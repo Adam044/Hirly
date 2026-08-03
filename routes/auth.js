@@ -33,19 +33,19 @@ module.exports = function registerAuthRoutes(
     authLimiter,
     [
       body('firstName')
-        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
         .trim()
         .isLength({ min: 2, max: 50 })
         .matches(/^[\u0600-\u06FFa-zA-Z0-9\s]+$/)
         .withMessage('First name must be 2-50 characters and contain only letters and numbers'),
       body('lastName')
-        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
         .trim()
         .isLength({ min: 2, max: 50 })
         .matches(/^[\u0600-\u06FFa-zA-Z0-9\s]+$/)
         .withMessage('Last name must be 2-50 characters and contain only letters and numbers'),
       body('city')
-        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
         .trim()
         .isLength({ min: 2, max: 100 })
         .withMessage('City must be between 2 and 100 characters'),
@@ -84,13 +84,13 @@ module.exports = function registerAuthRoutes(
         .withMessage('Please provide a valid email address'),
       passwordValidation,
       body('phone')
-        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
         .matches(/^[\+]?[1-9][\d]{0,15}$/)
         .withMessage('Please provide a valid phone number'),
-      body('userType').isIn(['professional', 'employer']).withMessage('User type must be professional or employer'),
+      body('userType').isIn(['professional', 'freelancer', 'employer']).withMessage('User type must be professional, freelancer, or employer'),
       body('employerType').optional().isIn(['individual', 'company']).withMessage('Employer type must be individual or company'),
       body('interests')
-        .if((value, { req }) => req.body.userType === 'professional')
+        .if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer')
         .optional()
         .custom((value) => {
           if (typeof value === 'string') {
@@ -101,23 +101,23 @@ module.exports = function registerAuthRoutes(
         })
         .withMessage('Interests must be an array'),
       body('currentStatus')
-        .if((value, { req }) => req.body.userType === 'professional')
+        .if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer')
         .notEmpty()
         .withMessage('Current status is required'),
       body('mainCategory')
-        .if((value, { req }) => req.body.userType === 'professional' && (req.body.currentStatus === 'Working' || req.body.currentStatus === 'Freelancing'))
+        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') && (req.body.currentStatus === 'Working' || req.body.currentStatus === 'Freelancing'))
         .notEmpty()
         .withMessage('Main category is required for working/freelancing status'),
       body('mainProfession')
-        .if((value, { req }) => req.body.userType === 'professional' && (req.body.currentStatus === 'Working' || req.body.currentStatus === 'Freelancing'))
+        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') && (req.body.currentStatus === 'Working' || req.body.currentStatus === 'Freelancing'))
         .notEmpty()
         .withMessage('Main profession is required for working/freelancing status'),
-      body('gender').if((value, { req }) => req.body.userType === 'professional').optional().isIn(['male', 'female']).withMessage('Gender must be either "male" or "female"'),
-      body('birthdate').if((value, { req }) => req.body.userType === 'professional').optional().isISO8601().withMessage('Birthdate must be a valid date'),
-      body('website_link').if((value, { req }) => req.body.userType === 'professional').optional().isURL().withMessage('Website link must be a valid URL'),
-      body('degree').if((value, { req }) => req.body.userType === 'professional').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Degree must be between 2 and 100 characters'),
-      body('degree_field').if((value, { req }) => req.body.userType === 'professional').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Degree field must be between 2 and 100 characters'),
-      body('university').if((value, { req }) => req.body.userType === 'professional').optional().trim().isLength({ min: 2, max: 200 }).withMessage('University must be between 2 and 200 characters')
+      body('gender').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().isIn(['male', 'female']).withMessage('Gender must be either "male" or "female"'),
+      body('birthdate').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().isISO8601().withMessage('Birthdate must be a valid date'),
+      body('website_link').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().isURL().withMessage('Website link must be a valid URL'),
+      body('degree').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Degree must be between 2 and 100 characters'),
+      body('degree_field').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Degree field must be between 2 and 100 characters'),
+      body('university').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().trim().isLength({ min: 2, max: 200 }).withMessage('University must be between 2 and 200 characters')
     ],
     handleValidationErrors,
     async (req, res, next) => {

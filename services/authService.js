@@ -122,7 +122,7 @@ class AuthService {
             const userId = userInsertResult.rows[0].id;
 
             // Insert Role-Specific Records
-            if (userType === 'professional') {
+            if (userType === 'professional' || userType === 'freelancer') {
                 const rawInterests = interests ? (typeof interests === 'string' ? JSON.parse(interests) : interests) : null;
                 const parsedInterests = Array.isArray(rawInterests) ? rawInterests.slice(0, 5) : rawInterests;
 
