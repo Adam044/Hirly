@@ -22,7 +22,7 @@ async function initializeDatabaseSchema(pool) {
                 phone TEXT,
                 city TEXT,
                 password_hash TEXT NOT NULL,
-                user_type TEXT NOT NULL CHECK (user_type IN ('professional', 'employer', 'admin')),
+                user_type TEXT NOT NULL CHECK (user_type IN ('professional', 'freelancer', 'employer', 'admin')),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 is_email_verified BOOLEAN DEFAULT false,
                 profile_picture_url TEXT,
@@ -594,6 +594,25 @@ async function initializeDatabaseSchema(pool) {
             BEGIN 
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='education' AND column_name='education_level') THEN
                     ALTER TABLE education ADD COLUMN education_level TEXT;
+                END IF;
+            END $$;
+        `);
+
+        // Update user_type constraint to allow 'freelancer'
+        await client.query(`
+            DO $$ 
+            BEGIN 
+                -- Check if the constraint exists and needs to be updated
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.table_constraints 
+                    WHERE table_name = 'users' 
+                    AND constraint_name = 'users_user_type_check'
+                ) THEN
+                    -- Drop the existing constraint
+                    ALTER TABLE users DROP CONSTRAINT users_user_type_check;
+                    -- Add the new constraint with 'freelancer' included
+                    ALTER TABLE users ADD CONSTRAINT users_user_type_check 
+                        CHECK (user_type IN ('professional', 'freelancer', 'employer', 'admin'));
                 END IF;
             END $$;
         `);
