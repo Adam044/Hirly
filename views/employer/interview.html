@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hirly Pilot | Secure Assessment</title>
+    <link rel="stylesheet" href="/styling/main.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
+    <style>
+        :root {
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --primary-glow: #6366f1;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow: hidden;
+            user-select: none; /* Security: Prevent selection */
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%);
+            z-index: -1; filter: blur(60px);
+            animation: pulseBg 10s ease-in-out infinite alternate;
+        }
+        @keyframes pulseBg { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 1; } }
+
+        /* Glass Components */
+        .glass-panel {
+            background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Chat Animation */
+        .msg-enter { opacity: 0; transform: translateY(20px); animation: msgPop 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
+        @keyframes msgPop { to { opacity: 1; transform: translateY(0); } }
+
+        /* Typing Indicator */
+        .typing-dot { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* Signature Canvas */
+        canvas#signaturePad { cursor: crosshair; touch-action: none; background: rgba(255,255,255,0.03); border-radius: 12px; }
+        
+        /* Security Toast */
+        .security-toast { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        /* Mic Visualizer */
+        .sound-wave-bar { width: 3px; background: #6366f1; border-radius: 2px; animation: soundWave 0.5s ease-in-out infinite alternate; }
+        @keyframes soundWave { 0% { height: 8px; opacity: 0.5; } 100% { height: 20px; opacity: 1; } }
+    </style>
+</head>
+<body class="flex flex-col h-screen" oncontextmenu="return false;"> <!-- Disable Right Click -->
+
+    <div class="ambient-bg"></div>
+
+    <!-- SECURITY TOAST -->
+    <div id="securityToast" class="fixed top-0 left-0 w-full z-[100] transform -translate-y-full security-toast">
+        <div class="bg-rose-600/95 backdrop-blur-md text-white px-6 py-3 flex items-center justify-center gap-3 shadow-2xl border-b border-rose-500/50">
+            <i class="fas fa-shield-alt animate-pulse"></i>
+            <span class="font-bold font-mono text-sm tracking-wide" id="securityMsg">PROCTOR ALERT: FOCUS LOST</span>
+        </div>
+    </div>
+
+    <!-- Header removed as per user request to prevent content overlap on technical pages -->
+
+    <!-- INTERVIEW TOOLBAR -->
+    <div class="h-16 border-b border-white/10 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-20">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 p-0.5">
+                <div class="w-full h-full bg-slate-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-brain text-indigo-400"></i>
+                </div>
+            </div>
+            <div>
+                <h1 class="font-bold text-white tracking-wide text-lg">Hirly <span class="text-indigo-400">Pilot</span></h1>
+                <div class="flex items-center gap-2 text-[10px] text-emerald-400 font-mono">
+                    <i class="fas fa-lock"></i> SECURE SESSION
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div id="countdownContainer" class="hidden text-right">
+                <div class="text-[10px] text-slate-500 uppercase font-bold">Time Remaining</div>
+                <div id="countdown" class="font-mono text-white font-bold">00:00</div>
+            </div>
+            <div id="modeBadge" class="hidden px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] uppercase font-bold text-slate-400">
+                <!-- Mode inserted here -->
+            </div>
+            <button id="endBtn" onclick="openEndConfirm()" class="px-3 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-[10px] uppercase font-bold text-rose-400 hidden">End</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 relative flex flex-col max-w-4xl mx-auto w-full overflow-hidden">
+        <div id="authModal" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+            <div class="glass-panel w-full max-w-md rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-white/10 bg-slate-900">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400"><i class="fas fa-user-lock"></i></div>
+                        <div>
+                            <div class="text-sm font-bold text-white">Login Required</div>
+                            <div id="authModalDesc" class="text-[11px] text-slate-400">Please log in to start your interview.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 space-y-3">
+                    <div class="grid grid-cols-1 gap-3">
+                        <input id="authEmail" type="email" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-indigo-500 outline-none" placeholder="Email">
+                        <input id="authPassword" type="password" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-indigo-500 outline-none" placeholder="Password">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <button id="switchAccountBtn" class="px-3 py-2 text-slate-400 hover:text-white text-sm" onclick="attemptLogout()">Switch Account</button>
+                        <button id="loginBtn" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg" onclick="attemptLogin()">Login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="statusModal" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+            <div class="glass-panel w-full max-w-md rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-white/10 bg-slate-900">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-rose-600/20 border border-rose-500/30 flex items-center justify-center text-rose-400"><i class="fas fa-info-circle"></i></div>
+                        <div>
+                            <div id="statusTitle" class="text-sm font-bold text-white">Interview Status</div>
+                            <div id="statusDesc" class="text-[11px] text-slate-400"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 flex justify-end gap-3">
+                    <a id="statusHomeBtn" href="/" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm rounded-lg border border-white/10">Home</a>
+                    <button id="statusCloseBtn" onclick="hideStatusModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- STEP 1: WELCOME & VERIFICATION -->
+        <div id="setupWizard" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6">
+            
+            <!-- Welcome View -->
+            <div id="viewWelcome" class="glass-panel max-w-md w-full p-8 rounded-3xl text-center relative overflow-hidden transition-all duration-500">
+                <div class="w-20 h-20 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-2xl ring-4 ring-indigo-500/20">
+                    <i class="fas fa-user-shield text-3xl text-indigo-400"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Identity Verification</h2>
+                <p class="text-slate-400 mb-8 text-sm leading-relaxed">
+                    This is a secure, proctored interview environment. Anti-cheat measures are active. To proceed, please verify you are human.
+                </p>
+                <button onclick="goToSignature()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/30">
+                    Verify Identity
+                </button>
+                <div class="mt-4 flex justify-center gap-4 text-[10px] text-slate-500 uppercase tracking-widest">
+                    <span><i class="fas fa-ban mr-1"></i> No Pasting</span>
+                    <span><i class="fas fa-eye mr-1"></i> Tab Tracking</span>
+                </div>
+            </div>
+
+            <!-- Signature View (Hidden) -->
+            <div id="viewSignature" class="glass-panel max-w-md w-full p-8 rounded-3xl text-center hidden transition-all duration-500">
+                <h2 class="text-xl font-bold text-white mb-1">Sign to Verify</h2>
+                <p class="text-slate-500 text-xs mb-4">Use your mouse or finger to sign below.</p>
+                
+                <div class="relative mb-6">
+                    <canvas id="signaturePad" width="340" height="150" class="mx-auto border border-white/10 shadow-inner bg-slate-900/50 rounded-xl"></canvas>
+                    <button onclick="clearSignature()" class="absolute top-2 right-2 text-[10px] text-slate-500 hover:text-white px-2 py-1 bg-slate-800/80 rounded transition">Clear</button>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="showView('viewWelcome')" class="flex-1 py-3 border border-white/10 text-slate-400 rounded-xl hover:text-white text-sm font-medium">Cancel</button>
+                    <button onclick="verifySignature()" class="flex-1 py-3 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-200 transition text-sm">Confirm Signature</button>
+                </div>
+            </div>
+
+            <!-- Mode Selection View (Hidden) -->
+            <div id="viewGuidelines" class="glass-panel max-w-lg w-full p-8 rounded-3xl hidden transition-all duration-500">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-white mb-2">Guidelines</h2>
+                    <p class="text-slate-400 text-sm">Read these carefully before starting.</p>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3"><i class="fas fa-clock text-indigo-400 mt-0.5"></i><span class="text-sm text-slate-300">Each question has ~100 seconds.</span></div>
+                    <div class="flex items-start gap-3"><i class="fas fa-comment-dots text-indigo-400 mt-0.5"></i><span class="text-sm text-slate-300">Answer one question at a time.</span></div>
+                    <div class="flex items-start gap-3"><i class="fas fa-shield-alt text-indigo-400 mt-0.5"></i><span class="text-sm text-slate-300">Anti-cheat is active. Stay focused in this tab.</span></div>
+                    <div class="flex items-start gap-3"><i class="fas fa-handshake text-indigo-400 mt-0.5"></i><span class="text-sm text-slate-300">You may end the interview anytime.</span></div>
+                </div>
+                <div class="mt-6 flex gap-3">
+                    <button onclick="showView('viewSignature')" class="flex-1 py-3 border border-white/10 text-slate-400 rounded-xl hover:text-white text-sm font-medium">Back</button>
+                    <button onclick="continueGuidelines()" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition text-sm">I Understand</button>
+                </div>
+            </div>
+
+            <div id="viewMode" class="glass-panel max-w-lg w-full p-8 rounded-3xl hidden transition-all duration-500">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-white mb-2">Select Interview Mode</h2>
+                    <p class="text-slate-400 text-sm">Choose your preferred interaction style. <br><span class="text-rose-400">This cannot be changed later.</span></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Text Option -->
+                    <button onclick="selectMode('text')" class="group p-4 rounded-2xl bg-slate-800/50 border border-white/5 hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-all text-left relative overflow-hidden">
+                        <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center mb-3 group-hover:bg-indigo-500 group-hover:text-white transition-colors text-slate-400">
+                            <i class="fas fa-keyboard"></i>
+                        </div>
+                        <h3 class="font-bold text-white mb-1">Text Chat</h3>
+                        <p class="text-xs text-slate-500">Standard messaging interface. Type your responses.</p>
+                        <div class="absolute top-3 right-3 w-4 h-4 rounded-full border border-slate-600 group-hover:border-indigo-500"></div>
+                    </button>
+
+                    <!-- Voice Option -->
+                    <button onclick="selectMode('voice')" class="group p-4 rounded-2xl bg-slate-800/50 border border-white/5 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all text-left relative overflow-hidden">
+                        <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center mb-3 group-hover:bg-purple-500 group-hover:text-white transition-colors text-slate-400">
+                            <i class="fas fa-microphone"></i>
+                        </div>
+                        <h3 class="font-bold text-white mb-1">Voice Mode</h3>
+                        <p class="text-xs text-slate-500">Immersive experience. AI speaks, you speak back.</p>
+                        <div class="absolute top-3 right-3 w-4 h-4 rounded-full border border-slate-600 group-hover:border-purple-500"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: ACTIVE CHAT AREA -->
+        <div id="chatInterface" class="flex-1 flex flex-col min-h-0 relative opacity-0 pointer-events-none transition-opacity duration-700">
+            <!-- Chat Scroll -->
+            <div id="chatScroll" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
+                <div class="h-4"></div>
+                <!-- Messages injected here -->
+            </div>
+
+            <!-- Input Area -->
+            <div id="inputArea" class="p-6 pt-2 z-20">
+                <div class="glass-panel p-2 rounded-2xl flex flex-col gap-2 relative">
+                    <!-- Progress Bar -->
+                    <div id="replyTimerBar" class="h-0.5 bg-white/5 rounded-full overflow-hidden w-full absolute top-0 left-0 right-0 rounded-t-2xl">
+                        <div id="replyTimerFill" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-0 transition-all duration-1000 ease-linear"></div>
+                    </div>
+
+                    <textarea id="userResponse" rows="1" class="w-full bg-transparent border-0 text-white placeholder-slate-500 focus:ring-0 resize-none p-4 max-h-32" placeholder="Type your answer..."></textarea>
+                    
+                    <div class="flex justify-between items-center px-2 pb-1">
+                        <div class="flex items-center gap-2">
+                            <!-- Mic Button (Only visible in Voice Mode or if Speech supported) -->
+                            <button id="micBtn" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-indigo-400 transition-all flex items-center justify-center relative hidden">
+                                <i class="fas fa-microphone" id="micIcon"></i>
+                                <div id="micVisualizer" class="absolute inset-0 flex items-center justify-center gap-0.5 hidden bg-slate-800 rounded-full">
+                                    <div class="sound-wave-bar h-2" style="animation-delay: 0s"></div>
+                                    <div class="sound-wave-bar h-3" style="animation-delay: 0.1s"></div>
+                                    <div class="sound-wave-bar h-2" style="animation-delay: 0.2s"></div>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <span id="charCount" class="text-[10px] text-slate-600 font-mono hidden md:block">0 chars</span>
+                            <span id="questionTimerText" class="text-[10px] text-slate-400 font-mono hidden md:block">100s</span>
+                            <button id="sendBtn" class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/20 flex items-center gap-2 text-sm">
+                                <span>Send</span> <i class="fas fa-paper-plane text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-24 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="endConfirmModal" class="fixed inset-0 z-[70] hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div id="endConfirmContent" class="glass-panel w-full max-w-md rounded-2xl overflow-hidden transform transition-all scale-95 opacity-0">
+            <div class="p-6 border-b border-white/10 bg-slate-900">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-rose-600/20 border border-rose-500/30 flex items-center justify-center text-rose-400"><i class="fas fa-flag-checkered"></i></div>
+                    <div>
+                        <div class="text-sm font-bold text-white">End Interview</div>
+                        <div class="text-[11px] text-slate-400">Are you sure you want to finish?</div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 flex justify-end gap-3">
+                <button onclick="closeEndConfirm()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm rounded-lg border border-white/10">Cancel</button>
+                <button id="endConfirmBtn" onclick="confirmEnd()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm rounded-lg">End</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/components.js"></script>
+    <script>
+        // --- STATE & CONFIG ---
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        let sessionId = null;
+        let selectedMode = null; // 'text' or 'voice'
+        let isVerified = false;
+        
+        // Security State
+        let tabSwitchCount = 0;
+        
+        // Speech
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isRecording = false;
+        let speechSynth = window.speechSynthesis;
+
+        // Canvas
+        let isDrawing = false;
+        const canvas = document.getElementById('signaturePad');
+        const ctx = canvas.getContext('2d');
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if(!token) {
+                showToast("Invalid Session Link", "error");
+                return;
+            }
+            // Initialize Systems
+            setupSignaturePad();
+            setupSecurity();
+            setupSpeech();
+            setupChatInput();
+            
+            // Load Session Data (but don't start yet)
+            loadSessionData();
+        });
+
+        async function loadSessionData() {
+            try {
+                const res = await fetch(`/api/interviews/session/${encodeURIComponent(token)}`);
+                const data = await res.json();
+                if(!data.success) {
+                    document.body.innerHTML = `<div class="flex items-center justify-center h-screen text-rose-500 font-mono">Session Error: ${data.error}</div>`;
+                    return;
+                }
+                sessionId = data.session.id;
+                window.__sessionInfo = data.session;
+                await checkAuthForInterview(data.session);
+                handleSessionStatus(data.session);
+                
+            } catch(e) { console.error(e); }
+        }
+
+        let __authorizedForSession = false;
+        async function checkAuthForInterview(session) {
+            try {
+                const meRes = await fetch('/api/user');
+                if (meRes.status !== 200) {
+                    showAuthModal('Please log in to begin.', session.freelancer_email);
+                    __authorizedForSession = false;
+                    return;
+                }
+                const me = await meRes.json();
+                const u = me.user;
+                if (!u || u.user_type !== 'freelancer' || u.id !== session.freelancer_id) {
+                    const msg = u && u.user_type !== 'freelancer' ? 'Please log in with a freelancer account.' : 'This link is assigned to a different account.';
+                    showAuthModal(msg, session.freelancer_email);
+                    __authorizedForSession = false;
+                    return;
+                }
+                hideAuthModal();
+                __authorizedForSession = true;
+            } catch {
+                showAuthModal('Please log in to begin.', session.freelancer_email);
+                __authorizedForSession = false;
+            }
+        }
+
+        function showAuthModal(message, targetEmail) {
+            const m = document.getElementById('authModal');
+            const d = document.getElementById('authModalDesc');
+            d.textContent = targetEmail ? `${message} Target: ${targetEmail}` : message;
+            m.classList.remove('hidden');
+        }
+        function hideAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
+        function showStatusModal(title, desc, terminal=false) {
+            document.getElementById('statusTitle').textContent = title;
+            document.getElementById('statusDesc').textContent = desc || '';
+            const closeBtn = document.getElementById('statusCloseBtn');
+            if (closeBtn) closeBtn.style.display = terminal ? 'none' : '';
+            document.getElementById('statusModal').classList.remove('hidden');
+        }
+        function hideStatusModal() { document.getElementById('statusModal').classList.add('hidden'); }
+        function handleSessionStatus(s) {
+            const st = (s.status || '').toLowerCase();
+            if (st === 'completed') {
+                showStatusModal('Interview Completed', 'Thank you for your time.', true);
+            } else if (st === 'expired') {
+                const dt = s.expires_at ? new Date(s.expires_at) : null;
+                const when = dt ? dt.toLocaleString() : '';
+                showStatusModal('Session Expired', when ? `Expired at ${when}.` : 'This session is no longer available.', true);
+            } else if ((s.invitation_response || '').toLowerCase() === 'rejected') {
+                showStatusModal('Invitation Declined', 'You have declined this interview.');
+            }
+        }
+        async function attemptLogin() {
+            const btn = document.getElementById('loginBtn');
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            if (!email || !password) { showToast('Enter email and password', 'error'); return; }
+            btn.disabled = true; btn.textContent = 'Logging in...';
+            try {
+                const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) });
+                const data = await res.json();
+                if (!data.success) { showToast(data.error || 'Login failed', 'error'); btn.disabled = false; btn.textContent = 'Login'; return; }
+                await checkAuthForInterview(window.__sessionInfo);
+                if (__authorizedForSession) { hideAuthModal(); showToast('Authenticated', 'info'); }
+            } catch { showToast('Network error', 'error'); }
+            finally { btn.disabled = false; btn.textContent = 'Login'; }
+        }
+        async function attemptLogout() {
+            try { await fetch('/api/logout', { method: 'POST' }); } catch {}
+            await checkAuthForInterview(window.__sessionInfo);
+        }
+
+        // --- STEP 1: VERIFICATION & MODE SELECTION ---
+
+        function showView(id) {
+            ['viewWelcome', 'viewSignature', 'viewGuidelines', 'viewMode'].forEach(v => {
+                const el = document.getElementById(v);
+                if(v === id) {
+                    el.classList.remove('hidden');
+                    // Small delay for fade in
+                    setTimeout(() => el.style.opacity = '1', 10);
+                } else {
+                    el.classList.add('hidden');
+                    el.style.opacity = '0';
+                }
+            });
+        }
+
+        function goToSignature() { showView('viewSignature'); }
+
+        // Signature Pad Logic
+        function setupSignaturePad() {
+            ctx.strokeStyle = '#6366f1'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+            const getPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                return { x: (e.clientX || e.touches[0].clientX) - rect.left, y: (e.clientY || e.touches[0].clientY) - rect.top };
+            };
+            const start = (e) => { isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+            const move = (e) => { if(!isDrawing) return; e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
+            const stop = () => isDrawing = false;
+            
+            canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', stop);
+            canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', move); canvas.addEventListener('touchend', stop);
+        }
+        function clearSignature() { ctx.clearRect(0,0,canvas.width, canvas.height); }
+        
+        function verifySignature() {
+            const pixelBuffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+            if (!pixelBuffer.some(c => c !== 0)) {
+                showToast("Please sign to verify identity", "error");
+                return;
+            }
+            isVerified = true;
+            showView('viewGuidelines');
+        }
+
+        function selectMode(mode) {
+            selectedMode = mode;
+            if (!__authorizedForSession) { showAuthModal('Please log in to begin.', window.__sessionInfo?.freelancer_email); return; }
+            const st = (window.__sessionInfo?.status || '').toLowerCase();
+            const inv = (window.__sessionInfo?.invitation_response || '').toLowerCase();
+            if (st === 'completed' || st === 'expired' || inv === 'rejected') { handleSessionStatus(window.__sessionInfo); return; }
+            
+            const wizard = document.getElementById('setupWizard');
+            const chat = document.getElementById('chatInterface');
+            const badge = document.getElementById('modeBadge');
+            
+            // Fade out wizard
+            wizard.style.opacity = '0';
+            wizard.style.pointerEvents = 'none';
+            
+            // Setup Mode Badge
+            badge.classList.remove('hidden');
+            badge.innerHTML = mode === 'voice' 
+                ? '<i class="fas fa-microphone mr-1 text-purple-400"></i> Voice Mode' 
+                : '<i class="fas fa-keyboard mr-1 text-indigo-400"></i> Text Mode';
+            
+            // Voice Setup
+            if(mode === 'voice') {
+                document.getElementById('micBtn').classList.remove('hidden');
+                // Attempt to start mic immediately to get permissions
+                if(recognition) try { recognition.start(); setTimeout(()=>recognition.stop(), 500); } catch {}
+            }
+
+            // Start Session
+            setTimeout(() => {
+                wizard.style.display = 'none';
+                chat.style.opacity = '1';
+                chat.style.pointerEvents = 'auto';
+                
+                // Trigger Server Start
+                startServerSession();
+            }, 500);
+        }
+
+        // --- STEP 2: ACTIVE SESSION ---
+
+        async function startServerSession() {
+            // Respond 'accept' implicitly if pending
+            try { await fetch(`/api/interviews/${token}/respond`, { method: 'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'accept'}) }); } catch{}
+            const msg = composeInitialGreeting();
+            addAiMessage(msg);
+            
+            startSessionTimer(20);
+            document.getElementById('endBtn').classList.remove('hidden');
+        }
+
+        async function getNextQuestion() {
+            showTyping();
+            try {
+                const res = await fetch(`/api/interviews/token/${token}/next`, { method: 'POST' });
+                const data = await res.json();
+                hideTyping();
+                if(data.success && data.aiReply) {
+                    addAiMessage(data.aiReply);
+                    startQuestionTimer(100);
+                }
+            } catch(e) { hideTyping(); }
+        }
+
+        async function sendMessage() {
+            const tx = document.getElementById('userResponse');
+            const text = tx.value.trim();
+            if(!text) return;
+
+            tx.value = ''; tx.style.height = 'auto';
+            addUserMessage(text);
+            stopQuestionTimer();
+            const t = text.toLowerCase();
+            const likelyEnd = /\b(no|nope|nah)\b.*\bquestion\b/.test(t) || /لا.*سؤال/.test(t) || /ما عندي.*سؤال/.test(t) || /ليس لدي.*سؤال/.test(t);
+            const END_KEYWORD = 'end';
+            const isEndKeyword = t.trim() === END_KEYWORD || /إنهاء|انهاء/.test(text.trim());
+            if (isEndKeyword) { showWrapOverlay(); await confirmEnd(); return; }
+            if (likelyEnd) { openEndConfirm(); }
+            
+            // Post to server
+            try {
+                const res = await fetch(`/api/interviews/token/${token}/message`, {
+                    method: 'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ sender: 'applicant', content: text })
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    // Logic: If AI replied immediately (rare in this architecture but possible)
+                    if(data.aiReply) addAiMessage(data.aiReply);
+                    else getNextQuestion();
+                }
+            } catch(e) { showToast("Connection failed", "error"); }
+        }
+
+        // --- SECURITY SUITE ---
+        function setupSecurity() {
+            const toast = document.getElementById('securityToast');
+            const msg = document.getElementById('securityMsg');
+            let timer;
+
+            function triggerAlert(text) {
+                msg.textContent = text;
+                toast.classList.remove('-translate-y-full');
+                clearTimeout(timer);
+                timer = setTimeout(() => toast.classList.add('-translate-y-full'), 4000);
+            }
+
+            // 1. Anti-Paste
+            document.getElementById('userResponse').addEventListener('paste', (e) => {
+                e.preventDefault();
+                triggerAlert("PROCTOR: PASTE ACTION BLOCKED");
+            });
+
+            // 2. Tab Switching
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden && isVerified) {
+                    tabSwitchCount++;
+                    triggerAlert(`PROCTOR: FOCUS LOST (${tabSwitchCount}/3)`);
+                    // Optional: Report to server
+                }
+            });
+        }
+
+        // --- UI HELPERS ---
+
+        function addAiMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'flex justify-start w-full msg-enter mb-6';
+            div.innerHTML = `
+                <div class="flex gap-4 max-w-[85%] md:max-w-[75%]">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mt-1 shadow-lg shadow-indigo-500/30">
+                        <i class="fas fa-robot text-white text-xs"></i>
+                    </div>
+                    <div class="glass-panel px-6 py-4 rounded-2xl rounded-tl-none text-slate-100 text-sm md:text-base leading-relaxed shadow-md">
+                        ${DOMPurify.sanitize(text)}
+                    </div>
+                </div>`;
+            document.getElementById('chatScroll').appendChild(div);
+            scrollToBottom();
+            
+            // TTS Logic
+            if(selectedMode === 'voice') speak(text);
+        }
+
+        function addUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'flex justify-end w-full msg-enter mb-6';
+            div.innerHTML = `
+                <div class="max-w-[85%] md:max-w-[75%]">
+                    <div class="bg-indigo-600 text-white px-6 py-4 rounded-2xl rounded-tr-none text-sm md:text-base leading-relaxed shadow-lg font-medium">
+                        ${DOMPurify.sanitize(text)}
+                    </div>
+                </div>`;
+            document.getElementById('chatScroll').appendChild(div);
+            scrollToBottom();
+        }
+
+        function showTyping() {
+            if(document.getElementById('typingInd')) return;
+            const div = document.createElement('div');
+            div.id = 'typingInd';
+            div.className = 'flex justify-start w-full msg-enter mb-6';
+            div.innerHTML = `
+                <div class="flex gap-4">
+                    <div class="w-8"></div>
+                    <div class="glass-panel px-4 py-3 rounded-2xl rounded-tl-none flex gap-1 items-center">
+                        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                    </div>
+                </div>`;
+            document.getElementById('chatScroll').appendChild(div);
+            scrollToBottom();
+        }
+
+        function hideTyping() { const el = document.getElementById('typingInd'); if(el) el.remove(); }
+        function scrollToBottom() { const c = document.getElementById('chatScroll'); c.scrollTop = c.scrollHeight; }
+
+        // --- SPEECH & UTILS ---
+        
+        function setupSpeech() {
+            if(!SpeechRecognition) return;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; recognition.lang = 'en-US';
+            
+            recognition.onstart = () => {
+                isRecording = true;
+                document.getElementById('micIcon').classList.add('hidden');
+                document.getElementById('micVisualizer').classList.remove('hidden');
+            };
+            recognition.onend = () => {
+                isRecording = false;
+                document.getElementById('micIcon').classList.remove('hidden');
+                document.getElementById('micVisualizer').classList.add('hidden');
+            };
+            recognition.onresult = (e) => {
+                const txt = e.results[0][0].transcript;
+                document.getElementById('userResponse').value = txt;
+                document.getElementById('userResponse').style.height = 'auto';
+            };
+            
+            document.getElementById('micBtn').addEventListener('click', () => {
+                if(isRecording) recognition.stop(); else recognition.start();
+            });
+        }
+
+        function speak(text) {
+            if(!speechSynth) return;
+            speechSynth.cancel();
+            const clean = text.replace(/[*#]/g, '');
+            const u = new SpeechSynthesisUtterance(clean);
+            u.rate = 1.1; 
+            speechSynth.speak(u);
+        }
+
+        function setupChatInput() {
+            const tx = document.getElementById('userResponse');
+            tx.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }});
+            tx.addEventListener('input', function() {
+                this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
+                document.getElementById('charCount').textContent = this.value.length + ' chars';
+            });
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        }
+
+        function continueGuidelines() { showView('viewMode'); }
+        let questionTimerInterval = null;
+        let questionTimerEnd = null;
+        function startQuestionTimer(seconds) {
+            const fill = document.getElementById('replyTimerFill');
+            const text = document.getElementById('questionTimerText');
+            const bar = document.getElementById('replyTimerBar');
+            if (questionTimerInterval) clearInterval(questionTimerInterval);
+            const start = Date.now();
+            questionTimerEnd = start + seconds * 1000;
+            bar.classList.remove('hidden');
+            text.classList.remove('hidden');
+            questionTimerInterval = setInterval(() => {
+                const now = Date.now();
+                const total = seconds * 1000;
+                const elapsed = Math.min(total, now - start);
+                const pct = Math.round((elapsed / total) * 100);
+                const left = Math.max(0, Math.ceil((questionTimerEnd - now) / 1000));
+                fill.style.width = pct + '%';
+                text.textContent = left + 's';
+                if (now >= questionTimerEnd) { clearInterval(questionTimerInterval); questionTimerInterval = null; showToast('Time elapsed for this question', 'info'); }
+            }, 250);
+        }
+        function stopQuestionTimer() {
+            const fill = document.getElementById('replyTimerFill');
+            const text = document.getElementById('questionTimerText');
+            const bar = document.getElementById('replyTimerBar');
+            if (questionTimerInterval) clearInterval(questionTimerInterval);
+            questionTimerInterval = null;
+            questionTimerEnd = null;
+            fill.style.width = '0%';
+            text.classList.add('hidden');
+            bar.classList.add('hidden');
+        }
+
+        function openEndConfirm() { document.getElementById('endConfirmModal').classList.remove('hidden'); setTimeout(()=>document.getElementById('endConfirmContent').classList.remove('scale-95','opacity-0'),10); }
+        function closeEndConfirm() { document.getElementById('endConfirmContent').classList.add('scale-95','opacity-0'); setTimeout(()=>document.getElementById('endConfirmModal').classList.add('hidden'),200); }
+        async function confirmEnd() {
+            const btn = document.getElementById('endConfirmBtn');
+            const orig = btn.textContent;
+            btn.textContent = 'Ending...'; btn.disabled = true;
+            try { showWrapOverlay(); await fetch(`/api/interviews/token/${token}/complete`, { method: 'POST' }); await pollStatus(); }
+            catch {}
+            finally { btn.textContent = orig; btn.disabled = false; closeEndConfirm(); }
+        }
+
+        function startSessionTimer(minutes) {
+            const end = Date.now() + minutes * 60000;
+            const el = document.getElementById('countdown');
+            document.getElementById('countdownContainer').classList.remove('hidden');
+            setInterval(() => {
+                const diff = end - Date.now();
+                if(diff <= 0) { el.textContent = "00:00"; return; }
+                const m = Math.floor(diff/60000); const s = Math.floor((diff%60000)/1000);
+                el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        function showToast(msg, type='info') {
+            const c = document.getElementById('toastContainer');
+            const d = document.createElement('div');
+            const bg = type === 'error' ? 'bg-rose-500' : 'bg-slate-700';
+            d.className = `${bg} text-white px-4 py-3 rounded-xl shadow-xl text-sm transition-all transform translate-x-10 opacity-0`;
+            d.textContent = msg;
+            c.appendChild(d);
+            setTimeout(() => d.classList.remove('translate-x-10', 'opacity-0'), 10);
+            setTimeout(() => { d.classList.add('opacity-0'); setTimeout(()=>d.remove(),300); }, 3000);
+        }
+
+        // --- Wrap-Up Overlay ---
+        function showWrapOverlay() {
+            let m = document.getElementById('wrapModal');
+            if (!m) {
+                m = document.createElement('div');
+                m.id = 'wrapModal';
+                m.className = 'fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4';
+                m.innerHTML = `
+                    <div class="glass-card w-full max-w-md rounded-2xl border border-white/10 p-6 text-center">
+                        <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+                            <i class="fas fa-spinner fa-spin text-indigo-400 text-2xl"></i>
+                        </div>
+                        <div class="text-white font-bold mb-1">Wrapping up interview</div>
+                        <div class="text-slate-400 text-sm">Please wait while we generate your report.</div>
+                    </div>`;
+                document.body.appendChild(m);
+            }
+        }
+        function hideWrapOverlay() { const m = document.getElementById('wrapModal'); if (m) m.remove(); }
+
+        async function pollStatus() {
+            let attempts = 0;
+            const max = 24;
+            while (attempts < max) {
+                try {
+                    const res = await fetch(`/api/interviews/token/${token}/status`);
+                    const data = await res.json();
+                    if (data.success && data.status === 'completed' && data.report_exists) {
+                        hideWrapOverlay();
+                        handleSessionStatus({ status: 'completed' });
+                        return;
+                    }
+                } catch {}
+                attempts++;
+                await new Promise(r => setTimeout(r, 2000));
+            }
+            hideWrapOverlay();
+            handleSessionStatus({ status: 'completed' });
+        }
+
+        function getTimeGreeting() {
+            const h = new Date().getHours();
+            if (h >= 5 && h < 12) return 'Good morning';
+            if (h >= 12 && h < 18) return 'Good afternoon';
+            return 'Good evening';
+        }
+
+        function composeInitialGreeting() {
+            const g = getTimeGreeting();
+            const fn = (window.__sessionInfo?.freelancer_first_name || '').trim();
+            const name = fn ? `, ${fn}` : '';
+            return `${g}${name}. I'm Pilot. Before we begin, how's your day going?`;
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,3096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hirly Pilot | AI Recruiting Assistant</title>
+    <link rel="stylesheet" href="/styling/main.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
+    <style>
+        :root {
+            --neon-blue: #3b82f6;
+            --neon-purple: #8b5cf6;
+            --neon-green: #10b981;
+            --bg-dark: #020617;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15), transparent 35%),
+                radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.15), transparent 35%),
+                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 1), rgba(2, 6, 23, 1));
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Responsive Sidebar */
+        #candidateSidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        @media (max-width: 768px) {
+            #candidateSidebar {
+                position: absolute;
+                left: 0;
+                top: 64px; /* Height of toolbar */
+                bottom: 0;
+                z-index: 40;
+                transform: translateX(-100%);
+            }
+            #candidateSidebar.open {
+                transform: translateX(0);
+            }
+            .main-stage-active #candidateSidebar {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* Responsive Main Stage */
+        #mainStage {
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            #mainStage {
+                position: fixed;
+                inset: 64px 0 0 0;
+                z-index: 30;
+                transform: translateX(100%);
+            }
+            #mainStage.active {
+                transform: translateX(0);
+            }
+        }
+
+        /* Glassmorphism Evolved */
+        .glass-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .glass-btn:hover { 
+            background: rgba(255, 255, 255, 0.08); 
+            border-color: rgba(59, 130, 246, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Premium Buttons */
+        .btn-primary {
+            background: var(--accent-gradient);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Neural Animation Premium */
+        .neural-loader {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .neural-ring {
+            position: absolute;
+            inset: 0;
+            border: 2px solid transparent;
+            border-top-color: var(--neon-blue);
+            border-radius: 50%;
+            animation: neural-rotate 2s linear infinite;
+        }
+        .neural-ring:nth-child(2) {
+            inset: 10px;
+            border-top-color: var(--neon-purple);
+            animation-duration: 3s;
+            animation-direction: reverse;
+        }
+        .neural-ring:nth-child(3) {
+            inset: 20px;
+            border-top-color: #ec4899;
+            animation-duration: 1.5s;
+        }
+        .neural-core {
+            position: absolute;
+            inset: 35px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            box-shadow: 0 0 30px var(--neon-blue);
+            animation: neural-pulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes neural-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes neural-pulse {
+            from { transform: scale(0.85); opacity: 0.6; filter: brightness(0.8); }
+            to { transform: scale(1.1); opacity: 1; filter: brightness(1.2); }
+        }
+
+        /* Animations */
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease forwards; }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.98) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-scale-in { animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-on-select {
+            animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .reveal { opacity: 0; }
+        .reveal-1 { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards; }
+        .reveal-2 { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards; }
+        .reveal-3 { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards; }
+        .reveal-4 { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards; }
+        .reveal-5 { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards; }
+
+        /* Candidate Cards Premium */
+        .candidate-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        .candidate-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateX(6px);
+            border-left-color: rgba(59, 130, 246, 0.3);
+        }
+        .candidate-card.active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent);
+            border-left-color: var(--neon-blue);
+            box-shadow: inset 4px 0 15px -5px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Stats Pill Premium */
+        .stats-pill {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Dossier Cards Premium */
+        .dossier-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .dossier-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+        }
+        .dossier-card:hover {
+            border-color: rgba(59, 130, 246, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Tabs Premium */
+        .tab-btn {
+            position: relative;
+            padding: 12px 20px;
+            color: #94a3b8;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .tab-btn:hover {
+            color: #f8fafc;
+        }
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--accent-gradient);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        .tab-btn.active {
+            color: white;
+            background: linear-gradient(to top, rgba(59, 130, 246, 0.05), transparent);
+        }
+        .tab-btn.active::after {
+            width: 80%;
+        }
+
+        /* Tooltip Style */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 8px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 10px;
+            pointer-events: none;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Checkbox Custom Style */
+        .custom-checkbox:checked + div {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .custom-checkbox:checked + div .check-icon {
+            opacity: 1;
+        }
+
+        /* Radio Custom Style */
+        input[type="radio"]:checked + .radio-icon {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        input[type="radio"]:checked ~ .radio-check {
+            border-color: #3b82f6;
+        }
+        input[type="radio"]:checked ~ .radio-check div {
+            opacity: 1;
+        }
+        
+        /* Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px; width: 20px; border-radius: 50%;
+            background: #3b82f6; cursor: pointer; margin-top: -8px;
+            box-shadow: 0 0 10px rgba(59,130,246,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer;
+            background: rgba(255,255,255,0.1); border-radius: 2px;
+        }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .new-candidate-glow {
+            animation: candidate-pulse 2s infinite;
+        }
+        @keyframes candidate-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .score-ring {
+            position: relative;
+            width: 40px; height: 40px;
+        }
+        .score-ring svg { transform: rotate(-90deg); }
+        .score-ring circle {
+            fill: none; stroke-width: 3; stroke-linecap: round;
+        }
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-subtle {
+            animation: bounce-subtle 2s infinite ease-in-out;
+        }
+        
+        #pipelineFunnel div {
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .filter-chip.active {
+            box-shadow: 0 0 15px rgba(59,130,246,0.2);
+        }
+        /* Modal Transitions & Steps */
+    .modal-stage-container {
+        display: flex;
+        width: 300%; /* For 3 stages */
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modal-stage {
+        width: 33.333%;
+        flex-shrink: 0;
+    }
+    .modal-stage-active-1 { transform: translateX(0); }
+    .modal-stage-active-2 { transform: translateX(-33.333%); }
+    .modal-stage-active-3 { transform: translateX(-66.666%); }
+
+    .step-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .step-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    .step-dot.active {
+        background: #3b82f6;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        width: 24px;
+    }
+
+    .dossier-card {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px border-white/5;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+    }
+    .dossier-card:hover {
+        background: rgba(15, 23, 42, 0.6);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Neuromorphic touches */
+    .glass-input {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 0.75rem;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    .glass-input:focus {
+        border-color: #3b82f6;
+        background: rgba(0, 0, 0, 0.4);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+</style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2"></div>
+
+    <!-- PAGE TOOLBAR -->
+    <div class="h-16 border-b border-white/10 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-4 md:px-6 shrink-0 z-20">
+        <div class="flex items-center gap-3 md:gap-4">
+            <button id="mobileMenuToggle" class="md:hidden w-10 h-10 rounded-xl glass-btn text-white flex items-center justify-center">
+                <i class="fas fa-users-viewfinder"></i>
+            </button>
+            <button onclick="history.back()" class="hidden md:flex w-8 h-8 rounded-full glass-btn items-center justify-center text-slate-400">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div>
+                <h1 class="text-lg md:text-xl font-bold text-white tracking-wide flex items-center gap-2">
+                    Hirly <span class="text-blue-400">Pilot</span>
+                </h1>
+                <p id="jobTitleDisplay" class="text-[10px] md:text-xs text-slate-400 font-mono truncate max-w-[120px] md:max-w-none">Loading Context...</p>
+            </div>
+            
+            <!-- Workflow Guide (REMOVED) -->
+        </div>
+        
+        <div class="flex gap-2 md:gap-3">
+            <button id="runPilotBtn" onclick="openAnalysisWizard()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold shadow-lg shadow-blue-500/20 transition flex items-center gap-2 relative overflow-hidden group">
+                <i class="fas fa-sparkles"></i>
+                <span class="hidden sm:inline">Run Analysis</span>
+                <span class="sm:hidden">Run</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- SIDEBAR: Candidate Stream -->
+        <aside id="candidateSidebar" class="w-[320px] md:w-[400px] border-r border-white/10 bg-slate-900/50 flex flex-col z-10">
+            
+            <!-- Sidebar Header / Stats -->
+                <div class="p-4 border-b border-white/5 space-y-4">
+                    <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col">
+                        <h2 class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Candidate Stream</h2>
+                        <div id="analysisProgress" class="text-[9px] text-blue-400 font-mono mt-0.5">0/0 analyzed</div>
+                    </div>
+                    <span id="totalCountBadge" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">0</span>
+                </div>
+                        <button onclick="fetchData(true)" class="text-[10px] text-blue-400 font-bold hover:text-blue-300 transition flex items-center gap-1">
+                            <i class="fas fa-sync-alt"></i> REFRESH
+                        </button>
+                    </div>
+
+                <!-- Pipeline Funnel Mini-View -->
+                <div id="pipelineFunnel" class="grid grid-cols-4 gap-1 h-1.5 rounded-full overflow-hidden bg-slate-800">
+                    <div id="funnel-strong" class="bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
+                    <div id="funnel-interview" class="bg-blue-500 transition-all duration-500" style="width: 0%"></div>
+                    <div id="funnel-backup" class="bg-amber-500 transition-all duration-500" style="width: 0%"></div>
+                    <div id="funnel-reject" class="bg-rose-500 transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-[8px] uppercase font-bold tracking-tighter text-slate-500 px-0.5">
+                    <span>Strong</span>
+                    <span>Interview</span>
+                    <span>Backup</span>
+                    <span>Reject</span>
+                </div>
+                
+                <!-- Smart Filters -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                        <button class="filter-chip active text-xs whitespace-nowrap px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition" onclick="applyFilter('all', this)">
+                            All
+                        </button>
+                        <button class="filter-chip text-xs whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 border border-white/10 hover:border-emerald-500/50 hover:text-emerald-400 transition" onclick="applyFilter('strong', this)">
+                            Top Match
+                        </button>
+                        <button class="filter-chip text-xs whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 border border-white/10 hover:border-amber-500/50 hover:text-amber-400 transition" onclick="applyFilter('interview', this)">
+                            Interview
+                        </button>
+                    </div>
+                    <!-- Detailed Verdict Filter Dropdown -->
+                    <select onchange="applyVerdictFilter(this.value)" class="w-full bg-slate-800 border border-white/10 text-xs text-slate-300 rounded-lg p-2 focus:border-blue-500 outline-none">
+                        <option value="">Filter by Verdict...</option>
+                        <option value="Strong Hire">Strong Hire (High Priority)</option>
+                        <option value="Interview">Interview</option>
+                        <option value="Backup">Backup / Potential</option>
+                        <option value="Reject">Reject</option>
+                        <option value="Error">Analysis Failed</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- List -->
+            <div id="candidateList" class="flex-1 overflow-y-auto p-2 space-y-1">
+                <div class="flex flex-col items-center justify-center h-full text-slate-500 gap-6 p-8">
+                    <div class="neural-loader scale-75">
+                        <div class="neural-ring"></div>
+                        <div class="neural-ring"></div>
+                        <div class="neural-core"></div>
+                    </div>
+                    <div class="text-center space-y-2">
+                        <span class="text-xs font-bold text-slate-300 uppercase tracking-widest block">Syncing Neural Network</span>
+                        <p class="text-[10px] text-slate-500 max-w-[200px] mx-auto leading-relaxed">Retrieving latest candidate profiles and analysis data from the cloud...</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN STAGE: Detailed Analysis -->
+        <main class="flex-1 relative bg-[#0B1120] overflow-hidden flex flex-col" id="mainStage">
+            
+            <!-- Empty State / Workflow Guide -->
+            <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                <div id="emptyStateContent" class="max-w-md animate-on-select">
+                    <!-- Dynamic content will be injected here -->
+                    <div class="w-24 h-24 rounded-full bg-slate-900 border border-white/5 flex items-center justify-center mb-8 mx-auto shadow-2xl">
+                        <i class="fas fa-fingerprint text-4xl text-blue-500/20"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3">No Candidate Selected</h2>
+                    <p class="text-slate-400 text-sm mb-8">Select a profile from the stream to view the full AI analysis dossier.</p>
+                </div>
+            </div>
+
+            <!-- Detail Content -->
+            <div id="detailContent" class="flex-1 flex flex-col h-full opacity-0 transition-opacity duration-300">
+                
+                <!-- Mobile Back to List -->
+                <div class="md:hidden p-4 border-b border-white/5 bg-slate-900/40">
+                    <button id="mobileBackToList" class="text-xs text-blue-400 font-bold flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i> BACK TO CANDIDATES
+                    </button>
+                </div>
+
+                <!-- Hero Section -->
+                <div class="p-6 md:p-8 pb-0 shrink-0 reveal reveal-1">
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+                        <div class="flex gap-4 md:gap-6">
+                            <div class="relative">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
+                                    <img id="detailAvatar" src="" class="w-full h-full object-cover hidden">
+                                    <span id="detailInitials" class="text-xl md:text-2xl font-bold text-slate-500">AB</span>
+                                </div>
+                                <div id="detailVerdictBadge" class="absolute -bottom-2 -right-2 px-2 py-0.5 md:px-3 md:py-1 rounded-lg bg-slate-800 border border-white/10 text-[8px] md:text-[10px] font-bold uppercase shadow-lg text-slate-300 whitespace-nowrap">
+                                    --
+                                </div>
+                            </div>
+                            <div>
+                                <h1 id="detailName" class="text-xl md:text-3xl font-bold text-white heading-font mb-1">Candidate Name</h1>
+                                <p id="detailHeadline" class="text-blue-400 text-xs md:text-sm font-medium mb-3">AI Headline pending...</p>
+                                <div class="flex flex-wrap gap-2 text-[10px] md:text-xs text-slate-400">
+                                    <span class="flex items-center gap-1"><i class="fas fa-map-marker-alt"></i> <span id="detailLoc">Location</span></span>
+                                    <span class="hidden md:inline w-px h-3 bg-white/10 mx-1"></span>
+                                    <span class="flex items-center gap-1"><i class="fas fa-briefcase"></i> <span id="detailRole">Profession</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Score Circle -->
+                        <div class="text-center self-center md:self-start">
+                            <div class="relative w-20 h-20 md:w-24 md:h-24 flex items-center justify-center">
+                                <svg class="w-full h-full absolute top-0 left-0 transform -rotate-90">
+                                    <circle cx="48" cy="48" r="40" stroke="#1e293b" stroke-width="6" fill="none"/>
+                                    <circle id="scoreCircle" cx="48" cy="48" r="40" stroke="#3b82f6" stroke-width="6" fill="none" stroke-dasharray="251.2" stroke-dashoffset="251.2" class="transition-all duration-1000 ease-out"/>
+                                </svg>
+                                <div>
+                                    <div id="detailScore" class="text-2xl md:text-3xl font-bold text-white heading-font">0%</div>
+                                    <div class="text-[8px] md:text-[10px] text-slate-500 uppercase font-bold">Match</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Bar -->
+                    <div class="flex flex-wrap items-center gap-3 border-b border-white/5 pb-6">
+                        <div class="flex gap-2">
+                            <button onclick="openDeepReport()" class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/20 hover:bg-emerald-600/20 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                                <i class="fas fa-file-contract"></i> Dossier
+                            </button>
+                            <a id="downloadCvBtn" target="_blank" class="glass-btn text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                                <i class="fas fa-download"></i> CV
+                            </a>
+                            <div id="cvStatusBadge" class="hidden md:flex items-center text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border border-white/5 bg-white/5 transition-all"></div>
+                            <a id="viewProfileBtn" target="_blank" class="glass-btn text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                                <i class="fas fa-user-circle"></i> Profile
+                            </a>
+                        </div>
+                        
+                        <div class="h-6 w-px bg-white/5 hidden md:block"></div>
+                        
+                        <!-- AI Feedback -->
+                <div class="flex items-center gap-1 bg-slate-900/50 p-1 rounded-xl border border-white/5">
+                    <span class="text-[8px] md:text-[10px] uppercase font-bold text-slate-500 px-2">Analysis?</span>
+                    <button onclick="submitAIFeedback('accurate')" title="Accurate Analysis" class="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition">
+                        <i class="fas fa-thumbs-up text-[10px] md:text-xs"></i>
+                    </button>
+                    <button onclick="submitAIFeedback('inaccurate')" title="Inaccurate Analysis" class="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition">
+                        <i class="fas fa-thumbs-down text-[10px] md:text-xs"></i>
+                    </button>
+                </div>
+
+                        <div class="flex-1"></div>
+                        
+                        <button onclick="initiateInterview()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-blue-600/20 transition hover:scale-105">
+                            <i class="fas fa-robot mr-2"></i> Invite to Interview
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Analysis Grid -->
+                <div class="flex-1 overflow-y-auto p-8 pt-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <!-- Col 1: Summary & Radar -->
+                        <div class="space-y-6">
+                            <div class="glass-panel p-5 rounded-xl reveal reveal-2">
+                                <h3 id="summaryTitle" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Executive Summary</h3>
+                                <p id="detailSummary" class="text-sm text-slate-300 leading-relaxed">Select a candidate...</p>
+                            </div>
+                            
+                            <div id="radarPanel" class="glass-panel p-5 rounded-xl relative overflow-hidden reveal reveal-3">
+                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Competency Radar</h3>
+                                <div class="h-64">
+                                    <canvas id="skillsRadar"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Pros/Cons & Gaps -->
+                        <div id="aiResultsCol2" class="space-y-6">
+                            <!-- Matched Skills -->
+                            <div class="glass-panel p-5 rounded-xl border-l-4 border-emerald-500 reveal reveal-2">
+                                <h3 class="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <i class="fas fa-check-circle"></i> Proven Assets
+                                </h3>
+                                <div id="detailPros" class="flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <!-- Missing Skills -->
+                            <div class="glass-panel p-5 rounded-xl border-l-4 border-rose-500 reveal reveal-3">
+                                <h3 class="text-xs font-bold text-rose-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <i class="fas fa-exclamation-triangle"></i> Critical Gaps & Risks
+                                </h3>
+                                <div id="detailCons" class="space-y-2"></div>
+                            </div>
+
+                            <!-- Interview Guide Preview -->
+                            <div class="glass-panel p-5 rounded-xl reveal reveal-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest">Recommended Question</h3>
+                                    <button onclick="openDeepReport()" class="text-[10px] text-slate-500 hover:text-white underline">See All</button>
+                                </div>
+                                <div id="detailQuestion" class="text-sm text-slate-300 italic border-l-2 border-blue-500/30 pl-3">
+                                    Analysis pending...
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- WELCOME OVERLAY -->
+    <!-- WELCOME OVERLAY -->
+    <div id="welcomeOverlay" class="fixed inset-0 z-[80] hidden bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden relative">
+            <!-- Decorative Background -->
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-purple-600/10 pointer-events-none"></div>
+            
+            <button onclick="document.getElementById('welcomeOverlay').classList.add('hidden')" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition z-20">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="p-10 relative z-10">
+                <div class="flex flex-col items-center text-center mb-10">
+                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white text-4xl shadow-2xl shadow-blue-500/20 mb-6 animate-bounce-subtle">
+                        <i class="fas fa-sparkles"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white heading-font mb-2">Welcome to Hirly Pilot</h2>
+                    <p class="text-slate-400 max-w-md">Let's set up your AI co-pilot to ensure your candidate analysis is precise, fair, and aligned with your team's goals.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 mb-10">
+                    <div class="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 transition-colors group">
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white mb-1">1. Build Job Dossier</div>
+                            <p class="text-sm text-slate-400 leading-relaxed">Pilot scans your job description to extract core competencies, must-haves, and screening priorities.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 transition-colors group">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-vial"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white mb-1">2. Calibrate & Confirm</div>
+                            <p class="text-sm text-slate-400 leading-relaxed">Review the AI's understanding. Refine its evaluation logic to match your specific team culture.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-purple-500/30 transition-colors group">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-white mb-1">3. Automated Scoring</div>
+                            <p class="text-sm text-slate-400 leading-relaxed">Once calibrated, Pilot analyzes your entire candidate stream, providing scores, pros/cons, and interview guides.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <button id="welcomeStartBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold shadow-xl shadow-blue-600/20 transition transform hover:-translate-y-1 active:scale-95">
+                        Begin Guided Calibration
+                    </button>
+                    <p class="text-center text-xs text-slate-500">Takes about 2 minutes. Can be recalibrated anytime.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JOB ANALYSIS MODAL -->
+    <div id="jobAnalysisModal" class="fixed inset-0 z-[75] hidden bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="w-full max-w-4xl bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-white/10 bg-slate-900/50 flex justify-between items-center shrink-0">
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider border border-blue-500/20">Phase 1</span>
+                        <h2 class="text-xl font-bold text-white heading-font tracking-tight">Job Dossier Calibration</h2>
+                    </div>
+                    <p class="text-xs text-slate-200">Defining the AI's evaluation criteria for this role</p>
+                </div>
+                <button id="closeJobAnalysis" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all group">
+                    <i class="fas fa-times group-hover:rotate-90 transition-transform"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content Area -->
+            <div class="flex-1 overflow-hidden relative flex flex-col min-h-0">
+                <div id="jobAnalysisContent" class="flex-1 flex flex-col min-h-0">
+                    
+                    <!-- Loading/Status Stage -->
+                    <div id="jobAnalysisStatus" class="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                        <div class="relative mb-8">
+                            <div class="neural-loader scale-125">
+                                <div class="neural-ring"></div>
+                                <div class="neural-ring"></div>
+                                <div class="neural-ring"></div>
+                                <div class="neural-core"></div>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2 animate-pulse">Analyzing Job Context...</h3>
+                        <p class="text-slate-400 text-sm max-w-sm leading-relaxed">
+                            Hirly Pilot is reading your job description, extracting requirements, 
+                            and building a structured evaluation framework.
+                        </p>
+                    </div>
+
+                    <!-- Dossier View Stage (Hidden initially) -->
+                    <div id="jobDossier" class="hidden flex-1 flex flex-col min-h-0">
+                        <div class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-8">
+                            
+                            <!-- Step Indicators -->
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="h-1 flex-1 bg-blue-600 rounded-full"></div>
+                                <div class="h-1 flex-1 bg-slate-800 rounded-full"></div>
+                                <div class="h-1 flex-1 bg-slate-800 rounded-full"></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <!-- Role Summary Card -->
+                                <div class="dossier-card lg:col-span-2">
+                                    <div class="flex items-center gap-3 mb-4 text-blue-400">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center"><i class="fas fa-briefcase text-sm"></i></div>
+                                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-200">AI Executive Summary</h4>
+                                    </div>
+                                    <div id="jdRole" class="text-sm text-slate-200 leading-relaxed font-medium"></div>
+                                </div>
+
+                                <!-- Transferability -->
+                                <div class="dossier-card">
+                                    <div class="flex items-center gap-3 mb-4 text-purple-400">
+                                        <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center"><i class="fas fa-arrows-rotate text-sm"></i></div>
+                                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-200">Transferability</h4>
+                                    </div>
+                                    <div id="jdTransfer" class="text-sm text-slate-200 leading-relaxed"></div>
+                                </div>
+
+                                <!-- Must Haves -->
+                                <div class="dossier-card border-l-2 border-emerald-500/30">
+                                    <div class="flex items-center gap-3 mb-4 text-emerald-400">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center"><i class="fas fa-check-circle text-sm"></i></div>
+                                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-200">Non-Negotiables</h4>
+                                    </div>
+                                    <ul id="jdMust" class="text-sm text-slate-200 space-y-2 list-none"></ul>
+                                </div>
+
+                                <!-- Nice to Haves -->
+                                <div class="dossier-card border-l-2 border-amber-500/30">
+                                    <div class="flex items-center gap-3 mb-4 text-amber-400">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center"><i class="fas fa-star text-sm"></i></div>
+                                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-200">Bonus Skills</h4>
+                                    </div>
+                                    <ul id="jdNice" class="text-sm text-slate-200 space-y-2 list-none"></ul>
+                                </div>
+                            </div>
+
+                            <!-- Adjustment Section -->
+                            <div class="mt-8 pt-8 border-t border-white/5">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Fine-tune with AI</h4>
+                                    <span class="text-[10px] text-slate-500 font-mono">REVISIONS REMAINING: <span id="jdRevCount" class="text-blue-400 font-bold">3</span></span>
+                                </div>
+                                <div class="relative">
+                                    <textarea id="jdEditText" 
+                                        class="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-white h-28 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all placeholder:text-slate-600" 
+                                        placeholder="E.g., 'Make sure to prioritize experience with React over Angular' or 'Add a requirement for fluent German'..."></textarea>
+                                    <div class="absolute bottom-3 right-3 flex gap-2">
+                                        <button id="jdRegenerateBtn" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-400 transition flex items-center gap-2">
+                                            <i class="fas fa-redo-alt"></i> RESET
+                                        </button>
+                                        <button id="jdReviseBtn" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-[10px] font-bold text-white shadow-lg shadow-blue-600/20 transition flex items-center gap-2">
+                                            <i class="fas fa-wand-magic-sparkles"></i> APPLY CHANGES
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div id="jobAnalysisFooter" class="p-6 bg-slate-900/80 border-t border-white/10 flex justify-between items-center shrink-0 backdrop-blur-md">
+                <div class="flex items-center gap-3 text-slate-500">
+                    <i class="fas fa-shield-halved text-blue-500/40"></i>
+                    <span class="text-[10px] font-medium max-w-[200px]">This dossier calibrates the AI Pilot's decision making for all future candidates.</span>
+                </div>
+                <button id="jdConfirmBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-xl shadow-emerald-600/20 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center gap-2">
+                    <span>Confirm & Launch Pilot</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: RUN PILOT (Overhauled Guided Wizard) -->
+    <div id="wizardModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="w-full max-w-xl bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl transform transition-all scale-95 opacity-0 flex flex-col" id="wizardContent">
+            <!-- Header -->
+            <div class="p-6 border-b border-white/10 bg-slate-900/50 flex justify-between items-center shrink-0">
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span id="wizardStepBadge" class="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-bold uppercase tracking-wider border border-purple-500/20">Step 1 of 3</span>
+                        <h2 class="text-xl font-bold text-white heading-font tracking-tight">Launch AI Pilot</h2>
+                    </div>
+                    <p id="wizardStepDesc" class="text-xs text-slate-400">Define the scope of this analysis run</p>
+                </div>
+                <button onclick="closeWizard()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all group">
+                    <i class="fas fa-times group-hover:rotate-90 transition-transform"></i>
+                </button>
+            </div>
+
+            <!-- Body (Scrollable) -->
+            <div class="p-6 space-y-6 overflow-y-auto max-h-[60vh]" id="wizardStages">
+                
+                <!-- STAGE 0: CHOICE -->
+                <div id="wizardStage0" class="wizard-stage space-y-8">
+                    <div class="text-center mb-6">
+                        <p class="text-slate-400 text-sm">How would you like to proceed with the analysis?</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4">
+                        <button onclick="quickLaunchPilot()" class="flex items-center gap-5 p-5 rounded-2xl bg-blue-600/10 border border-blue-500/30 hover:bg-blue-600/20 transition-all group text-left">
+                            <div class="w-14 h-14 rounded-xl bg-blue-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-lg font-bold text-white mb-1">Quick Launch</div>
+                                <div class="text-xs text-slate-400">Analyze new candidates immediately using balanced settings.</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-blue-500/50"></i>
+                        </button>
+
+                        <button onclick="nextWizardStep()" class="flex items-center gap-5 p-5 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-purple-500/30 hover:bg-white/[0.05] transition-all group text-left">
+                            <div class="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 text-2xl group-hover:scale-110 transition-transform">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-lg font-bold text-white mb-1">Calibrate Pilot</div>
+                                <div class="text-xs text-slate-400">Fine-tune strictness, focus areas, and custom AI instructions.</div>
+                            </div>
+                            <i class="fas fa-chevron-right text-purple-500/50"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STAGE 1: SCOPE -->
+                <div id="wizardStage1" class="wizard-stage hidden space-y-6">
+                    <div class="grid grid-cols-1 gap-3">
+                        <label class="relative flex items-center p-4 rounded-xl border border-white/10 bg-slate-800/30 hover:bg-slate-800/50 cursor-pointer transition group">
+                            <input type="radio" name="scope" value="all" checked class="hidden" onchange="toggleSpecificList('none')">
+                            <div class="radio-icon w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 mr-4 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-bold text-white">Full Stream</div>
+                                <div class="text-[10px] text-slate-500">Analyze every candidate in the pipeline</div>
+                            </div>
+                            <div class="radio-check w-5 h-5 rounded-full border-2 border-white/10 flex items-center justify-center">
+                                <div class="w-2 h-2 rounded-full bg-blue-500 opacity-0 transition-opacity"></div>
+                            </div>
+                        </label>
+
+                        <label class="relative flex items-center p-4 rounded-xl border border-white/10 bg-slate-800/30 hover:bg-slate-800/50 cursor-pointer transition group">
+                            <input type="radio" name="scope" value="not_analyzed" class="hidden" onchange="toggleSpecificList('not_analyzed')">
+                            <div class="radio-icon w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 mr-4 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-sparkles"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-bold text-white">New Candidates Only</div>
+                                <div class="text-[10px] text-slate-500">Only analyze those without a score yet</div>
+                            </div>
+                            <div class="radio-check w-5 h-5 rounded-full border-2 border-white/10 flex items-center justify-center">
+                                <div class="w-2 h-2 rounded-full bg-blue-500 opacity-0 transition-opacity"></div>
+                            </div>
+                        </label>
+
+                        <label class="relative flex items-center p-4 rounded-xl border border-white/10 bg-slate-800/30 hover:bg-slate-800/50 cursor-pointer transition group">
+                            <input type="radio" name="scope" value="specific" class="hidden" onchange="toggleSpecificList('specific')">
+                            <div class="radio-icon w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 mr-4 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-list-check"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-bold text-white">Specific Selection</div>
+                                <div class="text-[10px] text-slate-500">Pick exactly who you want to analyze</div>
+                            </div>
+                            <div class="radio-check w-5 h-5 rounded-full border-2 border-white/10 flex items-center justify-center">
+                                <div class="w-2 h-2 rounded-full bg-blue-500 opacity-0 transition-opacity"></div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Specific Candidates List -->
+                    <div id="specificCandidatesPanel" class="hidden animate-in fade-in slide-in-from-top-2">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Select Candidates</label>
+                            <button onclick="selectAllWizardCandidates()" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold">Select All</button>
+                        </div>
+                        <div id="wizardCandidateList" class="max-h-48 overflow-y-auto border border-white/10 rounded-xl p-3 bg-black/40 space-y-2 custom-scrollbar">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STAGE 2: INTELLIGENCE -->
+                <div id="wizardStage2" class="wizard-stage hidden space-y-8">
+                    <!-- Strictness -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Strictness Level</label>
+                            <span id="strictnessVal" class="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-bold border border-blue-500/20">5 - Balanced</span>
+                        </div>
+                        <input type="range" id="strictnessSlider" min="1" max="10" value="5" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500" oninput="updateStrictnessLabel(this.value)">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-2 font-medium">
+                            <span>LENIENT</span>
+                            <span>BALANCED</span>
+                            <span>RUTHLESS</span>
+                        </div>
+                        <p class="mt-4 text-[11px] text-slate-500 leading-relaxed italic">
+                            High strictness makes the AI more critical of gaps, while leniency emphasizes potential and transferable skills.
+                        </p>
+                    </div>
+
+                    <!-- Source & Evidence -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Data Source</label>
+                            <select id="pilotSource" class="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-blue-500/50 outline-none transition-colors">
+                                <option value="both" selected>CV + Profile</option>
+                                <option value="cv_only">CV Only</option>
+                                <option value="profile_only">Profile Only</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">CV Weight</label>
+                                <span id="cvWeightVal" class="text-[10px] font-mono text-blue-400">66%</span>
+                            </div>
+                            <input type="range" id="cvWeightSlider" min="0" max="100" value="66" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500" oninput="document.getElementById('cvWeightVal').innerText = this.value + '%'">
+                        </div>
+                    </div>
+
+                    <!-- Domain Tolerance -->
+                    <div class="p-4 rounded-xl bg-slate-800/30 border border-white/5">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Domain Tolerance</label>
+                            <span id="domainTolVal" class="text-[10px] font-mono text-slate-400">50%</span>
+                        </div>
+                        <input type="range" id="domainTolSlider" min="0" max="100" value="50" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-500" oninput="document.getElementById('domainTolVal').innerText = this.value + '%'">
+                        <p class="mt-2 text-[10px] text-slate-500">Determines how strict the AI is about exact industry experience vs. similar domains.</p>
+                    </div>
+                </div>
+
+                <!-- STAGE 3: FOCUS -->
+                <div id="wizardStage3" class="wizard-stage hidden space-y-6">
+                    <!-- Focus Areas -->
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 block">Primary Focus Areas</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" class="focus-chip p-3 rounded-xl border border-white/10 bg-slate-800/30 text-xs text-slate-300 hover:border-blue-500/50 transition flex items-center gap-2" onclick="toggleChip(this, 'Technical Depth')">
+                                <i class="fas fa-microchip text-[10px] opacity-50"></i> Technical Depth
+                            </button>
+                            <button type="button" class="focus-chip p-3 rounded-xl border border-white/10 bg-slate-800/30 text-xs text-slate-300 hover:border-blue-500/50 transition flex items-center gap-2" onclick="toggleChip(this, 'Cultural Fit')">
+                                <i class="fas fa-heart text-[10px] opacity-50"></i> Cultural Fit
+                            </button>
+                            <button type="button" class="focus-chip p-3 rounded-xl border border-white/10 bg-slate-800/30 text-xs text-slate-300 hover:border-blue-500/50 transition flex items-center gap-2" onclick="toggleChip(this, 'Leadership')">
+                                <i class="fas fa-crown text-[10px] opacity-50"></i> Leadership
+                            </button>
+                            <button type="button" class="focus-chip p-3 rounded-xl border border-white/10 bg-slate-800/30 text-xs text-slate-300 hover:border-blue-500/50 transition flex items-center gap-2" onclick="toggleChip(this, 'Stability')">
+                                <i class="fas fa-anchor text-[10px] opacity-50"></i> Stability
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Instructions -->
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 block">Custom Directives</label>
+                        <textarea id="customPrompt" class="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-blue-500/50 outline-none h-32 resize-none transition-all placeholder:text-slate-600" placeholder="E.g. Be extremely strict about the 5 years of React experience. Look for evidence of large-scale architecture..."></textarea>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 cursor-pointer hover:bg-blue-500/10 transition group">
+                            <input id="transferabilityChk" type="checkbox" class="w-4 h-4 rounded border-white/10 bg-slate-800 text-blue-500 focus:ring-blue-500/50" checked>
+                            <div class="flex-1">
+                                <div class="text-xs font-bold text-white">Emphasize Transferability</div>
+                                <div class="text-[10px] text-slate-500">Allow AI to bridge skill gaps with related experience</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 bg-slate-900 border-t border-white/10 flex justify-between items-center shrink-0 rounded-b-2xl">
+                <button id="wizardBackBtn" onclick="prevWizardStep()" class="text-slate-500 hover:text-white text-sm font-bold px-4 transition-colors opacity-0 pointer-events-none">
+                    <i class="fas fa-arrow-left mr-2"></i> Back
+                </button>
+                <div class="flex gap-3">
+                    <button id="wizardNextBtn" onclick="nextWizardStep()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2">
+                        <span>Continue</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button id="wizardRunBtn" onclick="runAnalysis()" class="hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-blue-600/20 transition-all flex items-center gap-2">
+                        <i class="fas fa-rocket"></i> Launch Pilot
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROCESSING OVERLAY (New Animation) -->
+    <div id="processingOverlay" class="fixed inset-0 z-[60] bg-black/90 backdrop-blur-xl hidden flex flex-col items-center justify-center p-4">
+        <div class="neural-loader mb-8">
+            <div class="neural-ring"></div>
+            <div class="neural-ring"></div>
+            <div class="neural-ring"></div>
+            <div class="neural-core"></div>
+        </div>
+        
+        <h2 class="text-2xl font-bold text-white heading-font mb-2">Pilot Is Thinking...</h2>
+        <div class="text-sm text-blue-400 font-mono mb-6 transition-opacity duration-300" id="processingStatusText">Initializing Neural Engine...</div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full max-w-md h-1.5 bg-slate-800 rounded-full overflow-hidden border border-white/5">
+            <div id="processingBar" class="h-full bg-gradient-to-r from-blue-500 to-purple-500 w-0 transition-all duration-300 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+        </div>
+        <div class="mt-2 text-xs text-slate-500 text-right w-full max-w-md" id="processingPercent">0%</div>
+        
+        <!-- Animated Logs -->
+        <div class="mt-8 h-24 overflow-hidden text-center relative w-full max-w-xs px-4">
+            <div class="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-10 pointer-events-none"></div>
+            <div id="processingLogs" class="text-[10px] text-slate-500 font-mono space-y-2 py-4">
+                <div class="flex items-center gap-2 justify-center opacity-40"><span class="w-1 h-1 rounded-full bg-blue-500"></span> System handshake verified</div>
+                <div class="flex items-center gap-2 justify-center opacity-60"><span class="w-1 h-1 rounded-full bg-purple-500"></span> Neural pathways connected</div>
+                <div class="flex items-center gap-2 justify-center"><span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> Pilot is actively analyzing...</div>
+            </div>
+        </div>
+
+        <button onclick="stopAnalysis()" class="mt-12 text-slate-500 hover:text-white text-xs font-medium border border-white/10 px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:pointer-events-none">
+            <i class="fas fa-times mr-2"></i> Stop & Cancel
+        </button>
+    </div>
+
+    <!-- MODAL 2: DEEP REPORT (Tabbed) -->
+    <div id="reportModal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+        <div class="w-full max-w-4xl h-[90vh] bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <!-- Header -->
+            <div class="p-6 border-b border-white/10 bg-slate-900 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center text-blue-400 text-xl font-bold">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white heading-font">Candidate Dossier</h2>
+                        <div class="text-xs text-slate-500 font-mono" id="reportHeaderName">LOADING...</div>
+                    </div>
+                </div>
+                <button onclick="closeReport()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-white/10 bg-slate-900/50 px-6 gap-6 shrink-0">
+                <button onclick="switchTab('tab-overview')" class="tab-btn active py-3 text-sm font-medium text-slate-400 hover:text-white transition">Overview</button>
+                <button onclick="switchTab('tab-skills')" class="tab-btn py-3 text-sm font-medium text-slate-400 hover:text-white transition">Skills Matrix</button>
+                <button onclick="switchTab('tab-risks')" class="tab-btn py-3 text-sm font-medium text-slate-400 hover:text-white transition">Risk Analysis</button>
+                <button onclick="switchTab('tab-interview')" class="tab-btn py-3 text-sm font-medium text-slate-400 hover:text-white transition">Interview Guide</button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-8 bg-[#0B1120] relative" id="reportContentArea">
+                
+                <!-- Tab: Overview -->
+                <div id="tab-overview" class="tab-content space-y-6">
+                    <div class="p-6 rounded-xl bg-slate-800/50 border border-white/5">
+                        <h3 class="text-blue-400 text-xs font-bold uppercase tracking-widest mb-3">AI Executive Summary</h3>
+                        <p id="repOverviewText" class="text-slate-300 leading-relaxed">Loading...</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="p-5 rounded-xl bg-emerald-900/10 border border-emerald-500/20">
+                            <h3 class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-3">Key Strengths</h3>
+                            <ul id="repPros" class="space-y-2 text-sm text-slate-300 list-disc list-inside"></ul>
+                        </div>
+                        <div class="p-5 rounded-xl bg-rose-900/10 border border-rose-500/20">
+                            <h3 class="text-rose-400 text-xs font-bold uppercase tracking-widest mb-3">Weaknesses</h3>
+                            <ul id="repCons" class="space-y-2 text-sm text-slate-300 list-disc list-inside"></ul>
+                        </div>
+                    </div>
+                    <!-- REMOVED CULTURAL ASSESSMENT HERE AS REQUESTED -->
+                </div>
+
+                <!-- Tab: Skills -->
+                <div id="tab-skills" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-slate-400 text-xs font-bold uppercase mb-3">Matched Requirements</h3>
+                            <div id="repMatchedSkills" class="space-y-2"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-slate-400 text-xs font-bold uppercase mb-3">Missing Critical Skills</h3>
+                            <div id="repMissingSkills" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Risks -->
+                <div id="tab-risks" class="tab-content hidden">
+                    <div class="p-6 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-4">
+                        <i class="fas fa-shield-virus text-rose-400 text-2xl mt-1"></i>
+                        <div>
+                            <h3 class="text-rose-400 font-bold text-lg mb-2">Detected Risk Factors</h3>
+                            <ul id="repRisksList" class="space-y-3 text-slate-300">
+                                <li>Analysis of employment gaps...</li>
+                                <li>Analysis of tenure...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Interview -->
+                <div id="tab-interview" class="tab-content hidden space-y-6">
+                    <div class="bg-blue-600/10 border border-blue-500/30 p-6 rounded-xl">
+                        <h3 class="text-blue-400 font-bold mb-2">AI Generated Question Bank</h3>
+                        <p class="text-xs text-slate-400 mb-6">These questions are generated based on the specific gaps found in the candidate's CV.</p>
+                        <div id="repQuestions" class="space-y-4"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 bg-slate-900 border-t border-white/10 flex justify-end gap-3 shrink-0">
+                <button onclick="downloadPDF()" class="glass-btn px-4 py-2 rounded-lg text-sm text-white flex items-center gap-2">
+                    <i class="fas fa-file-pdf"></i> Export Full Dossier (PDF)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: INTERVIEW CONFIG (Restored & Modernized) -->
+    <div id="interviewConfigModal" class="fixed inset-0 z-[70] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel max-w-lg w-full rounded-2xl overflow-hidden transform transition-all scale-95 opacity-0 flex flex-col max-h-[90vh]" id="intConfigContent">
+            <div class="bg-slate-900 p-6 border-b border-white/10 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold text-white heading-font"><i class="fas fa-sliders-h mr-2 text-blue-400"></i> Interview Configuration</h3>
+                <button onclick="closeInterviewConfig()" class="text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-6 overflow-y-auto">
+                <!-- Focus Tracks -->
+                <div>
+                    <label class="block text-xs text-slate-500 uppercase font-bold mb-3 flex items-center justify-between">
+                        <span>Select Focus Tracks</span>
+                        <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">AI Guidance</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer group relative">
+                            <input type="checkbox" class="track-checkbox hidden" value="Technical Assessment">
+                            <div class="p-3 rounded-xl border border-white/10 bg-slate-800 hover:border-blue-500/50 transition flex items-center gap-3 h-full">
+                                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400"><i class="fas fa-code"></i></div>
+                                <span class="text-sm font-bold text-slate-300 group-hover:text-white">Technical</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group relative">
+                            <input type="checkbox" class="track-checkbox hidden" value="Cultural Fit">
+                            <div class="p-3 rounded-xl border border-white/10 bg-slate-800 hover:border-blue-500/50 transition flex items-center gap-3 h-full">
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400"><i class="fas fa-users"></i></div>
+                                <span class="text-sm font-bold text-slate-300 group-hover:text-white">Culture Fit</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group relative">
+                            <input type="checkbox" class="track-checkbox hidden" value="Problem Solving">
+                            <div class="p-3 rounded-xl border border-white/10 bg-slate-800 hover:border-blue-500/50 transition flex items-center gap-3 h-full">
+                                <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400"><i class="fas fa-lightbulb"></i></div>
+                                <span class="text-sm font-bold text-slate-300 group-hover:text-white">Logic</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer group relative">
+                            <input type="checkbox" class="track-checkbox hidden" value="Leadership Potential">
+                            <div class="p-3 rounded-xl border border-white/10 bg-slate-800 hover:border-blue-500/50 transition flex items-center gap-3 h-full">
+                                <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400"><i class="fas fa-chess-king"></i></div>
+                                <span class="text-sm font-bold text-slate-300 group-hover:text-white">Leadership</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Custom Context -->
+                <div>
+                    <label class="block text-xs text-slate-500 uppercase font-bold mb-2">Specific Instructions</label>
+                    <textarea id="intCustomContext" class="w-full bg-slate-900 border border-white/10 rounded-xl p-3 text-sm text-white h-20 focus:border-blue-500 focus:outline-none placeholder-slate-600" placeholder="E.g., Ask about their gap year in 2023..."></textarea>
+                </div>
+
+                <!-- Settings -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-500 uppercase font-bold mb-2">Language</label>
+                        <select id="intLanguage" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none">
+                            <option value="en">English</option>
+                            <option value="ar">Arabic (العربية)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 uppercase font-bold mb-2">Deadline</label>
+                        <input type="date" id="intDeadlineDate" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-sm text-white focus:border-blue-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-900 border-t border-white/10 flex justify-end gap-3 shrink-0">
+                <button onclick="closeInterviewConfig()" class="text-slate-400 hover:text-white font-medium px-4 transition">Cancel</button>
+                <button onclick="sendInterviewInvite()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/20 flex items-center gap-2 transition transform active:scale-95">
+                    <i class="fas fa-paper-plane"></i> <span id="sendBtnText">Send Invite</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Container -->
+    <div id="fullReportPrint" class="hidden font-sans bg-white text-slate-900 p-8 absolute left-[-9999px] top-0 w-[800px]">
+        <!-- Structure will be generated dynamically by JS -->
+    </div>
+
+    <!-- JS LOGIC -->
+    <script>
+        function showToast(msg, type='info') {
+            const c = document.getElementById('toastContainer');
+            if(!c) return;
+            const t = document.createElement('div');
+            let borderClass = 'border-blue-500';
+            let bgClass = 'bg-slate-800';
+            let icon = '<i class="fas fa-info-circle text-blue-400"></i>';
+
+            if(type === 'success') {
+                borderClass = 'border-emerald-500';
+                icon = '<i class="fas fa-check-circle text-emerald-400"></i>';
+            }
+            if(type === 'error') {
+                borderClass = 'border-rose-500';
+                icon = '<i class="fas fa-exclamation-circle text-rose-400"></i>';
+            }
+            
+            t.className = `p-4 rounded-xl shadow-2xl flex items-center gap-3 border-l-4 ${borderClass} ${bgClass} text-slate-200 transform translate-x-full transition-all duration-300 pointer-events-auto w-80`;
+            t.innerHTML = `
+                ${icon}
+                <div class="text-sm font-medium flex-1">${msg}</div>
+            `;
+            c.appendChild(t);
+            
+            // Animate in
+            requestAnimationFrame(() => {
+                t.classList.remove('translate-x-full');
+            });
+
+            setTimeout(() => { 
+                t.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(()=>t.remove(), 300); 
+            }, 4000);
+        }
+
+        // --- STATE MANAGEMENT ---
+        let currentJobId = new URLSearchParams(window.location.search).get('jobId');
+        let candidates = [];
+        let selectedCandidateId = null;
+        let radarChart = null;
+        let currentFilter = 'all';
+        let currentVerdictFilter = '';
+        let analysisIsRunning = false;
+        let currentRunId = null;
+
+        function stopAnalysis() {
+            if (!currentRunId) {
+                location.reload();
+                return;
+            }
+            
+            const stopBtn = document.querySelector('#processingOverlay button');
+            if (stopBtn) {
+                stopBtn.disabled = true;
+                stopBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Stopping...';
+            }
+
+            fetch(`/api/ai/stop-analysis/${currentJobId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ runId: currentRunId })
+            }).then(res => res.json())
+              .then(d => {
+                  if (d.success) {
+                      addProcessingLog("Stop signal sent. Completing current candidates...", "warning");
+                  }
+              }).catch(err => {
+                  console.error("Stop error:", err);
+                  location.reload();
+              });
+        }
+        let seenCandidateIds = new Set();
+
+        function updateSidebarCount() {
+            const badge = document.getElementById('totalCountBadge');
+            const progress = document.getElementById('analysisProgress');
+            if (badge) badge.innerText = candidates.length;
+            
+            if (progress) {
+                const analyzedCount = candidates.filter(c => c.match_score > 0).length;
+                progress.innerText = `${analyzedCount}/${candidates.length} analyzed`;
+            }
+        }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            if(!currentJobId) return showToast("Missing Job ID", "error");
+            
+            await fetchData();
+            updateWorkflowIndicators();
+            updateWorkflowButtons();
+            
+            const params = new URLSearchParams(window.location.search);
+            const forceGuide = params.get('guide') === '1';
+            const welcomeSeen = localStorage.getItem('aiWelcomeSeen');
+            const dossierConfirmed = localStorage.getItem('jobDossierConfirmed');
+            
+            // Auto-trigger flow
+            if(forceGuide || !welcomeSeen) {
+                document.getElementById('welcomeOverlay').classList.remove('hidden');
+            } else if (!dossierConfirmed) {
+                // Welcome seen but dossier not confirmed -> Jump straight to dossier modal
+                openGuidedStart();
+            }
+            
+            document.getElementById('welcomeStartBtn').onclick = () => startGuidedJourney();
+            document.getElementById('closeJobAnalysis').onclick = () => document.getElementById('jobAnalysisModal').classList.add('hidden');
+            document.getElementById('jdReviseBtn').onclick = () => reviseJobDossier();
+            document.getElementById('jdConfirmBtn').onclick = () => confirmJobDossier();
+            document.getElementById('jdRegenerateBtn').onclick = () => regenerateJobDossier();
+        });
+
+        function updateWorkflowButtons() {
+            // Function logic removed as per request to hide workflow/dossier indicators
+        }
+
+        function openGuidedStart() {
+            document.getElementById('welcomeOverlay').classList.add('hidden');
+            openJobAnalysis();
+        }
+
+        let currentWizardStep = 0;
+        let activeChips = [];
+
+        function openAnalysisWizard() {
+            const confirmed = localStorage.getItem('jobDossierConfirmed');
+            if (!confirmed) {
+                showToast("Please complete your Job Dossier first.", "info");
+                openJobAnalysis();
+                return;
+            }
+
+            const modal = document.getElementById('wizardModal');
+            const content = document.getElementById('wizardContent');
+            
+            currentWizardStep = 0; // Choice stage
+            updateWizardUI();
+            
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            });
+        }
+
+        function updateWizardUI() {
+            const stages = document.querySelectorAll('.wizard-stage');
+            stages.forEach((s, idx) => {
+                if (idx === currentWizardStep) s.classList.remove('hidden');
+                else s.classList.add('hidden');
+            });
+
+            const badge = document.getElementById('wizardStepBadge');
+            const desc = document.getElementById('wizardStepDesc');
+            const prevBtn = document.getElementById('wizardBackBtn');
+            const nextBtn = document.getElementById('wizardNextBtn');
+            const runBtn = document.getElementById('wizardRunBtn');
+
+            if (currentWizardStep === 0) {
+                badge.innerText = "Getting Started";
+                desc.innerText = "Choose how you want to proceed";
+                prevBtn.classList.add('opacity-0', 'pointer-events-none');
+                nextBtn.classList.add('hidden');
+                if (runBtn) runBtn.classList.add('hidden');
+            } else if (currentWizardStep === 1) {
+                badge.innerText = "Step 1 of 3";
+                desc.innerText = "Define the scope of this analysis run";
+                prevBtn.classList.remove('opacity-0', 'pointer-events-none');
+                nextBtn.classList.remove('hidden');
+                nextBtn.innerHTML = 'Continue <i class="fas fa-arrow-right ml-2"></i>';
+                if (runBtn) runBtn.classList.add('hidden');
+            } else if (currentWizardStep === 2) {
+                badge.innerText = "Step 2 of 3";
+                desc.innerText = "Configure AI Intelligence & Strictness";
+                prevBtn.classList.remove('opacity-0', 'pointer-events-none');
+                nextBtn.classList.remove('hidden');
+                nextBtn.innerHTML = 'Continue <i class="fas fa-arrow-right ml-2"></i>';
+                if (runBtn) runBtn.classList.add('hidden');
+            } else if (currentWizardStep === 3) {
+                badge.innerText = "Step 3 of 3";
+                desc.innerText = "Final Review & Launch";
+                prevBtn.classList.remove('opacity-0', 'pointer-events-none');
+                nextBtn.classList.add('hidden');
+                if (runBtn) runBtn.classList.remove('hidden');
+            }
+        }
+
+        function nextWizardStep() {
+            if (currentWizardStep < 3) {
+                currentWizardStep++;
+                updateWizardUI();
+            } else {
+                runAnalysis();
+            }
+        }
+
+        function prevWizardStep() {
+            if (currentWizardStep > 0) {
+                currentWizardStep--;
+                updateWizardUI();
+            }
+        }
+
+        // --- RESPONSIVE LOGIC ---
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const candidateSidebar = document.getElementById('candidateSidebar');
+        const mainStage = document.getElementById('mainStage');
+        const mobileBackToList = document.getElementById('mobileBackToList');
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', () => {
+                candidateSidebar.classList.toggle('open');
+                document.body.classList.toggle('sidebar-open');
+            });
+        }
+
+        if (mobileBackToList) {
+            mobileBackToList.addEventListener('click', () => {
+                mainStage.classList.remove('active');
+                document.body.classList.remove('main-stage-active');
+            });
+        }
+
+        function showCandidateDetailMobile() {
+            if (window.innerWidth <= 768) {
+                mainStage.classList.add('active');
+                document.body.classList.add('main-stage-active');
+                candidateSidebar.classList.remove('open');
+            }
+        }
+
+        // --- DATA FETCHING ---
+        function updateWorkflowIndicators() {
+            // Function logic removed as per request to hide workflow/dossier indicators
+        }
+
+        async function fetchData() {
+            try {
+                // Fetch Job Context
+                const jobRes = await fetch(`/api/jobs/${currentJobId}`);
+                const job = await jobRes.json();
+                document.getElementById('jobTitleDisplay').textContent = job.title;
+
+                // Fetch AI Data
+                const res = await fetch(`/api/ai/overview/${currentJobId}`);
+                const data = await res.json();
+                
+                if(data.success) {
+                    // Identify truly new candidates for this session
+                    const incomingCandidates = data.candidates || [];
+                    incomingCandidates.forEach(c => {
+                        if (seenCandidateIds.size > 0 && !seenCandidateIds.has(c.id)) {
+                            c.isNewInSession = true;
+                        }
+                        seenCandidateIds.add(c.id);
+                    });
+
+                    candidates = incomingCandidates;
+                    updateSidebarCount();
+                    renderList();
+                    updateRetryButton();
+                    updateWorkflowIndicators();
+                    
+                    // Auto-select first useful candidate
+                    if(candidates.length > 0 && !selectedCandidateId) {
+                        selectCandidate(candidates[0].id);
+                    } else if(selectedCandidateId) {
+                        // Refresh current
+                        const current = candidates.find(x => x.id === selectedCandidateId);
+                        if (current) populateDetails(current);
+                    } else {
+                        showEmptyState();
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function showEmptyState() {
+            const container = document.getElementById('emptyState');
+            const content = document.getElementById('emptyStateContent');
+            const detail = document.getElementById('detailContent');
+            
+            detail.classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            const confirmed = localStorage.getItem('jobDossierConfirmed');
+            const analyzedCount = candidates.filter(c => c.match_score > 0).length;
+            
+            if (!confirmed) {
+                content.innerHTML = `
+                    <div class="w-20 h-20 rounded-2xl bg-blue-600/20 flex items-center justify-center text-blue-400 mb-6 mx-auto animate-bounce-subtle">
+                        <i class="fas fa-clipboard-check text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3">Step 1: Set Job Context</h2>
+                    <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                        To analyze candidates fairly, Hirly needs to understand your requirements. 
+                        Let's build your AI Job Dossier first.
+                    </p>
+                    <button onclick="openGuidedStart()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-blue-600/20 transition transform hover:-translate-y-1 active:scale-95">
+                        Start Guided Journey
+                    </button>
+                `;
+            } else if (candidates.length > 0 && analyzedCount === 0) {
+                content.innerHTML = `
+                    <div class="w-20 h-20 rounded-2xl bg-purple-600/20 flex items-center justify-center text-purple-400 mb-6 mx-auto">
+                        <i class="fas fa-microchip text-3xl animate-pulse"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3">Step 2: Run Initial Analysis</h2>
+                    <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                        Your Job Dossier is ready! Now, let's run the AI Pilot over your candidate stream 
+                        to identify the strongest matches.
+                    </p>
+                    <button onclick="openAnalysisWizard()" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-purple-600/20 transition transform hover:-translate-y-1 active:scale-95">
+                        Run First Analysis
+                    </button>
+                `;
+            } else if (candidates.length === 0) {
+                content.innerHTML = `
+                    <div class="w-20 h-20 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500 mb-6 mx-auto">
+                        <i class="fas fa-users-slash text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3">No Candidates Found</h2>
+                    <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                        There are currently no candidates in the stream for this job. 
+                        New applicants will appear here automatically.
+                    </p>
+                    <button onclick="fetchData(true)" class="glass-btn text-white px-6 py-3 rounded-xl text-sm font-bold border border-white/10">
+                        <i class="fas fa-sync-alt mr-2"></i> Check Again
+                    </button>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="w-20 h-20 rounded-full bg-slate-900 border border-white/5 flex items-center justify-center mb-6 mx-auto">
+                        <i class="fas fa-fingerprint text-3xl text-blue-500/20"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3">Select a Candidate</h2>
+                    <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                        Select a profile from the stream on the left to view their AI-generated 
+                        suitability analysis and competency radar.
+                    </p>
+                `;
+            }
+        }
+
+        let jdRevisionCount = 0;
+        let currentDossier = null;
+
+        function resetAnalysisStatus() {
+            const el = document.getElementById('jobAnalysisStatus');
+            el.classList.remove('hidden');
+            el.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-600/20 flex items-center justify-center text-blue-400">
+                        <i class="fas fa-robot fa-lg animate-pulse"></i>
+                    </div>
+                    <div>
+                        <div class="text-white font-bold">Analyzing your job...</div>
+                        <div class="text-xs text-slate-400">Parsing description, requirements, and building a structured dossier</div>
+                    </div>
+                </div>
+                <div id="jobAnalysisSpinner" class="mt-6 flex items-center justify-center">
+                    <div class="neural-loader">
+                        <div class="neural-ring"></div>
+                        <div class="neural-ring"></div>
+                        <div class="neural-ring"></div>
+                        <div class="neural-core"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showAnalysisError(msg) {
+            const status = document.getElementById('jobAnalysisStatus');
+            status.innerHTML = `
+                <div class="flex flex-col items-center gap-4 text-center p-4">
+                    <div class="w-12 h-12 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400">
+                        <i class="fas fa-exclamation-triangle fa-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-white font-bold text-lg">Analysis Failed</div>
+                        <div class="text-sm text-rose-300">${msg}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('jobAnalysisFooter').classList.remove('hidden');
+            document.getElementById('jdConfirmBtn').disabled = true;
+        }
+
+        async function startGuidedJourney() {
+            localStorage.setItem('aiWelcomeSeen', '1');
+            document.getElementById('welcomeOverlay').classList.add('hidden');
+            document.getElementById('jobAnalysisModal').classList.remove('hidden');
+            
+            const status = document.getElementById('jobAnalysisStatus');
+            const steps = [
+                "Initializing Hirly Pilot...",
+                "Scanning Job Description...",
+                "Extracting Core Competencies...",
+                "Synthesizing Ideal Candidate Persona...",
+                "Finalizing Job Dossier..."
+            ];
+
+            const runSteps = async () => {
+                for (const step of steps) {
+                    const h3 = status.querySelector('h3');
+                    if (h3) h3.innerText = step;
+                    await new Promise(r => setTimeout(r, 800));
+                }
+            };
+
+            resetAnalysisStatus();
+            document.getElementById('jobDossier').classList.add('hidden');
+            document.getElementById('jobAnalysisFooter').classList.add('hidden');
+
+            const stepPromise = runSteps();
+
+            try {
+                const res = await fetch(`/api/ai/job-dossier/${currentJobId}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({}) 
+                });
+                const data = await res.json();
+                
+                await stepPromise;
+
+                if(data.success) {
+                    currentDossier = data.dossier;
+                    renderDossier(currentDossier);
+                    updateRevCount();
+                } else {
+                    showAnalysisError(data.error || 'AI failed. Please try again later.');
+                }
+            } catch(e) {
+                showAnalysisError(e.message || 'Network error occurred.');
+            }
+        }
+
+        function renderDossier(d) {
+            document.getElementById('jobAnalysisStatus').classList.add('hidden');
+            document.getElementById('jobDossier').classList.remove('hidden');
+            document.getElementById('jobAnalysisFooter').classList.remove('hidden');
+            document.getElementById('jdConfirmBtn').disabled = false;
+
+            // RTL/LTR Logic
+            const isArabic = (text) => /[\u0600-\u06FF]/.test(text);
+            const container = document.getElementById('jobDossier');
+            
+            if (isArabic(d.role_summary || '') || isArabic(d.transferability || '')) {
+                container.style.direction = 'rtl';
+                container.classList.add('font-arabic');
+            } else {
+                container.style.direction = 'ltr';
+                container.classList.remove('font-arabic');
+            }
+
+            // --- 1. AI Executive Summary (Enhanced Paragraph) ---
+            const summaryEl = document.getElementById('jdRole');
+            if (summaryEl) {
+                summaryEl.innerHTML = `
+                    <div class="relative p-4 rounded-xl bg-blue-500/[0.03] border border-blue-500/10">
+                        <div class="absolute -left-1 top-4 w-1 h-8 bg-blue-500 rounded-full"></div>
+                        <p class="text-[15px] text-slate-200 leading-relaxed italic">
+                            "${d.role_summary || 'Analyzing role context...'}"
+                        </p>
+                    </div>
+                `;
+            }
+
+            // --- 2. Transferability (Checkmarks/Badges) ---
+            const transferEl = document.getElementById('jdTransfer');
+            if (transferEl) {
+                const transferText = d.transferability || '';
+                // If it looks like a list or has commas, split it, otherwise just show it nicely
+                const parts = transferText.split(/[,\n•]/).filter(p => p.trim().length > 2);
+                
+                if (parts.length > 1) {
+                    transferEl.innerHTML = `
+                        <div class="grid grid-cols-1 gap-2">
+                            ${parts.map(p => `
+                                <div class="flex items-center gap-3 p-2.5 rounded-lg bg-purple-500/[0.03] border border-purple-500/10 group hover:border-purple-500/30 transition-all">
+                                    <i class="fas fa-check-double text-purple-400 text-xs shrink-0"></i>
+                                    <span class="text-sm text-slate-200 font-medium">${p.trim()}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    transferEl.innerHTML = `
+                        <div class="p-3 rounded-lg bg-purple-500/[0.03] border border-purple-500/10 flex items-start gap-3">
+                            <i class="fas fa-lightbulb text-purple-400 mt-1 shrink-0"></i>
+                            <span class="text-sm text-slate-200 leading-relaxed">${transferText}</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            // --- 3. Helper for Premium Bullets (Must/Nice Haves) ---
+            const fillPremiumBullets = (id, items, colorClass, icon) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (!items || items.length === 0) {
+                    el.innerHTML = '<li class="text-slate-500 italic p-2">Not specified</li>';
+                    return;
+                }
+                el.innerHTML = items.map(item => `
+                    <li class="flex items-start gap-3 p-2.5 rounded-lg hover:bg-white/[0.02] transition-colors group">
+                        <div class="mt-1 w-5 h-5 rounded-md ${colorClass}/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fas ${icon} text-[10px] ${colorClass}"></i>
+                        </div>
+                        <span class="text-sm text-slate-200 leading-relaxed">${item}</span>
+                    </li>
+                `).join('');
+            };
+
+            fillPremiumBullets('jdMust', d.must_haves || [], 'text-emerald-400', 'fa-check');
+            fillPremiumBullets('jdNice', d.nice_to_haves || [], 'text-amber-400', 'fa-plus');
+        }
+
+        async function reviseJobDossier() {
+            if(jdRevisionCount >= 3) return;
+            
+            const noteEl = document.getElementById('jdEditText');
+            const note = noteEl.value || '';
+            if (!note.trim()) return;
+
+            // UI Prep
+            document.getElementById('jobDossier').classList.add('hidden');
+            document.getElementById('jobAnalysisFooter').classList.add('hidden');
+            resetAnalysisStatus();
+            
+            try {
+                const res = await fetch(`/api/ai/job-dossier/${currentJobId}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ revision_instructions: note }) 
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    jdRevisionCount += 1;
+                    currentDossier = data.dossier;
+                    renderDossier(currentDossier);
+                    updateRevCount();
+                    
+                    // Clear the input after success
+                    noteEl.value = '';
+                } else {
+                    showAnalysisError(data.error || 'Revision failed.');
+                }
+            } catch(e) {
+                showAnalysisError(e.message || 'Network error.');
+            }
+        }
+
+        function updateRevCount() {
+            const left = Math.max(0, 3 - jdRevisionCount);
+            const el = document.getElementById('jdRevCount');
+            if (el) el.innerText = String(left);
+            const btn = document.getElementById('jdReviseBtn');
+            if (btn) {
+                btn.disabled = left <= 0;
+                btn.innerText = left > 0 ? `Revise with AI (${left} left)` : 'Revise limit reached';
+            }
+        }
+
+        async function regenerateJobDossier() {
+            // UI Prep
+            document.getElementById('jobDossier').classList.add('hidden');
+            document.getElementById('jobAnalysisFooter').classList.add('hidden');
+            resetAnalysisStatus();
+
+            try {
+                const res = await fetch(`/api/ai/job-dossier/${currentJobId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regenerate: true }) });
+                const data = await res.json();
+                
+                if(data.success) {
+                    jdRevisionCount = 0;
+                    currentDossier = data.dossier;
+                    renderDossier(currentDossier);
+                    updateRevCount();
+                } else {
+                    showAnalysisError(data.error || 'Regeneration failed.');
+                }
+            } catch(e) {
+                showAnalysisError(e.message || 'Network error.');
+            }
+        }
+
+        
+
+        async function openJobAnalysis() {
+            document.getElementById('jobAnalysisModal').classList.remove('hidden');
+            
+            // If already confirmed, skip loading and show dossier
+            if (localStorage.getItem('jobDossierConfirmed') && currentDossier) {
+                document.getElementById('jobAnalysisStatus').classList.add('hidden');
+                document.getElementById('jobDossier').classList.remove('hidden');
+                document.getElementById('jobAnalysisFooter').classList.remove('hidden');
+                renderDossier(currentDossier);
+                return;
+            }
+            
+            document.getElementById('jobAnalysisStatus').classList.remove('hidden');
+            document.getElementById('jobAnalysisStatus').innerHTML = `
+                <div class="flex items-center justify-center p-6 h-full">
+                    <div class="neural-loader">
+                        <div class="neural-ring"></div>
+                        <div class="neural-ring"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('jobDossier').classList.add('hidden');
+            document.getElementById('jobAnalysisFooter').classList.add('hidden');
+
+            try {
+                // Fetch with dontGenerate: true so we don't trigger AI cost just by looking
+                const res = await fetch(`/api/ai/job-dossier/${currentJobId}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ dontGenerate: true }) 
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    currentDossier = data.dossier;
+                    renderDossier(currentDossier);
+                    // Hide spinner, show dossier
+                    document.getElementById('jobAnalysisStatus').classList.add('hidden');
+                } else {
+                    if(data.code === 'NO_DOSSIER') {
+                        // Show "Not Analyzed Yet" state
+                        document.getElementById('jobAnalysisStatus').innerHTML = `
+                            <div class="flex flex-col items-center gap-4 text-center p-8 h-full justify-center">
+                                <div class="w-16 h-16 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-500">
+                                    <i class="fas fa-search fa-2x"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white font-bold text-xl mb-1">No Analysis Found</div>
+                                    <div class="text-slate-400 text-sm max-w-sm mx-auto">This job hasn't been analyzed by Hirly Pilot yet. Start the guided journey to create your dossier.</div>
+                                </div>
+                                <button onclick="openGuidedStart(); document.getElementById('jobAnalysisModal').classList.add('hidden');" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-blue-600/20 transition transform hover:scale-105">
+                                    <i class="fas fa-route mr-2"></i> Start Guided Journey
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        showAnalysisError(data.error || 'Could not load dossier.');
+                    }
+                }
+            } catch(e) {
+                showAnalysisError('Network error occurred.');
+            }
+        }
+
+        function confirmJobDossier() {
+            localStorage.setItem('jobDossierConfirmed', '1');
+            document.getElementById('jobAnalysisModal').classList.add('hidden');
+            showEmptyState();
+            updateWorkflowIndicators();
+        }
+
+        // --- RENDERING SIDEBAR ---
+        function renderSkeletons() {
+            const listEl = document.getElementById('candidateList');
+            // If it's already full of real candidates, don't clear it, just append skeletons at the bottom
+            // If it's empty or has only the "Syncing" state, clear it first
+            if (candidates.length === 0) listEl.innerHTML = '';
+            
+            for(let i=0; i<3; i++) {
+                const el = document.createElement('div');
+                el.className = 'p-4 rounded-2xl border border-white/5 mb-2 relative overflow-hidden bg-white/[0.01]';
+                el.innerHTML = `
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-2xl skeleton shrink-0"></div>
+                        <div class="flex-1 space-y-3 py-1">
+                            <div class="h-3 w-2/3 skeleton rounded-full"></div>
+                            <div class="flex gap-2">
+                                <div class="h-2 w-16 skeleton rounded-full"></div>
+                                <div class="h-2 w-12 skeleton rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="w-8 h-4 skeleton rounded-lg shrink-0"></div>
+                    </div>
+                `;
+                listEl.appendChild(el);
+            }
+        }
+
+        function renderList() {
+            const listEl = document.getElementById('candidateList');
+            listEl.innerHTML = '';
+            
+            // Update Stats & Funnel
+            document.getElementById('totalCountBadge').innerText = candidates.length;
+            updatePipelineFunnel();
+            
+            const filtered = candidates.filter(c => {
+                // Primary Filter
+                if(currentFilter === 'strong' && c.match_score < 80) return false;
+                if(currentFilter === 'interview') {
+                    const verdict = (c.verdict || '').toLowerCase();
+                    if (!verdict.includes('interview') && !verdict.includes('strong') && !verdict.includes('hire')) return false;
+                }
+                if(currentFilter === 'not_analyzed') {
+                    const verdict = (c.verdict || '').toLowerCase();
+                    const isPending = !verdict || verdict === 'pending';
+                    const isUnscored = c.match_score === 0 && !verdict.includes('error') && !verdict.includes('failed');
+                    return isPending || isUnscored;
+                }
+                
+                // Verdict Dropdown Filter
+                if(currentVerdictFilter) {
+                    const verdict = (c.verdict || '').toLowerCase();
+                    const filter = currentVerdictFilter.toLowerCase();
+                    
+                    if (filter === 'error') {
+                        if (!verdict.includes('error') && !verdict.includes('failed')) return false;
+                    } else if (filter === 'backup') {
+                        if (!verdict.includes('backup') && !verdict.includes('potential')) return false;
+                    } else {
+                        if (!verdict.includes(filter)) return false;
+                    }
+                }
+                
+                return true;
+            });
+
+            if(filtered.length === 0 && !analysisIsRunning) {
+                listEl.innerHTML = `
+                    <div class="p-8 text-center">
+                        <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-600 mx-auto mb-3">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <div class="text-slate-500 text-xs font-medium">No candidates match filters.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach((c, index) => {
+                const isActive = selectedCandidateId === c.id;
+                const scoreColor = getScoreColor(c.match_score);
+                const verdictClass = getVerdictBadgeClass(c.verdict);
+                
+                const el = document.createElement('div');
+                el.className = `candidate-card group p-4 rounded-2xl cursor-pointer hover:bg-white/[0.03] transition-all duration-300 border border-transparent mb-2 relative overflow-hidden ${isActive ? 'active bg-blue-500/5 border-blue-500/20 shadow-lg shadow-blue-500/5' : ''} ${c.isNewInSession ? 'new-candidate-glow' : ''}`;
+                el.style.animation = `fadeInRight 0.4s ease forwards ${index * 0.05}s`;
+                el.style.opacity = '0';
+                
+                el.onclick = () => selectCandidate(c.id);
+                el.innerHTML = `
+                    <div class="flex justify-between items-start relative z-10">
+                        <div class="flex gap-4">
+                            <div class="relative">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-400 border border-white/10 overflow-hidden shadow-inner group-hover:border-blue-500/30 transition-colors">
+                                    ${c.avatar_url ? `<img src="${c.avatar_url}" class="w-full h-full object-cover">` : getInitials(c.first_name, c.last_name)}
+                                </div>
+                                ${isActive ? '<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-slate-900 flex items-center justify-center"><i class="fas fa-check text-[8px] text-white"></i></div>' : ''}
+                                ${c.isNewInSession ? '<div class="absolute -top-1 -left-1 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-slate-900 animate-ping"></div>' : ''}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-bold text-slate-200 truncate group-hover:text-blue-400 transition-colors">${c.first_name} ${c.last_name}</div>
+                                <div class="flex items-center gap-2 mt-1.5">
+                                    <span class="px-2 py-0.5 rounded-lg text-[9px] uppercase font-bold tracking-wider border ${verdictClass}">${c.verdict || 'Pending'}</span>
+                                    <span class="text-[10px] text-slate-500 font-medium"><i class="far fa-clock mr-1"></i>${new Date(c.applied_at || Date.now()).toLocaleDateString([], {month:'short', day:'numeric'})}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-xs font-black ${scoreColor} bg-${scoreColor.split('-')[1]}-500/10 px-2 py-1 rounded-lg border border-${scoreColor.split('-')[1]}-500/20">${c.match_score}%</div>
+                        </div>
+                    </div>
+                    ${isActive ? '<div class="absolute inset-y-0 left-0 w-1 bg-blue-500 rounded-r-full"></div>' : ''}
+                `;
+                listEl.appendChild(el);
+            });
+
+            if (analysisIsRunning) {
+                renderSkeletons();
+            }
+        }
+
+        // --- SELECT CANDIDATE ---
+        function selectCandidate(id) {
+            if (selectedCandidateId === id) {
+                showCandidateDetailMobile();
+                return;
+            }
+            selectedCandidateId = id;
+            const c = candidates.find(x => x.id === id);
+            if(!c) return;
+
+            showCandidateDetailMobile();
+
+            // UI Updates
+            const detailContent = document.getElementById('detailContent');
+            const emptyState = document.getElementById('emptyState');
+            
+            emptyState.classList.add('hidden');
+            
+            // Trigger entry animation with a slight fade-out first for smoothness
+            detailContent.classList.add('opacity-0');
+            
+            setTimeout(() => {
+                // Trigger entry animation
+                detailContent.classList.remove('animate-on-select', 'hidden', 'opacity-0');
+                void detailContent.offsetWidth; // Force reflow
+                detailContent.classList.add('animate-on-select');
+                
+                // Scroll details back to top
+                const scrollEl = detailContent.querySelector('.overflow-y-auto');
+                if(scrollEl) scrollEl.scrollTop = 0;
+                
+                renderList(); // Refresh active state
+                populateDetails(c);
+            }, 50);
+        }
+
+        function populateDetails(c) {
+            if (!c) return;
+
+            // Helper to safe-set text
+            const safeSetText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            };
+
+            // Populate Hero
+            safeSetText('detailName', `${c.first_name} ${c.last_name}`);
+            safeSetText('detailRole', c.profession || 'N/A');
+            safeSetText('detailLoc', c.location || 'Remote');
+            
+            // Headline logic
+            const headline = c.headline && c.headline.length > 5 ? c.headline : (c.summary ? c.summary.substring(0, 60) + "..." : "Pending Analysis...");
+            safeSetText('detailHeadline', headline);
+
+            // Score Animation - Reset first
+            const scoreEl = document.getElementById('detailScore');
+            const scoreCircle = document.getElementById('scoreCircle');
+            
+            if (scoreEl && scoreCircle) {
+                scoreEl.innerText = '0%';
+                scoreCircle.style.strokeDashoffset = '251.2';
+                
+                // Colorize Score
+                const color = c.match_score >= 80 ? '#10b981' : (c.match_score >= 50 ? '#f59e0b' : '#ef4444');
+                
+                // Animate Score Number
+                let currentScore = 0;
+                const duration = 1000;
+                const startTime = performance.now();
+                
+                function animateScore(now) {
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeProgress = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+                    
+                    currentScore = Math.floor(easeProgress * (c.match_score || 0));
+                    if (scoreEl) {
+                        scoreEl.innerText = currentScore + '%';
+                        scoreEl.style.color = color;
+                    }
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateScore);
+                    }
+                }
+                requestAnimationFrame(animateScore);
+                
+                scoreCircle.style.stroke = color;
+                const offset = 251.2 - (251.2 * (c.match_score || 0)) / 100;
+                setTimeout(() => {
+                    if (scoreCircle) scoreCircle.style.strokeDashoffset = offset;
+                }, 100);
+            }
+
+            // Verdict Badge
+            const vBadge = document.getElementById('detailVerdictBadge');
+            if (vBadge) {
+                vBadge.innerText = c.verdict || 'Pending';
+                vBadge.className = `absolute -bottom-3 -right-3 px-3 py-1 rounded-lg border text-[10px] font-bold uppercase shadow-lg whitespace-nowrap transition-all duration-500 ${getVerdictClass(c.verdict)}`;
+            }
+
+            // Avatar
+            const avatarImg = document.getElementById('detailAvatar');
+            const initials = document.getElementById('detailInitials');
+            if (avatarImg && initials) {
+                if(c.avatar_url) {
+                    avatarImg.src = c.avatar_url;
+                    avatarImg.classList.remove('hidden');
+                    initials.classList.add('hidden');
+                } else {
+                    avatarImg.classList.add('hidden');
+                    initials.classList.remove('hidden');
+                    initials.innerText = getInitials(c.first_name, c.last_name);
+                }
+            }
+
+            // Summary
+            const summaryEl = document.getElementById('detailSummary');
+            const summaryTitle = document.getElementById('summaryTitle');
+            const radarPanel = document.getElementById('radarPanel');
+            const aiResultsCol2 = document.getElementById('aiResultsCol2');
+            const analysisGrid = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2');
+
+            if (summaryEl) {
+                if (c.match_score > 0 || c.summary) {
+                    // SHOW EVERYTHING
+                    if (summaryTitle) summaryTitle.classList.remove('hidden');
+                    if (radarPanel) radarPanel.classList.remove('hidden');
+                    if (aiResultsCol2) aiResultsCol2.classList.remove('hidden');
+                    if (analysisGrid) {
+                        analysisGrid.classList.remove('lg:grid-cols-1');
+                        analysisGrid.classList.add('lg:grid-cols-2');
+                    }
+                    summaryEl.innerHTML = `<p class="leading-relaxed text-slate-300 reveal reveal-2">${c.summary || 'No summary available.'}</p>`;
+                } else {
+                    // HIDE AI SECTIONS, SHOW ONLY PENDING UI
+                    if (summaryTitle) summaryTitle.classList.add('hidden');
+                    if (radarPanel) radarPanel.classList.add('hidden');
+                    if (aiResultsCol2) aiResultsCol2.classList.add('hidden');
+                    if (analysisGrid) {
+                        analysisGrid.classList.remove('lg:grid-cols-2');
+                        analysisGrid.classList.add('lg:grid-cols-1');
+                    }
+                    summaryEl.innerHTML = `
+                        <div class="flex flex-col items-center gap-6 text-slate-500 py-12 reveal reveal-2">
+                            <div class="w-20 h-20 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 shadow-xl shadow-blue-500/5">
+                                <i class="fas fa-robot fa-3x"></i>
+                            </div>
+                            <div class="text-center space-y-2">
+                                <h3 class="text-xl font-bold text-white heading-font">Analysis Pending</h3>
+                                <p class="text-sm max-w-[280px] mx-auto text-slate-400">This candidate hasn't been evaluated by the AI Pilot yet.</p>
+                            </div>
+                            <div class="flex flex-col gap-3 w-full max-w-[280px] mt-4">
+                                <button onclick="analyzeCandidateNow(${c.id})" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-6 py-3.5 rounded-2xl text-sm font-bold shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                                    <i class="fas fa-sparkles"></i> Analyze This Candidate
+                                </button>
+                                <button onclick="openAnalysisWizard()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-3.5 rounded-2xl text-sm font-bold border border-white/5 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                                    <i class="fas fa-layer-group"></i> Analyze All New
+                                </button>
+                            </div>
+                        </div>`;
+                }
+            }
+
+            // Matched/Missing Chips
+            const prosContainer = document.getElementById('detailPros');
+            if (prosContainer) {
+                const matched = c.matched_skills || c.pros || [];
+                prosContainer.innerHTML = matched.length 
+                    ? matched.slice(0, 6).map((s, i) => `
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 text-xs font-semibold reveal reveal-${Math.min(5, i+1)}">
+                            <i class="fas fa-check-circle text-[10px]"></i> ${s}
+                        </div>`).join('')
+                    : `<span class="text-slate-500 text-xs italic reveal reveal-1">None detected</span>`;
+            }
+
+            // Gaps
+            const consContainer = document.getElementById('detailCons');
+            if (consContainer) {
+                const missing = c.missing_skills || c.cons || [];
+                consContainer.innerHTML = missing.length
+                    ? missing.slice(0, 4).map((s, i) => `
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/5 border border-rose-500/10 text-rose-300 text-xs font-semibold reveal reveal-${Math.min(5, i+1)}">
+                            <i class="fas fa-exclamation-circle text-[10px]"></i> ${s}
+                        </div>`).join('')
+                    : `<div class="flex items-center gap-2 text-emerald-400 text-xs italic reveal reveal-1">
+                        <i class="fas fa-shield-check"></i> No critical gaps found
+                       </div>`;
+            }
+
+            // Question Preview
+            const detailQuestion = document.getElementById('detailQuestion');
+            if (detailQuestion) {
+                const qs = c.interview_questions || [];
+                detailQuestion.innerText = qs.length > 0 ? qs[0] : "Questions will be generated after analysis.";
+            }
+
+            // CV Link
+            const cvBtn = document.getElementById('downloadCvBtn');
+            if (cvBtn) {
+                if(c.cv_path) {
+                    let href = c.cv_path;
+                    if(!href.startsWith('http')) {
+                        if(href.includes('supabase') || href.includes('.com')) href = 'https://' + href;
+                    }
+                    cvBtn.href = href;
+                    cvBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    cvBtn.href = '#';
+                    cvBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            const cvBadge = document.getElementById('cvStatusBadge');
+            if (cvBadge) {
+                const meta = c.cv_meta;
+                if (meta && meta.used) {
+                    cvBadge.classList.remove('text-rose-300', 'border-rose-500/40', 'hidden');
+                    cvBadge.classList.add('text-emerald-300', 'border-emerald-500/40', 'flex');
+                    cvBadge.innerText = `CV analyzed (${meta.length || 0} chars)`;
+                } else {
+                    cvBadge.classList.remove('text-emerald-300', 'border-emerald-500/40', 'hidden');
+                    cvBadge.classList.add('text-rose-300', 'border-rose-500/40', 'flex');
+                    cvBadge.innerText = `CV not used${meta && meta.reason ? `: ${meta.reason}` : ''}`;
+                }
+            }
+
+            // Profile Button
+            const profileBtn = document.getElementById('viewProfileBtn');
+            if (profileBtn) {
+                if(c.user_id) {
+                    profileBtn.href = `/profile.html?id=${c.user_id}`;
+                    profileBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    profileBtn.href = '#';
+                    profileBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            // Update Chart
+            const radarCanvas = document.getElementById('skillsRadar');
+            if (radarCanvas) {
+                updateRadar(c.match_score);
+            }
+        }
+
+        // --- RADAR CHART ---
+        function updateRadar(score) {
+            const canvas = document.getElementById('skillsRadar');
+            const ctx = canvas.getContext('2d');
+            if(radarChart) radarChart.destroy();
+            
+            // Generate professional competency labels
+            const labels = ['Technical Mastery', 'Role Alignment', 'Experience', 'Soft Skills', 'Cultural Resonance'];
+            
+            // Map the score to a more realistic but high-performing set of values
+            const base = score;
+            const values = [
+                Math.min(100, base + (Math.sin(base) * 5)),
+                Math.min(100, base + (Math.cos(base) * 8)),
+                Math.min(100, base + (Math.sin(base * 0.5) * 10)),
+                Math.min(100, base + (Math.cos(base * 0.5) * 6)),
+                Math.min(100, base + (Math.sin(base * 1.5) * 4))
+            ];
+            
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Candidate Competency',
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#3b82f6',
+                        pointRadius: 3,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleFont: { family: 'Poppins', size: 12, weight: 'bold' },
+                            bodyFont: { family: 'Poppins', size: 12 },
+                            padding: 12,
+                            displayColors: false,
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: (context) => ` Level: ${context.raw.toFixed(1)}%`
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: {
+                                color: '#94a3b8',
+                                font: { size: 10, family: 'Poppins', weight: '500' }
+                            },
+                            ticks: {
+                                display: false,
+                                stepSize: 20
+                            },
+                            min: 0,
+                            max: 100
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // --- RETRY LOGIC ---
+        function updateRetryButton() {
+            const failedCount = candidates.filter(c => c.verdict === 'Error' || c.verdict === 'Analysis Failed' || c.summary === 'Analysis Failed').length;
+            const btn = document.getElementById('retryFailedBtn');
+            if (btn) {
+                if (failedCount > 0) {
+                    btn.classList.remove('hidden');
+                    btn.querySelector('span').innerText = `Retry ${failedCount} Failed`;
+                } else {
+                    btn.classList.add('hidden');
+                }
+            }
+        }
+
+        function retryFailedAnalysis() {
+            // Select "Specific Candidates" mode
+            const scopeInputs = document.querySelectorAll('input[name="scope"]');
+            for(const inp of scopeInputs) {
+                if(inp.value === 'specific') inp.checked = true;
+            }
+            
+            // Open Wizard
+            openAnalysisWizard();
+            
+            // Wait for DOM update then check failed ones
+            setTimeout(() => {
+                const list = document.getElementById('wizardCandidateList');
+                const checkboxes = list.querySelectorAll('input[type="checkbox"]');
+                const failedIds = new Set(candidates.filter(c => c.verdict === 'Error' || c.verdict === 'Analysis Failed' || c.summary === 'Analysis Failed').map(c => c.id));
+                
+                checkboxes.forEach(cb => {
+                    if(failedIds.has(Number(cb.value))) {
+                        cb.checked = true;
+                    } else {
+                        cb.checked = false;
+                    }
+                });
+                
+                // Ensure list is visible
+                toggleSpecificList(true);
+            }, 100);
+        }
+
+        // --- WIZARD UTILS ---
+        function closeWizard() {
+            const modal = document.getElementById('wizardModal');
+            const content = document.getElementById('wizardContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function updateStrictnessLabel(val) {
+            const el = document.getElementById('strictnessVal');
+            if(val <= 3) { el.innerText = `${val} - Lenient`; el.className = "text-xs text-emerald-400 font-bold"; }
+            else if(val >= 8) { el.innerText = `${val} - Ruthless`; el.className = "text-xs text-rose-400 font-bold"; }
+            else { el.innerText = `${val} - Balanced`; el.className = "text-xs text-blue-400 font-bold"; }
+        }
+
+        function toggleSpecificList(mode) {
+            const panel = document.getElementById('specificCandidatesPanel');
+            if (mode === 'none') {
+                panel.classList.add('hidden');
+                return;
+            }
+
+            panel.classList.remove('hidden');
+            const list = document.getElementById('wizardCandidateList');
+            
+            let candidatesToShow = candidates;
+            let shouldCheck = false;
+
+            if (mode === 'not_analyzed') {
+                candidatesToShow = candidates.filter(c => {
+                    const isPending = !c.verdict || c.verdict === 'Pending';
+                    const isUnscored = c.match_score === 0 && c.verdict !== 'Error' && c.verdict !== 'Analysis Failed';
+                    return isPending || isUnscored;
+                });
+                shouldCheck = true;
+            }
+
+            if (candidatesToShow.length === 0) {
+                list.innerHTML = '<div class="text-slate-500 text-xs p-2 italic">No candidates found for this category.</div>';
+            } else {
+                list.innerHTML = candidatesToShow.map(c => `
+                    <label class="flex items-center gap-3 p-2 rounded hover:bg-white/5 cursor-pointer">
+                        <input type="checkbox" class="custom-checkbox hidden" value="${c.id}" ${shouldCheck ? 'checked' : ''}>
+                        <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center mr-2 transition">
+                            <i class="fas fa-check text-[10px] text-blue-400 opacity-0 check-icon"></i>
+                        </div>
+                        <div class="text-sm text-slate-300">${c.first_name} ${c.last_name}</div>
+                    </label>
+                `).join('');
+            }
+        }
+
+        function toggleChip(btn, val) {
+            if(activeChips.includes(val)) {
+                activeChips = activeChips.filter(x => x !== val);
+                btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
+                btn.classList.add('bg-slate-800', 'text-slate-300', 'border-white/10');
+            } else {
+                activeChips.push(val);
+                btn.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
+                btn.classList.remove('bg-slate-800', 'text-slate-300', 'border-white/10');
+            }
+        }
+
+        const thoughtLogs = [
+            "Initializing neural pathways...",
+            "Decoding candidate DNA...",
+            "Mapping professional trajectory...",
+            "Analyzing skill cross-pollination...",
+            "Synthesizing industry benchmarks...",
+            "Evaluating cultural resonance...",
+            "Calculating growth velocity...",
+            "Cross-referencing technical mastery...",
+            "Filtering for high-impact traits...",
+            "Projecting long-term performance...",
+            "Identifying hidden potential...",
+            "Parsing semantic experience patterns..."
+        ];
+
+        function addProcessingLog(msg, type = 'info') {
+            const container = document.getElementById('processingLogs');
+            if (!container) return;
+            
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 justify-center opacity-0 transform translate-y-2 transition-all duration-500';
+            
+            let dotColor = 'bg-blue-500';
+            if (type === 'success') dotColor = 'bg-emerald-500';
+            if (type === 'warning') dotColor = 'bg-amber-500';
+            
+            div.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${dotColor} ${type === 'info' ? 'animate-pulse' : ''}"></span> ${msg}`;
+            
+            container.prepend(div);
+            
+            // Limit logs
+            if (container.children.length > 5) {
+                container.lastElementChild.remove();
+            }
+
+            requestAnimationFrame(() => {
+                div.classList.remove('opacity-0', 'translate-y-2');
+            });
+        }
+
+        function quickLaunchPilot() {
+            // Set defaults for balanced analysis
+            document.getElementById('strictnessSlider').value = 5;
+            updateStrictnessLabel(5);
+            document.getElementById('pilotSource').value = 'both';
+            document.getElementById('cvWeightSlider').value = 66;
+            document.getElementById('cvWeightVal').innerText = '66%';
+            document.getElementById('domainTolSlider').value = 50;
+            document.getElementById('domainTolVal').innerText = '50%';
+            document.getElementById('customPrompt').value = '';
+            document.getElementById('transferabilityChk').checked = true;
+            
+            // Set scope to "not_analyzed" (New Candidates Only)
+            const notAnalyzedRadio = document.querySelector('input[name="scope"][value="not_analyzed"]');
+            if (notAnalyzedRadio) {
+                notAnalyzedRadio.checked = true;
+                toggleSpecificList('not_analyzed');
+            }
+
+            // Execute
+            runAnalysis();
+        }
+
+        function analyzeCandidateNow(id) {
+            // Target only this specific ID
+            runAnalysis([id]);
+        }
+
+        async function runAnalysis(specificIds = null) {
+            let appIds = specificIds;
+            const scopeEl = document.querySelector('input[name="scope"]:checked');
+            const scope = scopeEl ? scopeEl.value : 'all';
+            
+            // Determine IDs if not provided
+            if (!appIds) {
+                if (scope === 'not_analyzed') {
+                    const checked = Array.from(document.querySelectorAll('#wizardCandidateList input:checked')).map(cb => Number(cb.value));
+                    if (checked.length > 0) {
+                        appIds = checked;
+                    } else {
+                        // Smart fallback: identify all un-analyzed candidates
+                        appIds = candidates.filter(c => !c.match_score || c.match_score <= 0).map(c => c.id);
+                    }
+                } else if (scope === 'specific') {
+                    appIds = Array.from(document.querySelectorAll('#wizardCandidateList input:checked')).map(cb => Number(cb.value));
+                } else {
+                    appIds = candidates.map(c => c.id);
+                }
+            }
+
+            // Validation: if we have a specific scope but no candidates, alert
+            if ((!appIds || appIds.length === 0)) {
+                showToast("No candidates selected for analysis.", "warning");
+                return;
+            }
+
+            closeWizard();
+            
+            // Show new Neural Overlay
+            const overlay = document.getElementById('processingOverlay');
+            overlay.classList.remove('hidden');
+            const bar = document.getElementById('processingBar');
+            const pct = document.getElementById('processingPercent');
+            const status = document.getElementById('processingStatusText');
+            const logsContainer = document.getElementById('processingLogs');
+            
+            // Reset state
+            analysisIsRunning = true;
+            renderList(); // Show skeletons in sidebar
+
+            bar.style.width = '2%';
+            pct.innerText = '0%';
+            logsContainer.innerHTML = '';
+            addProcessingLog("Establishing secure connection...", "success");
+            
+            // Thought rotation interval
+            let logIndex = 0;
+            const logRotation = setInterval(() => {
+                if (overlay.classList.contains('hidden')) {
+                    clearInterval(logRotation);
+                    return;
+                }
+                status.classList.add('opacity-0');
+                setTimeout(() => {
+                    const msg = thoughtLogs[logIndex % thoughtLogs.length];
+                    status.innerText = msg;
+                    status.classList.remove('opacity-0');
+                    if (logIndex % 2 === 0) addProcessingLog(msg);
+                    logIndex++;
+                }, 300);
+            }, 3500);
+
+            const custom = document.getElementById('customPrompt').value;
+            const strictness = document.getElementById('strictnessSlider').value;
+            const sourceSel = document.getElementById('pilotSource').value;
+            const cvWeight = parseInt(document.getElementById('cvWeightSlider').value, 10) || 66;
+            const domainTol = parseInt(document.getElementById('domainTolSlider').value, 10) || 50;
+            const transfer = !!document.getElementById('transferabilityChk').checked;
+
+            const totalDisplay = (appIds && appIds.length) ? appIds.length : candidates.length;
+            pct.innerText = `0/${totalDisplay}`;
+
+            try {
+                addProcessingLog(`Queuing ${totalDisplay} candidates...`, 'info');
+                const res = await fetch(`/api/ai/analyze-job/${currentJobId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        applicationIds: appIds,
+                        additionalInstructions: custom,
+                        focusAreas: activeChips,
+                        source: sourceSel,
+                        strictness: strictness,
+                        cv_weight: cvWeight,
+                        domain_tolerance: domainTol,
+                        transferability: transfer,
+                        force: false // Always false now as requested
+                    })
+                });
+                const d = await res.json();
+                if(d.success) {
+                    currentRunId = d.runId;
+                    addProcessingLog("Analysis engine active.", "success");
+                    const base = `/api/ai/progress/${currentJobId}`;
+                    const progUrl = `${base}?runId=${encodeURIComponent(d.runId)}`;
+                    
+                    let lastProcessed = 0;
+                    const interval = setInterval(async () => {
+                        const pRes = await fetch(progUrl);
+                        const pData = await pRes.json();
+                        
+                        if(pData.success) {
+                            const totalApps = pData.total || 1;
+                            const totalProcessed = pData.processed || 0;
+                            const progress = Math.min(100, Math.round((totalProcessed / totalApps) * 100));
+                            
+                            bar.style.width = `${progress}%`;
+                            pct.innerText = `${totalProcessed}/${totalApps}`;
+                            
+                            if (totalProcessed > lastProcessed) {
+                                addProcessingLog(`Processed ${totalProcessed}/${totalApps} candidates`, 'success');
+                                lastProcessed = totalProcessed;
+                            }
+                            
+                            if(totalProcessed >= totalApps || pData.status === 'stopping' || pData.status === 'stopped') {
+                                clearInterval(interval);
+                                clearInterval(logRotation);
+                                bar.style.width = '100%';
+                                
+                                if (pData.status === 'stopping' || pData.status === 'stopped') {
+                                    status.innerText = "Analysis stopped.";
+                                    addProcessingLog("Run halted by user.", "warning");
+                                } else {
+                                    pct.innerText = `${totalApps}/${totalApps}`;
+                                    status.innerText = "Analysis complete.";
+                                    addProcessingLog("Finalizing results...", "success");
+                                }
+                                
+                                setTimeout(async () => {
+                                    analysisIsRunning = false;
+                                    currentRunId = null;
+                                    overlay.classList.add('hidden');
+                                    await fetchData();
+                                    
+                                    // Reset stop button if needed
+                                    const stopBtn = document.querySelector('#processingOverlay button');
+                                    if (stopBtn) {
+                                        stopBtn.disabled = false;
+                                        stopBtn.innerHTML = '<i class="fas fa-times mr-2"></i> Stop & Cancel';
+                                    }
+
+                                    showToast(pData.status === 'stopping' ? "Analysis halted." : "Analysis complete!", "info");
+                                }, 1200);
+                            }
+                        }
+                    }, 1500);
+                }
+            } catch(e) { 
+                analysisIsRunning = false;
+                clearInterval(logRotation);
+                showToast("Error: " + e.message, "error"); 
+                overlay.classList.add('hidden');
+                renderList();
+            }
+        }
+
+        // --- REPORT LOGIC ---
+        function openDeepReport() {
+            if(!selectedCandidateId) return;
+            const c = candidates.find(x => x.id === selectedCandidateId);
+            
+            document.getElementById('reportHeaderName').innerText = `DOSSIER: ${c.first_name.toUpperCase()} ${c.last_name.toUpperCase()}`;
+            document.getElementById('repOverviewText').innerText = c.summary || "No analysis data available.";
+            
+            // Populate Lists
+            fillList('repPros', c.pros);
+            fillList('repCons', c.cons);
+            
+            // Skills Tab
+            fillSkillList('repMatchedSkills', c.matched_skills, 'text-emerald-400', 'check-circle');
+            fillSkillList('repMissingSkills', c.missing_skills, 'text-rose-400', 'times-circle');
+            
+            // Risks
+            fillList('repRisksList', c.cons); // Fallback to cons if risk array undefined
+            
+            // Questions
+            const qContainer = document.getElementById('repQuestions');
+            const qs = c.interview_questions || [];
+            qContainer.innerHTML = qs.length ? qs.map((q, i) => `
+                <div class="flex gap-4 p-4 bg-slate-800/50 rounded-lg border border-white/5">
+                    <div class="text-blue-500 font-bold font-mono">Q${i+1}</div>
+                    <div class="text-slate-300 text-sm">${q}</div>
+                </div>
+            `).join('') : '<div class="text-slate-500 italic">No questions generated.</div>';
+
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+
+        function closeReport() { document.getElementById('reportModal').classList.add('hidden'); }
+        
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        async function downloadPDF() {
+            if(!selectedCandidateId) return;
+            const c = candidates.find(x => x.id === selectedCandidateId);
+            const printDiv = document.getElementById('fullReportPrint');
+            
+            // Temporary reveal for html2pdf to grab the content
+            // We use display block but positioned off-screen to avoid flicker
+            printDiv.classList.remove('hidden'); 
+            
+            // Capture radar chart image from canvas
+            const radarCanvas = document.getElementById('skillsRadar');
+            const radarImg = radarCanvas.toDataURL("image/png");
+
+            // Construct Full Report HTML (For Print)
+            printDiv.innerHTML = `
+                <div style="font-family: 'Poppins', sans-serif; position: relative; color: #000; background: #fff; padding: 20px;">
+                    <!-- Watermark -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(0,0,0,0.05); font-weight: bold; white-space: nowrap; z-index: 0;">
+                        CONFIDENTIAL // HIRLY PILOT
+                    </div>
+
+                    <!-- Header -->
+                    <div style="border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h1 style="font-size: 24px; font-weight: bold; margin: 0; color: #000;">AI CANDIDATE DOSSIER</h1>
+                            <p style="font-size: 14px; color: #666;">Generated by Hirly Pilot</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h2 style="font-size: 18px; margin: 0; color: #2563eb;">${c.first_name.toUpperCase()} ${c.last_name.toUpperCase()}</h2>
+                            <p style="font-size: 12px; color: #666;">${new Date().toLocaleDateString()}</p>
+                        </div>
+                    </div>
+
+                    <!-- Score Section -->
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div>
+                            <p style="font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">AI Match Score</p>
+                            <div style="font-size: 36px; font-weight: bold; color: #0f172a;">${c.match_score}%</div>
+                        </div>
+                        <div>
+                            <p style="font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">Verdict</p>
+                            <div style="font-size: 18px; font-weight: bold; padding: 5px 10px; background: #e2e8f0; border-radius: 4px; display: inline-block; color: #0f172a;">${c.verdict}</div>
+                        </div>
+                    </div>
+
+                    <!-- Executive Summary -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="font-size: 14px; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px; color: #334155;">1. EXECUTIVE SUMMARY</h3>
+                        <p style="font-size: 12px; line-height: 1.6; color: #334155;">${c.summary || 'N/A'}</p>
+                    </div>
+
+                    <!-- Radar Chart & Pros/Cons -->
+                    <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+                        <div style="width: 40%;">
+                            <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #334155;">COMPETENCY MATRIX</h3>
+                            <img src="${radarImg}" style="width: 100%; height: auto;">
+                        </div>
+                        <div style="width: 60%;">
+                            <div style="margin-bottom: 15px;">
+                                <h4 style="font-size: 12px; font-weight: bold; color: #16a34a; margin-bottom: 5px;">KEY STRENGTHS</h4>
+                                <ul style="font-size: 12px; color: #334155; padding-left: 20px;">
+                                    ${(c.pros || []).map(p => `<li>${p}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 12px; font-weight: bold; color: #dc2626; margin-bottom: 5px;">RISK FACTORS</h4>
+                                <ul style="font-size: 12px; color: #334155; padding-left: 20px;">
+                                    ${(c.cons || []).map(p => `<li>${p}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skills Table -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="font-size: 14px; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px; color: #334155;">2. SKILLS ANALYSIS</h3>
+                        <div style="display: flex; gap: 20px;">
+                            <div style="flex: 1; background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #dcfce7;">
+                                <div style="font-weight: bold; font-size: 12px; color: #15803d; margin-bottom: 5px;">MATCHED</div>
+                                <div style="font-size: 12px; color: #166534;">${(c.matched_skills || []).join(', ') || 'None'}</div>
+                            </div>
+                            <div style="flex: 1; background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fee2e2;">
+                                <div style="font-weight: bold; font-size: 12px; color: #b91c1c; margin-bottom: 5px;">MISSING</div>
+                                <div style="font-size: 12px; color: #991b1b;">${(c.missing_skills || []).join(', ') || 'None'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interview Guide -->
+                    <div>
+                        <h3 style="font-size: 14px; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px; color: #334155;">3. INTERVIEW GUIDE</h3>
+                        ${(c.interview_questions || []).map((q, i) => `
+                            <div style="margin-bottom: 10px; font-size: 12px;">
+                                <strong style="color: #2563eb;">Q${i+1}:</strong> <span style="color: #334155;">${q}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Config for html2pdf
+            const opt = {
+                margin: [0.5, 0.5],
+                filename: `Hirly_Dossier_${c.first_name}_${c.last_name}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            await html2pdf().set(opt).from(printDiv).save();
+            
+            // Re-hide print container
+            printDiv.classList.add('hidden');
+        }
+
+        // --- INTERVIEW LOGIC ---
+        function initiateInterview() {
+            if(!selectedCandidateId) return;
+            
+            // Show config modal instead of redirect
+            const modal = document.getElementById('interviewConfigModal');
+            const content = document.getElementById('intConfigContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            // Defaults
+            document.getElementById('intDeadlineDate').min = new Date().toISOString().split('T')[0];
+        }
+
+        function closeInterviewConfig() {
+            const modal = document.getElementById('interviewConfigModal');
+            const content = document.getElementById('intConfigContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        async function sendInterviewInvite() {
+            if(!selectedCandidateId) return;
+            const btn = document.querySelector('#intConfigContent button:last-child');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+
+            // Gather Data
+            const tracks = Array.from(document.querySelectorAll('.track-checkbox:checked')).map(cb => cb.value);
+            const custom = document.getElementById('intCustomContext').value;
+            const deadline = document.getElementById('intDeadlineDate').value;
+            const lang = document.getElementById('intLanguage').value;
+
+            let instructions = custom;
+            if(tracks.length > 0) instructions += `\nFOCUS ON: ${tracks.join(', ')}`;
+
+            try {
+                const res = await fetch('/api/interviews/initiate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        applicationId: candidates.find(c => c.id === selectedCandidateId).id, // Using application ID
+                        instructions: instructions,
+                        language: lang,
+                        durationMinutes: 20,
+                        deadlineAt: deadline ? new Date(deadline).toISOString() : null
+                    })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    closeInterviewConfig();
+                    showToast("Invitation sent successfully!", "success");
+                    // Refresh to show status update
+                    fetchData();
+                } else {
+                    showToast("Error: " + data.error, "error");
+                }
+            } catch(e) { showToast("Network Error", "error"); }
+            finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- PIPELINE ENHANCEMENTS ---
+        function updatePipelineFunnel() {
+            const counts = {
+                strong: candidates.filter(c => (c.verdict || '').toLowerCase().includes('strong')).length,
+                interview: candidates.filter(c => (c.verdict || '').toLowerCase().includes('interview')).length,
+                backup: candidates.filter(c => (c.verdict || '').toLowerCase().includes('backup') || (c.verdict || '').toLowerCase().includes('potential')).length,
+                reject: candidates.filter(c => (c.verdict || '').toLowerCase().includes('reject')).length
+            };
+            const total = candidates.length || 1;
+            
+            Object.keys(counts).forEach(key => {
+                const el = document.getElementById(`funnel-${key}`);
+                if (el) el.style.width = `${(counts[key] / total) * 100}%`;
+            });
+        }
+
+        function submitAIFeedback(type) {
+            showToast(`Thank you! Your feedback helps Hirly Pilot learn.`, "success");
+            // In a real app, this would POST to /api/analysis/feedback
+        }
+
+
+        // --- UTILS ---
+        function fillList(id, items) {
+            const el = document.getElementById(id);
+            if(!items || !items.length) el.innerHTML = "<li>None detected</li>";
+            else el.innerHTML = items.map(x => `<li>${x}</li>`).join('');
+        }
+
+        function fillSkillList(id, items, color, icon) {
+            const el = document.getElementById(id);
+            if(!items || !items.length) el.innerHTML = "<div class='text-slate-500 italic text-sm'>None</div>";
+            else el.innerHTML = items.map(x => `
+                <div class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-white/5">
+                    <i class="fas fa-${icon} ${color}"></i>
+                    <span class="text-slate-300 text-sm">${x}</span>
+                </div>
+            `).join('');
+        }
+
+        function getInitials(f, l) { return (f[0] + l[0]).toUpperCase(); }
+        
+        function getScoreColor(s) {
+            if(s >= 80) return 'text-emerald-400';
+            if(s >= 50) return 'text-amber-400';
+            return 'text-rose-400';
+        }
+
+        function getVerdictClass(v) {
+            if(!v) return 'bg-slate-800 text-slate-500 border-white/10';
+            const low = v.toLowerCase();
+            if(low.includes('strong') || low.includes('hire')) return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+            if(low.includes('interview')) return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+            if(low.includes('reject')) return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+            return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        }
+
+        function getVerdictBadgeClass(v) {
+            if(!v) return 'bg-slate-800 border-white/10 text-slate-500';
+            const low = v.toLowerCase();
+            if(low.includes('strong')) return 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400';
+            if(low.includes('interview')) return 'bg-blue-500/20 border-blue-500/30 text-blue-400';
+            if(low.includes('reject')) return 'bg-rose-500/20 border-rose-500/30 text-rose-400';
+            return 'bg-amber-500/20 border-amber-500/30 text-amber-400';
+        }
+
+        function applyFilter(type, btn) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active', 'bg-blue-500/20', 'text-blue-300', 'border-blue-500/30'));
+            btn.classList.add('active', 'bg-blue-500/20', 'text-blue-300', 'border-blue-500/30');
+            renderList();
+        }
+
+        function applyVerdictFilter(val) {
+            currentVerdictFilter = val;
+            renderList();
+        }
+
+    </script>
+    <script src="/components.js"></script>
+</body>
+</html>

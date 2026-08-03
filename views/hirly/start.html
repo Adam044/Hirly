@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="start_page_title">هايرلي - ابدأ</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Core Styling -->
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/global-rtl.css">
+    <link rel="stylesheet" href="/styling/pages/page-auth.css">
+</head>
+<body>
+    <!-- Header will be loaded by components.js -->
+    <div id="headerPlaceholder"></div>
+
+    <main class="main container">
+        <div class="auth-container">
+            <div class="auth-title">
+                <h1 id="startPageTitle" class="section-title text-center" data-lang-key="start_page_header">مرحباً بك مجدداً!</h1>
+                <p id="startPageSubtitle" class="section-subtitle text-center" data-lang-key="start_page_subtitle">ماذا ترغب أن تفعل اليوم؟</p>
+            </div>
+            
+            <div id="optionsContainer" class="card-container">
+                <!-- Cards will be dynamically inserted here by JavaScript -->
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer will be loaded by components.js -->
+    <div id="footerPlaceholder"></div>
+
+    <div id="toastContainer" class="toast-container"></div>
+    <!-- Scripts -->
+    <script src="/language/language.js" defer></script>
+    <script src="/language/index-page-translations.js" defer></script>
+    <script src="/auth.js" defer></script>
+    <script src="/components.js" defer></script>
+    <script src="/script.js" defer></script>
+    
+    <!-- Unified Start Page Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const optionsContainer = document.getElementById('optionsContainer');
+            const startPageTitle = document.getElementById('startPageTitle');
+            const startPageSubtitle = document.getElementById('startPageSubtitle');
+
+            const createCard = (titleKey, descriptionKey, iconClass, link) => {
+                const t = window.translations;
+                const lang = window.currentLanguage;
+                const title = t[titleKey]?.[lang] || titleKey;
+                const description = t[descriptionKey]?.[lang] || descriptionKey;
+                const linkText = t?.['go_to_link']?.[lang] || 'Go to link';
+                
+                const card = document.createElement('a');
+                card.href = link;
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-icon-container">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <h2>${title}</h2>
+                    <p>${description}</p>
+                    <div class="card-link">
+                        <span>${linkText}</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                `;
+                return card;
+            };
+
+            const createFreelancerCards = () => {
+                optionsContainer.appendChild(createCard(
+                    'discover_jobs_card_title',
+                    'discover_jobs_card_desc',
+                    'fas fa-briefcase',
+                    '/jobs.html'
+                ));
+                optionsContainer.appendChild(createCard(
+                    'dashboard_freelancer_card_title',
+                    'dashboard_freelancer_card_desc',
+                    'fas fa-tachometer-alt',
+                    '/dashboard.html'
+                ));
+            };
+
+            const createEmployerCards = () => {
+                optionsContainer.appendChild(createCard(
+                    'post_job_card_title',
+                    'post_job_card_desc',
+                    'fas fa-bullhorn',
+                    '/post_job.html'
+                ));
+                optionsContainer.appendChild(createCard(
+                    'discover_talent_card_title',
+                    'discover_talent_card_desc',
+                    'fas fa-user-friends',
+                    '/talent.html'
+                ));
+                optionsContainer.appendChild(createCard(
+                    'dashboard_employer_card_title',
+                    'dashboard_employer_card_desc',
+                    'fas fa-chart-line',
+                    '/hire_dashboard.html'
+                ));
+            };
+
+            const initializeStartPageContent = async () => {
+                const authStatus = await window.checkAuthStatus();
+                const userType = authStatus.user?.user_type;
+                const t = window.translations;
+                const lang = window.currentLanguage;
+
+                if (startPageTitle) startPageTitle.textContent = t?.['start_page_header']?.[lang] || 'Welcome Back!';
+                if (startPageSubtitle) startPageSubtitle.textContent = t?.['start_page_subtitle']?.[lang] || 'What would you like to do today?';
+
+                if (!authStatus.isAuthenticated) {
+                    window.location.href = '/signup.html';
+                    return;
+                }
+
+                optionsContainer.innerHTML = '';
+                if (userType === 'freelancer') {
+                    createFreelancerCards();
+                } else if (userType === 'employer') {
+                    createEmployerCards();
+                } else {
+                    console.error('Unknown user type:', userType);
+                    window.location.href = '/';
+                }
+            };
+
+            window.addEventListener('translationsApplied', () => {
+                initializeStartPageContent();
+            });
+
+            if (window.currentLanguage) {
+                initializeStartPageContent();
+            }
+        });
+    </script>
+
+    <!-- Custom styling for start page cards moved from page-auth.css -->
+    <style>
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 2rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            width: 100%;
+            border: 1px solid var(--border-color);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+        .card-icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            transition: all 0.2s ease;
+        }
+        .card:hover .card-icon-container {
+            transform: scale(1.1);
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        .card h2 {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        .card p {
+            font-size: var(--font-size-sm);
+            color: var(--text-body);
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+        .card-link {
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            margin-top: auto;
+        }
+        .card:hover .card-link {
+            color: var(--primary-dark);
+        }
+        html[dir="rtl"] .card-link {
+            flex-direction: row-reverse;
+        }
+
+        /* Responsive adjustments for mobile */
+        @media (max-width: 768px) {
+            .card-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .card {
+                max-width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

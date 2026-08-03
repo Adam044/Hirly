@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="login_title">Login — Hirly</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/pages/page-auth.css">
+</head>
+<body class="auth-page-body">
+    <div id="headerPlaceholder"></div>
+
+    <main class="auth-main">
+        <div class="auth-container">
+            <header class="auth-header">
+                <h1 data-lang-key="welcome_back_heading">Welcome Back</h1>
+                <p data-lang-key="login_subtitle">Login to access your Hirly account</p>
+            </header>
+
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email" data-lang-key="email_address_label">Email Address</label>
+                    <div class="auth-input-wrapper">
+                        <input type="email" id="email" class="auth-input" data-lang-key="email_placeholder" placeholder="Enter your email" required>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" data-lang-key="password_label">Password</label>
+                    <div class="auth-input-wrapper">
+                        <input type="password" id="password" class="auth-input" placeholder="••••••••" required>
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+
+                <div class="auth-extra">
+                    <a href="/forgot_password.html" class="auth-link" data-lang-key="forgot_password_link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="auth-btn-primary">
+                    <span data-lang-key="login_btn">Login</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <footer class="auth-footer">
+                <p data-lang-key="no_account_question">Don't have an account?</p>
+                <a href="/signup.html" class="auth-link" style="font-size: 1.1rem;" data-lang-key="sign_up">Create a free account</a>
+            </footer>
+
+            <div id="loginMessage" class="mt-4 text-center" style="font-weight: 600; font-size: 0.9rem;"></div>
+        </div>
+    </main>
+
+    <div id="footerPlaceholder"></div>
+
+    <script src="/language/language.js"></script>
+    <script src="/language/auth-page-translations.js"></script>
+    <script src="/auth.js" defer></script>
+    <script src="/components.js" defer></script>
+</body>
+</html>

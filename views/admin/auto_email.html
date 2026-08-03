@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Email System | Admin Hirly</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1', // Indigo-500
+                        secondary: '#4f46e5', // Indigo-600
+                        accent: '#a5b4fc', // Indigo-300
+                        dark: '#1e293b', // Slate-800
+                        light: '#f8fafc', // Slate-50
+                        info: '#3b82f6', // Blue-500
+                        success: '#22c55e', // Green-500
+                        warning: '#f97316', // Orange-500
+                        danger: '#ef4444', // Red-500
+                        'dark-bg': '#0f172a', // Slate-900
+                        'card-bg': '#1e293b', // Slate-800
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+        
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s infinite; }
+    </style>
+</head>
+<body class="bg-dark-bg text-gray-100 min-h-screen">
+    <div class="flex">
+        <!-- Sidebar Placeholder (Simple Version) -->
+        <aside class="w-64 bg-card-bg shadow-lg p-6 flex flex-col fixed inset-y-0 left-0 hidden md:flex">
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-primary">Hirly Admin</h3>
+                <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Control Panel</p>
+            </div>
+            <nav class="flex-grow space-y-2">
+                <a href="/admin_dashboard.html" class="flex items-center py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-xl transition-all">
+                    <i class="fas fa-arrow-left mr-3 w-5"></i> Back to Dashboard
+                </a>
+                <div class="pt-4 pb-2">
+                    <p class="text-[10px] font-bold text-gray-500 uppercase px-4 mb-2">Automations</p>
+                    <a href="#" class="flex items-center py-3 px-4 bg-primary/10 text-primary border border-primary/20 rounded-xl transition-all">
+                        <i class="fas fa-robot mr-3 w-5"></i> Auto Email System
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-grow md:ml-64 p-6 md:p-10">
+            <header class="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-white tracking-tight">Auto Email System</h1>
+                    <p class="text-gray-400 mt-2 flex items-center">
+                        <span class="w-2 h-2 bg-success rounded-full mr-2 animate-pulse-soft"></span>
+                        Automated Website Scanning & Professional Email Outreach
+                    </p>
+                </div>
+                <div id="statusBadge" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-full text-sm font-medium text-gray-400 flex items-center">
+                    <i class="fas fa-circle-notch fa-spin mr-2 hidden" id="runningSpinner"></i>
+                    <span id="statusText">System Ready</span>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left Column: Configuration -->
+                <div class="lg:col-span-7 space-y-8">
+                    <!-- Website Input -->
+                    <div class="bg-card-bg p-8 rounded-3xl shadow-xl border border-slate-700/50">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-info/20 rounded-xl flex items-center justify-center text-info mr-4">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <h2 class="text-xl font-bold text-white">Target Sources</h2>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <!-- AI Mode Toggle -->
+                                <div class="flex items-center bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 mr-2">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase mr-3">AI Mode</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="aiModeToggle" class="sr-only peer">
+                                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-success"></div>
+                                    </label>
+                                </div>
+                                <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700">
+                                    <button id="modeUrl" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-primary text-white">Manual URLs</button>
+                                    <button id="modeSearch" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-500 hover:text-gray-300">Keyword Scan</button>
+                                </div>
+                            </div>
+                        </div>
+                        <p id="sourceDesc" class="text-sm text-gray-400 mb-4">Enter website URLs to scan for emails. Support multiple URLs separated by newlines or commas.</p>
+                        <textarea id="websiteUrls" 
+                                  class="w-full h-40 bg-slate-900 border border-slate-700 rounded-2xl p-4 text-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all custom-scrollbar placeholder:text-gray-600"
+                                  placeholder="example.com&#10;https://another-site.org, third-site.net"></textarea>
+                    </div>
+
+                    <!-- Campaign & Config -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Campaign Selection -->
+                        <div class="bg-card-bg p-8 rounded-3xl shadow-xl border border-slate-700/50">
+                            <div class="flex items-center mb-6">
+                                <div class="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary mr-4">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                <h2 class="text-xl font-bold text-white">Campaign</h2>
+                            </div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Select Outreach Template</label>
+                            <select id="campaignSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-primary outline-none">
+                                <option value="">Loading campaigns...</option>
+                            </select>
+                        </div>
+
+                        <!-- Sending Configuration -->
+                        <div class="bg-card-bg p-8 rounded-3xl shadow-xl border border-slate-700/50">
+                            <div class="flex items-center mb-6">
+                                <div class="w-10 h-10 bg-warning/20 rounded-xl flex items-center justify-center text-warning mr-4">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <h2 class="text-xl font-bold text-white">Settings</h2>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Max Emails to Send</label>
+                                    <input type="number" id="maxEmails" value="50" min="1" max="500" 
+                                           class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Delay (seconds)</label>
+                                    <input type="number" id="delaySeconds" value="15" min="5" max="300" 
+                                           class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-xl border border-slate-700">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center text-accent mr-3">
+                                            <i class="fas fa-search-plus text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold text-white">Deep Scan Mode</p>
+                                            <p class="text-[10px] text-gray-500">Crawl sub-pages & job links</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="deepScanToggle" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    </label>
+                                </div>
+                                <p id="estimateTime" class="text-[11px] text-gray-500 italic"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-wrap gap-4">
+                            <button id="runBtn" class="flex-grow bg-primary hover:bg-secondary text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-play"></i> Start Automation
+                            </button>
+                            <button id="stopBtn" disabled class="bg-slate-800 hover:bg-danger text-white font-bold py-4 px-8 rounded-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-30 disabled:cursor-not-allowed">
+                                <i class="fas fa-stop"></i> Stop
+                            </button>
+                        </div>
+                        
+                        <!-- Simplified Test Option -->
+                        <div class="flex gap-3 items-center bg-slate-800/30 p-4 rounded-2xl border border-slate-700/30">
+                            <input type="email" id="testEmailInput" placeholder="Send a test to your email..." 
+                                   class="flex-grow bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-gray-200 focus:ring-1 focus:ring-accent outline-none">
+                            <button id="testBtn" class="bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 text-sm whitespace-nowrap">
+                                <i class="fas fa-paper-plane"></i> Send Test
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Progress & Logs -->
+                <div class="lg:col-span-5 space-y-8">
+                    <!-- Progress Stats -->
+                    <div class="bg-card-bg p-8 rounded-3xl shadow-xl border border-slate-700/50">
+                        <h2 class="text-xl font-bold text-white mb-6">Live Progress</h2>
+                        <div class="grid grid-cols-2 gap-4 mb-8">
+                            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/30">
+                                <p class="text-xs text-gray-500 uppercase font-bold mb-1">Emails Found</p>
+                                <p id="emailsFoundCount" class="text-3xl font-black text-info">0</p>
+                            </div>
+                            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-700/30">
+                                <p class="text-xs text-gray-500 uppercase font-bold mb-1">Emails Sent</p>
+                                <p id="emailsSentCount" class="text-3xl font-black text-success">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-xs font-bold text-gray-400 uppercase">
+                                <span>Overall Progress</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-700">
+                                <div id="progressBar" class="bg-primary h-full w-0 transition-all duration-500"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs Window -->
+                    <div class="bg-card-bg rounded-3xl shadow-xl border border-slate-700/50 overflow-hidden flex flex-col" style="height: 480px;">
+                        <div class="bg-slate-800/50 px-6 py-4 border-b border-slate-700 flex justify-between items-center">
+                            <h2 class="text-sm font-bold text-gray-300 uppercase tracking-wider">Activity Logs</h2>
+                            <button id="clearLogs" class="text-[10px] text-gray-500 hover:text-white uppercase font-bold">Clear</button>
+                        </div>
+                        <div id="logsContainer" class="flex-grow p-6 font-mono text-xs overflow-y-auto custom-scrollbar space-y-2 bg-slate-900/30">
+                            <div class="text-gray-500">[System] Awaiting configuration...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let isRunning = false;
+        let campaignId = null;
+        let statusInterval = null;
+        let lastLogIndex = 0; // Track backend logs separately
+        let inputMode = 'url'; // 'url' or 'search'
+
+        // Initialize Page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadCampaigns();
+            updateEstimate();
+            
+            // Check if a campaign is already running
+            checkActiveCampaign();
+        });
+
+        document.getElementById('modeUrl').addEventListener('click', () => setInputMode('url'));
+        document.getElementById('modeSearch').addEventListener('click', () => setInputMode('search'));
+
+        function setInputMode(mode) {
+            inputMode = mode;
+            const urlBtn = document.getElementById('modeUrl');
+            const searchBtn = document.getElementById('modeSearch');
+            const desc = document.getElementById('sourceDesc');
+            const textarea = document.getElementById('websiteUrls');
+            const aiMode = document.getElementById('aiModeToggle').checked;
+
+            if (mode === 'url') {
+                urlBtn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-primary text-white';
+                searchBtn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-500 hover:text-gray-300';
+                desc.textContent = 'Enter website URLs to scan for emails. Support multiple URLs separated by newlines or commas.';
+                textarea.placeholder = 'example.com\nhttps://another-site.org, third-site.net';
+                if (aiMode) {
+                    document.getElementById('aiModeToggle').checked = false;
+                    addLog('Manual URL mode selected. AI Auto-Targeting disabled.', 'warning');
+                }
+            } else {
+                searchBtn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-primary text-white';
+                urlBtn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-500 hover:text-gray-300';
+                desc.textContent = 'Enter search queries to discover websites (e.g., "شركات في فلسطين"). The system will find sites and scan them.';
+                textarea.placeholder = 'شركات تكنولوجيا في رام الله\nPalestine companies directory\nshops in Gaza';
+            }
+        }
+
+        // AI Mode Toggle logic
+        document.getElementById('aiModeToggle').addEventListener('change', (e) => {
+            const textarea = document.getElementById('websiteUrls');
+            const desc = document.getElementById('sourceDesc');
+            
+            if (e.target.checked) {
+                setInputMode('search');
+                textarea.value = 'AUTO_AI_MODE_ENABLED';
+                textarea.disabled = true;
+                textarea.classList.add('opacity-50');
+                desc.textContent = 'Advanced AI Mode: The system will automatically generate 15+ specialized Palestinian industry queries (Tech, NGOs, Factories, etc.) and discover employers for you.';
+                addLog('Advanced AI Mode enabled. Automatic industry targeting activated.', 'system');
+            } else {
+                textarea.value = '';
+                textarea.disabled = false;
+                textarea.classList.remove('opacity-50');
+                setInputMode('url');
+            }
+        });
+
+        async function loadCampaigns() {
+            try {
+                const response = await fetch('/admin/email-templates');
+                const data = await response.json();
+                const select = document.getElementById('campaignSelect');
+                
+                if (data.success && data.templates) {
+                    // Filter to only show Employer Marketing as requested
+                    const filtered = data.templates.filter(t => t.id === 'employer-marketing');
+                    
+                    if (filtered.length > 0) {
+                        select.innerHTML = '';
+                        filtered.forEach(template => {
+                            const option = document.createElement('option');
+                            option.value = template.id;
+                            option.textContent = template.name;
+                            select.appendChild(option);
+                        });
+                        // Auto-select the only option
+                        select.value = filtered[0].id;
+                    } else {
+                        select.innerHTML = '<option value="">Employer Marketing template not found</option>';
+                    }
+                } else {
+                    select.innerHTML = '<option value="">Error loading templates</option>';
+                }
+            } catch (error) {
+                console.error('Error loading templates:', error);
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const container = document.getElementById('logsContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry'; // Added for tracking
+            const time = new Date().toLocaleTimeString();
+            
+            let colorClass = 'text-gray-400';
+            if (type === 'success') colorClass = 'text-success';
+            if (type === 'error') colorClass = 'text-danger';
+            if (type === 'warning') colorClass = 'text-warning';
+            if (type === 'system') colorClass = 'text-info font-bold';
+            
+            logEntry.className += ` border-l-2 border-transparent pl-2 ${colorClass}`;
+            logEntry.innerHTML = `<span class="text-[10px] text-gray-600 mr-2">[${time}]</span> ${message}`;
+            
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateEstimate() {
+            const max = parseInt(document.getElementById('maxEmails').value) || 0;
+            const delay = parseInt(document.getElementById('delaySeconds').value) || 0;
+            const totalSec = max * delay;
+            const hours = Math.floor(totalSec / 3600);
+            const mins = Math.floor((totalSec % 3600) / 60);
+            
+            let timeStr = '';
+            if (hours > 0) timeStr += `${hours}h `;
+            if (mins > 0) timeStr += `${mins}m`;
+            if (hours === 0 && mins === 0) timeStr = `${totalSec}s`;
+            
+            document.getElementById('estimateTime').textContent = `Estimated completion time: ~${timeStr}`;
+        }
+
+        document.getElementById('maxEmails').addEventListener('input', updateEstimate);
+        document.getElementById('delaySeconds').addEventListener('input', updateEstimate);
+
+        async function startAutomation() {
+            const websites = document.getElementById('websiteUrls').value.trim();
+            const template = document.getElementById('campaignSelect').value;
+            const maxEmails = document.getElementById('maxEmails').value;
+            const delay = document.getElementById('delaySeconds').value;
+            const deepScan = document.getElementById('deepScanToggle').checked;
+            const aiMode = document.getElementById('aiModeToggle').checked;
+
+            if (!websites) return alert('Please enter target websites');
+            if (!template) return alert('Please select an email campaign');
+
+            setRunningState(true);
+            lastLogIndex = 0; // Reset for new run
+            addLog('Starting auto-email process...', 'system');
+            
+            try {
+                const response = await fetch('/admin/auto-email/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        websites, 
+                        template, 
+                        maxEmails, 
+                        delay, 
+                        deepScan, 
+                        mode: inputMode,
+                        aiMode
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    campaignId = data.campaignId;
+                    addLog(`Automation started (ID: ${campaignId})`, 'success');
+                    startPolling();
+                } else {
+                    addLog('Error: ' + data.error, 'error');
+                    setRunningState(false);
+                }
+            } catch (error) {
+                addLog('Critical failure connecting to server', 'error');
+                setRunningState(false);
+            }
+        }
+
+        async function stopAutomation() {
+            if (!campaignId) return;
+            addLog('Requesting stop...', 'warning');
+            
+            try {
+                const response = await fetch(`/admin/auto-email/stop/${campaignId}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    addLog('Automation stopped by user.', 'warning');
+                }
+            } catch (error) {
+                addLog('Error stopping automation.', 'error');
+            }
+        }
+
+        function startPolling() {
+            if (statusInterval) clearInterval(statusInterval);
+            statusInterval = setInterval(async () => {
+                if (!campaignId) return;
+                
+                try {
+                    const response = await fetch(`/admin/auto-email/status/${campaignId}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.progress) {
+                        const p = data.progress;
+                        document.getElementById('emailsFoundCount').textContent = p.emailsFoundCount;
+                        document.getElementById('emailsSentCount').textContent = p.emailsSentCount;
+                        
+                        const percent = p.totalToSent > 0 ? Math.round((p.emailsSentCount / p.totalToSent) * 100) : 0;
+                        document.getElementById('progressPercent').textContent = percent + '%';
+                        document.getElementById('progressBar').style.width = percent + '%';
+                        
+                        // Handle new logs
+                        if (p.logs && p.logs.length > lastLogIndex) {
+                            p.logs.slice(lastLogIndex).forEach(log => {
+                                addLog(log.message, log.type);
+                            });
+                            lastLogIndex = p.logs.length;
+                        }
+
+                        if (['completed', 'stopped', 'failed'].includes(p.status)) {
+                            setRunningState(false);
+                            clearInterval(statusInterval);
+                            addLog(`Process ${p.status}.`, p.status === 'completed' ? 'success' : 'warning');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 2000);
+        }
+
+        function setRunningState(running) {
+            isRunning = running;
+            document.getElementById('runBtn').disabled = running;
+            document.getElementById('stopBtn').disabled = !running;
+            document.getElementById('websiteUrls').disabled = running;
+            document.getElementById('campaignSelect').disabled = running;
+            document.getElementById('maxEmails').disabled = running;
+            document.getElementById('delaySeconds').disabled = running;
+            
+            const badge = document.getElementById('statusBadge');
+            const spinner = document.getElementById('runningSpinner');
+            const text = document.getElementById('statusText');
+            
+            if (running) {
+                badge.classList.add('border-primary/50', 'text-primary');
+                spinner.classList.remove('hidden');
+                text.textContent = 'Automation Running';
+            } else {
+                badge.classList.remove('border-primary/50', 'text-primary');
+                spinner.classList.add('hidden');
+                text.textContent = 'System Ready';
+            }
+        }
+
+        async function checkActiveCampaign() {
+            // Future enhancement: fetch currently running campaign on load
+        }
+
+        document.getElementById('runBtn').addEventListener('click', startAutomation);
+        document.getElementById('stopBtn').addEventListener('click', stopAutomation);
+        document.getElementById('clearLogs').addEventListener('click', () => {
+            document.getElementById('logsContainer').innerHTML = '<div class="text-gray-500">[System] Logs cleared.</div>';
+        });
+
+        // Test Email Logic
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const testEmail = document.getElementById('testEmailInput').value.trim();
+            const templateId = document.getElementById('campaignSelect').value;
+            
+            if (!testEmail) return alert('Please enter a test email address');
+            if (!templateId) return alert('Please select a campaign template first');
+            
+            const btn = document.getElementById('testBtn');
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            
+            addLog(`Sending test email to ${testEmail}...`, 'info');
+            
+            try {
+                const response = await fetch('/admin/auto-email/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: testEmail, templateId })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addLog('Test email sent successfully!', 'success');
+                } else {
+                    addLog('Failed to send test email: ' + data.error, 'error');
+                }
+            } catch (error) {
+                addLog('Error sending test email', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="job_dashboard_title">Dashboard | Hirly</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        gray: {
+                            50: '#fafafa',
+                            100: '#f5f5f5',
+                            200: '#ebebeb',
+                            300: '#e0e0e0',
+                            400: '#d4d4d4',
+                            500: '#a3a3a3',
+                            600: '#737373',
+                            700: '#525252',
+                            800: '#404040',
+                            900: '#262626',
+                            950: '#171717',
+                        },
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Design System -->
+    <style>
+        /* === CSS Custom Properties === */
+        :root {
+            /* Colors */
+            --gray-000: #ffffff;
+            --gray-005: #fafafa;
+            --gray-010: #f5f5f5;
+            --gray-020: #ebebeb;
+            --gray-030: #e0e0e0;
+            --gray-040: #d4d4d4;
+            --gray-050: #a3a3a3;
+            --gray-060: #737373;
+            --gray-070: #525252;
+            --gray-080: #404040;
+            --gray-090: #262626;
+            --gray-100: #171717;
+            
+            --brand-500: #10b981;
+            --brand-600: #059669;
+            
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            
+            /* Layout */
+            --sidebar-width: 280px;
+            --header-height: 64px;
+            
+            /* Borders */
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --radius-xl: 12px;
+            
+            /* Shadows */
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+            
+            /* Animations */
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-fast: 100ms;
+            --duration-normal: 150ms;
+        }
+        
+        /* === Base Styles === */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body {
+            background: var(--gray-005);
+            color: var(--gray-090);
+            min-height: 100vh;
+        }
+        
+        /* === Layout === */
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* === Sidebar === */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            right: 0;
+            background: var(--gray-000);
+            border-left: 1px solid var(--gray-020);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform var(--duration-normal) var(--ease-out);
+        }
+        
+        [dir="ltr"] .sidebar {
+            right: auto;
+            left: 0;
+            border-left: none;
+            border-right: 1px solid var(--gray-020);
+        }
+        
+        /* Mobile Sidebar */
+        @media (max-width: 1023px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+            
+            [dir="ltr"] .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.is-open {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 99;
+            }
+            
+            .sidebar-overlay.is-visible {
+                display: block;
+            }
+        }
+        
+        /* Sidebar Header */
+        .sidebar-header {
+            padding: var(--space-6);
+            border-bottom: 1px solid var(--gray-020);
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+        
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--gray-010);
+        }
+        
+        .user-avatar-placeholder {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--gray-090);
+            color: var(--gray-000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .user-info {
+            min-width: 0;
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-090);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            color: var(--gray-050);
+        }
+        
+        /* Profile Completion */
+        .profile-completion {
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--gray-010);
+        }
+        
+        .completion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+        }
+        
+        .completion-label {
+            font-size: 12px;
+            color: var(--gray-050);
+        }
+        
+        .completion-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--brand-600);
+        }
+        
+        .completion-bar {
+            height: 4px;
+            background: var(--gray-020);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .completion-fill {
+            height: 100%;
+            background: var(--brand-600);
+            border-radius: 2px;
+            transition: width 0.3s var(--ease-out);
+        }
+        
+        /* Navigation */
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--space-3);
+            overflow-y: auto;
+        }
+        
+        .nav-section {
+            margin-bottom: var(--space-5);
+        }
+        
+        .nav-section-title {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-040);
+            padding: 0 var(--space-3);
+            margin-bottom: var(--space-2);
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            color: var(--gray-060);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--duration-fast) var(--ease-out);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: right;
+        }
+        
+        [dir="ltr"] .nav-item {
+            text-align: left;
+        }
+        
+        .nav-item:hover {
+            background: var(--gray-010);
+            color: var(--gray-080);
+        }
+        
+        .nav-item.active {
+            background: var(--gray-090);
+            color: var(--gray-000);
+        }
+        
+        .nav-item.active .nav-icon {
+            color: var(--brand-400);
+        }
+        
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: currentColor;
+            opacity: 0.8;
+            flex-shrink: 0;
+        }
+        
+        .nav-badge {
+            margin-right: auto;
+            margin-left: 0;
+            background: var(--brand-600);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        [dir="ltr"] .nav-badge {
+            margin-left: auto;
+            margin-right: 0;
+        }
+        
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: var(--space-3);
+            border-top: 1px solid var(--gray-020);
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background var(--duration-fast) var(--ease-out);
+        }
+        
+        .user-menu:hover {
+            background: var(--gray-010);
+        }
+        
+        .user-menu-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .user-menu-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .user-menu-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-090);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .user-menu-email {
+            font-size: 12px;
+            color: var(--gray-050);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-right: var(--sidebar-width);
+            min-height: 100vh;
+            padding: var(--space-8) var(--space-10);
+        }
+        
+        [dir="ltr"] .main-content {
+            margin-right: 0;
+            margin-left: var(--sidebar-width);
+        }
+        
+        @media (max-width: 1023px) {
+            .main-content {
+                margin-right: 0;
+                margin-left: 0;
+                padding: var(--space-5);
+            }
+        }
+        
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            padding: var(--space-4);
+            background: var(--gray-000);
+            border-bottom: 1px solid var(--gray-020);
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        @media (max-width: 1023px) {
+            .mobile-header {
+                display: flex;
+            }
+        }
+        
+        .mobile-menu-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--gray-010);
+            color: var(--gray-060);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .mobile-menu-btn:hover {
+            background: var(--gray-020);
+            color: var(--gray-080);
+        }
+        
+        /* Page Header */
+        .page-header {
+            margin-bottom: var(--space-8);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--gray-090);
+            letter-spacing: -0.02em;
+            margin-bottom: var(--space-2);
+        }
+        
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--gray-050);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-8);
+        }
+        
+        @media (max-width: 767px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .stat-card {
+            background: var(--gray-000);
+            border: 1px solid var(--gray-020);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-4);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .stat-card:hover {
+            border-color: var(--gray-030);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .stat-icon-blue {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        .stat-icon-green {
+            background: #ecfdf5;
+            color: #10b981;
+        }
+        
+        .stat-icon-amber {
+            background: #fffbeb;
+            color: #f59e0b;
+        }
+        
+        .stat-info {
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-090);
+            line-height: 1.2;
+            margin-bottom: var(--space-1);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--gray-050);
+        }
+        
+        /* Content Sections */
+        .content-section {
+            background: var(--gray-000);
+            border: 1px solid var(--gray-020);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-6);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-5);
+            border-bottom: 1px solid var(--gray-020);
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-090);
+        }
+        
+        .section-action {
+            font-size: 13px;
+            color: var(--brand-600);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color var(--duration-fast) var(--ease-out);
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .section-action:hover {
+            color: var(--brand-700);
+        }
+        
+        .section-content {
+            padding: var(--space-5);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-12) var(--space-6);
+            text-align: center;
+        }
+        
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-xl);
+            background: var(--gray-010);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--gray-040);
+            margin-bottom: var(--space-4);
+        }
+        
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-090);
+            margin-bottom: var(--space-2);
+        }
+        
+        .empty-description {
+            font-size: 14px;
+            color: var(--gray-050);
+            max-width: 320px;
+        }
+        
+        /* Loading State */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--gray-000);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity var(--duration-normal) var(--ease-out);
+        }
+        
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--gray-020);
+            border-top-color: var(--brand-600);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: var(--space-4);
+            font-size: 14px;
+            color: var(--gray-050);
+        }
+        
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: var(--space-5);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4) var(--space-5);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s var(--ease-out);
+        }
+
+        /* Education Entry Type Buttons */
+        .edu-type-btn.active-type[data-type="University"] {
+            border-color: #6366f1 !important; /* indigo-500 */
+            color: #4f46e5 !important; /* indigo-600 */
+            background-color: #eef2ff !important; /* indigo-50 */
+        }
+        .edu-type-btn.active-type[data-type="Certificate"] {
+            border-color: #10b981 !important; /* emerald-500 */
+            color: #059669 !important; /* emerald-600 */
+            background-color: #ecfdf5 !important; /* emerald-50 */
+        }
+        .edu-type-btn.active-type[data-type="Course"] {
+            border-color: #f59e0b !important; /* amber-500 */
+            color: #d97706 !important; /* amber-600 */
+            background-color: #fffbeb !important; /* amber-50 */
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .toast-success {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+        
+        .toast-error {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .toast-warning {
+            background: #fffbeb;
+            color: #92400e;
+        }
+        
+        /* Application Cards */
+        .application-card {
+            background: var(--gray-005);
+            border: 1px solid var(--gray-020);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .application-card:hover {
+            border-color: var(--gray-030);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .application-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+        
+        .application-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-090);
+            margin-bottom: var(--space-1);
+        }
+        
+        .application-company {
+            font-size: 13px;
+            color: var(--gray-050);
+        }
+        
+        .application-status {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-pending {
+            background: #fffbeb;
+            color: #92400e;
+        }
+        
+        .status-accepted {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+        
+        .status-rejected {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .application-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--gray-020);
+        }
+        
+        .application-date {
+            font-size: 12px;
+            color: var(--gray-050);
+        }
+        
+        .application-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-020);
+            background: var(--gray-000);
+            color: var(--gray-060);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .action-btn:hover {
+            border-color: var(--gray-030);
+            background: var(--gray-010);
+            color: var(--gray-080);
+        }
+        
+        /* Service Cards */
+        .service-card {
+            background: var(--gray-000);
+            border: 1px solid var(--gray-020);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .service-card:hover {
+            border-color: var(--gray-030);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .service-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        
+        .service-content {
+            padding: var(--space-4);
+        }
+        
+        .service-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-090);
+            margin-bottom: var(--space-2);
+        }
+        
+        .service-description {
+            font-size: 13px;
+            color: var(--gray-050);
+            line-height: 1.5;
+            margin-bottom: var(--space-3);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .service-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--gray-020);
+        }
+        
+        .service-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--brand-600);
+        }
+        
+        .service-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+        
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-5);
+        }
+        
+        .modal-overlay.show,
+        .modal-overlay.is-visible {
+            display: flex;
+        }
+        
+        .modal-overlay.hidden {
+            display: none !important;
+        }
+        
+        .modal-container {
+            background: var(--gray-000);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: modalSlideIn 0.3s var(--ease-out);
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-5);
+            border-bottom: 1px solid var(--gray-020);
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-090);
+        }
+        
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--gray-010);
+            color: var(--gray-060);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .modal-close:hover {
+            background: var(--gray-020);
+            color: var(--gray-080);
+        }
+        
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-5);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-3);
+            padding: var(--space-5);
+            border-top: 1px solid var(--gray-020);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: var(--space-5);
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-070);
+            margin-bottom: var(--space-2);
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--gray-020);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            color: var(--gray-090);
+            background: var(--gray-000);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--brand-500);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--gray-090);
+            color: var(--gray-000);
+        }
+        
+        .btn-primary:hover {
+            background: var(--gray-080);
+        }
+        
+        .btn-secondary {
+            background: var(--gray-000);
+            color: var(--gray-070);
+            border: 1px solid var(--gray-020);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--gray-010);
+            border-color: var(--gray-030);
+        }
+        
+        .btn-ghost {
+            background: transparent;
+            color: var(--gray-060);
+        }
+        
+        .btn-ghost:hover {
+            background: var(--gray-010);
+            color: var(--gray-080);
+        }
+        
+        .btn-danger {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .btn-danger:hover {
+            background: #fee2e2;
+        }
+        
+        .btn-sm {
+            padding: var(--space-2) var(--space-3);
+            font-size: 13px;
+        }
+        
+        /* Filter Buttons */
+        .filter-group {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            border: 1px solid var(--gray-020);
+            background: var(--gray-000);
+            color: var(--gray-060);
+        }
+        
+        .filter-btn:hover {
+            background: var(--gray-010);
+            border-color: var(--gray-030);
+        }
+        
+        .filter-btn.active {
+            background: var(--gray-090);
+            border-color: var(--gray-090);
+            color: var(--gray-000);
+        }
+        
+        /* Profile Card Modal */
+        .profile-card-preview {
+            background: var(--gray-005);
+            border: 1px solid var(--gray-020);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+        }
+        
+        .qr-code-container {
+            display: flex;
+            justify-content: center;
+            padding: var(--space-6);
+        }
+        
+        /* Skills Tags */
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+        
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-3);
+            background: var(--gray-010);
+            border: 1px solid var(--gray-020);
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            color: var(--gray-070);
+        }
+        
+        .skill-tag .remove-skill {
+            cursor: pointer;
+            color: var(--gray-040);
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+        
+        .skill-tag .remove-skill:hover {
+            color: #dc2626;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-030);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-040);
+        }
+        
+        /* Focus States */
+        :focus-visible {
+            outline: 2px solid var(--brand-500);
+            outline-offset: 2px;
+        }
+        
+        /* Screen Reader Only */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="pageLoadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text" data-lang-key="loading_dashboard">Loading Dashboard...</p>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- Mobile Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <div id="userAvatarContainer">
+                        <div id="userAvatar" class="user-avatar-placeholder">JD</div>
+                    </div>
+                    <div class="user-info">
+                        <div id="userName" class="user-name">John Doe</div>
+                        <div class="user-role" data-lang-key="professional">Professional</div>
+                    </div>
+                </div>
+                
+                <!-- Profile Completion -->
+                <div class="profile-completion">
+                    <div class="completion-header">
+                        <span class="completion-label" data-lang-key="profile_completion">Profile Completion</span>
+                        <span id="profileCompletenessPercent" class="completion-value">75%</span>
+                    </div>
+                    <div class="completion-bar">
+                        <div id="profileCompletenessBar" class="completion-fill" style="width: 75%"></div>
+                    </div>
+                    <button id="improveProfileBtn" class="w-full mt-3 py-2 px-3 bg-brand-50 text-brand-700 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-brand-100 hover:bg-brand-100 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span data-lang-key="improve_profile">Improve Profile</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <!-- Main -->
+                <div class="nav-section">
+                    <div class="nav-section-title" data-lang-key="main">Main</div>
+                    <a href="#overview" class="nav-item active" data-section="overview" data-lang-key="overview">
+                        <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                        <span data-lang-key="overview">Overview</span>
+                    </a>
+                    <a href="#applications" class="nav-item" data-section="applications">
+                        <span class="nav-icon"><i class="fa-solid fa-briefcase"></i></span>
+                        <span data-lang-key="applications">Applications</span>
+                        <span id="applicationsBadge" class="nav-badge" style="display: none;">0</span>
+                    </a>
+                    <a href="#services" class="nav-item" data-section="services">
+                        <span class="nav-icon"><i class="fa-solid fa-layer-group"></i></span>
+                        <span data-lang-key="my_services">My Services</span>
+                    </a>
+                    <a href="#profile-card" class="nav-item" data-section="profile-card">
+                        <span class="nav-icon"><i class="fa-solid fa-id-card"></i></span>
+                        <span data-lang-key="profile_card">Profile Card</span>
+                    </a>
+                </div>
+                
+                <!-- Profile -->
+                <div class="nav-section">
+                    <div class="nav-section-title" data-lang-key="profile">Profile</div>
+                    <a href="#personal" class="nav-item" data-section="personal">
+                        <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
+                        <span data-lang-key="personal_info">Personal Info</span>
+                    </a>
+                    <a href="#professional" class="nav-item" data-section="professional">
+                        <span class="nav-icon"><i class="fa-solid fa-briefcase"></i></span>
+                        <span data-lang-key="professional_info">Professional</span>
+                    </a>
+                    <a href="#education" class="nav-item" data-section="education">
+                        <span class="nav-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                        <span data-lang-key="education">Education</span>
+                    </a>
+                    <a href="#settings" class="nav-item" data-section="settings">
+                        <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+                        <span data-lang-key="settings">Settings</span>
+                    </a>
+                </div>
+
+                <!-- Actions -->
+                <div class="nav-section">
+                    <div class="nav-section-title" data-lang-key="quick_actions">Quick Actions</div>
+                    <a href="/jobs.html" class="nav-item" target="_blank">
+                        <span class="nav-icon"><i class="fa-solid fa-briefcase"></i></span>
+                        <span data-lang-key="browse_jobs">Browse Jobs</span>
+                    </a>
+                    <a href="/index.html" class="nav-item" target="_blank">
+                        <span class="nav-icon"><i class="fa-solid fa-home"></i></span>
+                        <span data-lang-key="homepage">Homepage</span>
+                    </a>
+                    <a href="/services.html" class="nav-item" target="_blank">
+                        <span class="nav-icon"><i class="fa-solid fa-layer-group"></i></span>
+                        <span data-lang-key="services">Services</span>
+                    </a>
+                    <a href="/hirly/about.html" class="nav-item" target="_blank">
+                        <span class="nav-icon"><i class="fa-solid fa-circle-info"></i></span>
+                        <span data-lang-key="about_us">About Us</span>
+                    </a>
+                    <a href="/contact.html" class="nav-item" target="_blank">
+                        <span class="nav-icon"><i class="fa-solid fa-envelope"></i></span>
+                        <span data-lang-key="contact_us">Contact Us</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- Footer -->
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="user-menu">
+                    <div id="userMenuAvatar" class="user-menu-avatar" style="display: none;"></div>
+                    <div id="userMenuInitials" class="user-avatar-placeholder" style="width: 32px; height: 32px; font-size: 12px;">JD</div>
+                    <div class="user-menu-info">
+                        <div id="userMenuName" class="user-menu-name">John Doe</div>
+                        <div id="userMenuEmail" class="user-menu-email">john@example.com</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-up" style="color: var(--gray-040); font-size: 12px;"></i>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Mobile Header -->
+            <div class="mobile-header">
+                <button id="mobileMenuBtn" class="mobile-menu-btn">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <span class="text-lg font-semibold" data-lang-key="dashboard">Dashboard</span>
+                <div style="width: 40px;"></div>
+            </div>
+            
+            <!-- Overview Section -->
+            <div id="overviewSection" class="section-content">
+                <header class="page-header">
+                    <h1 id="welcomeGreetingText" class="page-title" data-lang-key="welcome_back">Welcome back, John</h1>
+                    <p class="page-subtitle" data-lang-key="dashboard_subtitle">Here's what's happening with your professional work</p>
+                </header>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-blue">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div id="allApplicationsCount" class="stat-value">0</div>
+                            <div class="stat-label" data-lang-key="applications">Applications</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-amber">
+                            <i class="fa-solid fa-eye"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div id="profileViewsCount" class="stat-value">0</div>
+                            <div class="stat-label" data-lang-key="profile_views">Profile Views</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Applications -->
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title" data-lang-key="recent_applications">Recent Applications</h2>
+                        <button id="viewAllApplicationsBtn" class="section-action" data-lang-key="view_all">View All</button>
+                    </div>
+                    <div id="recentApplicationsList" class="section-content">
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fa-solid fa-briefcase"></i>
+                            </div>
+                            <h3 class="empty-title" data-lang-key="no_applications">No applications yet</h3>
+                            <p class="empty-description" data-lang-key="no_applications_desc">Start applying to jobs to see them here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Applications Section -->
+            <div id="applicationsSection" class="section-content hidden">
+                <header class="page-header">
+                    <h1 class="page-title" data-lang-key="applications">Applications</h1>
+                    <p class="page-subtitle" data-lang-key="applications_subtitle">Track and manage your job applications</p>
+                </header>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <div class="filter-group">
+                            <button class="filter-btn active" data-filter="all" data-lang-key="all">All</button>
+                            <button class="filter-btn" data-filter="pending" data-lang-key="pending">Pending</button>
+                            <button class="filter-btn" data-filter="accepted" data-lang-key="accepted">Accepted</button>
+                            <button class="filter-btn" data-filter="rejected" data-lang-key="rejected">Rejected</button>
+                        </div>
+                    </div>
+                    <div id="applicationsList" class="section-content">
+                        <!-- Applications will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Services Section -->
+            <div id="servicesSection" class="section-content hidden">
+                <header class="page-header">
+                    <h1 class="page-title" data-lang-key="my_services">My Services</h1>
+                    <p class="page-subtitle" data-lang-key="services_subtitle">Manage your professional services and offerings</p>
+                </header>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title" data-lang-key="all_services">All Services</h2>
+                        <button id="addServiceBtn2" class="btn btn-primary add-service-trigger" data-lang-key="add_service">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Add Service</span>
+                        </button>
+                    </div>
+                    <div id="allServicesList" class="section-content">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Service cards will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Card Section -->
+            <div id="profile-cardSection" class="section-content hidden">
+                <header class="page-header">
+                    <h1 class="page-title" data-lang-key="profile_card">Profile Card</h1>
+                    <p class="page-subtitle" data-lang-key="profile_card_subtitle">Share your professional profile with QR code</p>
+                </header>
+                
+                <div class="content-section">
+                    <div class="section-content">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Profile Preview -->
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4" data-lang-key="preview">Preview</h3>
+                                <div class="profile-card-preview">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div id="viewProfileCardAvatar" class="user-avatar-placeholder" style="width: 64px; height: 64px; font-size: 24px;">JD</div>
+                                        <img id="viewProfileCardAvatarImg" src="" alt="" class="w-16 h-16 rounded-full object-cover hidden">
+                                        <div>
+                                            <div id="viewProfileCardName" class="text-lg font-semibold">John Doe</div>
+                                            <div id="viewProfileCardProfession" class="text-sm text-gray-500">Web Developer</div>
+                                        </div>
+                                    </div>
+                                    <div id="viewProfileCardBio" class="text-sm text-gray-600 mb-4">
+                                        Full-stack developer with 5 years of experience in React and Node.js.
+                                    </div>
+                                    <div id="viewProfileCardSkills" class="flex flex-wrap gap-2 mb-6">
+                                        <!-- Skills will be inserted here -->
+                                    </div>
+                                    <div class="pt-6 border-t border-slate-50 flex items-center justify-between">
+                                        <div class="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                                            <i class="fa-solid fa-eye text-emerald-500"></i>
+                                            <span id="viewProfileCardViewsCount">0 Views</span>
+                                        </div>
+                                        <a id="visitMyProfileBtn" href="#" target="_blank" class="px-4 py-2 bg-slate-900 text-white text-[10px] font-black rounded-xl hover:bg-slate-800 transition-all uppercase tracking-widest flex items-center gap-2">
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                                            <span data-lang-key="visit_profile">Visit Profile</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- QR Code -->
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4" data-lang-key="qr_code">QR Code</h3>
+                                <div class="bg-gray-50 rounded-lg p-6">
+                                    <div id="qrCodeContainer" class="qr-code-container">
+                                        <!-- QR code will be generated here -->
+                                    </div>
+                                    <p class="text-center text-sm text-gray-500 mt-4" data-lang-key="scan_to_view">
+                                        Scan to view profile
+                                    </p>
+                                </div>
+                                <div class="mt-4 flex flex-col sm:flex-row justify-center gap-3">
+                                    <button id="downloadQRBtn" class="btn btn-secondary">
+                                        <i class="fa-solid fa-download"></i>
+                                        <span data-lang-key="download_qr">Download QR Code</span>
+                                    </button>
+                                    <button id="shareProfileBtn" class="btn btn-primary">
+                                        <i class="fa-solid fa-share-nodes"></i>
+                                        <span data-lang-key="share_profile">Share Profile</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Info Section -->
+            <div id="personalSection" class="section-content hidden">
+                <header class="page-header">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="page-title" data-lang-key="personal_info">Personal Info</h1>
+                            <p class="page-subtitle" data-lang-key="personal_info_subtitle">Your basic account information and contact details</p>
+                        </div>
+                        <button id="editPersonalInfoBtn" class="btn btn-primary">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span data-lang-key="edit">Edit</span>
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="content-section">
+                        <div class="section-header">
+                            <h2 class="section-title" data-lang-key="basic_details">Basic Details</h2>
+                        </div>
+                        <div class="section-content space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-400 uppercase" data-lang-key="full_name">Full Name</label>
+                                <div id="viewFullName" class="text-sm font-medium text-gray-900 mt-1">-</div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-400 uppercase" data-lang-key="email">Email</label>
+                                <div id="viewEmail" class="text-sm font-medium text-gray-900 mt-1">-</div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-400 uppercase" data-lang-key="phone">Phone</label>
+                                <div id="viewPhone" class="text-sm font-medium text-gray-900 mt-1">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-header">
+                            <h2 class="section-title" data-lang-key="additional_info">Additional Information</h2>
+                        </div>
+                        <div class="section-content space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-400 uppercase" data-lang-key="country">Country</label>
+                                <div id="viewCountry" class="text-sm font-medium text-gray-900 mt-1">-</div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-400 uppercase" data-lang-key="city">City</label>
+                                <div id="viewCity" class="text-sm font-medium text-gray-900 mt-1">-</div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-400 uppercase" data-lang-key="gender">Gender</label>
+                                <div id="viewGender" class="text-sm font-medium text-gray-900 mt-1">-</div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-400 uppercase" data-lang-key="birthdate">Birthdate</label>
+                                <div id="viewBirthdate" class="text-sm font-medium text-gray-900 mt-1">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Section -->
+            <div id="professionalSection" class="section-content hidden">
+                <header class="page-header">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="page-title" data-lang-key="professional_info">Professional</h1>
+                            <p class="page-subtitle" data-lang-key="professional_info_subtitle">Your professional background and skills</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="editProfessionalInfoBtn" class="px-6 py-2 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all flex items-center gap-2 shadow-xl shadow-slate-100 view-mode-only">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                <span data-lang-key="edit">Edit Profile</span>
+                            </button>
+                            <button id="cancelProfessionalEdit" class="px-6 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all hidden edit-mode-only">
+                                <span data-lang-key="cancel">Cancel</span>
+                            </button>
+                            <button id="saveProfessionalEdit" class="px-6 py-2 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all flex items-center gap-2 shadow-xl shadow-slate-100 hidden edit-mode-only">
+                                <i class="fa-solid fa-check text-xs"></i>
+                                <span data-lang-key="save">Save Changes</span>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="space-y-8">
+                    <!-- About Me & Skills -->
+                    <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                        <div class="flex items-center gap-4 mb-2">
+                            <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500">
+                                <i class="fa-solid fa-user-tie text-lg"></i>
+                            </div>
+                            <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]" data-lang-key="about_me">About Me</h2>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                            <div class="space-y-4">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1" data-lang-key="bio">Professional Bio</label>
+                                <div class="view-mode-only">
+                                    <div id="viewBio" class="text-sm text-slate-600 leading-relaxed font-medium">-</div>
+                                </div>
+                                <div class="edit-mode-only hidden">
+                                    <textarea id="editBio" name="bio" class="w-full h-40 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:border-emerald-500 transition-all outline-none text-sm font-medium leading-relaxed" data-lang-placeholder="bio_placeholder"></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1" data-lang-key="skills">Skills & Expertise</label>
+                                <div class="view-mode-only">
+                                    <div id="viewSkills" class="flex flex-wrap gap-2">
+                                        <!-- Skills tags -->
+                                    </div>
+                                </div>
+                                <div class="edit-mode-only hidden space-y-4">
+                                    <div id="editSkillsContainer" class="flex flex-wrap gap-2 min-h-[48px] p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <!-- Skill tags for editing -->
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <div class="relative flex-1 group">
+                                            <i class="fa-solid fa-plus absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors"></i>
+                                            <input type="text" id="newSkillInput" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:border-emerald-500 transition-all outline-none text-sm font-medium" data-lang-placeholder="add_skill_placeholder">
+                                        </div>
+                                        <button type="button" id="addSkillBtn" class="px-6 py-2 bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-50 flex items-center gap-2">
+                                            <span>Add</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Career Information -->
+                        <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                            <div class="flex items-center gap-4 mb-2">
+                                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
+                                    <i class="fa-solid fa-briefcase text-lg"></i>
+                                </div>
+                                <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]" data-lang-key="career_info">Career Information</h2>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-blue-200 transition-all">
+                                    <div class="flex-1">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" data-lang-key="current_status">Status</p>
+                                        <div class="view-mode-only">
+                                            <p id="viewCurrentStatus" class="text-sm font-bold text-slate-700 mt-1">-</p>
+                                        </div>
+                                        <div class="edit-mode-only hidden mt-2">
+                                            <div id="editStatusDropdown" class="relative">
+                                                <button type="button" class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-xl text-left text-sm font-bold text-slate-700 flex items-center justify-between group hover:border-blue-500 transition-all">
+                                                    <div class="flex items-center gap-3">
+                                                        <i id="editStatusIcon" class="fa-solid fa-circle-dot text-slate-300 group-hover:text-blue-500 transition-colors"></i>
+                                                        <span id="selectedEditStatus">Select Status</span>
+                                                    </div>
+                                                    <i class="fas fa-chevron-down text-[10px] text-slate-300 group-hover:text-blue-500 transition-all"></i>
+                                                </button>
+                                                <input type="hidden" id="editStatus">
+                                                <div id="editStatusMenu" class="absolute z-20 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl overflow-hidden hidden max-h-60 overflow-y-auto custom-scrollbar">
+                                                    <!-- Status options populated by JS -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-blue-500 shadow-sm group-hover:scale-110 transition-transform view-mode-only">
+                                        <i class="fa-solid fa-circle-dot"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex flex-col p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-emerald-200 transition-all">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" data-lang-key="primary_profession">Primary Profession</p>
+                                    <div class="view-mode-only flex items-center justify-between mt-1">
+                                        <p id="viewProfession" class="text-sm font-bold text-slate-700">-</p>
+                                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-500 shadow-sm group-hover:scale-110 transition-transform">
+                                            <i class="fa-solid fa-briefcase"></i>
+                                        </div>
+                                    </div>
+                                    <div class="edit-mode-only hidden mt-2 space-y-3">
+                                        <div id="mainCategoryDropdown" class="relative">
+                                            <button type="button" class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-xl text-left text-sm font-bold text-slate-700 flex items-center justify-between group hover:border-emerald-500 transition-all">
+                                                <span id="selectedMainCategory" class="text-slate-400 truncate" data-lang-key="select_category">Select Category</span>
+                                                <i class="fas fa-chevron-down text-[10px] text-slate-300 group-hover:text-emerald-500 transition-all"></i>
+                                            </button>
+                                            <div id="mainCategoryMenu" class="absolute z-30 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl max-h-60 overflow-y-auto hidden"></div>
+                                        </div>
+                                        <div id="currentProfessionDropdown" class="relative">
+                                            <button type="button" class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-xl text-left text-sm font-bold text-slate-700 flex items-center justify-between group hover:border-emerald-500 transition-all">
+                                                <span id="selectedSpecialization" class="text-slate-400 truncate" data-lang-key="select_profession">Select Profession</span>
+                                                <i class="fas fa-chevron-down text-[10px] text-slate-300 group-hover:text-emerald-500 transition-all"></i>
+                                            </button>
+                                            <input type="hidden" id="editProfession">
+                                            <div id="currentProfessionMenu" class="absolute z-30 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl max-h-60 overflow-y-auto hidden"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-indigo-200 transition-all">
+                                    <div class="flex-1">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" data-lang-key="website">Portfolio / Website</p>
+                                        <div class="view-mode-only">
+                                            <a id="viewWebsite" href="#" target="_blank" class="text-sm font-bold text-indigo-600 hover:text-indigo-700 mt-1 block truncate max-w-[200px]">-</a>
+                                        </div>
+                                        <div class="edit-mode-only hidden mt-2">
+                                            <input type="url" id="editWebsite" class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700" placeholder="https://...">
+                                        </div>
+                                    </div>
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-500 shadow-sm group-hover:scale-110 transition-transform view-mode-only">
+                                        <i class="fa-solid fa-globe"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Interests & CV -->
+                        <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                            <div class="flex items-center gap-4 mb-2">
+                                <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-500">
+                                    <i class="fa-solid fa-heart text-lg"></i>
+                                </div>
+                                <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]" data-lang-key="interests_and_cv">Interests & CV</h2>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div class="space-y-4">
+                                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1" data-lang-key="interested_professions">Interested In</label>
+                                    <div class="view-mode-only">
+                                        <div id="viewInterestedProfessions" class="flex flex-wrap gap-2">
+                                            <!-- Interest tags -->
+                                        </div>
+                                    </div>
+                                    <div class="edit-mode-only hidden space-y-4">
+                                        <div id="editInterestsContainer" class="flex flex-wrap gap-2 min-h-[48px] p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <!-- Interest tags for editing -->
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div id="interestCategoryDropdown" class="relative">
+                                                <button type="button" class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-xl text-left text-sm font-bold text-slate-700 flex items-center justify-between group hover:border-purple-500 transition-all">
+                                                    <span id="selectedInterestCategory" class="text-slate-400 truncate" data-lang-key="select_category">Select Category</span>
+                                                    <i class="fas fa-chevron-down text-[10px] text-slate-300 group-hover:text-purple-500 transition-all"></i>
+                                                </button>
+                                                <div id="interestCategoryMenu" class="absolute z-20 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl max-h-48 overflow-y-auto hidden"></div>
+                                            </div>
+                                            <div id="interestProfessionDropdown" class="relative">
+                                                <button type="button" class="w-full px-4 py-2.5 bg-white border border-slate-100 rounded-xl text-left text-sm font-bold text-slate-700 flex items-center justify-between group hover:border-purple-500 transition-all">
+                                                    <span id="selectedInterestProfession" class="text-slate-400 truncate" data-lang-key="select_profession">Select Profession</span>
+                                                    <i class="fas fa-chevron-down text-[10px] text-slate-300 group-hover:text-purple-500 transition-all"></i>
+                                                </button>
+                                                <div id="interestProfessionMenu" class="absolute z-20 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl max-h-48 overflow-y-auto hidden"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-4 pt-4 border-t border-slate-50">
+                                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1" data-lang-key="curriculum_vitae">Curriculum Vitae (PDF)</label>
+                                    <div class="view-mode-only">
+                                        <div id="viewCvWrapper" class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-rose-200 transition-all hidden">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-rose-500 shadow-sm">
+                                                    <i class="fa-solid fa-file-pdf"></i>
+                                                </div>
+                                                <span class="text-sm font-bold text-slate-700 uppercase tracking-wider" data-lang-key="my_cv">My CV.pdf</span>
+                                            </div>
+                                            <a id="viewCvFile" href="#" target="_blank" class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 hover:text-emerald-500 shadow-sm hover:scale-110 transition-all">
+                                                <i class="fa-solid fa-download"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="edit-mode-only hidden">
+                                        <div id="editCvContainer" class="relative group">
+                                            <div id="cvEmptyState" class="p-6 border-2 border-dashed border-slate-100 rounded-[24px] bg-slate-50 flex flex-col items-center justify-center gap-3 transition-all hover:border-purple-300 hover:bg-purple-50/30 cursor-pointer" onclick="document.getElementById('editCvFile').click()">
+                                                <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-slate-200 shadow-sm group-hover:text-purple-500 group-hover:scale-110 transition-all duration-300">
+                                                    <i class="fa-solid fa-file-arrow-up text-xl"></i>
+                                                </div>
+                                                <div class="text-center">
+                                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] block" data-lang-key="upload_cv">Upload CV</span>
+                                                    <span class="text-[8px] text-slate-300 font-medium mt-1">PDF max 5MB</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="cvFileActions" class="p-4 bg-white border border-slate-100 rounded-[24px] flex items-center justify-between shadow-sm hidden">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 shadow-sm">
+                                                        <i class="fa-solid fa-file-pdf"></i>
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span id="cvFileNameDisplay" class="text-[10px] font-black text-slate-700 truncate max-w-[120px] uppercase tracking-wider">My CV.pdf</span>
+                                                        <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Verified Document</span>
+                                                    </div>
+                                                </div>
+                                                <button type="button" id="removeCvBtn" class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-all">
+                                                    <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <input type="file" id="editCvFile" name="cv" class="hidden" accept=".pdf">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Education Section -->
+            <div id="educationSection" class="section-content hidden">
+                <header class="page-header">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="page-title" data-lang-key="education">Education</h1>
+                            <p class="page-subtitle" data-lang-key="education_subtitle">Your academic background and certifications</p>
+                        </div>
+                        <button id="addEducationBtn" class="px-6 py-2 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all flex items-center gap-2 shadow-xl shadow-slate-100">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span data-lang-key="add_education">Add Education</span>
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="space-y-8">
+                    <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                        <div class="flex items-center gap-4 mb-2">
+                            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
+                                <i class="fa-solid fa-graduation-cap text-lg"></i>
+                            </div>
+                            <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]" data-lang-key="academic_history">Academic History</h2>
+                        </div>
+                        
+                        <div id="viewEducationList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Education items -->
+                            <div class="empty-state col-span-full py-12 text-center">
+                                <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mb-4 mx-auto">
+                                    <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest" data-lang-key="no_education">No education history</h3>
+                                <p class="text-xs text-slate-300 font-medium mt-1" data-lang-key="no_education_desc">Add your degrees and academic achievements</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div id="settingsSection" class="section-content hidden">
+                <header class="page-header">
+                    <h1 class="page-title" data-lang-key="settings">Settings</h1>
+                    <p class="page-subtitle" data-lang-key="settings_subtitle">Configure your account and preferences</p>
+                </header>
+                
+                <div class="space-y-6">
+                    <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                        <div>
+                            <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6" data-lang-key="privacy_settings">Privacy Settings</h2>
+                            
+                            <div class="space-y-4">
+                                <!-- Visible to All -->
+                                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-slate-100 group hover:border-emerald-200 transition-all">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-500 shadow-sm border border-slate-100 transition-all">
+                                            <i class="fa-solid fa-globe text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-bold text-slate-700" data-lang-key="visible_to_all">Visible to Everyone</h3>
+                                            <p class="text-xs text-slate-400 font-medium" data-lang-key="visible_to_all_desc">Your profile is public and can be found by anyone</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="radio" name="privacyVisibility" id="visibilityAll" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                    </label>
+                                </div>
+
+                                <!-- Visible to Companies Only -->
+                                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-slate-100 group hover:border-emerald-200 transition-all">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-500 shadow-sm border border-slate-100 transition-all">
+                                            <i class="fa-solid fa-building-user text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-bold text-slate-700" data-lang-key="visible_companies_only">Companies Only</h3>
+                                            <p class="text-xs text-slate-400 font-medium" data-lang-key="visible_companies_only_desc">Only registered employers can view your full profile</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="radio" name="privacyVisibility" id="visibilityCompanies" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                    </label>
+                                </div>
+
+                                <!-- Private Mode -->
+                                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-slate-100 group hover:border-emerald-200 transition-all">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-500 shadow-sm border border-slate-100 transition-all">
+                                            <i class="fa-solid fa-eye-slash text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-bold text-slate-700" data-lang-key="private_mode">Private Mode</h3>
+                                            <p class="text-xs text-slate-400 font-medium" data-lang-key="private_mode_desc">Hide your profile from search results entirely</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="radio" name="privacyVisibility" id="visibilityPrivate" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                    </label>
+                                </div>
+
+                                <!-- Hide Contact Info -->
+                                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-slate-100 group hover:border-emerald-200 transition-all">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-500 shadow-sm border border-slate-100 transition-all">
+                                            <i class="fa-solid fa-user-secret text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-bold text-slate-700" data-lang-key="hide_contact_info">Hide Contact Info</h3>
+                                            <p class="text-xs text-slate-400 font-medium" data-lang-key="hide_contact_info_desc">Keep your email and phone hidden from public view</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="radio" name="privacyVisibility" id="hideContactInfoToggle" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-8 border-t border-slate-50">
+                            <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6" data-lang-key="notifications">Notifications</h2>
+                            
+                            <div class="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-slate-100 group hover:border-emerald-200 transition-all">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-500 shadow-sm border border-slate-100 transition-all">
+                                        <i class="fa-solid fa-envelope-open-text text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-slate-700" data-lang-key="email_notifications">Email Notifications</h3>
+                                        <p class="text-xs text-slate-400 font-medium" data-lang-key="email_notifications_desc">Receive updates about your applications and messages</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="emailNotificationsToggle" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Language Section -->
+                        <div class="pt-8 border-t border-slate-50">
+                            <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6" data-lang-key="language">Language</h2>
+
+                            <div class="p-5 bg-slate-50 rounded-[24px] border border-slate-100 group hover:border-emerald-200 transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-500 shadow-sm border border-slate-100 transition-all">
+                                            <i class="fa-solid fa-language text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-bold text-slate-700" data-lang-key="interface_language">Interface Language</h3>
+                                            <p class="text-xs text-slate-400 font-medium" data-lang-key="interface_language_desc">Choose your preferred language for the dashboard</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
+                                        <button id="langSwitchAR" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2" data-lang="ar">
+                                            <img src="/images/flags/palestine-flag.svg" alt="AR" class="w-4 h-4 rounded-sm object-cover grayscale-[0.5] group-hover:grayscale-0">
+                                            <span>العربية</span>
+                                        </button>
+                                        <button id="langSwitchEN" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2" data-lang="en">
+                                            <img src="/images/flags/united-kingdom-flag.svg" alt="EN" class="w-4 h-4 rounded-sm object-cover grayscale-[0.5] group-hover:grayscale-0">
+                                            <span>English</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Refresh Suggestion Message -->
+                                <div id="langRefreshSuggestion" class="hidden mt-6 p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-sm">
+                                            <i class="fa-solid fa-sync-alt animate-spin-slow"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider" data-lang-key="refresh_recommended_title">Language Updated!</p>
+                                            <p class="text-[10px] text-emerald-600 font-medium" data-lang-key="refresh_recommended_desc">Refresh to apply all changes perfectly</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="window.location.reload()" class="px-4 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 shadow-md shadow-emerald-100 transition-all">
+                                        <span data-lang-key="refresh_now">Refresh Now</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Share Modal -->
+    <div id="shareProfileModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 520px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" data-lang-key="share_profile_title">Share Profile</h3>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1" data-lang-key="share_profile_subtitle">Showcase your skills to the world</p>
+                </div>
+                <button class="modal-close w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all" data-modal="shareProfileModal">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body space-y-8">
+                <!-- QR Code & Card Preview -->
+                <div class="p-6 bg-slate-50 rounded-[32px] border border-slate-100 flex flex-col items-center gap-6">
+                    <div id="qrCodeContainerModal" class="p-4 bg-white rounded-[24px] border border-slate-100 shadow-sm"></div>
+                    <div class="text-center">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]" data-lang-key="scan_qr_text">Scan to view profile</p>
+                    </div>
+                </div>
+
+                <!-- Profile Link -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1" data-lang-key="profile_link">Profile Link</label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1 group">
+                            <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors"></i>
+                            <input type="text" id="profileLinkInput" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:border-emerald-500 transition-all outline-none text-sm font-medium text-slate-600" readonly>
+                        </div>
+                        <button id="copyLinkBtn" class="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-100">
+                            <i class="fa-solid fa-copy text-xs"></i>
+                            <span data-lang-key="copy">Copy</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Social Sharing -->
+                <div class="space-y-4">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1" data-lang-key="share_social">Share via Social Media</label>
+                    <div class="grid grid-cols-4 gap-4">
+                        <button id="shareWhatsApp" class="flex flex-col items-center gap-3 group">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-emerald-100 group-hover:-translate-y-1 transition-all duration-300">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">WhatsApp</span>
+                        </button>
+                        <button id="shareFacebook" class="flex flex-col items-center gap-3 group">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-blue-100 group-hover:-translate-y-1 transition-all duration-300">
+                                <i class="fa-brands fa-facebook-f"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Facebook</span>
+                        </button>
+                        <button id="shareLinkedIn" class="flex flex-col items-center gap-3 group">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-700 text-white flex items-center justify-center text-2xl shadow-lg shadow-blue-100 group-hover:-translate-y-1 transition-all duration-300">
+                                <i class="fa-brands fa-linkedin-in"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">LinkedIn</span>
+                        </button>
+                        <button id="shareTwitter" class="flex flex-col items-center gap-3 group">
+                            <div class="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-2xl shadow-lg shadow-slate-100 group-hover:-translate-y-1 transition-all duration-300">
+                                <i class="fa-brands fa-x-twitter"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Twitter</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer pt-4">
+                <button type="button" class="w-full py-3 bg-slate-50 text-slate-500 font-bold rounded-xl hover:bg-slate-100 transition-all uppercase tracking-widest text-xs" data-modal="shareProfileModal" data-lang-key="close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Modal -->
+    <div id="serviceModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="serviceModalTitle" class="modal-title" data-lang-key="add_service">Add Service</h3>
+                <button class="modal-close" data-modal="serviceModal">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="serviceForm">
+                    <input type="hidden" id="serviceId" name="serviceId">
+                    
+                    <div class="form-group">
+                        <label class="form-label" data-lang-key="service_title">Service Title</label>
+                        <input type="text" id="serviceTitle" name="serviceTitle" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" data-lang-key="service_description">Description</label>
+                        <textarea id="serviceDescription" name="serviceDescription" class="form-textarea" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-lang-key="category">Category</label>
+                        <select id="serviceCategory" name="category" class="form-select" required>
+                            <option value="" data-lang-key="select_category">Select Category</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label" data-lang-key="price">Price</label>
+                            <input type="number" id="servicePrice" name="price" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" data-lang-key="currency">Currency</label>
+                            <select id="serviceCurrency" name="currency" class="form-select">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="JOD">JOD</option>
+                                <option value="ILS">ILS</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" data-lang-key="delivery_time">Delivery Time (e.g. 3 days)</label>
+                        <input type="text" id="serviceDeliveryTime" name="deliveryTime" class="form-input" placeholder="e.g. 3 days" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" data-lang-key="service_image">Service Image</label>
+                        <div class="mt-2">
+                            <div id="serviceImagePlaceholder" class="p-8 border-2 border-dashed border-slate-100 rounded-[20px] bg-slate-50 flex flex-col items-center justify-center gap-3 transition-all hover:border-emerald-300 hover:bg-emerald-50/30 cursor-pointer" onclick="document.getElementById('serviceImage').click()">
+                                <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-slate-300 shadow-sm transition-all">
+                                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                                </div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]" data-lang-key="upload_image">Upload Image</span>
+                            </div>
+                            
+                            <div id="serviceImagePreview" class="relative group hidden">
+                                <img id="serviceImagePreviewImg" src="" alt="Preview" class="w-full h-48 object-cover rounded-[20px] border border-slate-100 shadow-sm">
+                                <button type="button" id="removeServiceImageBtn" class="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-md text-rose-500 rounded-xl flex items-center justify-center shadow-lg hover:bg-rose-500 hover:text-white transition-all">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                            
+                            <input type="file" id="serviceImage" name="serviceImage" class="hidden" accept="image/*">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="serviceModal" data-lang-key="cancel">Cancel</button>
+                <button type="submit" form="serviceForm" class="btn btn-primary" data-lang-key="save">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logout Confirmation Modal -->
+    <!-- Add Education Modal -->
+    <div id="addEducationModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500">
+                        <i class="fa-solid fa-plus text-lg"></i>
+                    </div>
+                    <h3 class="modal-title" data-lang-key="add_new_entry">Add New Entry</h3>
+                </div>
+                <button class="modal-close w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all" data-modal="addEducationModal">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-8 p-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="col-span-full space-y-4">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="learning_type">Learning Type</label>
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" class="edu-type-btn active px-6 py-3 rounded-2xl bg-white border border-slate-100 text-sm font-bold text-slate-600 hover:border-indigo-200 transition-all flex items-center gap-3 shadow-sm" data-type="University">
+                                    <i class="fa-solid fa-graduation-cap text-indigo-500"></i>
+                                    <span data-lang-key="university">University</span>
+                                </button>
+                                <button type="button" class="edu-type-btn px-6 py-3 rounded-2xl bg-white border border-slate-100 text-sm font-bold text-slate-600 hover:border-blue-200 transition-all flex items-center gap-3 shadow-sm" data-type="School">
+                                    <i class="fa-solid fa-school text-blue-500"></i>
+                                    <span data-lang-key="school">School</span>
+                                </button>
+                                <button type="button" class="edu-type-btn px-6 py-3 rounded-2xl bg-white border border-slate-100 text-sm font-bold text-slate-600 hover:border-emerald-200 transition-all flex items-center gap-3 shadow-sm" data-type="Certificate">
+                                    <i class="fa-solid fa-award text-emerald-500"></i>
+                                    <span data-lang-key="certificate">Certificate</span>
+                                </button>
+                                <button type="button" class="edu-type-btn px-6 py-3 rounded-2xl bg-white border border-slate-100 text-sm font-bold text-slate-600 hover:border-amber-200 transition-all flex items-center gap-3 shadow-sm" data-type="Course">
+                                    <i class="fa-solid fa-book text-amber-500"></i>
+                                    <span data-lang-key="course">Course</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4" id="uniSelectWrapperModal">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="university">University Name</label>
+                            <input type="text" id="editUniNameModal" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm" placeholder="e.g., An-Najah National University" data-lang-placeholder="uni_placeholder">
+                        </div>
+
+                        <div class="space-y-4 hidden" id="orgNameWrapperModal">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="organization">School / Platform Name</label>
+                            <input type="text" id="editOrgNameModal" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm" placeholder="e.g., Al-Rawdah School" data-lang-placeholder="school_placeholder">
+                        </div>
+
+                        <div class="space-y-4" id="eduLevelWrapperModal">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="edu_level">Education Level</label>
+                            <div class="relative">
+                                <select id="editEduLevelModal" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm appearance-none cursor-pointer">
+                                    <option value="" data-lang-key="select_level">Select Level</option>
+                                    <option value="Bachelor" data-lang-key="degree_bachelor">Bachelor's</option>
+                                    <option value="Master" data-lang-key="degree_masters">Master's</option>
+                                    <option value="PhD" data-lang-key="degree_phd">PhD</option>
+                                    <option value="Diploma" data-lang-key="degree_diploma">Diploma</option>
+                                    <option value="HighSchool" data-lang-key="high_school_degree">High School</option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div class="col-span-full space-y-4" id="degreeCategoryWrapperModal">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="field_category_label">Field Category</label>
+                            <div class="relative custom-dropdown" id="degreeCategoryDropdownModal">
+                                <button type="button" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm flex items-center justify-between">
+                                    <span id="selectedDegreeCategoryModal" data-lang-key="select_field_category">Select Category</span>
+                                    <i class="fas fa-chevron-down text-slate-300 transition-transform"></i>
+                                </button>
+                                <div class="absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl hidden max-h-60 overflow-y-auto" id="degreeCategoryMenuModal"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-span-full space-y-4" id="degreeTitleWrapperModal">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="title">Degree / Specialization</label>
+                            <div class="relative custom-dropdown" id="degreeTitleDropdownModal">
+                                <button type="button" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm flex items-center justify-between">
+                                    <span id="selectedDegreeTitleModal" data-lang-key="select_degree">Select Degree</span>
+                                    <i class="fas fa-chevron-down text-slate-300 transition-transform"></i>
+                                </button>
+                                <div class="absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl hidden max-h-60 overflow-y-auto" id="degreeTitleMenuModal"></div>
+                            </div>
+                            <input type="text" id="editDegreeTitleTextModal" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm hidden" placeholder="e.g., B.Sc. Computer Science" data-lang-placeholder="title_placeholder">
+                        </div>
+
+                        <div class="space-y-4" id="fieldWrapperModal">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="field">Field of Study</label>
+                            <input type="text" id="editDegreeFieldModal" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm" placeholder="e.g., Engineering, Business..." data-lang-placeholder="field_placeholder">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-4">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="year_label">Year</label>
+                                <input type="text" id="editGradYearModal" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm" placeholder="2024" data-lang-placeholder="year_placeholder">
+                            </div>
+                            <div class="space-y-4">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="current_status_label">Current</label>
+                                <div class="flex items-center h-[56px]">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="editIsCurrentModal" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-span-full space-y-4" id="linkWrapperModal">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="link">Verification Link (Optional)</label>
+                            <input type="url" id="editEduLinkModal" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:border-indigo-500 transition-all outline-none text-sm font-bold text-slate-700 shadow-sm" placeholder="https://..." data-lang-placeholder="link_placeholder">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer pt-6">
+                <div class="flex justify-end gap-4 w-full">
+                    <button type="button" class="px-8 py-3 rounded-2xl text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-all" data-modal="addEducationModal" data-lang-key="cancel">Cancel</button>
+                    <button type="button" id="confirmAddDegreeBtnModal" class="px-8 py-3 bg-slate-900 text-white text-sm font-black rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-100 uppercase tracking-widest" data-lang-key="add_entry">Add Entry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="logoutConfirmationModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title" data-lang-key="confirm_logout">Confirm Logout</h3>
+                <button class="modal-close" data-modal="logoutConfirmationModal">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p data-lang-key="logout_confirmation">Are you sure you want to logout?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="logoutConfirmationModal" data-lang-key="cancel">Cancel</button>
+                <button type="button" id="confirmLogoutBtn" class="btn btn-danger" data-lang-key="logout">Logout</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Language Translations -->
+    <script src="/language/language.js"></script>
+    <script src="/language/categories-professions-translations.js"></script>
+    <script src="/language/cities-translations.js"></script>
+    <script src="/language/study-fields-translations.js"></script>
+    <script src="/language/job-dashboard-translations.js"></script>
+
+    <!-- JavaScript Modules -->
+    <script src="/js/dashboard/dashboard-api.js"></script>
+    <script src="/js/dashboard/dashboard-ui.js"></script>
+    <script src="/js/dashboard/dashboard-modals.js"></script>
+    <script src="/js/dashboard/dashboard-profile.js"></script>
+    <script src="/js/dashboard/dashboard-services.js"></script>
+    <script src="/js/dashboard/dashboard-applications.js"></script>
+    <script src="/js/dashboard/dashboard-core.js"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
+</html>

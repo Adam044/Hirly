@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hirly Pilot | Interview Analytics</title>
+    <link rel="stylesheet" href="/styling/main.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --neon-blue: #0ea5e9;
+            --neon-purple: #8b5cf6;
+            --neon-green: #10b981;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 40%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .glass-card:hover { border-color: rgba(255, 255, 255, 0.2); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        .candidate-item {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .candidate-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-left-color: var(--neon-blue);
+        }
+        .candidate-item.active {
+            background: rgba(14, 165, 233, 0.15);
+            border-left-color: var(--neon-blue);
+        }
+
+        .score-box {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .vs-badge {
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #94a3b8;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6 h-screen flex flex-col">
+
+    <!-- Header removed as per user request to prevent content overlap on technical pages -->
+
+    <!-- PAGE TOOLBAR -->
+    <div class="h-16 border-b border-white/10 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-20 mb-6">
+        <div class="flex items-center gap-4">
+            <button onclick="history.back()" class="w-10 h-10 rounded-full glass-card flex items-center justify-center text-slate-400 hover:text-white transition">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold text-white tracking-wide">Interview <span class="text-indigo-400">Analysis</span></h1>
+                <div class="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                    <span id="jobTitleDisplay">Loading Job...</span>
+                    <span class="text-slate-600">|</span>
+                    <span id="activeSessionsCount">0 Sessions</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex gap-4">
+            <div class="glass-card px-4 py-2 rounded-lg text-right">
+                <div class="text-[10px] text-slate-500 uppercase font-bold">Completed</div>
+                <div class="text-xl font-bold text-white leading-none" id="statsCompleted">0</div>
+            </div>
+            <div class="glass-card px-4 py-2 rounded-lg text-right">
+                <div class="text-[10px] text-slate-500 uppercase font-bold">Avg Performance</div>
+                <div class="text-xl font-bold text-emerald-400 leading-none" id="statsAvgScore">-%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+        
+        <div class="lg:col-span-4 glass-card rounded-2xl flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-white/10 bg-slate-900/40 backdrop-blur-md">
+                <h3 class="font-bold text-white text-sm uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-video text-slate-500"></i> Active Interviews
+                </h3>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2 space-y-1" id="interviewList">
+                <div class="flex flex-col items-center justify-center h-48 text-slate-500">
+                    <i class="fas fa-circle-notch fa-spin mb-2"></i>
+                    <span class="text-xs">Loading sessions...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-8 glass-card rounded-2xl flex flex-col overflow-hidden relative">
+            
+            <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 bg-slate-900/90 z-20">
+                <div class="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center mb-4 border border-white/5 shadow-2xl">
+                    <i class="fas fa-scale-balanced text-3xl opacity-30"></i>
+                </div>
+                <p class="font-mono text-sm tracking-widest uppercase">Select a candidate to analyze results</p>
+            </div>
+
+            <div id="detailContent" class="flex flex-col h-full opacity-0 transition-opacity duration-500">
+                
+                <div class="p-6 border-b border-white/10 bg-gradient-to-r from-slate-900 to-transparent shrink-0">
+                    <div class="flex justify-between items-start">
+                        <div class="flex gap-4">
+                            <div class="w-16 h-16 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center text-xl font-bold text-white shadow-lg relative overflow-hidden group">
+                                <span id="detailAvatar">--</span>
+                                <div class="absolute inset-0 border-2 border-indigo-500/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white heading-font text-glow-blue" id="detailName">Name</h2>
+                                <p class="text-slate-400 text-sm mb-2 font-mono" id="detailRole">Profession</p>
+                                <div class="flex gap-2" id="detailBadges">
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div id="deltaBadge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold mb-1 bg-slate-800 border border-white/10">
+                                </div>
+                            <div class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Performance Delta</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0 relative mb-8">
+                        <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 hidden md:flex">
+                            <div class="vs-badge">VS</div>
+                        </div>
+
+                        <div class="score-box p-6 rounded-l-2xl border-r-0 md:border-r border-white/10 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition"><i class="fas fa-file-alt text-5xl"></i></div>
+                            <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-2">Initial Expectation</div>
+                            <div class="text-4xl font-black text-slate-300 heading-font mb-1" id="detailBeforeScore">0%</div>
+                            <div class="text-xs text-slate-500">Based on CV & Profile Screening</div>
+                        </div>
+
+                        <div class="score-box p-6 rounded-r-2xl bg-indigo-500/5 border-indigo-500/20 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition"><i class="fas fa-microphone-lines text-5xl text-indigo-400"></i></div>
+                            <div class="text-[10px] text-indigo-300 uppercase tracking-widest font-bold mb-2">Interview Reality</div>
+                            <div class="text-4xl font-black text-white heading-font mb-1" id="detailAfterScore">--</div>
+                            <div class="text-xs text-indigo-300/60" id="detailStatusText">Pending Completion</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div class="p-4 rounded-xl bg-slate-800/60 border border-white/10">
+                            <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-2">Budget Alignment</div>
+                            <div id="detailBudgetAlignment" class="text-sm font-mono text-slate-200">--</div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-slate-800/60 border border-white/10">
+                            <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-2">Wage Expectation</div>
+                            <div id="detailWageExpectation" class="text-sm font-mono text-slate-200">--</div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+                        <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <i class="fas fa-brain"></i> Pilot Interview Summary
+                        </h4>
+                        <div id="detailSummaryPost" class="text-sm text-slate-300 leading-relaxed font-light">
+                            Interview pending or summary not yet generated.
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                         <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Trajectory</h4>
+                         <div class="h-48 w-full">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-white/10 bg-slate-900/50 flex justify-between items-center shrink-0">
+                    <div class="text-xs text-slate-500" id="lastUpdated">Updated: Just now</div>
+                    <div class="flex gap-3">
+                         <a id="openTranscriptBtn" target="_blank" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-white/10 transition flex items-center gap-2 cursor-pointer">
+                            <i class="fas fa-align-left text-slate-400"></i> Read Transcript
+                        </a>
+                        <button onclick="openDetails()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-white/10 transition flex items-center gap-2">
+                            <i class="fas fa-clipboard-list text-slate-400"></i> Report Details
+                        </button>
+                        <button onclick="triggerReeval()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
+                            <i class="fas fa-rotate"></i> Re-evaluate
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="transcriptModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-2xl rounded-2xl flex flex-col h-[80vh]">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-slate-900">
+                <h3 class="font-bold text-white">Interview Transcript</h3>
+                <button onclick="document.getElementById('transcriptModal').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="transcriptBody" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950 font-mono text-sm">
+                </div>
+        </div>
+    </div>
+
+    <div id="detailsModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-xl rounded-2xl flex flex-col">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-slate-900">
+                <h3 class="font-bold text-white">Report Details</h3>
+                <button onclick="document.getElementById('detailsModal').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 space-y-4 bg-slate-950">
+                <div>
+                    <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-2">Readiness</div>
+                    <div id="detailReadiness" class="text-sm text-slate-200">--</div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-2">Concerns</div>
+                    <ul id="detailConcerns" class="space-y-2"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/components.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const jobId = params.get('jobId');
+        let interviewData = [];
+        let selectedIndex = null;
+        let chartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if(!jobId) return alert("Missing Job ID");
+            await loadData();
+        });
+
+        async function loadData() {
+            try {
+                // Fetch Job Info
+                const jobRes = await fetch(`/api/jobs/${jobId}`);
+                const job = await jobRes.json();
+                document.getElementById('jobTitleDisplay').textContent = job.title || 'Unknown Job';
+
+                // Fetch Analysis Data
+                const res = await fetch(`/api/interviews/analysis/${jobId}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    // FILTER: Only show candidates who have a session_id (meaning invite sent)
+                    interviewData = data.items.filter(item => item.session_id);
+                    
+                    updateHeaderStats();
+                    renderList();
+                } else {
+                    document.getElementById('interviewList').innerHTML = `<div class="p-4 text-center text-rose-400">Error loading data</div>`;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function updateHeaderStats() {
+            document.getElementById('activeSessionsCount').textContent = `${interviewData.length} Active Sessions`;
+            
+            const completed = interviewData.filter(i => i.session_status === 'completed');
+            document.getElementById('statsCompleted').textContent = completed.length;
+
+            if (completed.length > 0) {
+                const totalScore = completed.reduce((acc, curr) => acc + (curr.after_score || 0), 0);
+                document.getElementById('statsAvgScore').textContent = Math.round(totalScore / completed.length) + "%";
+            }
+        }
+
+        function renderList() {
+            const listEl = document.getElementById('interviewList');
+            if(interviewData.length === 0) {
+                listEl.innerHTML = `<div class="p-8 text-center text-slate-500 text-sm">No interviews initiated yet.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = interviewData.map((item, index) => {
+                const isActive = selectedIndex === index ? 'active' : '';
+                const initials = (item.name.split(' ').map(n=>n[0]).join('')).toUpperCase().substring(0,2);
+                
+                // Status Logic
+                let statusBadge = '';
+                if (item.invitation_response === 'rejected') statusBadge = '<span class="w-2 h-2 rounded-full bg-rose-500"></span>';
+                else if (item.session_status === 'completed') statusBadge = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>';
+                else if (item.invitation_response === 'accepted') statusBadge = '<span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>';
+                else statusBadge = '<span class="w-2 h-2 rounded-full bg-amber-500"></span>';
+
+                return `
+                <div onclick="selectCandidate(${index})" class="candidate-item p-3 rounded-xl cursor-pointer flex items-center justify-between group ${isActive}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 border border-white/10">
+                            ${initials}
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-200 text-sm group-hover:text-white transition-colors">${item.name}</div>
+                            <div class="flex items-center gap-2 text-[10px] text-slate-500 font-mono uppercase">
+                                ${statusBadge}
+                                ${item.session_status}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold ${item.delta > 0 ? 'text-emerald-400' : (item.delta < 0 ? 'text-rose-400' : 'text-slate-500')}">
+                            ${item.after_score ? item.after_score + '%' : '--'}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function selectCandidate(index) {
+            renderDetail(index);
+        }
+
+        function renderDetail(index) {
+            selectedIndex = index;
+            renderList(); // Refresh active class
+
+            const data = interviewData[index];
+            const empty = document.getElementById('emptyState');
+            const content = document.getElementById('detailContent');
+            
+            empty.classList.add('hidden');
+            content.classList.remove('opacity-0');
+
+            // Populate Text
+            document.getElementById('detailName').textContent = data.name;
+            document.getElementById('detailRole').textContent = data.profession || 'Applicant';
+            document.getElementById('detailAvatar').textContent = (data.name.split(' ').map(n=>n[0]).join('')).toUpperCase().substring(0,2);
+            document.getElementById('detailBeforeScore').textContent = (data.before_score || 0) + '%';
+            
+            // Score & Status Logic
+            const afterEl = document.getElementById('detailAfterScore');
+            const statusText = document.getElementById('detailStatusText');
+            
+            if (data.session_status === 'completed') {
+                afterEl.textContent = (data.after_score || 0) + '%';
+                afterEl.className = "text-4xl font-black text-white heading-font mb-1";
+                statusText.textContent = "Session Completed";
+            } else {
+                afterEl.textContent = "--";
+                afterEl.className = "text-4xl font-black text-slate-600 heading-font mb-1";
+                statusText.textContent = data.invitation_response === 'accepted' ? "Interview In Progress" : "Waiting for Candidate";
+            }
+
+            document.getElementById('detailBudgetAlignment').textContent = data.budget_alignment || '--';
+            document.getElementById('detailWageExpectation').textContent = data.wage_expectation || '--';
+
+            // Delta Badge Logic
+            const deltaEl = document.getElementById('deltaBadge');
+            if (data.after_score !== null) {
+                if(data.delta > 0) {
+                    deltaEl.className = "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold mb-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400";
+                    deltaEl.innerHTML = `<i class="fas fa-arrow-trend-up"></i> +${data.delta}% Improvement`;
+                } else if (data.delta < 0) {
+                    deltaEl.className = "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold mb-1 bg-rose-500/10 border border-rose-500/20 text-rose-400";
+                    deltaEl.innerHTML = `<i class="fas fa-arrow-trend-down"></i> ${data.delta}% Drop`;
+                } else {
+                    deltaEl.className = "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold mb-1 bg-slate-800 border border-white/10 text-slate-400";
+                    deltaEl.innerHTML = `<i class="fas fa-minus"></i> Consistent`;
+                }
+            } else {
+                deltaEl.className = "hidden";
+            }
+
+            // Summary
+            document.getElementById('detailSummaryPost').textContent = data.after_summary || "No summary available yet. Interview may be pending.";
+
+            // Transcript Button
+            const transcriptBtn = document.getElementById('openTranscriptBtn');
+            transcriptBtn.onclick = () => loadTranscript(data.session_id, data.name);
+
+            // Chart
+            updateChart(data);
+        }
+
+        function openDetails() {
+            if (selectedIndex === null) return;
+            const d = interviewData[selectedIndex];
+            document.getElementById('detailReadiness').textContent = d.readiness || '--';
+            const ul = document.getElementById('detailConcerns');
+            const items = (d.concerns || []).map(c => `<li class="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm">${c}</li>`).join('');
+            ul.innerHTML = items || '<li class="text-slate-500 text-sm">No concerns recorded</li>';
+            document.getElementById('detailsModal').classList.remove('hidden');
+        }
+
+        async function triggerReeval() {
+            if (selectedIndex === null) return;
+            const d = interviewData[selectedIndex];
+            if (!d.session_id) return;
+            const btns = document.querySelectorAll('button');
+            btns.forEach(b => b.disabled = true);
+            try {
+                const res = await fetch(`/api/interviews/${d.session_id}/reevaluate`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) { await loadData(); document.getElementById('lastUpdated').textContent = 'Updated: Just now'; }
+            } catch {}
+            finally { btns.forEach(b => b.disabled = false); }
+        }
+
+        async function loadTranscript(sessionId, name) {
+            const modal = document.getElementById('transcriptModal');
+            const body = document.getElementById('transcriptBody');
+            body.innerHTML = '<div class="text-slate-500 text-center">Loading...</div>';
+            modal.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`/api/interviews/${sessionId}/transcript`);
+                const data = await res.json();
+                if(data.success) {
+                    body.innerHTML = data.messages.map(m => `
+                        <div class="mb-4 ${m.sender === 'ai' ? 'text-left' : 'text-right'}">
+                            <div class="text-[10px] text-slate-500 uppercase mb-1">${m.sender === 'ai' ? 'Hirly Pilot' : name}</div>
+                            <div class="inline-block p-3 rounded-lg max-w-[85%] ${m.sender === 'ai' ? 'bg-indigo-900/30 text-indigo-100 border border-indigo-500/20' : 'bg-slate-800 text-white border border-white/10'}">
+                                ${m.content}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) { body.innerHTML = 'Error loading transcript'; }
+        }
+
+        function updateChart(data) {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            const isCompleted = data.session_status === 'completed';
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Initial Screening', 'Interview Result'],
+                    datasets: [{
+                        label: 'Match Score',
+                        data: [data.before_score || 0, isCompleted ? (data.after_score || 0) : 0],
+                        backgroundColor: [
+                            'rgba(148, 163, 184, 0.5)', // Gray for initial
+                            data.delta >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(244, 63, 94, 0.6)' // Green or Red for result
+                        ],
+                        borderColor: [
+                            'rgba(148, 163, 184, 1)',
+                            data.delta >= 0 ? '#10b981' : '#f43f5e'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#cbd5e1', font: { family: "'Poppins', sans-serif" } } },
+                        y: { grid: { display: false }, ticks: { color: '#cbd5e1', font: { family: "'Poppins', sans-serif" } } }
+                    }
+                }
+            });
+        }
+        function showToast(msg, type='info') {
+            const c = document.getElementById('toastContainer');
+            if(!c) return;
+            const t = document.createElement('div');
+            let borderClass = 'border-indigo-500';
+            if(type === 'success') borderClass = 'border-emerald-500';
+            if(type === 'error') borderClass = 'border-rose-500';
+            
+            t.className = `bg-slate-800 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border-l-4 ${borderClass} transform translate-y-4 opacity-0 transition-all duration-300 ring-1 ring-white/10`;
+            t.textContent = msg;
+            c.appendChild(t);
+            
+            requestAnimationFrame(() => {
+                t.classList.remove('translate-y-4', 'opacity-0');
+            });
+
+            setTimeout(() => { 
+                t.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(()=>t.remove(), 300); 
+            }, 3000);
+        }
+
+    </script>
+</body>
+</html>

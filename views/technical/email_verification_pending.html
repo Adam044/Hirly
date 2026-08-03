@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag"> <!-- Ensure id="htmlTag" is here -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="verify_email_title">Verify Your Email - Hirly</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        secondary: '#6366f1',
+                        dark: '#0f172a',
+                        hirly: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/styling/main.css">
+    
+    <style type="text/tailwindcss">
+        body { font-family: 'Plus Jakarta Sans', sans-serif; @apply bg-slate-50; }
+        .verification-card {
+            @apply bg-white rounded-[2rem] border border-slate-100 shadow-2xl shadow-slate-200/50 p-8 md:p-12 w-full max-w-[480px] mx-auto transition-all duration-500;
+        }
+        .code-input {
+            @apply w-full h-14 md:h-16 text-center text-2xl font-black text-slate-700 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-hirly-500 focus:bg-white focus:ring-4 focus:ring-hirly-500/10 outline-none transition-all;
+        }
+        .btn-verify {
+            @apply w-full py-4 bg-hirly-600 hover:bg-hirly-700 text-white font-bold rounded-2xl shadow-lg shadow-hirly-500/20 hover:shadow-hirly-500/40 transform hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        }
+        .btn-resend {
+            @apply px-6 py-3 text-hirly-600 font-bold hover:bg-hirly-50 rounded-xl transition-all disabled:opacity-50;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Header will be loaded by components.js -->
+    <div id="headerPlaceholder"></div>
+
+    <main class="flex-1 flex items-center justify-center p-6">
+        <div class="verification-card">
+            <div class="text-center space-y-6 mb-10">
+                <div class="w-20 h-20 bg-hirly-50 text-hirly-500 rounded-[2rem] flex items-center justify-center mx-auto mb-6 transform rotate-12 hover:rotate-0 transition-transform duration-500 shadow-inner">
+                    <i class="fas fa-envelope-open-text text-3xl"></i>
+                </div>
+                
+                <h2 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight" data-lang-key="verify_email_heading">Verify Your Email</h2>
+                
+                <p id="verificationInstruction" class="text-slate-500 font-medium leading-relaxed" data-lang-key="verification_instruction">
+                    A 6-digit verification code has been sent to <span class="text-slate-900 font-bold" id="userEmailDisplay">your email address</span>.
+                </p>
+            </div>
+
+            <form id="verificationForm" class="space-y-8">
+                <div class="grid grid-cols-6 gap-2 md:gap-3" dir="ltr">
+                    <input type="text" class="code-input" maxlength="1" data-index="0" inputmode="numeric" pattern="[0-9]*" autofocus>
+                    <input type="text" class="code-input" maxlength="1" data-index="1" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="code-input" maxlength="1" data-index="2" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="code-input" maxlength="1" data-index="3" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="code-input" maxlength="1" data-index="4" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="code-input" maxlength="1" data-index="5" inputmode="numeric" pattern="[0-9]*">
+                </div>
+
+                <div id="verificationMessage" class="hidden p-4 rounded-2xl text-sm font-bold text-center animate-fade-in"></div>
+
+                <button type="submit" class="btn-verify group" id="verifyBtn">
+                    <span data-lang-key="verify_account_btn">Verify Account</span>
+                    <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform rtl:rotate-180"></i>
+                    <div class="hidden inline-block ml-2 animate-spin" id="verifySpinner">
+                        <i class="fas fa-circle-notch"></i>
+                    </div>
+                </button>
+            </form>
+
+            <div class="mt-10 pt-8 border-t border-slate-50 text-center space-y-4">
+                <p class="text-slate-400 text-sm font-bold uppercase tracking-widest" data-lang-key="didnt_receive_code_question">Didn't receive the code?</p>
+                <button type="button" id="resendVerificationBtn" class="btn-resend text-sm">
+                    <span data-lang-key="resend_verification_btn">Resend Verification Code</span>
+                    <div class="hidden inline-block ml-2 animate-spin" id="resendSpinner">
+                        <i class="fas fa-circle-notch"></i>
+                    </div>
+                </button>
+            </div>
+
+            <div class="mt-6 text-center">
+                <a href="/login.html" class="text-slate-400 hover:text-slate-600 text-xs font-bold uppercase tracking-widest transition-colors" data-lang-key="go_to_login_page">
+                    <i class="fas fa-chevron-left mr-1 rtl:rotate-180"></i>
+                    Back to Login
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <div id="footerPlaceholder"></div>
+
+    <script src="/language/language.js"></script>
+    <script src="/language/auth-page-translations.js"></script>
+    <script src="/language/email-verification-translations.js"></script> <!-- NEW: Page-specific translations -->
+    <script src="/auth.js" defer></script>
+    <script src="/components.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeInputs = document.querySelectorAll('.code-input');
+            const verifyBtn = document.getElementById('verifyBtn');
+            const resendBtn = document.getElementById('resendVerificationBtn');
+            const verificationMessage = document.getElementById('verificationMessage');
+            const userEmailDisplay = document.getElementById('userEmailDisplay');
+            const verifySpinner = document.getElementById('verifySpinner');
+            const resendSpinner = document.getElementById('resendSpinner');
+            const verificationForm = document.getElementById('verificationForm');
+            const verificationInstruction = document.getElementById('verificationInstruction');
+
+
+            let userEmail = '';
+            let resendAttempts = 0;
+            const maxResendAttempts = 3;
+
+            function displayMessage(messageKey, type = 'danger') {
+                const message = (window.translations && window.translations[messageKey] && window.translations[messageKey][window.currentLanguage]) || messageKey;
+                verificationMessage.textContent = message;
+                verificationMessage.classList.remove('hidden', 'bg-rose-50', 'text-rose-600', 'bg-emerald-50', 'text-emerald-600', 'bg-blue-50', 'text-blue-600');
+                
+                if (type === 'danger' || type === 'error') {
+                    verificationMessage.classList.add('bg-rose-50', 'text-rose-600');
+                } else if (type === 'success') {
+                    verificationMessage.classList.add('bg-emerald-50', 'text-emerald-600');
+                } else {
+                    verificationMessage.classList.add('bg-blue-50', 'text-blue-600');
+                }
+                
+                verificationMessage.classList.remove('hidden');
+            }
+
+            function clearMessage() {
+                verificationMessage.textContent = '';
+                verificationMessage.classList.add('hidden');
+            }
+
+            function showSpinner(spinnerElement) {
+                if (spinnerElement) {
+                    spinnerElement.classList.remove('hidden');
+                }
+            }
+
+            function hideSpinner(spinnerElement) {
+                if (spinnerElement) {
+                    spinnerElement.classList.add('hidden');
+                }
+            }
+
+            function disableButtons(disabled) {
+                verifyBtn.disabled = disabled;
+                resendBtn.disabled = disabled;
+            }
+
+            function getVerificationCode() {
+                let code = '';
+                codeInputs.forEach(input => {
+                    code += input.value;
+                });
+                return code;
+            }
+
+            function setInitialEmailDisplay() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const emailFromUrl = urlParams.get('email');
+                
+                if (emailFromUrl) {
+                    userEmail = decodeURIComponent(emailFromUrl);
+                    console.log('Email from URL:', userEmail); // Debug log
+                    
+                    // Update the instruction text with the actual email
+                    if (verificationInstruction) {
+                        let translatedInstruction = 'A 6-digit verification code has been sent to <strong>{email}</strong>. Please enter it below to activate your account.';
+                        
+                        // Try to get translated instruction
+                        if (window.translations && window.translations['verification_instruction'] && window.currentLanguage) {
+                            translatedInstruction = window.translations['verification_instruction'][window.currentLanguage] || translatedInstruction;
+                        }
+                        
+                        verificationInstruction.innerHTML = translatedInstruction.replace('{email}', `<strong>${userEmail}</strong>`);
+                    }
+                    
+                    // Also update the email display element if it exists
+                    if (userEmailDisplay) {
+                        userEmailDisplay.textContent = userEmail;
+                    }
+                } else {
+                    console.log('No email parameter found in URL'); // Debug log
+                    
+                    // Fallback when no email is provided
+                    if (verificationInstruction) {
+                        let fallbackText = 'A 6-digit verification code has been sent to your email address. Please enter it below to activate your account.';
+                        
+                        if (window.translations && window.translations['verification_instruction_fallback'] && window.currentLanguage) {
+                            fallbackText = window.translations['verification_instruction_fallback'][window.currentLanguage] || fallbackText;
+                        }
+                        
+                        verificationInstruction.innerHTML = fallbackText;
+                    }
+                    
+                    if (userEmailDisplay) {
+                        const fallbackEmail = (window.translations && window.translations['your_email_address'] && window.currentLanguage) 
+                            ? window.translations['your_email_address'][window.currentLanguage] 
+                            : 'your email address';
+                        userEmailDisplay.textContent = fallbackEmail;
+                    }
+                }
+            }
+
+            codeInputs.forEach((input, index) => {
+                input.addEventListener('input', function(e) {
+                    // Only allow numbers
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                    
+                    if (this.value.length > 1) {
+                        this.value = this.value.slice(0, 1);
+                    }
+                    
+                    if (this.value && index < codeInputs.length - 1) {
+                        codeInputs[index + 1].focus();
+                    }
+                    clearMessage();
+                });
+
+                input.addEventListener('keydown', function(event) {
+                    if (event.key === 'Backspace') {
+                        if (this.value === '' && index > 0) {
+                            codeInputs[index - 1].focus();
+                        } else {
+                            this.value = '';
+                        }
+                    } else if (event.key === 'ArrowLeft' && index > 0) {
+                        codeInputs[index - 1].focus();
+                    } else if (event.key === 'ArrowRight' && index < codeInputs.length - 1) {
+                        codeInputs[index + 1].focus();
+                    }
+                });
+
+                input.addEventListener('focus', function() {
+                    this.select();
+                });
+
+                if (index === 0) {
+                    input.addEventListener('paste', function(event) {
+                        event.preventDefault();
+                        const pasteData = (event.clipboardData || window.clipboardData).getData('text').trim();
+                        if (/^\d+$/.test(pasteData)) {
+                            const digits = pasteData.split('').slice(0, 6);
+                            digits.forEach((digit, i) => {
+                                if (codeInputs[i]) codeInputs[i].value = digit;
+                            });
+                            const nextIndex = Math.min(digits.length, 5);
+                            codeInputs[nextIndex].focus();
+                            clearMessage();
+                        }
+                    });
+                }
+            });
+
+            if (verificationForm) {
+                verificationForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    clearMessage();
+                    const verificationCode = getVerificationCode();
+
+                    if (verificationCode.length !== 6 || !/^\d+$/.test(verificationCode)) {
+                        displayMessage('enter_valid_code_error', 'danger'); // Using translation key
+                        return;
+                    }
+
+                    if (!userEmail) {
+                        displayMessage('email_missing_error', 'danger'); // Using translation key
+                        return;
+                    }
+
+                    showSpinner(verifySpinner);
+                    disableButtons(true);
+
+                    try {
+                        const response = await fetch('/api/verify-email', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ code: verificationCode, email: userEmail })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            displayMessage('email_verified_success', 'success'); // Using translation key
+                            setTimeout(() => {
+                                window.location.href = result.redirect || '/login.html';
+                            }, 1500);
+                        } else {
+                            displayMessage(result.error || 'verification_failed_generic', 'danger'); // Using translation key
+                        }
+                    } catch (error) {
+                        console.error('Error during email verification:', error);
+                        displayMessage('unexpected_error_occurred', 'danger'); // Using translation key
+                    } finally {
+                        hideSpinner(verifySpinner);
+                        disableButtons(false);
+                    }
+                });
+            }
+
+            if (resendBtn) {
+                resendBtn.addEventListener('click', async () => {
+                    clearMessage();
+                    
+                    // Check if maximum attempts reached
+                    if (resendAttempts >= maxResendAttempts) {
+                        displayMessage('max_resend_attempts_reached', 'danger');
+                        resendBtn.disabled = true;
+                        resendBtn.textContent = (window.translations && window.translations['max_attempts_reached'] && window.translations['max_attempts_reached'][window.currentLanguage]) || 'Maximum attempts reached';
+                        return;
+                    }
+                    
+                    if (!userEmail) {
+                        displayMessage('email_missing_error', 'danger'); // Using translation key
+                        return;
+                    }
+
+                    displayMessage('sending_new_code_info', 'info'); // Using translation key
+                    showSpinner(resendSpinner);
+                    disableButtons(true);
+
+                    try {
+                        const response = await fetch('/api/resend-verification-email', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ email: userEmail })
+                        });
+                        const data = await response.json();
+
+                        if (data.success) {
+                            resendAttempts++;
+                            const remainingAttempts = maxResendAttempts - resendAttempts;
+                            
+                            if (remainingAttempts > 0) {
+                                const successMessage = (window.translations && window.translations['new_code_sent_with_attempts'] && window.translations['new_code_sent_with_attempts'][window.currentLanguage]) 
+                                    || `New verification code sent successfully. ${remainingAttempts} attempts remaining.`;
+                                displayMessage('new_code_sent_success', 'success');
+                                
+                                // Update button text to show remaining attempts
+                                const buttonText = (window.translations && window.translations['resend_verification_btn'] && window.translations['resend_verification_btn'][window.currentLanguage]) || 'Resend Verification Code';
+                                resendBtn.innerHTML = `${buttonText} (${remainingAttempts} left) <span class="loading-spinner" id="resendSpinner" style="display: none;"></span>`;
+                            } else {
+                                displayMessage('new_code_sent_success', 'success');
+                                resendBtn.disabled = true;
+                                resendBtn.textContent = (window.translations && window.translations['max_attempts_reached'] && window.translations['max_attempts_reached'][window.currentLanguage]) || 'Maximum attempts reached';
+                            }
+                        } else {
+                            displayMessage(data.error || 'resend_failed_generic', 'danger'); // Using translation key
+                        }
+                    } catch (error) {
+                        console.error('Error resending verification code:', error);
+                        displayMessage('unexpected_error_occurred', 'danger'); // Using translation key
+                    } finally {
+                        hideSpinner(resendSpinner);
+                        if (resendAttempts < maxResendAttempts) {
+                            disableButtons(false);
+                        } else {
+                            verifyBtn.disabled = false; // Keep verify button enabled
+                        }
+                    }
+                });
+            }
+
+            // Ensure translations are applied and then set initial email display
+            window.addEventListener('translationsApplied', setInitialEmailDisplay);
+            setInitialEmailDisplay(); // Call initially in case translations are already loaded
+        });
+    </script>
+</body>
+</html>

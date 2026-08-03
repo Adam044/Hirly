@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="employers_page_title">Hirly for Employers</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/global-rtl.css">
+
+    <!-- Language & Translations -->
+    <script src="/language/language.js"></script>
+    <script src="/language/employers-translations.js"></script>
+
+    <!-- Page Specific Styles -->
+    <style>
+        /* Base Theme */
+        body {
+            overflow-x: hidden;
+        }
+
+        /* --- Dynamic Text Rotator --- */
+        .rotating-text-wrapper {
+            display: inline-flex;
+            margin: 0;
+            vertical-align: bottom;
+            overflow: hidden;
+            height: 1.2em; /* Matches line-height */
+            position: relative;
+        }
+
+        .rotating-word {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.5s ease;
+            white-space: nowrap;
+            color: #10b981; /* Emerald 500 */
+        }
+
+        .rotating-word.active {
+            opacity: 1;
+            transform: translateY(0);
+            position: relative; /* Keeps space */
+        }
+        
+        .rotating-word.exit {
+            opacity: 0;
+            transform: translateY(-100%);
+            position: absolute;
+        }
+
+        [dir="rtl"] .rotating-word { left: auto; right: 0; }
+
+
+        /* --- New Talent Cards Styling --- */
+        .talent-showcase-scroller {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
+            padding: 1rem 0.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .talent-showcase-scroller {
+                grid-template-columns: repeat(3, 1fr);
+                padding: 2rem 1rem;
+            }
+        }
+
+        .talent-card-mock {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08);
+            border: 1px solid #f1f5f9;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .talent-card-mock:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.12);
+        }
+        .verified-badge-icon {
+            color: #3b82f6; /* Blue check */
+            background: white;
+            border-radius: 50%;
+        }
+
+        /* --- AI Simulator Tweaks --- */
+        .pilot-ui { font-family: 'Poppins', sans-serif; }
+        .radar-poly { transition: all 0.5s ease; }
+        .cand-tab.active { background: #1e293b; border-color: #3b82f6; }
+        .cand-tab.active .match-score { color: #3b82f6; }
+        
+        /* Modern Scanning Animation */
+        .scan-grid {
+            background-image: linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            perspective: 1000px;
+        }
+        .scan-beam {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 100%;
+            background: linear-gradient(180deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, rgba(16, 185, 129, 0.6) 100%);
+            transform-origin: top;
+            animation: beamScan 1.5s ease-in-out infinite;
+            filter: blur(4px);
+        }
+        @keyframes beamScan {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        
+        .matrix-text {
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px rgba(16, 185, 129, 0.8);
+        }
+
+        /* Mobile adjustments for AI */
+        @media (max-width: 768px) {
+            .pilot-ui { min-height: 600px; } /* Smaller min-height on mobile */
+        }
+
+        /* --- Founder's Card (Holographic) --- */
+        .founders-card-modern {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05), inset 0 0 0 1px rgba(255,255,255,0.5);
+            position: relative; overflow: hidden;
+        }
+        .founders-card-modern::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.1), rgba(167, 139, 250, 0.1), rgba(236, 72, 153, 0.05), transparent 70%);
+            animation: rotateMesh 20s linear infinite; z-index: -1;
+        }
+        @keyframes rotateMesh { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Scanning Animation */
+        .scan-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, #10b981, transparent);
+            box-shadow: 0 0 15px #10b981;
+            z-index: 20; opacity: 0;
+        }
+        .scanning .scan-line { animation: scanDown 2s ease-in-out infinite; opacity: 1; }
+        @keyframes scanDown { 0% { top: 0%; } 100% { top: 100%; } }
+
+        /* Scrollbar Hiding */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header Placeholder -->
+    <div id="headerPlaceholder" class="relative z-50"></div>
+
+    <main class="relative overflow-hidden">
+        
+        <!-- Abstract Background Blobs -->
+        <div class="absolute top-[-100px] left-[-100px] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none z-0"></div>
+        <div class="absolute top-[40%] right-[-200px] w-[800px] h-[800px] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none z-0"></div>
+
+        <!-- 1. HERO SECTION -->
+        <section class="relative pt-32 pb-20 container mx-auto px-6 z-10">
+            <div class="text-center max-w-4xl mx-auto">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 font-semibold text-sm mb-6 shadow-sm" data-aos="fade-down">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span data-lang-key="hero_badge">The Hirly Ecosystem</span>
+                </div>
+                
+                <div class="mb-6" data-aos="fade-up">
+                    <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 leading-tight tracking-tight">
+                        <span data-lang-key="hero_prefix">Hire</span>
+                        <span class="rotating-text-wrapper text-emerald-500">
+                            <span class="rotating-word active" data-lang-key="word_engineers">Engineers</span>
+                            <span class="rotating-word" data-lang-key="word_plumbers">Plumbers</span>
+                            <span class="rotating-word" data-lang-key="word_designers">Designers</span>
+                            <span class="rotating-word" data-lang-key="word_consultants">Consultants</span>
+                            <span class="rotating-word" data-lang-key="word_electricians">Electricians</span>
+                            <span class="rotating-word" data-lang-key="word_everyone">Everyone</span>
+                        </span>
+                    </h1>
+                </div>
+                
+                <p class="text-lg md:text-xl text-slate-600 mb-10 leading-relaxed max-w-2xl mx-auto" data-lang-key="hero_subtitle" data-aos="fade-up" data-aos-delay="100">
+                    From quick home fixes to building corporate teams. Access 250+ professions and thousands of verified experts in one unified ecosystem.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center" data-aos="fade-up" data-aos-delay="200">
+                    <a href="#founders-edition" class="btn btn-primary btn-lg rounded-full shadow-lg shadow-emerald-500/30 px-10 py-4 text-lg transform hover:-translate-y-1 transition w-full sm:w-auto text-center">
+                        <span data-lang-key="btn_start_free">Start Hiring Free</span>
+                    </a>
+                    <button onclick="scrollToDemo()" class="btn btn-outline-secondary btn-lg rounded-full px-10 py-4 text-lg bg-white/80 backdrop-blur-sm hover:bg-white transition border-slate-300 w-full sm:w-auto">
+                        <i class="fas fa-play me-2 text-indigo-500 text-sm"></i> <span data-lang-key="btn_view_pilot">See Pilot AI</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. INSTANT CONNECT -->
+        <section class="py-16 relative z-10">
+            <div class="container mx-auto px-6">
+                <!-- Path 1: Instant Connect (REVAMPED SHOWCASE) -->
+                <div class="group h-full max-w-7xl mx-auto">
+                    <div class="bg-white rounded-[2rem] p-6 md:p-10 border border-slate-100 shadow-xl shadow-slate-200/50 h-full flex flex-col relative overflow-hidden">
+                        <!-- Background Decor -->
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-bl-[120px] -z-0"></div>
+                        
+                        <div class="mb-8 relative z-10 text-center md:text-start">
+                            <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-5 shadow-sm mx-auto md:mx-0"><i class="fas fa-bolt"></i></div>
+                            <h3 class="text-2xl md:text-3xl font-bold text-slate-900 mb-3" data-lang-key="path_instant_title">Instant Professional Connect</h3>
+                            <p class="text-slate-500 text-base md:text-lg leading-relaxed break-words max-w-2xl" data-lang-key="path_instant_desc">
+                                Browse verified profiles, check ratings, and contact directly. Perfect for quick needs, freelancers, and trades.
+                            </p>
+                        </div>
+
+                        <!-- TALENT SHOWCASE SCROLLER -->
+                        <div class="mt-auto relative z-10 -mx-4 md:-mx-6">
+                            <div class="talent-showcase-scroller px-4 md:px-6">
+                                    
+                                    <!-- CARD 1: Trade (Arabic Context) -->
+                                    <div class="talent-card-mock flex flex-col">
+                                        <div class="p-5 flex items-start gap-4">
+                                            <div class="relative">
+                                                <img src="https://ui-avatars.com/api/?name=Mahmoud+M&background=0f172a&color=fff" class="w-14 h-14 rounded-full border-2 border-white shadow-md" alt="Mahmoud">
+                                                <i class="fas fa-check-circle absolute -bottom-1 -right-1 text-blue-500 bg-white rounded-full text-lg border border-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-slate-900 text-lg" data-lang-key="name_mahmoud">محمود المصري</h4>
+                                                <p class="text-sm text-slate-500 font-medium" data-lang-key="role_electrician">فني كهرباء • Electrician</p>
+                                                <div class="flex text-yellow-400 text-xs mt-1 gap-0.5">
+                                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                                    <span class="text-slate-400 ms-1 text-xs">(42)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="px-5 pb-3">
+                                            <div class="flex flex-wrap gap-2 mb-4">
+                                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium" data-lang-key="tag_wiring">تمديدات منزلية</span>
+                                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium" data-lang-key="tag_maintenance">صيانة</span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-auto px-5 py-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                            <span class="font-bold text-emerald-600">₪50 <span data-lang-key="unit_hr">/ hr</span></span>
+                                            <button class="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition shadow-lg shadow-emerald-500/20"><i class="fas fa-phone-alt text-sm"></i></button>
+                                        </div>
+                                    </div>
+
+                                    <!-- CARD 2: Creative (English Context) -->
+                                    <div class="talent-card-mock flex flex-col">
+                                        <div class="absolute top-4 right-4 bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase" data-lang-key="card_top_rated">Top Rated</div>
+                                        <div class="p-5 flex items-start gap-4">
+                                            <div class="relative">
+                                                <img src="https://ui-avatars.com/api/?name=Sarah+J&background=8b5cf6&color=fff" class="w-14 h-14 rounded-full border-2 border-white shadow-md" alt="Sarah">
+                                                <i class="fas fa-check-circle absolute -bottom-1 -right-1 text-blue-500 bg-white rounded-full text-lg border border-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-slate-900 text-lg" data-lang-key="name_sarah">Sarah Jenkins</h4>
+                                                <p class="text-sm text-slate-500 font-medium" data-lang-key="role_designer">UI/UX Designer</p>
+                                                <div class="flex text-yellow-400 text-xs mt-1 gap-0.5">
+                                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                                                    <span class="text-slate-400 ms-1 text-xs">(18)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="px-5 pb-3">
+                                            <div class="flex flex-wrap gap-2 mb-4">
+                                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium" data-lang-key="tag_figma">Figma</span>
+                                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium" data-lang-key="tag_web_design">Web Design</span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-auto px-5 py-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                            <span class="font-bold text-slate-700">$45 <span data-lang-key="unit_hr">/ hr</span></span>
+                                            <button class="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition" data-lang-key="card_view_profile">View Profile</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- CARD 3: Academic (Mixed) -->
+                                    <div class="talent-card-mock flex flex-col">
+                                        <div class="p-5 flex items-start gap-4">
+                                            <div class="relative">
+                                                <img src="https://ui-avatars.com/api/?name=Dr+Khalid&background=10b981&color=fff" class="w-14 h-14 rounded-full border-2 border-white shadow-md" alt="Khalid">
+                                                <i class="fas fa-check-circle absolute -bottom-1 -right-1 text-blue-500 bg-white rounded-full text-lg border border-white"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-slate-900 text-lg" data-lang-key="name_khalid">Dr. Khalid Omar</h4>
+                                                <p class="text-sm text-slate-500 font-medium" data-lang-key="role_tutor">Chemistry Tutor</p>
+                                                <div class="flex text-yellow-400 text-xs mt-1 gap-0.5">
+                                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                                    <span class="text-slate-400 ms-1 text-xs">(56)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="px-5 pb-3">
+                                            <div class="flex flex-wrap gap-2 mb-4">
+                                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium" data-lang-key="tag_organic_chem">Organic Chem</span>
+                                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium" data-lang-key="tag_sat_prep">SAT Prep</span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-auto px-5 py-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                            <span class="font-bold text-slate-700">₪120 <span data-lang-key="unit_hr">/ hr</span></span>
+                                            <button class="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition" data-lang-key="card_view_profile">View Profile</button>
+                                        </div>
+                                    </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. THE COMPLETE ENTERPRISE SUITE -->
+        <section class="py-20 bg-white border-y border-slate-100">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4" data-lang-key="suite_title">The Complete Enterprise Suite</h2>
+                    <p class="text-slate-500 max-w-2xl mx-auto" data-lang-key="suite_desc">More than just job posts. A full infrastructure for your organization.</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                    <!-- Feature 1 -->
+                    <div class="feature-item p-6 rounded-2xl bg-slate-50 hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-lg transition-all">
+                        <div class="feature-icon-box bg-purple-100 text-purple-600"><i class="fas fa-store"></i></div>
+                        <h3 class="font-bold text-lg mb-2" data-lang-key="feat_company_page">Branded Company Profile</h3>
+                        <p class="text-sm text-slate-500" data-lang-key="feat_company_page_desc">Your own custom page to showcase culture, benefits, and open roles.</p>
+                    </div>
+                    <!-- Feature 2 -->
+                    <div class="feature-item p-6 rounded-2xl bg-slate-50 hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-lg transition-all">
+                        <div class="feature-icon-box bg-blue-100 text-blue-600"><i class="fas fa-envelope-open-text"></i></div>
+                        <h3 class="font-bold text-lg mb-2" data-lang-key="feat_emailing">Automated Emailing</h3>
+                        <p class="text-sm text-slate-500" data-lang-key="feat_emailing_desc">Built-in rejection, interview invite, and offer letter templates.</p>
+                    </div>
+                    <!-- Feature 3 -->
+                    <div class="feature-item p-6 rounded-2xl bg-slate-50 hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-lg transition-all">
+                        <div class="feature-icon-box bg-emerald-100 text-emerald-600"><i class="fas fa-chart-pie"></i></div>
+                        <h3 class="font-bold text-lg mb-2" data-lang-key="feat_analytics">Advanced Analytics</h3>
+                        <p class="text-sm text-slate-500" data-lang-key="feat_analytics_desc">Track time-to-hire, source of hire, and team performance metrics.</p>
+                    </div>
+                    <!-- Feature 4 -->
+                    <div class="feature-item p-6 rounded-2xl bg-slate-50 hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-lg transition-all">
+                        <div class="feature-icon-box bg-amber-100 text-amber-600"><i class="fas fa-headset"></i></div>
+                        <h3 class="font-bold text-lg mb-2" data-lang-key="feat_support">Dedicated Support</h3>
+                        <p class="text-sm text-slate-500" data-lang-key="feat_support_desc">24/7 Priority customer success manager for your organization.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. NEW: HIRLY PILOT SHOWCASE -->
+        <section class="py-24 bg-slate-900 border-b border-slate-800 relative overflow-hidden">
+            <!-- Background Glow -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+            <div class="container mx-auto px-6 relative z-10">
+                <div class="text-center max-w-4xl mx-auto mb-20">
+                    <span class="inline-block py-1 px-3 rounded-full bg-emerald-900/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-6 animate-pulse" data-lang-key="not_only_that">
+                        Not Only That!
+                    </span>
+                    <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                        <span data-lang-key="meet_pilot">Meet</span> <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400" data-lang-key="ai_pilot_version">Hirly Pilot (v1.0)</span>
+                    </h2>
+                    <p class="text-xl text-slate-400 leading-relaxed max-w-2xl mx-auto" data-lang-key="pilot_desc">
+                        Recently dropped. One of the world's most advanced AI recruiting systems.
+                    </p>
+                </div>
+
+                <!-- Feature Grid -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                    <!-- Feature 1 -->
+                    <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                        <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-2xl mb-6 text-emerald-400 group-hover:scale-110 transition-transform shadow-lg shadow-emerald-900/20">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3" data-lang-key="feat_deep_analysis">Deep Analysis</h3>
+                        <p class="text-slate-400 leading-relaxed" data-lang-key="feat_deep_analysis_desc">Analyzes hundreds of CVs and <span class="text-emerald-300">complete profiles</span> in minutes, not just keywords.</p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                        <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-2xl mb-6 text-blue-400 group-hover:scale-110 transition-transform shadow-lg shadow-blue-900/20">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3" data-lang-key="feat_smart_verdicts">Smart Verdicts</h3>
+                        <p class="text-slate-400 leading-relaxed" data-lang-key="feat_smart_verdicts_desc">Provides matching scores and detailed verdicts for every candidate.</p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                        <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-2xl mb-6 text-purple-400 group-hover:scale-110 transition-transform shadow-lg shadow-purple-900/20">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3" data-lang-key="feat_ai_interviews">AI Interviews</h3>
+                        <p class="text-slate-400 leading-relaxed" data-lang-key="feat_ai_interviews_desc">Unsure? Pilot autonomously conducts voice interviews to verify skills.</p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                        <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-2xl mb-6 text-amber-400 group-hover:scale-110 transition-transform shadow-lg shadow-amber-900/20">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3" data-lang-key="feat_exportable_reports">Exportable Reports</h3>
+                        <p class="text-slate-400 leading-relaxed" data-lang-key="feat_exportable_reports_desc">Get deep, shareable PDF reports for your entire hiring team.</p>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                        <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-2xl mb-6 text-pink-400 group-hover:scale-110 transition-transform shadow-lg shadow-pink-900/20">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3" data-lang-key="feat_fully_adjustable">Fully Adjustable</h3>
+                        <p class="text-slate-400 leading-relaxed" data-lang-key="feat_fully_adjustable_desc">Customize criteria weights to fit your exact hiring needs.</p>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                        <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-2xl mb-6 text-cyan-400 group-hover:scale-110 transition-transform shadow-lg shadow-cyan-900/20">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-3" data-lang-key="feat_full_automation">Full Automation</h3>
+                        <p class="text-slate-400 leading-relaxed" data-lang-key="feat_full_automation_desc">Emails candidates about your response and schedules meetings.</p>
+                    </div>
+                </div>
+
+                <!-- CTA to Demo -->
+                <div class="text-center">
+                    <button onclick="scrollToDemo()" class="group relative inline-flex items-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-full transition-all hover:scale-105 shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+                        <span data-lang-key="btn_demo">Try the Interactive Demo</span>
+                        <i class="fas fa-arrow-down group-hover:translate-y-1 transition-transform"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. INTERACTIVE AI PILOT SIMULATOR -->
+        <section id="demo" class="py-24 bg-slate-950 relative overflow-hidden">
+            <div class="container mx-auto px-6 relative z-10">
+                <div class="text-center mb-12">
+                    <span class="text-emerald-400 font-mono text-xs uppercase tracking-widest mb-2 block" data-lang-key="ai_pilot_version">Hirly Pilot v1.0</span>
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4" data-lang-key="ai_section_title">See the Magic in Action</h2>
+                </div>
+
+                <!-- THE SIMULATOR UI -->
+                <div class="max-w-6xl mx-auto bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden pilot-ui flex flex-col md:flex-row h-[700px] md:h-[800px] relative">
+                    
+                    <!-- Sidebar (Controls) -->
+                    <!-- On Mobile: Collapsed into a bottom sheet or simplified header -->
+                    <div class="w-full md:w-80 bg-slate-900/80 backdrop-blur-md p-6 border-b md:border-b-0 md:border-e border-slate-800 flex flex-col z-20 absolute md:relative bottom-0 h-auto md:h-full transition-transform duration-300 transform translate-y-full md:translate-y-0" id="controlsSidebar">
+                        <div class="hidden md:block mb-6">
+                            <label class="text-xs text-slate-400 uppercase font-bold mb-2 block tracking-wider" data-lang-key="ai_job_context">Job Context</label>
+                            <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800/50 text-sm text-slate-300">
+                                <div class="font-bold text-white mb-1" data-lang-key="job_role_senior_frontend">Senior Frontend Engineer</div>
+                                <div class="text-xs text-slate-500 mb-3" data-lang-key="job_location_ramallah">Ramallah • Remote Friendly</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-slate-800 px-2 py-1 rounded-md text-[10px] text-emerald-400 font-mono border border-slate-700" data-lang-key="job_tech_react">React</span>
+                                    <span class="bg-slate-800 px-2 py-1 rounded-md text-[10px] text-emerald-400 font-mono border border-slate-700" data-lang-key="job_tech_ts">TypeScript</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="hidden md:block mb-auto">
+                            <label class="text-xs text-slate-400 uppercase font-bold mb-2 block tracking-wider" data-lang-key="ai_candidate_pool">Candidate Pool</label>
+                            <div class="space-y-3 text-xs text-slate-500">
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/50">
+                                    <span data-lang-key="ai_applicants">Applicants</span> <span class="text-white font-bold font-mono text-sm">54</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/50">
+                                    <span data-lang-key="ai_avg_match">Avg Match</span> <span class="text-emerald-400 font-bold font-mono text-sm">82%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Run Button (Visible on Mobile as primary interaction) -->
+                         <div class="mt-auto md:mt-6">
+                            <button id="runPilotBtn" onclick="runSimulation()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all flex items-center justify-center gap-2 group relative overflow-hidden">
+                                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></span>
+                                <i class="fas fa-bolt group-hover:animate-pulse"></i> <span data-lang-key="btn_run_analysis">RUN ANALYSIS</span>
+                            </button>
+                         </div>
+                    </div>
+
+                    <!-- Main Viewport -->
+                    <div class="flex-1 bg-slate-950 relative flex flex-col w-full h-full">
+                        
+                        <!-- STATE 0: IDLE (Mobile Friendly) -->
+                        <div id="simStateIdle" class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
+                            <!-- Mobile Context Header -->
+                            <div class="md:hidden absolute top-6 left-0 w-full px-6">
+                                <div class="flex items-center justify-between text-xs text-slate-500 border-b border-slate-800 pb-4">
+                                    <span><i class="fas fa-briefcase me-1"></i> Frontend Engineer</span>
+                                    <span><i class="fas fa-users me-1"></i> 54 Candidates</span>
+                                </div>
+                            </div>
+
+                            <div class="relative mb-8 group cursor-pointer" onclick="runSimulation()">
+                                <div class="absolute inset-0 bg-emerald-500/20 rounded-full blur-3xl group-hover:bg-emerald-500/30 transition-all duration-1000 animate-pulse"></div>
+                                <div class="w-24 h-24 md:w-32 md:h-32 bg-slate-900 rounded-full flex items-center justify-center border border-slate-800 shadow-2xl relative z-10 group-hover:scale-105 transition-transform duration-300">
+                                    <i class="fas fa-fingerprint text-4xl md:text-5xl text-emerald-500/80 group-hover:text-emerald-400 transition-colors"></i>
+                                </div>
+                                <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap md:hidden">
+                                <span class="text-xs text-emerald-500 animate-bounce block" data-lang-key="ai_tap_to_analyze">Tap to Analyze</span>
+                            </div>
+                            </div>
+                            
+                            <h3 class="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight" data-lang-key="ai_ready_analyze">System Ready</h3>
+                            <p class="text-slate-500 text-sm md:text-base max-w-xs mx-auto leading-relaxed" data-lang-key="ai_click_run">
+                                Awaiting authorization to process candidate pool.
+                            </p>
+                            
+                            <!-- Mobile specific Run Button trigger (invisible overlay) -->
+                            <div class="md:hidden absolute inset-0 z-20" onclick="runSimulation()"></div>
+                        </div>
+
+                        <!-- STATE 1: SCANNING LIST (Mobile Optimized) -->
+                        <div id="simStateScanning" class="absolute inset-0 p-4 md:p-8 hidden flex flex-col z-30 bg-slate-950 scan-grid overflow-hidden">
+                            <div class="scan-beam"></div>
+                            
+                            <div class="flex items-center justify-between mb-8 relative z-10">
+                                <h3 class="text-emerald-400 font-bold flex items-center gap-3 text-lg md:text-xl matrix-text">
+                                    <i class="fas fa-satellite-dish fa-spin"></i> <span data-lang-key="ai_scanning">PROCESSING...</span>
+                                </h3>
+                                <span class="text-xs font-mono text-emerald-500/50">PID: 8492</span>
+                            </div>
+                            
+                            <div class="space-y-3 relative flex-grow scanning px-1">
+                                <!-- Mock Rows -->
+                                <div class="bg-slate-900/90 backdrop-blur-sm p-3 md:p-4 rounded-xl border border-emerald-500/30 flex items-center gap-3 md:gap-4 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-800 border border-emerald-500/30 flex-shrink-0 relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-emerald-500/20 animate-ping"></div>
+                                    </div>
+                                    <div class="flex-grow min-w-0">
+                                        <div class="h-2.5 w-24 bg-emerald-900/50 rounded mb-2"></div>
+                                        <div class="h-2 w-16 bg-slate-800 rounded"></div>
+                                    </div>
+                                    <div class="text-[10px] md:text-xs text-emerald-500 font-mono whitespace-nowrap" data-lang-key="ai_scanning_lbl">SCANNING...</div>
+                                </div>
+                                
+                                <div class="bg-slate-900/90 backdrop-blur-sm p-3 md:p-4 rounded-xl border border-emerald-500/50 flex items-center gap-3 md:gap-4 transform translate-x-2 transition-transform">
+                                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-900/20 text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-500/50 flex-shrink-0">AQ</div>
+                                    <div class="flex-grow min-w-0">
+                                        <div class="text-white font-bold truncate text-sm md:text-base" data-lang-key="cand_name_ahmed">Ahmed Qasim</div>
+                                        <div class="text-xs text-slate-500 truncate" data-lang-key="cand_loc_ramallah">Ramallah, Palestine</div>
+                                    </div>
+                                    <div class="text-[10px] md:text-xs text-emerald-400 font-mono animate-pulse whitespace-nowrap" data-lang-key="ai_analyzing_lbl">> ANALYZING</div>
+                                </div>
+                                
+                                <div class="bg-slate-900/80 backdrop-blur-sm p-3 md:p-4 rounded-xl border border-slate-800 flex items-center gap-3 md:gap-4 opacity-60">
+                                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-900/20 text-blue-400 flex items-center justify-center font-bold text-xs border border-blue-500/30 flex-shrink-0">LN</div>
+                                    <div class="flex-grow min-w-0">
+                                        <div class="text-white font-bold truncate text-sm md:text-base" data-lang-key="cand_name_layla">Layla Nour</div>
+                                        <div class="text-xs text-slate-500 truncate" data-lang-key="cand_loc_gaza">Gaza Strip</div>
+                                    </div>
+                                    <div class="text-[10px] md:text-xs text-slate-500 font-mono whitespace-nowrap" data-lang-key="ai_queued_lbl">QUEUED</div>
+                                </div>
+                                
+                                <div class="bg-slate-900/80 backdrop-blur-sm p-3 md:p-4 rounded-xl border border-slate-800 flex items-center gap-3 md:gap-4 opacity-40">
+                                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-purple-900/20 text-purple-400 flex items-center justify-center font-bold text-xs border border-purple-500/30 flex-shrink-0">OB</div>
+                                    <div class="flex-grow min-w-0">
+                                        <div class="text-white font-bold truncate text-sm md:text-base" data-lang-key="cand_name_omar_full">Omar Barghouti</div>
+                                        <div class="text-xs text-slate-500 truncate" data-lang-key="cand_loc_nablus">Nablus</div>
+                                    </div>
+                                    <div class="text-[10px] md:text-xs text-slate-500 font-mono whitespace-nowrap" data-lang-key="ai_queued_lbl">QUEUED</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STATE 2: DETAILED REPORT (Mobile Refined) -->
+                        <div id="simStateReport" class="absolute inset-0 flex flex-col hidden bg-slate-950 z-30">
+                            
+                            <!-- Mobile: Top Bar for "Back to Scan" or Context -->
+                            <div class="md:hidden flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900">
+                                <span class="text-xs text-slate-400 font-mono">RESULTS: 3 MATCHES</span>
+                                <button onclick="resetSimulation()" class="text-xs text-emerald-500 font-bold">RESET</button>
+                            </div>
+
+                            <!-- Top Navigation (Candidate Switcher - Chip Style for Mobile) -->
+                            <div class="flex border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm p-3 gap-2 overflow-x-auto no-scrollbar items-center">
+                                <!-- Tab 1 -->
+                                <button onclick="showCandidate(0)" id="tab0" class="cand-tab active flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 transition-all hover:bg-slate-800 group min-w-[140px] md:min-w-[200px]">
+                                    <img src="https://ui-avatars.com/api/?name=Ahmed+Qasim&background=10b981&color=fff" class="w-8 h-8 rounded-full" alt="AQ">
+                                    <div>
+                                        <div class="text-sm font-bold text-white" data-lang-key="cand_name_ahmed">Ahmed Qasim</div>
+                                        <div class="text-[10px] text-slate-400" data-lang-key="cand_loc_ramallah">Ramallah</div>
+                                    </div>
+                                    <div class="ms-auto text-lg font-bold text-emerald-500 match-score">98%</div>
+                                </button>
+                                
+                                <button onclick="showCandidate(1)" id="tab1" class="cand-tab flex-1 flex items-center gap-3 p-3 rounded-lg border border-transparent hover:bg-slate-800 transition text-start group min-w-[200px]">
+                                    <img src="https://ui-avatars.com/api/?name=Layla+Nour&background=3b82f6&color=fff" class="w-8 h-8 rounded-full" alt="LN">
+                                    <div>
+                                        <div class="text-sm font-bold text-white" data-lang-key="cand_name_layla">Layla Nour</div>
+                                        <div class="text-[10px] text-slate-400" data-lang-key="cand_loc_gaza">Gaza</div>
+                                    </div>
+                                    <div class="ms-auto text-lg font-bold text-blue-500 match-score">92%</div>
+                                </button>
+                                
+                                <button onclick="showCandidate(2)" id="tab2" class="cand-tab flex-1 flex items-center gap-3 p-3 rounded-lg border border-transparent hover:bg-slate-800 transition text-start group min-w-[200px]">
+                                    <img src="https://ui-avatars.com/api/?name=Omar+B&background=f59e0b&color=fff" class="w-8 h-8 rounded-full" alt="OB">
+                                    <div>
+                                        <div class="text-sm font-bold text-white" data-lang-key="cand_name_omar">Omar Bargh.</div>
+                                        <div class="text-[10px] text-slate-400" data-lang-key="cand_loc_nablus">Nablus</div>
+                                    </div>
+                                    <div class="ms-auto text-lg font-bold text-amber-500 match-score">78%</div>
+                                </button>
+                            </div>
+
+                            <!-- Report Content Area -->
+                            <div class="flex-grow overflow-y-auto p-4 md:p-8 custom-scrollbar relative">
+                                <!-- Dynamic Content Injection -->
+                                <div id="reportContent" class="animate-fadeIn">
+                                    <!-- Populated via JS -->
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 border-t border-slate-800 bg-slate-900 flex justify-between items-center shrink-0">
+                                <span class="text-xs text-slate-500" data-lang-key="ai_generated_in">Analysis generated in 1.2s</span>
+                                <button onclick="resetSimulation()" class="text-slate-400 hover:text-white text-xs underline" data-lang-key="ai_reset">Reset Demo</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. FOUNDER'S EDITION (Modern Design) -->
+        <section id="founders-edition" class="py-24 relative container mx-auto px-6">
+            <div class="founders-card-modern rounded-[2rem] md:rounded-[40px] p-8 md:p-20 text-center max-w-5xl mx-auto">
+                <div class="relative z-10">
+                    <span class="inline-block py-1 px-4 rounded-full bg-slate-900 text-white text-xs font-bold uppercase mb-6 tracking-widest shadow-lg" data-lang-key="founder_limited">Limited Access</span>
+                    
+                    <h2 class="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-slate-900 tracking-tight" data-lang-key="founder_title">
+                        The Founder's Edition
+                    </h2>
+                    
+                    <p class="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-12 font-medium" data-lang-key="founder_desc">
+                        We are building the future of the Palestinian economy. For a limited time, get full access to the <strong>Enterprise Ecosystem</strong> completely free.
+                    </p>
+
+                    <div class="flex flex-col md:flex-row justify-center gap-4 md:gap-6 mb-12">
+                        <div class="flex items-center gap-3 bg-white/60 px-6 py-3 rounded-2xl shadow-sm border border-white justify-center">
+                            <i class="fas fa-check-circle text-emerald-500 text-xl"></i>
+                            <span class="text-slate-800 font-bold" data-lang-key="founder_unlimited_jobs">Unlimited Jobs</span>
+                        </div>
+                        <div class="flex items-center gap-3 bg-white/60 px-6 py-3 rounded-2xl shadow-sm border border-white justify-center">
+                            <i class="fas fa-check-circle text-emerald-500 text-xl"></i>
+                            <span class="text-slate-800 font-bold" data-lang-key="founder_full_ai">Full AI Access</span>
+                        </div>
+                        <div class="flex items-center gap-3 bg-white/60 px-6 py-3 rounded-2xl shadow-sm border border-white justify-center">
+                            <i class="fas fa-check-circle text-emerald-500 text-xl"></i>
+                            <span class="text-slate-800 font-bold" data-lang-key="founder_priority_support">Priority Support</span>
+                        </div>
+                    </div>
+
+                    <a href="/signup.html?type=client" class="btn btn-primary px-8 md:px-12 py-4 md:py-5 rounded-full text-lg md:text-xl font-bold shadow-xl shadow-emerald-500/20 transform hover:-translate-y-1 transition-all inline-block w-full md:w-auto">
+                        <span data-lang-key="btn_claim_free">Claim Free Access</span>
+                    </a>
+                    <p class="mt-6 text-sm text-slate-500" data-lang-key="founder_no_cc">Setup takes 2 minutes</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div id="footerPlaceholder"></div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="/auth.js"></script>
+    <script src="/components.js"></script>
+    <script>
+        // Init Animations
+        AOS.init({ once: true, duration: 800, offset: 50 });
+
+        // --- TEXT ROTATOR ---
+        function startTextRotation() {
+            const words = document.querySelectorAll('.rotating-word');
+            if (!words.length) return;
+            
+            let currentIndex = 0;
+            
+            setInterval(() => {
+                const current = words[currentIndex];
+                const nextIndex = (currentIndex + 1) % words.length;
+                const next = words[nextIndex];
+                
+                // 1. Exit current
+                current.classList.add('exit');
+                current.classList.remove('active');
+                
+                // 2. Enter next
+                next.classList.add('active');
+                
+                // 3. Reset after transition
+                setTimeout(() => {
+                    current.classList.remove('exit');
+                }, 500); // Matches CSS duration
+                
+                currentIndex = nextIndex;
+            }, 2500);
+        }
+        
+        // Start immediately
+        startTextRotation();
+
+        function scrollToDemo() {
+            document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- TRANSLATION HELPER ---
+        function t(key) {
+            const lang = localStorage.getItem('hirlyLang') || 'en';
+            if (window.translations && window.translations[key] && window.translations[key][lang]) {
+                return window.translations[key][lang];
+            }
+            return key;
+        }
+
+        // --- SIMULATOR DATA ---
+        const candidates = [
+            {
+                name: "cand_name_ahmed",
+                role: "role_senior_react",
+                match: 98,
+                badgeClass: "verdict-strong",
+                badgeText: "badge_strong_hire",
+                verdict: "verdict_ahmed",
+                radarPoints: "50,10 95,30 90,80 30,90 10,30", // High all around
+                strengths: ["str_clean_code", "str_system_design", "str_mentorship", "str_testing"],
+                weaknesses: ["weak_timezone"]
+            },
+            {
+                name: "cand_name_layla",
+                role: "role_frontend_spec",
+                match: 92,
+                badgeClass: "verdict-interview",
+                badgeText: "badge_interview",
+                verdict: "verdict_layla",
+                radarPoints: "50,10 85,30 60,80 40,90 20,40", // High technical, lower leadership
+                strengths: ["str_ui_animation", "str_tailwind", "str_rapid_prototyping"],
+                weaknesses: ["weak_sql"]
+            },
+            {
+                name: "cand_name_omar_full",
+                role: "role_fullstack",
+                match: 78,
+                badgeClass: "verdict-consider",
+                badgeText: "badge_potential",
+                verdict: "verdict_omar",
+                radarPoints: "50,40 60,30 90,80 40,90 30,40", // High backend/logic, lower frontend
+                strengths: ["str_node_arch", "str_db_opt"],
+                weaknesses: ["weak_react_hooks"]
+            }
+        ];
+
+        // --- SIMULATOR LOGIC ---
+        function runSimulation() {
+            const idle = document.getElementById('simStateIdle');
+            const scanning = document.getElementById('simStateScanning');
+            const report = document.getElementById('simStateReport');
+            const btn = document.getElementById('runPilotBtn');
+
+            // 1. Switch to Scanning
+            idle.classList.add('hidden');
+            scanning.classList.remove('hidden');
+            
+            // Update Button (Desktop)
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span data-lang-key="btn_analyzing">PROCESSING...</span>`;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // 2. Wait 2.5 seconds then show Report
+            setTimeout(() => {
+                scanning.classList.add('hidden');
+                report.classList.remove('hidden');
+                
+                // Load First Candidate
+                showCandidate(0);
+                
+                // Update button state (Desktop)
+                btn.innerHTML = `<i class="fas fa-check"></i> <span data-lang-key="btn_complete">ANALYSIS COMPLETE</span>`;
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500', 'opacity-50');
+                btn.classList.add('bg-slate-800', 'cursor-default', 'text-emerald-400', 'border', 'border-emerald-500/30');
+            }, 2500);
+        }
+
+        function showCandidate(index) {
+            const c = candidates[index];
+            const content = document.getElementById('reportContent');
+            
+            // Update Tabs
+            document.querySelectorAll('.cand-tab').forEach((t, i) => {
+                if(i === index) {
+                    t.classList.add('active', 'bg-slate-800', 'border-emerald-500/50');
+                    t.classList.remove('border-transparent');
+                } else {
+                    t.classList.remove('active', 'bg-slate-800', 'border-emerald-500/50');
+                    t.classList.add('border-transparent');
+                }
+            });
+
+            // Render Content (Modern V1.0 Design)
+            content.innerHTML = `
+                <div class="flex flex-col lg:flex-row justify-between items-start mb-8 gap-6 animate-fadeIn">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-2xl md:text-3xl font-bold text-white" data-lang-key="${c.name}">${t(c.name)}</h3>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700">ID: ${8492 + index}</span>
+                        </div>
+                        <p class="text-slate-400 text-sm mb-4 font-mono" data-lang-key="${c.role}">${t(c.role)}</p>
+                        
+                        <div class="verdict-badge ${c.badgeClass} inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-900/20 backdrop-blur-md border border-white/10" data-lang-key="${c.badgeText}">
+                            <i class="fas fa-gavel"></i> ${t(c.badgeText)}
+                        </div>
+                    </div>
+                    
+                    <!-- Radar Chart (Visual Only - Styled) -->
+                    <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800 w-full lg:w-48 flex flex-col items-center relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors"></div>
+                        <div class="w-24 h-24 relative mb-2">
+                            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">
+                                <polygon points="${c.radarPoints}" class="fill-emerald-500/20 stroke-emerald-400 stroke-[1.5]" />
+                                <!-- Grid Lines -->
+                                <circle cx="50" cy="50" r="20" fill="none" stroke="#334155" stroke-width="0.5" />
+                                <circle cx="50" cy="50" r="35" fill="none" stroke="#334155" stroke-width="0.5" />
+                                <line x1="50" y1="50" x2="50" y2="10" stroke="#334155" stroke-width="0.5"/>
+                                <line x1="50" y1="50" x2="90" y2="40" stroke="#334155" stroke-width="0.5"/>
+                                <line x1="50" y1="50" x2="80" y2="90" stroke="#334155" stroke-width="0.5"/>
+                                <line x1="50" y1="50" x2="20" y2="90" stroke="#334155" stroke-width="0.5"/>
+                                <line x1="50" y1="50" x2="10" y2="40" stroke="#334155" stroke-width="0.5"/>
+                            </svg>
+                        </div>
+                        <div class="text-[10px] text-emerald-400/70 uppercase font-bold tracking-wider font-mono" data-lang-key="ai_skill_profile">SKILL MATRIX</div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-500/5 border border-indigo-500/20 p-5 rounded-xl mb-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-20 h-20 bg-indigo-500/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
+                    <h4 class="text-indigo-400 text-xs font-bold uppercase mb-2 flex items-center gap-2" data-lang-key="ai_verdict">
+                        <i class="fas fa-brain"></i> ${t('ai_verdict')}
+                    </h4>
+                    <p class="text-slate-300 text-sm leading-relaxed" data-lang-key="${c.verdict}">${t(c.verdict)}</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-slate-900/50 rounded-xl p-5 border border-slate-800 hover:border-emerald-500/30 transition-colors">
+                        <h4 class="text-emerald-500 text-xs font-bold uppercase mb-3 flex items-center gap-2" data-lang-key="ai_strengths">
+                            <i class="fas fa-plus-circle"></i> ${t('ai_strengths')}
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${c.strengths.map(s => `<span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-medium" data-lang-key="${s}">${t(s)}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/50 rounded-xl p-5 border border-slate-800 hover:border-amber-500/30 transition-colors">
+                        <h4 class="text-amber-500 text-xs font-bold uppercase mb-3 flex items-center gap-2" data-lang-key="ai_weaknesses">
+                            <i class="fas fa-exclamation-triangle"></i> ${t('ai_weaknesses')}
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                             ${c.weaknesses.map(w => `<span class="px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md text-xs font-medium" data-lang-key="${w}">${t(w)}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetSimulation() {
+            const idle = document.getElementById('simStateIdle');
+            const scanning = document.getElementById('simStateScanning');
+            const report = document.getElementById('simStateReport');
+            const btn = document.getElementById('runPilotBtn');
+
+            report.classList.add('hidden');
+            idle.classList.remove('hidden');
+            
+            // Reset Button
+            btn.innerHTML = `
+                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></span>
+                <i class="fas fa-bolt group-hover:animate-pulse"></i> <span data-lang-key="btn_run_analysis">RUN ANALYSIS</span>
+            `;
+            btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+            btn.classList.remove('bg-slate-800', 'cursor-default', 'opacity-50', 'text-emerald-400', 'border', 'border-emerald-500/30');
+        }
+    </script>
+</body>
+</html>

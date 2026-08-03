@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="talent_page_title">المواهب - هايرلي</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/pages/page-talent.css">
+    <link rel="stylesheet" href="/styling/global-rtl.css">
+
+    <!-- Language scripts (MUST be loaded first among JS) -->
+    <script src="/language/language.js"></script>
+    <script src="/language/talent-translations.js"></script> <!-- NEW: Load page-specific translations -->
+    <script src="/language/categories-professions-translations.js"></script> <!-- NEW: Load categories/professions data -->
+    <script src="/language/cities-translations.js"></script> <!-- NEW: Load cities data -->
+</head>
+<body>
+    <!-- Header will be loaded by components.js -->
+    <div id="headerPlaceholder"></div>
+    <div id="pageLoadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- NEW: Centralized Access Denied Modal (kept for general access control) -->
+    <div class="modal-overlay" id="accessDeniedModal" style="display: none;">
+        <div class="modal-content medium-modal text-center">
+            <button class="modal-close" id="closeModalBtn" aria-label="Close"></button>
+            <div class="modal-icon">
+                <i class="fas fa-lock fa-4x text-primary mb-3"></i>
+            </div>
+            <h2 id="accessDeniedTitle" data-lang-key="access_denied_title">Access Denied</h2>
+            <p id="accessDeniedMessage" data-lang-key="access_denied_message">You must be a verified employer to view freelancer profiles.</p>
+            <div class="modal-actions mt-4" id="modalActions">
+                <!-- Buttons will be dynamically inserted here by talent.js -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wrapper for all main content that should be hidden when modal is active -->
+    <div id="mainContentWrapper" class="main-content-wrapper">
+        <main class="main talent-listing-page-wrapper">
+            <!-- Integrated Search Header -->
+            <section class="talent-search-header relative overflow-hidden">
+                <!-- Decorative Background Elements -->
+                <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
+                    <div class="absolute -top-32 -left-32 w-[500px] h-[500px] bg-hirly-500/5 rounded-full blur-[120px]"></div>
+                    <div class="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px]"></div>
+                </div>
+
+                <div class="container relative z-10">
+                    <div class="talent-search-text max-w-3xl mx-auto">
+                        <h1 class="talent-page-title" data-lang-key="hero_title_professionals">Find exactly who you need</h1>
+                        <p class="talent-page-description" data-lang-key="hero_subtitle_professionals">Whether you need freelancers for a project, a quick fix, or even to hire someone. From electricians to doctors, use the filters to choose exactly who you want.</p>
+                        
+                        <!-- Sleek Search Bar -->
+                        <div class="talent-search-bar-main group">
+                            <i class="fas fa-search search-icon text-slate-400 group-focus-within:text-hirly-500 transition-colors"></i>
+                            <input type="text" id="searchQueryHero" placeholder="Search by name, skill, or profession..." data-lang-key="search_talent_placeholder">
+                            <button id="searchTalentButtonHero" class="btn btn-primary shadow-xl shadow-hirly-200/50" data-lang-key="search_talent">
+                                <span data-lang-key="search_talent">Search</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Services Section (formerly One-Person Team Jobs) - Visible on Desktop & Mobile -->
+            <section class="quick-filters-section container quick-services-section">
+                <h2 class="section-heading text-center mb-lg" data-lang-key="quick_services">Quick Services</h2>
+                <div class="quick-filters-grid" id="quickServicesGrid">
+                    <!-- Quick Service Cards will be dynamically loaded here by JS -->
+                </div>
+            </section>
+            
+            <!-- Browse All Professions Section - ONLY FOR MOBILE -->
+            <section class="quick-filters-section container browse-all-professions-section-mobile">
+                <h2 class="section-heading text-center mb-lg" data-lang-key="categories">Categories</h2>
+                <div class="quick-filters-grid" id="quickCategoriesGridMobile">
+                    <!-- Quick Category Cards will be dynamically loaded here by JS -->
+                </div>
+            </section>
+
+            <!-- Horizontal Filter Bar for All Devices -->
+            <section class="horizontal-filter-section container">
+                <div class="filter-bar-container">
+                    <div class="filter-bar-row">
+                        <!-- Category Dropdown -->
+                        <div class="filter-col">
+                            <div class="custom-dropdown" id="categoryDropdown">
+                                <button type="button" class="custom-dropdown-trigger form-control" id="categoryDropdownToggle" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-th-large filter-icon"></i> <span id="selectedCategoriesDisplay" data-lang-key="all_categories">All Categories</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="custom-dropdown-menu checkbox-list" id="categoryCheckboxes"></div>
+                            </div>
+                        </div>
+                        <!-- Profession Dropdown -->
+                        <div class="filter-col">
+                            <div class="custom-dropdown" id="professionsDropdown">
+                                <button type="button" class="custom-dropdown-trigger form-control" id="professionsDropdownToggle" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-briefcase filter-icon"></i> <span id="selectedProfessionsDisplay" data-lang-key="select_professions">Select Professions</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="custom-dropdown-menu checkbox-list" id="professionsCheckboxes"></div>
+                            </div>
+                        </div>
+                        <!-- City Dropdown -->
+                        <div class="filter-col">
+                            <div class="custom-dropdown" id="cityDropdown">
+                                <button type="button" class="custom-dropdown-trigger form-control" id="cityDropdownToggle" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-map-marker-alt filter-icon"></i> <span id="selectedCitiesDisplay" data-lang-key="all_cities">All Cities</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="custom-dropdown-menu checkbox-list" id="cityCheckboxes"></div>
+                            </div>
+                        </div>
+                        <!-- Clear -->
+                        <div class="filter-col-auto">
+                            <button type="button" id="clearFiltersSidebar" class="btn btn-icon-only" title="Clear Filters" data-lang-key="clear_filters">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Talent page content area -->
+            <div class="container jobs-content-area full-width-layout">
+                <!-- TALENT LIST CONTENT -->
+                <div class="talent-list-content">
+                    <div class="talent-grid-header">
+                        <h2 class="section-title text-left" data-lang-key="browse_talent_section_title">Browse Talent</h2>
+                    </div>
+                    <div class="talent-grid-section" id="loadMoreContainer" style="display: none;">
+                         <div class="talent-grid" id="talentGrid" aria-live="polite" aria-atomic="true">
+                             <!-- Talent cards will be loaded here by JavaScript -->
+                         </div>
+                         <button id="loadMoreBtn" class="btn btn-primary load-more-btn btn-icon" data-lang-key="load_more">
+                             <i class="fas fa-arrow-down"></i>
+                             <span class="button-text">Load More</span>
+                         </button>
+                     </div>
+                    
+                    <div id="noResults" class="no-results" style="display: none;">
+                        <i class="fas fa-user-slash"></i>
+                        <p data-lang-key="no_talent_found">No talent found matching your criteria</p>
+                        <button class="btn btn-outline" id="clearFiltersFromNoResults">
+                            <i class="fas fa-undo"></i> <span data-lang-key="clear_filters">Clear Filters</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- END: New layout -->
+        </main>
+    </div>
+
+    <div id="footerPlaceholder"></div>
+    
+    <script src="/auth.js"></script>
+    <script src="/components.js" defer></script>
+    <script src="/js/talent.js" defer></script>
+</body>
+</html>

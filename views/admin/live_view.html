@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live View | Hirly Command Center</title>
+    
+    <!-- External Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/styling/admin/realtime/styles.css">
+</head>
+<body class="live-view-active">
+    <div class="live-dashboard">
+        <!-- Header -->
+        <header class="live-header">
+            <div class="live-logo">
+                <img src="/images/logo.jpg" alt="Hirly" style="height: 32px; border-radius: 8px;">
+                <span>HIRLY LIVE</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="live-badge">Live System Tracking</div>
+                <button onclick="window.location.href='/admin_dashboard.html'" class="exit-btn">
+                    <i class="fas fa-arrow-left"></i> Exit
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Map Area -->
+        <main class="live-map-container">
+            <div id="liveMap"></div>
+            <!-- HUD Overlays -->
+            <button id="fullscreenBtn" class="hud-btn" title="Toggle Fullscreen">
+                <i class="fas fa-expand"></i>
+            </button>
+            <div class="hud-coords">
+                <span id="mapLat">31.9522</span>° N, <span id="mapLon">35.2332</span>° E
+            </div>
+            <div class="hud-status">
+                <span id="serverCpu" class="text-indigo-400">CPU: 0.00</span> | 
+                <span id="serverMem" class="text-emerald-400">RAM: 0.0%</span>
+                <span class="scanner-line ml-2"></span>
+            </div>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="live-sidebar">
+            <div class="live-stat-card primary">
+                <p class="stat-label">Visitors Right Now</p>
+                <h2 class="stat-value" id="activeVisitorsCount">0</h2>
+                <div class="stat-trend flex items-center gap-2 mt-2">
+                    <span class="trend-up"><i class="fas fa-chart-line"></i> <span id="fiveMinVisits">0</span> in last 5m</span>
+                </div>
+            </div>
+
+            <!-- New Stats Grid -->
+            <div class="live-stats-grid">
+                <div class="stat-mini-card">
+                    <p class="stat-label">Total Visits</p>
+                    <h3 class="stat-value-mini" id="totalVisits">0</h3>
+                    <div class="stat-sub-label">Signups: <span id="totalSignups">0</span></div>
+                    <div class="stat-sub-label">Rate: <span id="totalConversionRate">0%</span></div>
+                </div>
+                <div class="stat-mini-card">
+                    <p class="stat-label">Daily</p>
+                    <h3 class="stat-value-mini" id="dailyVisits">0</h3>
+                    <div class="stat-sub-label">Signups: <span id="dailySignups">0</span></div>
+                    <div class="stat-sub-label">Rate: <span id="dailyConversionRate">0%</span></div>
+                </div>
+                <div class="stat-mini-card">
+                    <p class="stat-label">Weekly</p>
+                    <h3 class="stat-value-mini" id="weeklyVisits">0</h3>
+                    <div class="stat-sub-label">Signups: <span id="weeklySignups">0</span></div>
+                    <div class="stat-sub-label">Rate: <span id="weeklyConversionRate">0%</span></div>
+                </div>
+                <div class="stat-mini-card highlight">
+                    <p class="stat-label">Avg Rate</p>
+                    <h3 class="stat-value-mini" id="conversionRate">0%</h3>
+                    <div class="stat-sub-label">Overall Conv.</div>
+                </div>
+            </div>
+
+            <!-- Traffic Chart -->
+            <div class="chart-card">
+                <p class="stat-label mb-3">Traffic History (24h)</p>
+                <div class="chart-container">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+
+            <div class="live-feed">
+                <div class="feed-header flex items-center justify-between">
+                    <span><i class="fas fa-bolt mr-2 text-indigo-400"></i> Activity</span>
+                    <div class="filter-group">
+                        <button id="filterAllEvents" class="filter-btn active">All</button>
+                        <button id="filterKeyEvents" class="filter-btn">Key</button>
+                    </div>
+                </div>
+                <div id="liveEventList" style="height: 400px; overflow-y: auto;">
+                    <!-- Events injected here -->
+                    <div class="text-center py-12 text-gray-500 text-sm">
+                        <i class="fas fa-radar fa-spin mb-3 text-2xl block"></i>
+                        Waiting for activity...
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Bottom Row (Intelligence & Pages) -->
+        <div class="live-bottom-row">
+            <!-- Marketing Intelligence Grid -->
+            <section class="intel-grid">
+                <!-- Device Distribution -->
+                <div class="intel-card">
+                    <h3 class="intel-title"><i class="fas fa-mobile-alt"></i> Device Distribution</h3>
+                    <div id="deviceStats" class="device-stats">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-400">Desktop</span>
+                            <span id="desktopPercent" class="text-xs font-bold text-white">0%</span>
+                        </div>
+                        <div class="progress-bar-bg"><div id="desktopBar" class="progress-bar desktop" style="width: 0%"></div></div>
+                        
+                        <div class="flex items-center justify-between mb-2 mt-4">
+                            <span class="text-xs text-gray-400">Mobile</span>
+                            <span id="mobilePercent" class="text-xs font-bold text-white">0%</span>
+                        </div>
+                        <div class="progress-bar-bg"><div id="mobileBar" class="progress-bar mobile" style="width: 0%"></div></div>
+                    </div>
+                </div>
+
+                <!-- Top Referrers -->
+                <div class="intel-card">
+                    <h3 class="intel-title"><i class="fas fa-share-nodes"></i> Top Traffic Sources</h3>
+                    <div id="referrerStats" class="referrer-list">
+                        <!-- Referrers injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Pages Grid -->
+            <section class="active-pages-section">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-layer-group text-primary"></i>
+                        Popular Pages
+                    </h3>
+                </div>
+                <div id="activePagesGrid" class="active-pages-grid">
+                    <!-- Page cards injected here -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Socket.io & Logic -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/js/admin/realtime/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" id="htmlTag">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+     
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="job_details_title">Job Details - Hirly</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/components/modals.css">
+    <link rel="stylesheet" href="/styling/pages/page-job-details.css">
+    <link rel="stylesheet" href="/styling/global-rtl.css">
+
+    <!-- Language scripts (MUST be loaded first and in correct dependency order) -->
+    <script src="/language/language.js"></script>
+    <script src="/language/job-details-translations.js"></script>
+    <script src="/language/categories-professions-translations.js"></script>
+    <script src="/language/cities-translations.js"></script>
+</head>
+<body>
+    <div id="headerPlaceholder"></div>
+    <div id="pageLoadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <main class="main job-details-page-wrapper">
+        <div id="loadingOverlay" class="loading-overlay" style="display:none"></div>
+        <div id="pageErrorMessage" class="error-state" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3 data-lang-key="error_loading_job">Error loading job details.</h3>
+            <p data-lang-key="try_again_later">Please try again later.</p>
+        </div>
+
+        <div id="jobDetailsContent" class="container job-details-layout" style="display: none;">
+            <div class="job-details-main">
+                <!-- Job Overview Section (remains first) -->
+                <section class="job-overview-section">
+                    <h1 id="jobTitle" data-lang-key="job_title_placeholder">Job Title</h1>
+                    <div class="job-meta-info">
+                        <span id="jobCountry" class="job-country"><i class="fas fa-globe"></i> <span data-lang-key="country">Country</span></span>
+                        <span class="job-meta-divider" id="dividerCountry">|</span>
+                        <span id="jobCity" class="job-city"><i class="fas fa-map-marker-alt"></i> <span data-lang-key="city">City</span></span>
+                        <span class="job-meta-divider" id="dividerCity">|</span>
+                        <span id="jobType" class="job-type"><i class="fas fa-briefcase"></i> <span data-lang-key="not_available">N/A</span></span>
+                        <span class="job-meta-divider" id="dividerType">|</span>
+                        <span id="jobSiteType" class="job-site-type"><i class="fas fa-laptop-house"></i> <span>N/A</span></span>
+                        <span class="job-meta-divider" id="dividerSiteType">|</span>
+                        <span id="jobBudget" class="job-budget"><i class="fas fa-money-bill-wave"></i> <span data-lang-key="not_available">N/A</span></span>
+                        <span class="job-meta-divider" id="dividerBudget">|</span>
+                        <span id="jobGender" class="job-gender"><i class="fas fa-venus-mars"></i> <span data-lang-key="any">Any</span></span>
+                        <span class="job-meta-divider" id="dividerGender">|</span>
+                        <span id="jobAgeRange" class="job-age-range"><i class="fas fa-user-clock"></i> <span data-lang-key="not_available">N/A</span></span>
+                        <span class="job-meta-divider" id="dividerAge">|</span>
+                        <span id="jobPostedDate" class="job-posted-date"><i class="fas fa-calendar-day"></i> <span data-lang-key="posted_date">Posted Date</span></span>
+                    </div>
+                </section>
+
+                <!-- Job Description Section -->
+                <section class="job-details-section">
+                    <h2 data-lang-key="job_description">Job Description</h2>
+                    <p id="jobDescription" data-lang-key="job_description_placeholder">Loading job description...</p>
+                </section>
+
+                <!-- Job Responsibilities Section -->
+                <section class="job-details-section" id="jobResponsibilitiesSection" style="display: none;">
+                    <h2 data-lang-key="responsibilities">Responsibilities</h2>
+                    <ul id="jobResponsibilities" class="job-requirements-list dossier-list">
+                        <!-- Responsibilities will be loaded here by JS -->
+                    </ul>
+                </section>
+
+                <!-- Required Professions Section -->
+                <section class="job-details-section">
+                    <h2 data-lang-key="required_professions">Required Professions</h2>
+                    <div id="requiredProfessions" class="job-tags-container">
+                        <!-- Professions will be loaded here by JS -->
+                    </div>
+                    <p id="noRequiredProfessions" class="empty-state small-empty-state" style="display: none;">
+                        <i class="fas fa-tags"></i>
+                        <span data-lang-key="no_required_professions">No specific professions listed.</span>
+                    </p>
+                </section>
+
+                <!-- Job Requirements Section -->
+                <section class="job-details-section" id="jobRequirementsSection" style="display: none;">
+                    <h2 data-lang-key="requirements">Requirements</h2>
+                    <ul id="jobRequirementsList" class="job-requirements-list">
+                        <!-- Requirements will be loaded here by JS -->
+                    </ul>
+                    <p id="noRequirementsMessage" class="empty-state small-empty-state" style="display: none;">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span data-lang-key="no_requirements_listed">No requirements listed.</span>
+                    </p>
+                </section>
+
+                <!-- Preferred Qualifications Section -->
+                <section class="job-details-section" id="jobPreferredQualificationsSection" style="display: none;">
+                    <h2 data-lang-key="preferred_qualifications">Preferred Qualifications</h2>
+                    <ul id="jobPreferredQualifications" class="job-requirements-list dossier-list">
+                        <!-- Qualifications will be loaded here by JS -->
+                    </ul>
+                </section>
+
+                <!-- Benefits Section -->
+                <section class="job-details-section" id="jobBenefitsSection" style="display: none;">
+                    <h2 data-lang-key="benefits">Benefits</h2>
+                    <ul id="jobBenefits" class="job-requirements-list dossier-list">
+                        <!-- Benefits will be loaded here by JS -->
+                    </ul>
+                </section>
+
+                <!-- Job Image Section (moved up) -->
+                <section class="job-details-section" id="jobImageSection" style="display: none;">
+                    <h2 data-lang-key="job_image">Job Image</h2>
+                    <img id="jobImage" src="" alt="Job Image" class="job-image">
+                </section>
+
+                <!-- About Employer Section (now the last section in job-details-main) -->
+                <section class="job-details-section about-employer-section">
+                    <h2 data-lang-key="about_the_employer">About the Employer</h2>
+                    <div class="employer-info-card">
+                        <div class="employer-card-header-main">
+                            <h3 class="employer-name-header" id="employerName">Employer Name</h3>
+                            <div class="employer-logo-sm" id="employerLogoContainer">
+                                <!-- Employer logo or initials will be loaded here by JS -->
+                            </div>
+                        </div>
+                        <a href="#" id="viewEmployerProfileBtn" class="btn btn-primary btn-icon" data-lang-key="view_employer_profile">
+                            <i class="fas fa-user-tie"></i> <span class="button-text">View Employer Profile</span>
+                        </a>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="job-apply-sidebar">
+                <section class="sidebar-section apply-job-card">
+                    <h3 data-lang-key="apply_for_this_job">Apply for this Job</h3>
+                    <div id="applyStatusMessage" class="form-message mt-2" style="display: none;"></div>
+                    <button id="applyNowBtn" class="btn btn-primary btn-lg btn-icon" data-lang-key="apply_now">
+                        <i class="fas fa-paper-plane"></i> <span class="button-text">Apply Now</span>
+                    </button>
+                    <button id="alreadyAppliedBtn" class="btn btn-secondary btn-lg btn-icon" style="display: none;" disabled data-lang-key="already_applied">
+                        <i class="fas fa-check-circle"></i> <span class="button-text">Already Applied</span>
+                    </button>
+                    <button id="jobClosedBtn" class="btn btn-danger btn-lg btn-icon" style="display: none;" disabled data-lang-key="job_closed">
+                        <i class="fas fa-times-circle"></i> <span class="button-text">Job Closed</span>
+                    </button>
+                    <button id="deadlinePassedBtn" class="btn btn-warning btn-lg btn-icon" style="display: none;" disabled data-lang-key="deadline_passed">
+                        <i class="fas fa-calendar-times"></i> <span class="button-text">Deadline Passed</span>
+                    </button>
+                    
+                    <!-- Deadline Display Section -->
+                    <div id="deadlineSection" class="deadline-display mt-3" style="display: none;">
+                        <div class="deadline-info">
+                            <i class="fas fa-calendar-times deadline-icon"></i>
+                            <span class="deadline-label" data-lang-key="deadline">آخر موعد للتقديم</span>
+                            <span class="deadline-date" id="deadlineDate"></span>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div id="applicationModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content large-modal">
+            <span class="modal-close-btn" id="closeApplicationModalBtn"></span>
+            <h2 data-lang-key="apply_for_job_modal_title">Apply for Job</h2>
+            <form id="applicationForm">
+                <p class="job-title-modal" id="jobTitleModal"></p>
+                <div class="form-group">
+                    <label for="proposalMessage" data-lang-key="proposal_message">Proposal Message</label>
+                    <textarea id="proposalMessage" name="proposalMessage" class="form-control" rows="6" placeholder="Tell the employer why you are the best fit for this job..." data-lang-key="proposal_message_placeholder" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group budget-group">
+                        <label for="bidAmount" data-lang-key="your_bid_amount">Your Bid Amount</label>
+                        <input type="number" id="bidAmount" name="bidAmount" class="form-control input-with-currency" placeholder="e.g., 500" data-lang-key="bid_amount_placeholder" min="0" step="0.01">
+                        <!-- Currency display removed as per request -->
+                    </div>
+                    <div class="form-group timeline-group">
+                        <label for="timeline" data-lang-key="estimated_timeline">Estimated Timeline</label>
+                        <input type="text" id="timeline" name="timeline" class="form-control" placeholder="e.g., 2 weeks" data-lang-key="timeline_placeholder">
+                    </div>
+                </div>
+                <div id="applicationMessageStatus" class="form-message mt-2" style="display: none;"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline-secondary" id="cancelApplicationBtn" data-lang-key="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitApplicationBtn" data-lang-key="submit_application">Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="employerLoginModal" class="modal-overlay">
+        <div class="modal-content small-modal text-center">
+            <button class="modal-close"><i class="fas fa-times"></i></button>
+            <div class="modal-header-icon-container">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h2 class="text-xl font-bold mb-2" data-lang-key="login_as_employer_title">Login as an Employer</h2>
+            <p class="text-sm text-gray-600 mb-4" data-lang-key="login_as_employer_message">You need to log in as an employer to view freelancer profiles.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline-secondary modal-cancel-btn" data-lang-key="cancel">Cancel</button>
+                <a href="/signup.html?type=client" class="btn btn-primary" data-lang-key="signup">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="freelancerLoginModal" class="modal-overlay">
+        <div class="modal-content small-modal text-center">
+            <button class="modal-close"><i class="fas fa-times"></i></button>
+            <div class="modal-header-icon-container">
+                <i class="fas fa-user-tag"></i>
+            </div>
+            <h2 class="text-xl font-bold mb-2" data-lang-key="login_as_freelancer_title">Login as a Freelancer</h2>
+            <p class="text-sm text-gray-600 mb-4" data-lang-key="login_as_freelancer_message">You need to log in as a freelancer to view company profiles and apply to jobs.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline-secondary modal-cancel-btn" data-lang-key="cancel">Cancel</button>
+                <a href="/technical/signup.html?type=freelancer" class="btn btn-primary" data-lang-key="signup">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="employerCannotApplyModal" class="modal-overlay">
+        <div class="modal-content small-modal text-center">
+            <button class="modal-close"><i class="fas fa-times"></i></button>
+            <div class="modal-header-icon-container">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h2 class="text-xl font-bold mb-2" data-lang-key="employer_cannot_apply_title">Employer Account</h2>
+            <p class="text-sm text-gray-600 mb-4" data-lang-key="employer_cannot_apply_desc">You are logged in as an employer. Only freelancers can apply for jobs.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline-secondary modal-cancel-btn" data-lang-key="cancel">Cancel</button>
+                <!-- "Go to Dashboard" button removed as per request -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification and Daily Limit Modals removed for Unlimited model -->
+
+    <div id="lowCompletenessModal" class="modal-overlay">
+        <div class="modal-content small-modal text-center">
+            <button class="modal-close"><i class="fas fa-times"></i></button>
+            <div class="modal-header-icon-container">
+                <i class="fas fa-user"></i>
+            </div>
+            <h2 class="text-xl font-bold mb-2" data-lang-key="low_profile_modal_title">Profile Incomplete</h2>
+            <p class="text-sm text-gray-600 mb-4" id="lowCompletenessDynamicDesc" data-lang-key="low_profile_modal_desc">Your profile seems low or missing some things. Are you sure you want to continue?</p>
+            <div class="progress-ring-wrapper mb-4">
+                <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120" preserveAspectRatio="xMidYMid meet">
+                    <circle class="progress-ring__circle--bg" cx="60" cy="60" r="54" stroke-width="12" fill="transparent" vector-effect="non-scaling-stroke"></circle>
+                    <circle id="lowCompletenessRingProgress" class="progress-ring__circle" cx="60" cy="60" r="54" stroke-width="12" fill="transparent" stroke-linecap="round" vector-effect="non-scaling-stroke"></circle>
+                    <text id="lowCompletenessPercent" x="60" y="66" text-anchor="middle" class="progress-ring__text">0%</text>
+                </svg>
+                <div class="mt-2 text-sm font-semibold" data-lang-key="profile_completeness_title">Profile Completeness</div>
+            </div>
+            <div id="lowCompletenessDetails" class="low-completeness-details">
+                <ul id="lowCompletenessMissingList" class="missing-list"></ul>
+            </div>
+            <div class="modal-actions">
+                <a href="/dashboard.html" class="btn btn-outline-secondary" id="lowCompletenessImproveBtn" data-lang-key="improve_profile_btn">Improve My Profile</a>
+                <button class="btn btn-primary" id="lowCompletenessApplyAnywayBtn" data-lang-key="apply_anyway_btn">Apply Either Way</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="externalApplyModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content editorial-modal external-application-modal">
+            <button class="modal-close"><i class="fas fa-times"></i></button>
+            
+            <div class="modal-body-editorial">
+                <h2 class="editorial-modal-title">
+                    <i class="fas fa-external-link-alt title-icon"></i>
+                    <span data-lang-key="hirly_benefit_title">Apply with Hirly Priority</span>
+                </h2>
+                <p class="editorial-modal-subtitle" data-lang-key="hirly_benefit_desc">
+                    You're about to apply externally. To stand out, ensure your Hirly profile is complete. Sharing your unique Hirly link or QR code gives you priority, looks more professional, and makes the process seamless for employers.
+                </p>
+
+                <div class="profile-completeness-card">
+                    <div class="completeness-visual">
+                        <svg class="progress-ring-luxe" width="70" height="70">
+                            <circle class="progress-ring-bg" cx="35" cy="35" r="30" stroke-width="6"></circle>
+                            <circle id="externalApplyRingProgress" class="progress-ring-fill" cx="35" cy="35" r="30" stroke-width="6"></circle>
+                            <text id="externalApplyPercentText" x="35" y="35" text-anchor="middle" class="progress-ring-label">0%</text>
+                        </svg>
+                    </div>
+                    <div class="completeness-info">
+                        <h4 data-lang-key="profile_completeness_title">Profile Completeness</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions-editorial">
+                <a href="/dashboard.html" class="btn btn-outline-primary btn-luxe" id="modalCompleteProfileBtn">
+                    <i class="fas fa-user-edit"></i>
+                    <span id="completeAccountBtnText" data-lang-key="complete_account">Complete Your Account</span>
+                </a>
+                <button id="continueToExternalBtn" class="btn btn-primary btn-luxe">
+                    <span data-lang-key="visit_external_site">Visit the Site</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="footerPlaceholder"></div>
+
+    <script src="/auth.js"></script>
+    <script src="/components.js"></script>
+    <script src="/script.js" defer></script>
+    <script src="/js/job_details.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+     
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="post_job_title">Post a New Job - Hirly</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styling/main.css"> <!-- Link to main.css for global styles -->
+    <link rel="stylesheet" href="/styling/global-rtl.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#667eea',
+                            dark: '#5a67d8',
+                            light: '#a78bfa',
+                            bg: '#f3f4ff'
+                        },
+                        secondary: {
+                            DEFAULT: '#4fd1c7',
+                            dark: '#38b2ac',
+                            light: '#81e6d9'
+                        },
+                        accent: '#f093fb',
+                        success: '#48bb78',
+                        danger: '#f56565',
+                        warning: '#ed8936',
+                        dark: '#1a202c',
+                        muted: '#e2e8f0',
+                        'gray-bg': '#fafbfc'
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'primary': '0 10px 20px rgba(102, 126, 234, 0.15)',
+                        'secondary': '0 10px 20px rgba(79, 209, 199, 0.15)',
+                        'accent': '0 10px 20px rgba(240, 147, 251, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer components {
+            .form-label {
+                @apply block text-sm font-semibold text-slate-700 mb-2;
+            }
+            .form-input {
+                @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200;
+            }
+            .btn-primary-tw {
+                @apply bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-primary active:scale-95 flex items-center justify-center gap-2;
+            }
+            .btn-secondary-tw {
+                @apply bg-secondary hover:bg-secondary-dark text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-secondary active:scale-95 flex items-center justify-center gap-2;
+            }
+            .btn-outline-tw {
+                @apply border-2 border-slate-200 hover:border-primary hover:text-primary text-slate-600 px-6 py-3 rounded-xl font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2;
+            }
+            .card-tw {
+                @apply bg-white rounded-2xl shadow-xl border border-slate-100 p-8;
+            }
+            
+            /* Custom Scrollbar */
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                @apply bg-slate-50 rounded-full;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+            }
+        }
+
+        /* Rich Text Editor Overrides */
+        .richtext-content:empty:not(:focus)::before {
+            content: attr(placeholder);
+            @apply text-slate-400 italic;
+        }
+    </style>
+
+    <!-- Language scripts (MUST be loaded first among JS, and in correct dependency order) -->
+    <!-- language.js defines window.addTranslations, so it must load first. -->
+    <script src="/language/language.js" defer></script>
+    <!-- Dependent translation files load next, after language.js -->
+    <script src="/language/post-job-translations.js" defer></script>
+    <script src="/language/cities-translations.js" defer></script>
+    <script src="/language/categories-professions-translations.js" defer></script>
+</head>
+<body>
+    <!-- Header will be loaded by components.js -->
+    <div id="headerPlaceholder"></div>
+
+    <main class="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            <div class="card-tw mb-8">
+                <div class="text-center mb-10">
+                    <h2 data-lang-key="post_job_heading" class="text-3xl font-bold text-slate-900 mb-2">Post a New Job</h2>
+                    <p class="text-slate-500">Fill in the details below to find your next great hire</p>
+                    <div class="h-1 w-20 bg-primary mx-auto mt-4 rounded-full"></div>
+                </div>
+
+                <form id="postJobForm" class="space-y-6">
+                    <div class="form-group">
+                        <label for="jobTitle" data-lang-key="job_title_label" class="form-label">Job Title</label>
+                        <input type="text" id="jobTitle" class="form-input" required data-lang-key="job_title_placeholder" placeholder="e.g., Senior Web Developer">
+                    </div>
+                <div class="form-group">
+                    <label for="jobDescription" data-lang-key="job_description_label" class="form-label">Job Description</label>
+                    
+                    <!-- Rich Text Editor Toggle and Toolbar -->
+                    <div class="flex justify-end mb-2">
+                        <button type="button" id="toggleRichTextEditor" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors">
+                            <i class="fas fa-magic text-primary"></i> <span class="button-text" data-lang-key="toggle_richtext">Format</span>
+                        </button>
+                    </div>
+
+                    <div id="richTextEditorToolbar" class="flex flex-wrap gap-1 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl" style="display: none;">
+                        <button type="button" data-command="bold" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Bold"><i class="fas fa-bold"></i></button>
+                        <button type="button" data-command="italic" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Italic"><i class="fas fa-italic"></i></button>
+                        <button type="button" data-command="underline" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Underline"><i class="fas fa-underline"></i></button>
+                        <div class="w-px h-6 bg-slate-200 mx-1 self-center"></div>
+                        <button type="button" data-command="insertUnorderedList" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                        <button type="button" data-command="insertOrderedList" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                        <div class="w-px h-6 bg-slate-200 mx-1 self-center"></div>
+                        <button type="button" data-command="justifyLeft" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Align Left"><i class="fas fa-align-left"></i></button>
+                        <button type="button" data-command="justifyCenter" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Align Center"><i class="fas fa-align-center"></i></button>
+                        <button type="button" data-command="justifyRight" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Align Right"><i class="fas fa-align-right"></i></button>
+                        <button type="button" data-command="justifyFull" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Justify"><i class="fas fa-align-justify"></i></button>
+                        <div class="w-px h-6 bg-slate-200 mx-1 self-center"></div>
+                        <button type="button" data-command="removeFormat" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all text-danger" title="Clear Formatting"><i class="fas fa-eraser"></i></button>
+                    </div>
+
+                    <!-- The jobDescription field now becomes a contenteditable div -->
+                    <div id="jobDescriptionContent" class="form-input richtext-content min-h-[200px] prose prose-slate max-w-none" contenteditable="true" data-lang-key="job_description_placeholder" placeholder="Provide a detailed description of the job, including responsibilities and requirements..."></div>
+                    <!-- A hidden textarea to actually hold the HTML content for form submission -->
+                    <textarea id="jobDescription" class="sr-only" name="description" rows="8"></textarea>
+                </div>
+
+                <!-- Budget Type Selection (Radio Buttons) -->
+                <div class="form-group">
+                    <label data-lang-key="budget_type_label" class="form-label">Budget</label>
+                    <div class="flex flex-wrap gap-4 p-4 bg-slate-50 border border-slate-200 rounded-xl" id="budgetTypeRadios">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="radio" name="budgetType" value="fixed" checked class="w-4 h-4 text-primary focus:ring-primary border-slate-300">
+                            <span data-lang-key="specify_budget" class="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">Specify a budget</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="radio" name="budgetType" value="negotiable" class="w-4 h-4 text-primary focus:ring-primary border-slate-300">
+                            <span data-lang-key="will_be_discussed" class="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">Will be discussed</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Budget Fields (Initially visible, will be hidden by JS if "Will be discussed" is chosen) -->
+                <div id="budgetFields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label for="budget" data-lang-key="budget_label" class="form-label">Budget Amount</label>
+                        <div class="relative">
+                            <input type="number" id="budget" class="form-input" required min="0" step="any" data-lang-key="budget_placeholder" placeholder="e.g., 1500">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="currency" data-lang-key="currency_label" class="form-label">Currency</label>
+                        <select id="currency" class="form-input" required>
+                            <option value="" data-lang-key="select_currency">Select Currency</option>
+                            <option value="USD" data-lang-key="usd_currency">USD ($)</option>
+                            <option value="ILS" data-lang-key="ils_currency">ILS (₪)</option>
+                            <option value="JOD" data-lang-key="jod_currency">JOD (JD)</option>
+                            <option value="EUR" data-lang-key="eur_currency">EUR (€)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- NEW: Category Dropdown -->
+                <div class="form-group">
+                    <label for="categoryDropdownToggle" data-lang-key="category_label" class="form-label">Category</label>
+                    <div class="relative" id="categoryDropdown">
+                        <button type="button" class="form-input flex justify-between items-center text-left rtl:text-right" id="categoryDropdownToggle" aria-haspopup="listbox" aria-expanded="false">
+                            <span data-lang-key="select_category">Select a Category</span>
+                            <i class="fas fa-chevron-down text-slate-400 transition-transform duration-200 dropdown-arrow"></i>
+                        </button>
+                        <div class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden hidden" id="categoryListContainer">
+                            <div class="max-h-60 overflow-y-auto custom-scrollbar p-2" id="categoryList">
+                                <!-- Category checkboxes will be dynamically loaded here by JS -->
+                                <div class="p-4 text-center text-slate-500">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i> <span data-lang-key="loading_categories_spinner">Loading categories...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="selectedCategoryHidden" name="category">
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label for="jobType" data-lang-key="job_type_label" class="form-label">Job Type</label>
+                        <select id="jobType" class="form-input" required>
+                            <option value="" data-lang-key="select_job_type">Select Job Type</option>
+                            <option value="Full-time" data-lang-key="full_time">Full-time</option>
+                            <option value="Part-time" data-lang-key="part_time">Part-time</option>
+                            <option value="Contract" data-lang-key="contract">Contract</option>
+                            <option value="Freelance" data-lang-key="freelance">Freelance</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="jobSiteType" data-lang-key="job_site_type_label" class="form-label">Job Site Type</label>
+                        <select id="jobSiteType" class="form-input" required>
+                            <option value="" data-lang-key="select_site_type">Select Site Type</option>
+                            <option value="On-site" data-lang-key="on_site">On-site</option>
+                            <option value="Remote" data-lang-key="remote">Remote</option>
+                            <option value="Hybrid" data-lang-key="hybrid">Hybrid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group" id="cityGroup">
+                        <label for="city" data-lang-key="job_city_label" class="form-label">Job City</label>
+                        <select id="city" class="form-input" required>
+                            <option value="" data-lang-key="select_city">Select City</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="genderRequirement" data-lang-key="gender_label" class="form-label">Gender Requirement</label>
+                        <select id="genderRequirement" class="form-input">
+                            <option value="any" data-lang-key="select_gender_any">Doesn't matter</option>
+                            <option value="male" data-lang-key="male_option">Male</option>
+                            <option value="female" data-lang-key="female_option">Female</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-lang-key="age_range_label" class="form-label">Age Range (from - to)</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" id="ageMin" class="form-input" min="16" max="100" data-lang-key="age_from_placeholder" placeholder="From">
+                        <input type="number" id="ageMax" class="form-input" min="16" max="100" data-lang-key="age_to_placeholder" placeholder="To">
+                    </div>
+                </div>
+
+                <!-- NEW: Optional Job Image Upload -->
+                <div class="form-group">
+                    <label for="jobImageInput" data-lang-key="job_image_label" class="form-label">Job Image (Optional)</label>
+                    <div class="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 border-dashed rounded-xl transition-all hover:bg-slate-100/50">
+                        <input type="file" id="jobImageInput" class="hidden" accept="image/jpeg,image/png,image/gif">
+                        <label for="jobImageInput" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:border-primary hover:text-primary transition-all shadow-sm font-medium">
+                            <i class="fas fa-image"></i> <span data-lang-key="choose_image">Choose Image</span>
+                        </label>
+                        <span id="jobImageFileName" class="text-sm text-slate-400 truncate flex-1" data-lang-key="no_file_chosen">No file chosen</span>
+                    </div>
+                    <div id="jobImagePreviewContainer" class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl hidden flex-col items-center">
+                        <img id="jobImagePreview" src="#" alt="Job Image Preview" class="max-h-48 rounded-lg shadow-sm mb-3">
+                        <button type="button" id="removeJobImageBtn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-danger bg-white border border-danger/20 rounded-lg hover:bg-danger hover:text-white transition-all">
+                            <i class="fas fa-trash-alt"></i> <span data-lang-key="remove_image">Remove Image</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label for="deadline" data-lang-key="deadline_label" class="form-label">Application Deadline</label>
+                        <input type="date" id="deadline" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="externalApplyUrl" data-lang-key="external_apply_label" class="form-label">External Application Link (Optional)</label>
+                        <input type="url" id="externalApplyUrl" class="form-input" data-lang-key="external_apply_placeholder" placeholder="e.g., https://company.com/careers/apply/123">
+                        <p class="mt-1.5 text-xs text-slate-400" data-lang-key="external_apply_hint">If provided, applicants will be redirected to this link.</p>
+                    </div>
+                </div>
+
+                <!-- NEW: Optional Requirements Builder -->
+                <div class="form-group">
+                    <label for="requirementsInput" data-lang-key="requirements_label" class="form-label">Requirements (Optional)</label>
+                    <div id="requirementsSuggestions" class="flex flex-wrap gap-2 mb-3">
+                        <!-- Smart suggestions will be injected by JS -->
+                    </div>
+                    <div id="selectedRequirements" class="flex flex-wrap gap-2 mb-4">
+                        <!-- Selected requirements appear here -->
+                        <span class="text-sm text-slate-400 italic tag-placeholder" data-lang-key="no_requirements_selected">No requirements added</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="requirementsInput" class="form-input" data-lang-key="add_requirement_placeholder" placeholder="Add a requirement, e.g., 3+ years experience">
+                        <button type="button" id="addRequirementBtn" class="btn-primary-tw !py-2" data-lang-key="add_requirement_btn">Add</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full btn-primary-tw text-lg py-4 mt-8" data-lang-key="post_job_button">Post Job</button>
+            </form>
+            <div id="postJobMessage" class="mt-6 p-4 rounded-xl text-center hidden"></div>
+        </div>
+    </div>
+</main>
+
+    <!-- Simplified Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center text-3xl mx-auto mb-6">
+                <i class="fas fa-check"></i>
+            </div>
+            
+            <h2 data-lang-key="job_posted_success_title" class="text-2xl font-bold text-slate-900 mb-2">Job Posted Successfully!</h2>
+            <p data-lang-key="job_posted_success_msg" class="text-slate-500 mb-8">Your job is now live and ready for applications.</p>
+            
+            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 mb-8">
+                <div id="successQrCode" class="bg-white p-3 rounded-xl inline-block shadow-sm border border-slate-200 mb-4"></div>
+                
+                <button id="downloadQrBtn" class="flex items-center justify-center gap-2 w-full mb-6 py-2 text-sm font-medium text-primary hover:text-primary-hover transition-colors">
+                    <i class="fas fa-download"></i>
+                    <span data-lang-key="download_qr_code">Download QR Code</span>
+                </button>
+
+                <div class="text-left rtl:text-right">
+                    <label data-lang-key="share_job_link" class="block text-sm font-semibold text-slate-700 mb-2">Share Job Link</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="jobShareLink" class="form-input !py-2 text-sm bg-white" readonly>
+                        <button id="copyJobLinkBtn" class="btn-primary-tw !px-4 !py-2">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <button id="goToDashboardBtn" class="btn-primary-tw w-full" data-lang-key="go_to_dashboard">Go to Dashboard</button>
+                <button id="postAnotherBtn" class="btn-outline-tw w-full" data-lang-key="post_another_job">Post Another</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="footerPlaceholder"></div>
+
+    <!-- Main application scripts (load after HTML content and translation files) -->
+    <script src="/auth.js" defer></script>
+    <script src="/script.js" defer></script>
+    <script src="/js/post_job.js" defer></script>
+    <script src="/components.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</body>
+</html>

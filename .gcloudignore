@@ -1,0 +1,29 @@
+# Only exclude what we don't need for deployment
+node_modules/
+.git/
+.env
+*.log
+.vscode/
+.vercel/
+Hirly.db
+.dockerignore
+.gitignore
+readme.md
+README.md
+
+# Testing and monitoring files (development only)
+test-optimization.js
+monitor-egress.js
+optimization-test-results.json
+egress-report-*.json
+README-TESTING.md
+TESTING-RESULTS.md
+
+# Keep everything else including:
+# - public/ (all static assets, JS, CSS, images)
+# - views/ (all HTML templates)  
+# - utils/ (server utilities including monitoring.js)
+# - server.js (main application)
+# - package.json and package-lock.json
+# - Dockerfile
+# - tailwind.config.js

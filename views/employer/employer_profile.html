@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="employer_profile_title">Employer Profile - Hirly</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hirly: {
+                            50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
+                            400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
+                            800: '#5b21b6', 900: '#4c1d95',
+                        }
+                    },
+                    borderRadius: {
+                        '4xl': '2rem',
+                        '5xl': '2.5rem',
+                        '6xl': '3.5rem',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/styling/main.css">
+    <!-- <link rel="stylesheet" href="/styling/pages/page-employer_profile.css"> -->
+    <link rel="stylesheet" href="/styling/components/modals.css">
+
+    <style>
+        body { font-family: 'Inter', 'Noto Sans Arabic', sans-serif; }
+        .luxe-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .luxe-card:hover:not(.no-hover) {
+            transform: translateY(-5px) scale(1.005);
+            box-shadow: 0 35px 60px -15px rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.2);
+        }
+        .luxe-btn-primary {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            color: white;
+            font-weight: 800;
+            border-radius: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .luxe-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4);
+        }
+        .luxe-btn-secondary {
+            background: white;
+            color: #475569;
+            font-weight: 700;
+            border-radius: 1.5rem;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .luxe-btn-secondary:hover {
+            border-color: #8b5cf6;
+            color: #7c3aed;
+            background: #f5f3ff;
+            transform: translateY(-2px);
+        }
+    </style>
+
+    <!-- Language scripts (MUST be loaded first among JS) -->
+    <script src="/language/language.js"></script>
+    <script src="/language/employer-profile-page-translations.js"></script>
+    <script src="/language/categories-professions-translations.js"></script>
+</head>
+<body class="bg-slate-50 profile-page-wrapper selection:bg-hirly-500/30 selection:text-white">
+    <!-- Header will be loaded by components.js -->
+    <div id="headerPlaceholder"></div>
+
+    <!-- Background Elements -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-hirly-500/5 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]"></div>
+    </div>
+
+    <main class="container mx-auto px-4 md:px-6 max-w-6xl relative z-10 pt-8 md:pt-12">
+        <div id="loadingSpinner" class="fixed inset-0 z-[9999] bg-white flex items-center justify-center flex-col gap-4">
+             <div class="relative w-20 h-20">
+                <div class="absolute inset-0 border-4 border-hirly-100 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-hirly-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <span class="text-hirly-600 font-bold tracking-widest uppercase text-xs" data-lang-key="loading">Loading...</span>
+        </div>
+        <div id="errorMessage" class="hidden text-center text-red-500 p-8 font-bold" data-lang-key="error_loading_profile">Error loading employer profile.</div>
+
+        <div id="employerProfileContent" class="space-y-8 hidden">
+            <!-- Profile Header -->
+            <header class="luxe-card no-hover p-6 md:p-12 relative overflow-hidden group bg-gradient-to-br from-white via-slate-50 to-hirly-50/20 border-hirly-100/50">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-hirly-500/5 rounded-full blur-3xl -mr-48 -mt-48 transition-transform duration-700 group-hover:scale-110"></div>
+                <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
+                
+                <div class="relative z-10 flex flex-col md:flex-row gap-8 md:gap-16 items-center">
+                    <!-- Avatar Section -->
+                    <div class="avatar-wrapper shrink-0 relative">
+                        <div class="absolute inset-0 bg-hirly-500/20 blur-2xl rounded-full transform scale-90 group-hover:scale-100 transition-transform duration-500"></div>
+                        <div id="employerAvatar" class="relative z-10 w-32 h-32 md:w-56 md:h-56 bg-white rounded-[2.5rem] flex items-center justify-center text-5xl md:text-7xl font-black text-slate-300 overflow-hidden shadow-2xl shadow-hirly-100/50 border-[6px] border-white transform transition-transform duration-500 hover:rotate-2">
+                            <!-- JS Inject -->
+                        </div>
+                    </div>
+
+                    <!-- Info Section -->
+                    <div class="space-y-6 w-full flex-1 min-w-0 pt-2 text-center md:text-center">
+                        <div class="space-y-4">
+                            <h1 id="employerName" class="text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight break-words leading-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 pb-2">...</h1>
+                            
+                            <div class="flex flex-wrap justify-center items-center gap-3 text-base md:text-lg">
+                                <!-- Category Tag -->
+                                <p id="employerCategory" class="flex items-center gap-2 font-bold text-hirly-600 px-5 py-2.5 bg-hirly-50 border border-hirly-100 rounded-full shadow-sm hover:shadow-md transition-all hidden"></p>
+                                
+                                <!-- Location Tag -->
+                                <div id="employerLocationContainer" class="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-600 rounded-full font-bold border border-slate-200 shadow-sm hover:shadow-md transition-all text-sm hidden">
+                                    <i class="fas fa-map-marker-alt text-hirly-500 text-lg"></i>
+                                    <span id="employerLocation"></span>
+                                </div>
+                                
+                                <!-- Rating Tag -->
+                                <div id="employerRatingContainer" class="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 rounded-full font-bold border border-slate-200 shadow-sm hover:shadow-md transition-all text-sm hidden">
+                                    <i class="fas fa-star text-amber-400 text-lg"></i>
+                                    <span id="employerAverageRating"></span>
+                                    <span id="employerReviewsCount" class="text-slate-400 text-xs font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- About Company Section -->
+            <section id="aboutCompanySection" class="luxe-card no-hover p-6 md:p-12 space-y-8">
+                <div class="flex flex-col items-center justify-center gap-3 group cursor-default">
+                    <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700">
+                        <span data-lang-key="about_company">About</span> <span id="aboutCompanyName"></span>
+                    </h2>
+                    <div class="w-16 h-1.5 bg-gradient-to-r from-hirly-200 to-hirly-400 rounded-full group-hover:w-24 transition-all duration-300"></div>
+                </div>
+                <div id="companyDescription" class="text-slate-600 leading-relaxed text-lg font-medium text-center max-w-3xl mx-auto">
+                    <!-- JS Inject -->
+                </div>
+            </section>
+
+            <!-- Posted Jobs Section -->
+            <section id="employerJobsSection" class="space-y-8">
+                <div class="px-4 flex flex-col items-center justify-center gap-3">
+                    <h2 class="text-3xl font-black text-slate-900">
+                        <span data-lang-key="posted_jobs">Jobs Posted</span>
+                    </h2>
+                    <span class="px-4 py-1 bg-slate-100 text-slate-400 text-[10px] font-black uppercase rounded-full tracking-widest" data-lang-key="open_positions">OPEN POSITIONS</span>
+                </div>
+                <div id="employerJobsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- JS Inject -->
+                    <div class="loading-spinner col-span-full flex justify-center py-12">
+                        <i class="fas fa-spinner fa-spin text-3xl text-hirly-500"></i>
+                    </div>
+                </div>
+                <div id="noEmployerJobs" class="hidden flex flex-col items-center justify-center p-12 bg-white/50 rounded-[2.5rem] border border-slate-100 text-center space-y-4">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 text-3xl mb-2">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900" data-lang-key="no_jobs_posted">No Jobs Posted Yet</h3>
+                    <p class="text-slate-500" data-lang-key="check_back_later">This employer has not posted any jobs yet.</p>
+                </div>
+            </section>
+
+            <!-- Contact CTA Section -->
+            <section id="contactSection" class="luxe-card p-6 md:p-20 text-center space-y-10 relative border-hirly-100 bg-gradient-to-br from-white via-white to-hirly-50/30 mt-12 mb-12">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-hirly-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+                <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
+                
+                <div class="relative z-10 space-y-8">
+                    <div class="space-y-4">
+                        <h2 class="text-3xl md:text-5xl font-black text-slate-900 leading-tight tracking-tight" data-lang-key="work_together_title">Interested in working together?</h2>
+                        <p class="text-slate-500 text-lg md:text-xl max-w-2xl mx-auto font-medium" data-lang-key="contact_employer_subtitle">Get in touch to discuss opportunities.</p>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-4 pt-4">
+                        <button id="contactEmployerBtn" class="luxe-btn-primary px-8 py-4 text-base w-full md:w-auto shadow-xl shadow-hirly-200">
+                            <i class="fas fa-envelope"></i>
+                            <span data-lang-key="contact_employer_btn">Contact Employer</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reviews Section -->
+            <section id="reviewsSection" class="space-y-8 hidden mb-12">
+                <div class="px-4 flex flex-col items-center justify-center gap-4">
+                    <h2 class="text-3xl font-black text-slate-900">
+                        <span data-lang-key="reviews_section_title">Reviews</span> (<span id="reviewsCount">0</span>)
+                    </h2>
+                    <button id="leaveReviewBtn" class="luxe-btn-secondary px-6 py-2 text-sm flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i>
+                        <span data-lang-key="leave_review">Leave a Review</span>
+                    </button>
+                </div>
+                <div id="reviewsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto px-4">
+                    <!-- JS Inject -->
+                </div>
+                <div class="empty-state hidden flex flex-col items-center justify-center p-12 text-center" id="noReviewsMessage">
+                    <i class="far fa-star text-4xl text-slate-200 mb-4"></i>
+                    <h3 class="text-lg font-bold text-slate-900" data-lang-key="no_reviews_yet_title">No Reviews Yet</h3>
+                    <p class="text-slate-500" data-lang-key="no_reviews_yet_message">Be the first to leave a review!</p>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="py-12 border-t border-slate-200 text-center">
+            <p class="text-slate-400 text-[10px] font-black tracking-[0.4em] uppercase">
+                <span>Powered by</span>
+                <a href="/" class="text-[#0f172a] underline decoration-2 decoration-hirly-500 underline-offset-4 hover:text-hirly-600 transition-colors">Hirly</a>
+            </p>
+        </footer>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal-overlay">
+        <div class="luxe-card max-w-lg w-full p-8 animate-fade-up">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
+                        <i class="fas fa-address-card text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-900 tracking-tight" data-lang-key="contact_employer_btn">Contact Info</h2>
+                        <p class="text-slate-500 font-medium text-sm" data-lang-key="contact_modal_subtitle">Get in touch directly</p>
+                    </div>
+                </div>
+                <button id="closeContactModalBtn" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-slate-200">
+                    <i class="fas fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <a id="modalCallBtn" href="#" class="group flex items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-300">
+                    <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 shadow-sm border border-slate-100">
+                        <i class="fas fa-phone-flip text-xl"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1" data-lang-key="call">Phone</span>
+                        <span id="modalPhoneNumber" class="text-slate-900 font-bold text-lg" dir="ltr">...</span>
+                    </div>
+                </a>
+
+                <a id="modalEmailBtn" href="#" class="group flex items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-300">
+                    <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 shadow-sm border border-slate-100">
+                        <i class="fas fa-envelope text-xl"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1" data-lang-key="email">Email</span>
+                        <span id="modalEmailAddress" class="text-slate-900 font-bold text-lg break-all">...</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal-overlay" style="display: none;">
+        <div class="luxe-card max-w-md w-full p-8 animate-fade-up">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="reviewModalTitle" class="text-2xl font-black text-slate-900" data-lang-key="review_modal_title_leave">Leave a Review</h2>
+                <button id="closeReviewModalBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="reviewForm" class="space-y-6">
+                <div class="form-group space-y-2">
+                    <label for="rating" class="text-sm font-bold text-slate-700" data-lang-key="rating">Rating</label>
+                    <div class="star-rating flex gap-2 text-2xl text-slate-200 cursor-pointer" id="starRating">
+                        <i class="fas fa-star hover:text-amber-400 transition-colors" data-rating="1"></i>
+                        <i class="fas fa-star hover:text-amber-400 transition-colors" data-rating="2"></i>
+                        <i class="fas fa-star hover:text-amber-400 transition-colors" data-rating="3"></i>
+                        <i class="fas fa-star hover:text-amber-400 transition-colors" data-rating="4"></i>
+                        <i class="fas fa-star hover:text-amber-400 transition-colors" data-rating="5"></i>
+                    </div>
+                    <input type="hidden" id="ratingInput" name="rating" value="0" required>
+                </div>
+                <div class="form-group space-y-2">
+                    <label for="reviewComment" class="text-sm font-bold text-slate-700" data-lang-key="comment">Comment</label>
+                    <textarea id="reviewComment" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-hirly-500 focus:ring-2 focus:ring-hirly-200 outline-none transition-all resize-none" rows="4" data-lang-key="share_experience_placeholder" placeholder="Share your experience..." required></textarea>
+                </div>
+                <div id="reviewMessageStatus" class="text-sm font-medium hidden"></div>
+                <div class="flex gap-4 pt-2">
+                    <button type="button" class="flex-1 py-3 px-4 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition-colors" id="cancelReviewBtn" data-lang-key="cancel_review">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 px-4 bg-hirly-600 text-white font-bold rounded-xl hover:bg-hirly-700 shadow-lg shadow-hirly-200 transition-all" id="submitReviewBtn" data-lang-key="submit_review">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reply to Review Modal -->
+    <div id="replyModal" class="modal-overlay" style="display: none;">
+        <div class="luxe-card max-w-md w-full p-8 animate-fade-up">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-black text-slate-900" data-lang-key="reply_to_review_title">Reply to Review</h2>
+                <button id="closeReplyModalBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="replyForm" class="space-y-6">
+                <div class="form-group space-y-2">
+                    <label for="replyContent" class="text-sm font-bold text-slate-700" data-lang-key="your_reply">Your Reply</label>
+                    <textarea id="replyContent" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-hirly-500 focus:ring-2 focus:ring-hirly-200 outline-none transition-all resize-none" rows="4" data-lang-key="reply_placeholder" placeholder="Type your reply here..." required></textarea>
+                </div>
+                <div id="replyMessageStatus" class="text-sm font-medium hidden"></div>
+                <div class="flex gap-4 pt-2">
+                    <button type="button" class="flex-1 py-3 px-4 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition-colors" id="cancelReplyBtn" data-lang-key="cancel_reply">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 px-4 bg-hirly-600 text-white font-bold rounded-xl hover:bg-hirly-700 shadow-lg shadow-hirly-200 transition-all" id="submitReplyBtn" data-lang-key="submit_reply">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal-overlay" style="display: none;">
+        <div class="luxe-card max-w-sm w-full p-8 text-center animate-fade-up">
+            <div class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 mx-auto mb-6">
+                <i class="fas fa-exclamation-triangle text-3xl"></i>
+            </div>
+            <h2 id="confirmationModalTitle" class="text-2xl font-black text-slate-900 mb-2" data-lang-key="confirm_action_modal">Confirm Action</h2>
+            <p id="confirmationModalMessage" class="text-slate-500 font-medium mb-6" data-lang-key="are_you_sure_proceed_modal">Are you sure?</p>
+            <div class="flex gap-4">
+                <button type="button" class="flex-1 py-3 px-4 bg-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-200 transition-colors" id="cancelActionBtn" data-lang-key="cancel_modal">Cancel</button>
+                <button type="button" class="flex-1 py-3 px-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200 transition-all" id="confirmActionBtn" data-lang-key="yes_confirm_modal">Confirm</button>
+            </div>
+            <button id="closeConfirmationModalBtn" class="hidden"></button>
+        </div>
+    </div>
+
+    <!-- Load scripts in correct order -->
+    <script src="/auth.js"></script>
+    <script src="/script.js"></script>
+    <script src="/js/employer_profile.js"></script>
+    <script src="/components.js" defer></script>
+</body>
+</html>

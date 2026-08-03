@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Sanitizer | Hirly Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-darker: #0f172a;
+            --bg-card: #1e293b;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-muted: #94a3b8;
+            --slate-50: #f8fafc;
+            --slate-900: #0f172a;
+        }
+
+        body {
+            background-color: var(--bg-darker);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+        .cluster-group {
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary);
+            padding-left: 20px;
+        }
+
+        .cluster-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .job-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 15px;
+        }
+
+        .job-mini-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .job-mini-card.to-delete {
+            border-color: var(--danger);
+            opacity: 0.6;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .job-mini-card.to-fix {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .job-mini-card.keep {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .status-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .tag-delete { background: var(--danger); color: white; }
+        .tag-keep { background: var(--success); color: white; }
+        .tag-fix { background: #8b5cf6; color: white; }
+
+        .job-title { font-weight: 700; font-size: 14px; margin-bottom: 5px; }
+        .job-meta { font-size: 12px; color: var(--text-muted); }
+
+        .action-overlay {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .summary-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--slate-900);
+            border: 1px solid var(--primary);
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div>
+                <h1 style="margin:0">Job Sanitizer</h1>
+                <p style="color:var(--text-muted); margin-top:5px">Semantic duplicate detection & cleanup</p>
+            </div>
+            <div style="display:flex; gap:10px">
+                <button onclick="window.location.href='/admin/job_aggregator.html'" class="btn btn-outline">
+                    <i class="fas fa-robot"></i> Aggregator
+                </button>
+                <button id="analyzeBtn" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Run Analysis
+                </button>
+            </div>
+        </header>
+
+        <div class="card">
+            <div style="display:flex; gap:20px; align-items:center">
+                <div style="flex:1">
+                    <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px">Timeframe</label>
+                    <select id="timeframe" class="btn btn-outline" style="width:100%">
+                        <option value="24 hours">Last 24 Hours</option>
+                        <option value="7 days">Last 7 Days</option>
+                        <option value="30 days" selected>Last 30 Days</option>
+                        <option value="90 days">Last 90 Days</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+                <div style="flex:1">
+                    <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:5px">Sensitivity</label>
+                    <select id="sensitivity" class="btn btn-outline" style="width:100%">
+                        <option value="exact">Exact (Title + Company + City)</option>
+                        <option value="high" selected>High (Semantic Title + Company)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="loader" class="loader">
+            <i class="fas fa-circle-notch fa-spin fa-3x" style="color:var(--primary)"></i>
+            <p style="margin-top:20px">Analyzing database for duplicates...</p>
+        </div>
+
+        <div id="resultsContainer">
+            <!-- Clusters will appear here -->
+            <div style="text-align:center; padding:100px; color:var(--text-muted)">
+                <i class="fas fa-broom fa-4x" style="margin-bottom:20px; opacity:0.3"></i>
+                <p>Run analysis to find duplicate clusters.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="summaryBar" class="summary-bar">
+        <div>
+            <span style="color:var(--text-muted)">To Remove:</span>
+            <span id="removeCount" style="font-weight:800; color:var(--danger); margin-left:5px">0</span>
+        </div>
+        <div style="width:1px; height:20px; background:rgba(255,255,255,0.2)"></div>
+        <div>
+            <span style="color:var(--text-muted)">To Fix:</span>
+            <span id="fixCount" style="font-weight:800; color:#8b5cf6; margin-left:5px">0</span>
+        </div>
+        <div style="width:1px; height:20px; background:rgba(255,255,255,0.2)"></div>
+        <button id="confirmBtn" class="btn btn-primary">
+            <i class="fas fa-check-circle"></i> Confirm Actions
+        </button>
+        <button id="cancelBtn" class="btn btn-outline" style="padding: 5px 15px; font-size: 12px;">Cancel</button>
+    </div>
+
+    <script src="/js/admin/job-sanitizer.js"></script>
+</body>
+</html>

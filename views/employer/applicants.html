@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="applicants_page_title">Job Applicants - Hirly</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Core Styling (Kept for Header/Footer consistency) -->
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/global-rtl.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // PRESERVED COLOR PALETTE
+                        primary: {
+                            DEFAULT: '#667eea',
+                            dark: '#5a67d8',
+                            light: '#a78bfa',
+                            bg: '#f3f4ff'
+                        },
+                        secondary: {
+                            DEFAULT: '#4fd1c7',
+                            dark: '#38b2ac',
+                            light: '#81e6d9'
+                        },
+                        accent: '#f093fb',
+                        success: '#48bb78',
+                        danger: '#f56565',
+                        warning: '#ed8936',
+                        dark: '#1a202c',
+                        muted: '#e2e8f0',
+                        'gray-bg': '#fafbfc'
+                    },
+                    fontFamily: {
+                        // Poppins is maintained for consistency
+                        sans: ['Poppins', 'sans-serif'], 
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* AI Assistant Modal & Demo Styles */
+        .ai-modal-content {
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            color: #fff;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Glass Panel & Demo Effects */
+        .glass-panel-demo {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scan-line {
+            position: absolute; width: 100%; height: 4px; left: 0;
+            background: #10b981;
+            box-shadow: 0 0 15px #10b981;
+            animation: scan 2s linear infinite;
+            z-index: 20;
+            top: 0;
+        }
+        
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .slide-container {
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .gradient-text-ai {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ai-bg-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        
+        /* PIN Input Styles */
+        .pin-input {
+            letter-spacing: 0.5em;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+        }
+    </style>
+
+    <!-- Custom Scrollbar for Split View -->
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f0f0f5; /* Very light track */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c3c3d4; /* Muted gray thumb */
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a3a3b3;
+        }
+        
+        /* Modal Transitions (Preserved Logic) */
+        .modal-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        /* Responsive Sidebar/Detail transition overrides (Preserved Logic) */
+        @media (max-width: 1023px) {
+            .applicants-sidebar.hide-mobile {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            .applicant-detail-pane.show-mobile {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Custom gradient for active tab background */
+        .pipeline-tab.active-bg {
+             background-image: linear-gradient(to right, #667eea, #5a67d8); /* primary and primary-dark */
+        }
+        /* Custom gradient for active list item ring */
+        .active-ring {
+            box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.4); /* primary-light with opacity */
+        }
+    </style>
+
+    <!-- Language scripts (Preserved) -->
+    <script src="/language/language.js"></script>
+    <script src="/language/applicants-page-translations.js"></script>
+    <script src="/language/categories-professions-translations.js"></script>
+    <script src="/language/cities-translations.js"></script>
+</head>
+<body class="bg-gray-bg text-dark font-sans h-screen overflow-hidden flex flex-col">
+    <!-- Header will be loaded by components.js (Preserved) -->
+    <!-- Header removed as per user request to prevent content overlap on technical pages -->
+
+    <!-- Main Container: Wider, bolder shadows for a modern feel -->
+    <main class="flex-1 flex flex-col pt-6 px-4 md:px-8 max-w-[1600px] w-full mx-auto min-h-0" id="mainContent">
+        
+        <!-- Header Section: Compact and Efficient -->
+        <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 pb-4 border-b border-gray-100 shrink-0 gap-4">
+            <div class="flex items-start gap-4">
+                <a href="/employer/hire_dashboard.html#postedJobsSection" class="mt-1 w-10 h-10 flex items-center justify-center rounded-lg bg-white hover:bg-gray-50 transition-colors text-gray-700 shadow-sm ring-1 ring-gray-200" aria-label="Back to Dashboard">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-0" data-lang-key="applicants_for_job_title">Applicants for Job</h1>
+                    <h2 id="jobTitleDisplay" class="text-base font-medium text-gray-500">...</h2>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                 <!-- Smart Hint (Bulk Actions) - Compact Pill -->
+                <button id="bulkActionsBtn" class="bg-orange-50 text-orange-600 hover:bg-orange-100 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-colors ring-1 ring-orange-200">
+                    <i class="fas fa-lightbulb text-orange-500"></i>
+                    <span data-lang-key="smart_hint_btn_text" class="hidden sm:inline">Did you hire someone? Quick Organization</span>
+                    <span class="sm:hidden">Organization</span>
+                </button>
+
+                <a id="aiAssistantBtn" href="#" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-sm text-sm font-medium">
+                    <i class="fas fa-robot"></i>
+                    <span class="hidden sm:inline">AI Assistant</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Pipeline Tabs (Segmented Control / Pill Navigation Style) - Compact Row -->
+        <div class="mb-4 shrink-0 overflow-x-auto pb-1">
+            <div class="flex flex-nowrap gap-2" id="pipelineTabs">
+                <!-- Active Tab uses custom gradient class and shadow for "pop" -->
+                <button class="pipeline-tab active active-bg text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all shadow-md text-sm whitespace-nowrap shrink-0" data-filter="all">
+                    <span data-lang-key="all">All</span>
+                    <span class="tab-count bg-white/20 px-1.5 py-0.5 rounded text-xs" id="totalApplicantsCount">0</span>
+                </button>
+                <button class="pipeline-tab px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 font-medium flex items-center gap-2 hover:bg-gray-50 transition-all text-sm whitespace-nowrap shrink-0" data-filter="pending">
+                    <span data-lang-key="pending_applicants_label">Pending</span>
+                    <span class="tab-count bg-gray-100 px-1.5 py-0.5 rounded text-xs" id="pendingApplicantsCount">0</span>
+                </button>
+                <button class="pipeline-tab px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 font-medium flex items-center gap-2 hover:bg-gray-50 transition-all text-sm whitespace-nowrap shrink-0" data-filter="shortlisted">
+                    <span data-lang-key="shortlisted_label">Shortlisted</span>
+                    <span class="tab-count bg-gray-100 px-1.5 py-0.5 rounded text-xs" id="shortlistedApplicantsCount">0</span>
+                </button>
+                <button class="pipeline-tab px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 font-medium flex items-center gap-2 hover:bg-gray-50 transition-all text-sm whitespace-nowrap shrink-0" data-filter="interviewing">
+                    <span data-lang-key="interviewing">Interviewing</span>
+                    <span class="tab-count bg-gray-100 px-1.5 py-0.5 rounded text-xs" id="interviewingApplicantsCount">0</span>
+                </button>
+                <button class="pipeline-tab px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 font-medium flex items-center gap-2 hover:bg-gray-50 transition-all text-sm whitespace-nowrap shrink-0" data-filter="accepted">
+                    <span data-lang-key="hired_applicants_label">Hired</span>
+                    <span class="tab-count bg-gray-100 px-1.5 py-0.5 rounded text-xs" id="hiredApplicantsCount">0</span>
+                </button>
+                <button class="pipeline-tab px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 font-medium flex items-center gap-2 hover:bg-gray-50 transition-all text-sm whitespace-nowrap shrink-0" data-filter="rejected">
+                    <span data-lang-key="rejected_applicants_label">Rejected</span>
+                    <span class="tab-count bg-gray-100 px-1.5 py-0.5 rounded text-xs" id="rejectedApplicantsCount">0</span>
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Split View Container: Dramatic visual separation -->
+        <div class="flex flex-1 bg-white rounded-3xl shadow-2xl shadow-gray-300/50 ring-2 ring-primary/10 overflow-hidden relative applicants-split-view min-h-0 mb-4">
+            
+            <!-- Sidebar (List View) - Distinct Background -->
+            <aside class="w-full lg:w-[400px] xl:w-[450px] flex flex-col border-r-2 border-primary-bg bg-white absolute lg:static inset-0 z-20 transition-transform duration-300 applicants-sidebar h-full">
+                
+                <!-- Sidebar Controls (Search and Filter) -->
+                <div class="p-4 border-b border-gray-100 flex gap-3 shrink-0">
+                    <div class="relative flex-1">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="applicantSearchInput" class="w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary-light outline-none transition-colors shadow-inner" data-lang-key="search_applicants_placeholder" placeholder="Search...">
+                    </div>
+                    <!-- Quick Filters Removed -->
+                    <button id="advancedFilterBtn" class="w-11 h-11 flex items-center justify-center border-2 border-gray-200 rounded-xl hover:bg-primary-bg text-primary-dark transition-colors shrink-0 shadow-sm" title="Advanced Filters">
+                        <i class="fas fa-sliders-h"></i>
+                    </button>
+                </div>
+
+                <!-- List Items (Refactored for dramatic card look) -->
+                <div id="applicantsList" class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                    <!-- Dynamic Items will be here -->
+                </div>
+            </aside>
+
+            <!-- Detail Pane (Main Content Area - Professional Resume Look) -->
+            <main class="flex-1 bg-gray-50 relative overflow-y-auto custom-scrollbar flex flex-col w-full lg:w-auto absolute lg:static inset-0 z-10 translate-x-full lg:translate-x-0 transition-transform duration-300 applicant-detail-pane h-full" id="applicantDetailPane">
+                <!-- Placeholder when no applicant is selected -->
+                <div class="h-full flex flex-col items-center justify-center text-gray-400 p-8 text-center bg-gray-50/70 backdrop-blur-sm">
+                    <i class="far fa-id-card fa-5x mb-6 text-gray-300"></i>
+                    <h3 class="text-2xl font-semibold" data-lang-key="select_applicant_placeholder">Select an applicant to view details</h3>
+                    <p class="text-base text-gray-500 mt-2">The applicant's full profile, scores, and actions will appear here.</p>
+                </div>
+            </main>
+        </div>
+
+        <!-- Loading & Error States (Preserved and slightly enhanced visual classes) -->
+        <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-lg z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="text-primary text-5xl">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+        </div>
+
+        <div id="pageErrorMessage" class="hidden flex-col items-center justify-center h-full text-danger"></div>
+    </main>
+
+    <!-- Modals (Refactored for modern design: better shadow, rounded corners, padding) -->
+
+    <!-- Interview Modal -->
+    <div id="interviewModal" class="modal-overlay fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl shadow-primary/30 w-full max-w-lg overflow-hidden ring-2 ring-primary-light/50">
+            <div class="p-6 border-b-2 border-primary-bg flex justify-between items-center bg-primary-bg">
+                <h3 class="text-xl font-bold text-gray-800" data-lang-key="interview_invitation">Interview Invitation</h3>
+                <button class="modal-close-btn text-gray-500 hover:text-gray-900 transition-colors w-9 h-9 rounded-full hover:bg-white/50">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-8">
+                <p class="mb-6 text-gray-700 font-medium">Send an invitation to <strong id="interviewCandidateName" class="text-primary-dark">...</strong></p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Date & Time</label>
+                    <input type="datetime-local" id="interviewDate" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/70 focus:border-primary-light outline-none transition-colors shadow-inner">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Message</label>
+                    <textarea id="interviewMessage" rows="4" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/70 focus:border-primary-light outline-none transition-colors shadow-inner" placeholder="Hi, I'd like to discuss the project..."></textarea>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
+                <button class="px-5 py-2.5 border-2 border-gray-300 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors modal-close-btn-action font-medium shadow-sm">Cancel</button>
+                <button id="sendInterviewBtn" class="px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors flex items-center gap-2 font-semibold shadow-lg shadow-primary/40 transform hover:-translate-y-px">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Send Invitation</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hire Confirm Modal -->
+    <div id="hireConfirmModal" class="modal-overlay fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl shadow-success/30 w-full max-w-md p-8 text-center ring-2 ring-success-light/50">
+            <div class="w-16 h-16 bg-success/15 text-success rounded-full flex items-center justify-center mx-auto mb-6 ring-2 ring-success/40">
+                <i class="fas fa-user-check fa-2x"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-3" data-lang-key="hire_confirm_modal_title">Confirm Hire</h2>
+            <p class="text-gray-600 mb-8 text-lg">
+                <span data-lang-key="hire_confirm_message_part1">Are you sure you want to hire</span> 
+                <strong id="hiringFreelancerName" class="font-bold text-success">...</strong> 
+                <span data-lang-key="hire_confirm_message_part2_new">?</span>
+            </p>
+            
+            <div class="flex items-center justify-center gap-2 mb-8 bg-gray-50 p-4 rounded-xl shadow-inner">
+                <input type="checkbox" id="keepJobOpenCheckbox" checked class="w-5 h-5 text-primary rounded border-gray-300 focus:ring-primary">
+                <label for="keepJobOpenCheckbox" class="text-base text-gray-700 font-medium cursor-pointer" data-lang-key="keep_job_open_label">Keep job open for others</label>
+            </div>
+
+            <div class="flex justify-center gap-4">
+                <button id="cancelHireBtn" class="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-600 hover:bg-gray-100 modal-close-btn-action font-medium transition-colors shadow-sm" data-lang-key="cancel_btn">Cancel</button>
+                <button id="confirmHireBtn" class="px-6 py-3 bg-success text-white rounded-xl hover:bg-green-600 transition-colors font-semibold shadow-lg shadow-success/40 transform hover:-translate-y-px">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span data-lang-key="hire_btn">Yes, Hire</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Confirm Modal -->
+    <div id="rejectConfirmModal" class="modal-overlay fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl shadow-danger/30 w-full max-w-md p-8 text-center ring-2 ring-danger-light/50">
+            <div class="w-16 h-16 bg-danger/15 text-danger rounded-full flex items-center justify-center mx-auto mb-6 ring-2 ring-danger/40">
+                <i class="fas fa-user-times fa-2x"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-3" data-lang-key="reject_confirm_modal_title">Confirm Rejection</h2>
+            <p class="text-gray-600 mb-6 text-lg">
+                <span data-lang-key="reject_confirm_message_part1">Are you sure you want to reject</span> 
+                <strong id="rejectingFreelancerName" class="font-bold text-danger">...</strong>
+                <span data-lang-key="reject_confirm_message_part2">?</span>
+            </p>
+            
+            <textarea id="rejectionReason" class="w-full p-4 border-2 border-gray-300 rounded-xl mb-6 text-base focus:ring-2 focus:ring-danger/70 focus:border-danger-light transition-colors shadow-inner" rows="3" placeholder="Reason (optional)" data-lang-key="rejection_reason_placeholder"></textarea>
+
+            <div class="flex justify-center gap-4">
+                <button id="cancelRejectBtn" class="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-600 hover:bg-gray-100 modal-close-btn-action font-medium transition-colors shadow-sm" data-lang-key="cancel_btn">Cancel</button>
+                <button id="confirmRejectBtn" class="px-6 py-3 bg-danger text-white rounded-xl hover:bg-red-600 transition-colors font-semibold shadow-lg shadow-danger/40 transform hover:-translate-y-px">
+                    <i class="fas fa-times-circle mr-2"></i>
+                    <span data-lang-key="reject_btn">Yes, Reject</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revert Modal -->
+    <div id="revertConfirmModal" class="modal-overlay fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl shadow-primary/30 w-full max-w-md p-8 text-center ring-2 ring-primary-light/50">
+            <div class="w-16 h-16 bg-primary/15 text-primary rounded-full flex items-center justify-center mx-auto mb-6 ring-2 ring-primary/40">
+                <i class="fas fa-undo fa-2x"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-3">Confirm Revert</h2>
+            <p class="text-gray-600 mb-8 text-lg">
+                <span data-lang-key="revert_confirm_message_part1">Revert decision for</span> 
+                <strong id="revertingFreelancerName" class="font-bold text-primary">...</strong>?
+            </p>
+            <div class="flex justify-center gap-4">
+                <button id="cancelRevertBtn" class="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-600 hover:bg-gray-100 modal-close-btn-action font-medium transition-colors shadow-sm">Cancel</button>
+                <button id="confirmRevertBtn" class="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-semibold shadow-lg shadow-primary/40 transform hover:-translate-y-px">
+                    <i class="fas fa-undo mr-2"></i>
+                    Revert
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Advanced Filters Modal -->
+    <div id="advancedFiltersModal" class="modal-overlay fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl shadow-primary/30 w-full max-w-lg overflow-hidden ring-2 ring-primary-light/50 flex flex-col max-h-[85vh]">
+            <div class="p-6 border-b-2 border-primary-bg flex justify-between items-center bg-primary-bg shrink-0">
+                <h3 class="text-xl font-bold text-gray-800" data-lang-key="advanced_filters_title">Advanced Filters</h3>
+                <button class="modal-close-btn text-gray-500 hover:text-gray-900 transition-colors w-9 h-9 rounded-full hover:bg-white/50">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-8 overflow-y-auto custom-scrollbar">
+                      <!-- Category & Profession Filters (Custom Multi-select) -->
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                          <!-- Category Dropdown -->
+                          <div class="filter-group relative">
+                              <label class="block text-sm font-bold text-gray-700 uppercase mb-3" data-lang-key="category_label">Category</label>
+                              <div class="relative" id="categoryDropdown">
+                                  <button type="button" class="w-full bg-white border-2 border-gray-300 text-gray-700 py-3 px-4 pr-10 rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all flex items-center justify-between group shadow-inner" id="categoryDropdownToggle">
+                                      <span class="truncate" id="selectedCategoriesDisplay" data-lang-key="all_categories_placeholder">All Categories</span>
+                                      <i class="fas fa-chevron-down text-gray-400 group-hover:text-primary transition-colors"></i>
+                                  </button>
+                                  <div class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar ring-1 ring-black/5" id="categoryDropdownMenu">
+                                      <!-- Populated by JS -->
+                                  </div>
+                              </div>
+                          </div>
+
+                          <!-- Profession Dropdown/Search -->
+                          <div class="filter-group relative">
+                              <label class="block text-sm font-bold text-gray-700 uppercase mb-3" data-lang-key="profession_label">Profession</label>
+                              <div class="relative" id="professionDropdown">
+                                  <button type="button" class="w-full bg-white border-2 border-gray-300 text-gray-700 py-3 px-4 pr-10 rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all flex items-center justify-between group shadow-inner" id="professionDropdownToggle">
+                                      <span class="truncate" id="selectedProfessionsDisplay" data-lang-key="all_professions_placeholder">All Professions</span>
+                                      <i class="fas fa-chevron-down text-gray-400 group-hover:text-primary transition-colors"></i>
+                                  </button>
+                                  <div class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar ring-1 ring-black/5" id="professionDropdownMenu">
+                                       <div class="p-2 sticky top-0 bg-white border-b border-gray-50 z-10">
+                                          <input type="text" id="professionSearchInput" placeholder="Search professions..." data-lang-key="search_professions_placeholder" class="w-full p-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/50 outline-none">
+                                      </div>
+                                      <div id="professionCheckboxes">
+                                          <!-- Populated by JS -->
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- Age Filter -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 uppercase mb-3" data-lang-key="age_range_label">Age Range</label>
+                    <div class="flex gap-4 items-center">
+                        <input type="number" id="filterMinAge" placeholder="Min" data-lang-key="min_placeholder" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/70 focus:border-primary-light outline-none transition-colors shadow-inner text-center">
+                        <span class="text-gray-400 font-bold">-</span>
+                        <input type="number" id="filterMaxAge" placeholder="Max" data-lang-key="max_placeholder" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/70 focus:border-primary-light outline-none transition-colors shadow-inner text-center">
+                    </div>
+                </div>
+
+                <!-- Gender Filter -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 uppercase mb-3" data-lang-key="gender_label">Gender</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="filterGender" value="" checked class="peer sr-only">
+                            <div class="p-2 text-center border-2 border-gray-200 rounded-xl text-gray-600 font-medium peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary-bg transition-all" data-lang-key="all_gender">All</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="filterGender" value="male" class="peer sr-only">
+                            <div class="p-2 text-center border-2 border-gray-200 rounded-xl text-gray-600 font-medium peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary-bg transition-all" data-lang-key="male_gender">Male</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="filterGender" value="female" class="peer sr-only">
+                            <div class="p-2 text-center border-2 border-gray-200 rounded-xl text-gray-600 font-medium peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary-bg transition-all" data-lang-key="female_gender">Female</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Has CV Filter -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 uppercase mb-3" data-lang-key="has_cv_label">Has CV</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="filterHasCV" value="" checked class="peer sr-only">
+                            <div class="p-2 text-center border-2 border-gray-200 rounded-xl text-gray-600 font-medium peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary-bg transition-all" data-lang-key="all_has_cv">All</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="filterHasCV" value="has_cv" class="peer sr-only">
+                            <div class="p-2 text-center border-2 border-gray-200 rounded-xl text-gray-600 font-medium peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary-bg transition-all" data-lang-key="yes_has_cv">Yes</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="filterHasCV" value="no" class="peer sr-only">
+                            <div class="p-2 text-center border-2 border-gray-200 rounded-xl text-gray-600 font-medium peer-checked:border-primary peer-checked:text-primary peer-checked:bg-primary-bg transition-all" data-lang-key="no_has_cv">No</div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- City Filter -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 uppercase mb-3" data-lang-key="city_filter_label">City</label>
+                    <select id="filterCity" class="w-full p-3 text-sm border-2 border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-primary-light focus:border-primary-light transition-colors shadow-inner">
+                        <option value="" data-lang-key="all_cities_option">All Cities</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 flex justify-end gap-3 border-t border-gray-200 shrink-0">
+                <button id="resetAdvancedFiltersBtn" class="px-5 py-2.5 border-2 border-gray-300 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors font-medium shadow-sm" data-lang-key="reset_filters_btn">Reset</button>
+                <button id="applyAdvancedFiltersBtn" class="px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-semibold shadow-lg shadow-primary/40 modal-close-btn-action" data-lang-key="apply_filters_btn">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Organization Modal (Updated) -->
+    <div id="bulkActionsInfoModal" class="modal-overlay fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="modal-content bg-white rounded-3xl shadow-2xl shadow-warning/30 w-full max-w-lg overflow-hidden ring-2 ring-warning-light/50 flex flex-col max-h-[85vh]">
+             <div class="p-6 border-b-2 border-warning/10 flex justify-between items-center bg-warning/5 shrink-0">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-magic text-warning text-2xl"></i>
+                    <h3 class="text-xl font-bold text-gray-800" data-lang-key="smart_organization_title">Smart Organization</h3>
+                </div>
+                <button class="modal-close-btn text-gray-500 hover:text-gray-900 transition-colors w-9 h-9 rounded-full hover:bg-white/50">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-8 overflow-y-auto custom-scrollbar">
+                <p class="text-gray-600 mb-6 font-medium" data-lang-key="smart_organization_desc">Bulk reject applicants to clean up your pipeline. Select the stages to target and the criteria.</p>
+                
+                <!-- Target Stages -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <label class="block text-sm font-bold text-gray-700 uppercase mb-3" data-lang-key="target_stages_label">Target Stages</label>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="bulkStagePending" value="pending" checked class="w-5 h-5 text-warning rounded focus:ring-warning">
+                            <span class="text-gray-700 font-medium" data-lang-key="stage_pending">Pending</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="bulkStageInterview" value="interviewing" class="w-5 h-5 text-warning rounded focus:ring-warning">
+                            <span class="text-gray-700 font-medium" data-lang-key="stage_interviewing">Interviewing</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="bulkStageShortlist" value="shortlisted" class="w-5 h-5 text-warning rounded focus:ring-warning">
+                            <span class="text-gray-700 font-medium" data-lang-key="stage_shortlisted">Shortlisted</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block text-sm font-bold text-gray-700 uppercase mb-2" data-lang-key="rejection_criteria_label">Rejection Criteria</label>
+                    
+                    <label class="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors has-checked:border-warning has-checked:bg-warning/5">
+                        <input type="radio" name="bulkActionType" value="all" checked class="w-5 h-5 text-warning focus:ring-warning">
+                        <span class="font-semibold text-gray-700" data-lang-key="reject_all_option">Reject All in selected stages</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors has-checked:border-warning has-checked:bg-warning/5">
+                        <input type="radio" name="bulkActionType" value="city" class="w-5 h-5 text-warning focus:ring-warning">
+                        <span class="font-semibold text-gray-700" data-lang-key="reject_by_city_option">Reject by City</span>
+                    </label>
+                    <div id="bulkCitySelectContainer" class="hidden ml-8 mb-2">
+                        <select id="bulkCitySelect" class="w-full p-2 border-2 border-gray-300 rounded-lg text-sm"></select>
+                    </div>
+
+                    <label class="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors has-checked:border-warning has-checked:bg-warning/5">
+                        <input type="radio" name="bulkActionType" value="gender" class="w-5 h-5 text-warning focus:ring-warning">
+                        <span class="font-semibold text-gray-700" data-lang-key="reject_by_gender_option">Reject by Gender</span>
+                    </label>
+                    <div id="bulkGenderSelectContainer" class="hidden ml-8 mb-2">
+                        <select id="bulkGenderSelect" class="w-full p-2 border-2 border-gray-300 rounded-lg text-sm">
+                            <option value="male" data-lang-key="male_gender">Male</option>
+                            <option value="female" data-lang-key="female_gender">Female</option>
+                        </select>
+                    </div>
+
+                    <label class="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors has-checked:border-warning has-checked:bg-warning/5">
+                        <input type="radio" name="bulkActionType" value="no_cv" class="w-5 h-5 text-warning focus:ring-warning">
+                        <span class="font-semibold text-gray-700" data-lang-key="reject_no_cv_option">Reject if No CV</span>
+                    </label>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 flex justify-end gap-3 border-t border-gray-200 shrink-0">
+                <button class="px-5 py-2.5 border-2 border-gray-300 rounded-xl text-gray-600 hover:bg-gray-100 modal-close-btn-action font-medium shadow-sm" data-lang-key="cancel_btn">Cancel</button>
+                <button id="executeBulkActionBtn" class="px-5 py-2.5 bg-warning text-white rounded-xl hover:bg-orange-600 transition-colors font-semibold shadow-lg shadow-warning/40 flex items-center gap-2">
+                    <i class="fas fa-trash-alt"></i>
+                    <span data-lang-key="execute_rejection_btn">Execute Rejection</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container (Preserved) -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-3"></div>
+
+    <!-- Global Components Script (Header/Footer/Modals) - Preserved -->
+    <script src="/components.js"></script>
+
+    <!-- Consolidated Application Logic (Refactored the dynamic HTML generation *inside* this script to match new design) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // --- DOM Elements --- (Preserved IDs)
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const pageErrorMessage = document.getElementById('pageErrorMessage');
+            const applicantsList = document.getElementById('applicantsList');
+            const applicantSearchInput = document.getElementById('applicantSearchInput');
+            const sidebarFilterToggle = document.getElementById('sidebarFilterToggle');
+            const sidebarFilters = document.getElementById('sidebarFilters');
+            const applicantDetailPane = document.getElementById('applicantDetailPane');
+            const pipelineTabs = document.getElementById('pipelineTabs');
+            const pipelineTabButtons = document.querySelectorAll('.pipeline-tab');
+            const jobTitleDisplay = document.getElementById('jobTitleDisplay');
+            
+            // Counts (Preserved IDs)
+            const totalApplicantsCount = document.getElementById('totalApplicantsCount');
+            const pendingApplicantsCount = document.getElementById('pendingApplicantsCount');
+            const shortlistedApplicantsCount = document.getElementById('shortlistedApplicantsCount');
+            const hiredApplicantsCount = document.getElementById('hiredApplicantsCount');
+            const rejectedApplicantsCount = document.getElementById('rejectedApplicantsCount');
+            const interviewingApplicantsCount = document.getElementById('interviewingApplicantsCount');
+
+            // Modals (Preserved IDs)
+            const interviewModal = document.getElementById('interviewModal');
+            const sendInterviewBtn = document.getElementById('sendInterviewBtn'); 
+            const interviewCandidateName = document.getElementById('interviewCandidateName');
+            const interviewDate = document.getElementById('interviewDate');
+            const interviewMessage = document.getElementById('interviewMessage');
+
+            const hireConfirmModal = document.getElementById('hireConfirmModal');
+            const hiringFreelancerName = document.getElementById('hiringFreelancerName');
+            const keepJobOpenCheckbox = document.getElementById('keepJobOpenCheckbox');
+            const confirmHireBtn = document.getElementById('confirmHireBtn');
+
+            const rejectConfirmModal = document.getElementById('rejectConfirmModal');
+            const rejectingFreelancerName = document.getElementById('rejectingFreelancerName');
+            const rejectionReasonInput = document.getElementById('rejectionReason');
+            const confirmRejectBtn = document.getElementById('confirmRejectBtn');
+
+            const revertConfirmModal = document.getElementById('revertConfirmModal');
+            const revertingFreelancerName = document.getElementById('revertingFreelancerName');
+            const confirmRevertBtn = document.getElementById('confirmRevertBtn');
+
+            // --- State Variables (Preserved) ---
+            let currentJobId = null;
+            let allApplications = [];
+            let currentFilterStatus = 'all'; 
+            let currentJobData = null;
+            let selectedApplicantId = null;
+            let currentSearchQuery = '';
+            let selectedCategory = '';
+            let cvFilterState = '';
+            let actingAppId = null;
+
+            // Advanced Filters State
+            let filterMinAge = null;
+            let filterMaxAge = null;
+            let filterGender = '';
+            let filterCity = '';
+
+            // --- Helpers ---
+            // Helper to get current language
+            const lang = window.currentLanguage || localStorage.getItem('hirlyLang') || 'en';
+
+            // Helper for simple translations
+            const translate = (key, defaultText) => {
+                if (window.translations && window.translations[key] && window.translations[key][lang]) {
+                    return window.translations[key][lang];
+                }
+                return defaultText || key;
+            };
+
+            // Helper for City Translations
+            const getTranslatedCity = (cityKeyOrName) => {
+                if (!cityKeyOrName) return translate('na', 'N/A');
+                
+                // Try to find by key first
+                if (window.palestinianCitiesTranslations && window.palestinianCitiesTranslations[cityKeyOrName]) {
+                    return window.palestinianCitiesTranslations[cityKeyOrName][lang];
+                }
+
+                // Try to find by English name if the input is an English name but we are in Arabic mode
+                if (window.palestinianCitiesTranslations) {
+                    const entry = Object.values(window.palestinianCitiesTranslations).find(c => c.en === cityKeyOrName);
+                    if (entry) return entry[lang];
+                }
+                
+                return cityKeyOrName;
+            };
+
+            // Helper for Category Translations
+            const getTranslatedCategory = (categoryName) => {
+                if (!categoryName) return translate('other', 'Other');
+                if (window.globalCategoriesAndProfessions) {
+                    const cat = window.globalCategoriesAndProfessions.find(c => c.name.en === categoryName || c.name.ar === categoryName);
+                    if (cat) return cat.name[lang];
+                }
+                return categoryName;
+            };
+
+            // Helper for Profession Translations
+            const getTranslatedProfession = (professionName) => {
+                if (!professionName) return translate('general_applicant', 'General Applicant');
+                if (window.globalCategoriesAndProfessions) {
+                    for (const cat of window.globalCategoriesAndProfessions) {
+                        const prof = cat.professions.find(p => p.en === professionName || p.ar === professionName);
+                        if (prof) return prof[lang];
+                    }
+                }
+                return professionName;
+            };
+
+            const calculateAge = (birthdate) => {
+                if (!birthdate) return null;
+                const today = new Date();
+                const birthDate = new Date(birthdate);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                return age;
+            };
+
+            // --- Shortlist Logic (Refactored to use backend status) ---
+            const isShortlisted = (appId) => {
+                const app = allApplications.find(a => a.id === appId);
+                return app && app.status === 'shortlisted';
+            };
+            
+            const toggleShortlist = (appId) => {
+                const app = allApplications.find(a => a.id === appId);
+                if (!app) return;
+                
+                if (app.status === 'shortlisted') {
+                    // If already shortlisted, move back to pending
+                    updateApplicationStatus(appId, 'pending');
+                } else {
+                    // Move to shortlisted
+                    updateApplicationStatus(appId, 'shortlisted');
+                }
+            };
+
+            // Legacy helper for compatibility (returns array of IDs)
+            const getShortlist = () => {
+                return allApplications.filter(a => a.status === 'shortlisted').map(a => a.id);
+            };
+
+            // --- Helpers (Preserved) ---
+
+            function showToast(msg, type='info') {
+                const c = document.getElementById('toastContainer');
+                if(!c) return;
+                const t = document.createElement('div');
+                let borderClass = 'border-primary';
+                if(type === 'success') borderClass = 'border-success';
+                if(type === 'error') borderClass = 'border-danger';
+                
+                // Enhanced Toast Style
+                t.className = `bg-white text-gray-800 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border-l-4 ${borderClass} transform translate-y-4 opacity-0 transition-all duration-300 ring-1 ring-gray-100`;
+                t.textContent = msg;
+                c.appendChild(t);
+                
+                // Animate in
+                requestAnimationFrame(() => {
+                    t.classList.remove('translate-y-4', 'opacity-0');
+                });
+
+                setTimeout(() => { 
+                    t.classList.add('translate-y-4', 'opacity-0');
+                    setTimeout(()=>t.remove(), 300); 
+                }, 3000);
+            }
+
+            function showModal(el) { 
+                if(!el) return;
+                el.classList.add('show'); 
+                document.body.classList.add('overflow-hidden');
+            }
+            function hideModal(el) { 
+                if(!el) return;
+                el.classList.remove('show'); 
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            // --- Initialization (Preserved) ---
+            async function init() {
+                const urlParams = new URLSearchParams(window.location.search);
+                currentJobId = urlParams.get('jobId');
+                
+                // AI Button - Prevent default link assignment (Handled by modal script)
+                /*
+                const aiBtn = document.getElementById('aiAssistantBtn');
+                if (aiBtn && currentJobId) {
+                    aiBtn.setAttribute('href', `/employer/ai.html?jobId=${encodeURIComponent(currentJobId)}`);
+                }
+                */
+
+                if (!currentJobId) {
+                    if (pageErrorMessage) {
+                        pageErrorMessage.innerHTML = '<i class="fas fa-exclamation-circle text-4xl mb-2"></i> <p>Job ID is missing.</p>';
+                        pageErrorMessage.classList.remove('hidden');
+                        pageErrorMessage.classList.add('flex');
+                    }
+                    return;
+                }
+
+                await fetchApplicants();
+                setupEventListeners();
+            }
+
+            async function fetchApplicants() {
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('hidden');
+                    setTimeout(() => loadingOverlay.classList.remove('opacity-0'), 10);
+                }
+                
+                try {
+                    // Mocking fetch for now if API not available in this context, but assuming API exists
+                    const [applicantsResponse, jobData] = await Promise.all([
+                        fetch(`/api/applications/job/${currentJobId}`),
+                        fetch(`/api/jobs/${currentJobId}`).then(res => res.json())
+                    ]);
+
+                    if (!applicantsResponse.ok) throw new Error('Failed to fetch applicants');
+                    
+                    const data = await applicantsResponse.json();
+                    allApplications = data.applications || [];
+                    currentJobData = jobData;
+                    
+                    if (currentJobData && jobTitleDisplay) {
+                        jobTitleDisplay.textContent = currentJobData.title;
+                    }
+
+                    populateFilters();
+                    updateStats();
+                    renderApplicants();
+                    
+                } catch (error) {
+                    console.error(error);
+                    showToast('Failed to load applicants', 'error');
+                } finally {
+                    if (loadingOverlay) {
+                        loadingOverlay.classList.add('opacity-0');
+                        setTimeout(() => loadingOverlay.classList.add('hidden'), 300);
+                    }
+                }
+            }
+
+    // State for custom dropdowns
+    let selectedCategories = [];
+    let selectedProfessions = [];
+
+    function populateFilters() {
+        // Ensure global categories are loaded before populating
+        if (typeof window.globalCategoriesAndProfessions === 'undefined') {
+            // console.log('Waiting for categories-professions-translations.js...');
+            setTimeout(populateFilters, 200);
+            return;
+        }
+
+        // Categories
+        const catSelect = document.getElementById('categoryFilterSelect');
+        if (catSelect) {
+            const categories = [...new Set(allApplications.map(app => app.category || 'Other'))].sort();
+            catSelect.innerHTML = `<option value="">${translate('all_categories', 'All Categories')}</option>` + 
+                categories.map(c => `<option value="${c}">${getTranslatedCategory(c)}</option>`).join('');
+        }
+
+        // Advanced Filter Categories (Custom Dropdown)
+        const categoryMenu = document.getElementById('categoryDropdownMenu');
+        if (categoryMenu && window.globalCategoriesAndProfessions) {
+            // Use all global categories
+            const availableCategories = window.globalCategoriesAndProfessions;
+
+            categoryMenu.innerHTML = availableCategories.map(cat => {
+                const name = cat.name[lang] || cat.name.en;
+                const icon = cat.icon || 'fas fa-tag';
+                const isSelected = selectedCategories.includes(name);
+                return `
+                    <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors" onclick="window.toggleCategoryFilter('${name.replace(/'/g, "\\'")}')">
+                        <div class="w-5 h-5 flex items-center justify-center text-primary/70">
+                            <i class="${icon}"></i>
+                        </div>
+                        <span class="flex-1 font-medium text-gray-700">${name}</span>
+                        <div class="w-5 h-5 border-2 ${isSelected ? 'border-primary bg-primary' : 'border-gray-300'} rounded flex items-center justify-center text-white transition-colors" id="cat-check-${name.replace(/[^a-zA-Z0-9]/g, '-')}">
+                            <i class="fas fa-check text-xs ${isSelected ? '' : 'opacity-0'}"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Advanced Filter Professions (Custom Dropdown)
+        window.populateProfessionsList();
+
+        // Cities (for Advanced Filter and Bulk Action)
+        const cities = [...new Set(allApplications.map(app => app.city).filter(c => c))].sort();
+        
+        const citySelect = document.getElementById('filterCity');
+        if (citySelect) {
+            citySelect.innerHTML = `<option value="">${translate('all_cities_option', 'All Cities')}</option>` + 
+                cities.map(c => `<option value="${c}">${getTranslatedCity(c)}</option>`).join('');
+        }
+
+        const bulkCitySelect = document.getElementById('bulkCitySelect');
+        if (bulkCitySelect) {
+            bulkCitySelect.innerHTML = `<option value="">${translate('all_cities_option', 'Select City')}</option>` + 
+                cities.map(c => `<option value="${c}">${getTranslatedCity(c)}</option>`).join('');
+        }
+    }
+
+    // Custom Filter Helpers
+    window.toggleCategoryFilter = (categoryName) => {
+        if (selectedCategories.includes(categoryName)) {
+            selectedCategories = selectedCategories.filter(c => c !== categoryName);
+        } else {
+            selectedCategories.push(categoryName);
+        }
+        
+        // Update UI
+        const checkId = `cat-check-${categoryName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        const checkEl = document.getElementById(checkId);
+        if (checkEl) {
+            if (selectedCategories.includes(categoryName)) {
+                checkEl.classList.remove('border-gray-300');
+                checkEl.classList.add('border-primary', 'bg-primary');
+                checkEl.querySelector('i').classList.remove('opacity-0');
+            } else {
+                checkEl.classList.add('border-gray-300');
+                checkEl.classList.remove('border-primary', 'bg-primary');
+                checkEl.querySelector('i').classList.add('opacity-0');
+            }
+        }
+        
+        // Update Display Text
+        const display = document.getElementById('selectedCategoriesDisplay');
+        if (display) {
+            display.textContent = selectedCategories.length > 0 
+                ? `${selectedCategories.length} ${translate('selected_suffix', 'Selected')}` 
+                : translate('all_categories_placeholder', 'All Categories');
+        }
+
+        // Refresh Professions based on selection
+        window.populateProfessionsList();
+    };
+
+    window.populateProfessionsList = () => {
+        const professionCheckboxes = document.getElementById('professionCheckboxes');
+        if (!professionCheckboxes || !window.globalCategoriesAndProfessions) return;
+
+        // Get unique professions from applicants
+        const applicantProfessions = new Set(allApplications.map(app => app.profession).filter(p => p));
+
+        let availableProfessions = [];
+        
+        if (selectedCategories.length === 0) {
+            // Show all professions if no category selected
+            window.globalCategoriesAndProfessions.forEach(cat => {
+                cat.professions.forEach(p => availableProfessions.push(p));
+            });
+        } else {
+            // Filter professions by selected categories
+            window.globalCategoriesAndProfessions.forEach(cat => {
+                const catName = cat.name[lang] || cat.name.en;
+                if (selectedCategories.includes(catName)) {
+                    cat.professions.forEach(p => availableProfessions.push(p));
+                }
+            });
+        }
+
+        // Filter available professions to only those present in applicants - DISABLED
+        // availableProfessions = availableProfessions.filter(p => 
+        //    applicantProfessions.has(p.en) || applicantProfessions.has(p.ar)
+        // );
+
+        // Remove duplicates (by english name as key)
+        const uniqueProfessions = [];
+        const seen = new Set();
+        availableProfessions.forEach(p => {
+            const name = p.en; 
+            if (!seen.has(name)) {
+                seen.add(name);
+                uniqueProfessions.push(p);
+            }
+        });
+
+        // Sort alphabetically
+        uniqueProfessions.sort((a, b) => (a[lang] || a.en).localeCompare(b[lang] || b.en));
+
+        professionCheckboxes.innerHTML = uniqueProfessions.map(p => {
+            const name = p[lang] || p.en;
+            const icon = p.icon || 'fas fa-briefcase';
+            const isSelected = selectedProfessions.includes(name);
+            return `
+                <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center gap-3 transition-colors" onclick="window.toggleProfessionFilter('${name.replace(/'/g, "\\'")}')">
+                     <div class="w-5 h-5 flex items-center justify-center text-primary/70">
+                        <i class="${icon}"></i>
+                    </div>
+                    <span class="flex-1 font-medium text-gray-700">${name}</span>
+                    <div class="w-5 h-5 border-2 ${isSelected ? 'border-primary bg-primary' : 'border-gray-300'} rounded flex items-center justify-center text-white transition-colors" id="prof-check-${name.replace(/[^a-zA-Z0-9]/g, '-')}">
+                        <i class="fas fa-check text-xs ${isSelected ? '' : 'opacity-0'}"></i>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
+    window.toggleProfessionFilter = (professionName) => {
+        if (selectedProfessions.includes(professionName)) {
+            selectedProfessions = selectedProfessions.filter(p => p !== professionName);
+        } else {
+            selectedProfessions.push(professionName);
+        }
+
+        // Update UI
+        const checkId = `prof-check-${professionName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        const checkEl = document.getElementById(checkId);
+        if (checkEl) {
+             if (selectedProfessions.includes(professionName)) {
+                checkEl.classList.remove('border-gray-300');
+                checkEl.classList.add('border-primary', 'bg-primary');
+                checkEl.querySelector('i').classList.remove('opacity-0');
+            } else {
+                checkEl.classList.add('border-gray-300');
+                checkEl.classList.remove('border-primary', 'bg-primary');
+                checkEl.querySelector('i').classList.add('opacity-0');
+            }
+        }
+
+        // Update Display Text
+        const display = document.getElementById('selectedProfessionsDisplay');
+        if (display) {
+            display.textContent = selectedProfessions.length > 0 
+                ? `${selectedProfessions.length} ${translate('selected_suffix', 'Selected')}` 
+                : translate('all_professions_placeholder', 'All Professions');
+        }
+    };
+
+    // Setup dropdown toggles
+    const setupDropdownsAndSearch = () => {
+        const setupDropdown = (toggleId, menuId) => {
+            const toggle = document.getElementById(toggleId);
+            const menu = document.getElementById(menuId);
+            if(toggle && menu) {
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    menu.classList.toggle('hidden');
+                });
+                document.addEventListener('click', (e) => {
+                    if(!toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+            }
+        };
+        setupDropdown('categoryDropdownToggle', 'categoryDropdownMenu');
+        setupDropdown('professionDropdownToggle', 'professionDropdownMenu');
+        
+        // Profession Search
+        const profSearch = document.getElementById('professionSearchInput');
+        if(profSearch) {
+            profSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const items = document.querySelectorAll('#professionCheckboxes > div');
+                items.forEach(item => {
+                    const text = item.querySelector('span').textContent.toLowerCase();
+                    item.style.display = text.includes(term) ? 'flex' : 'none';
+                });
+            });
+        }
+    };
+    setupDropdownsAndSearch();
+
+
+            function updateStats() {
+                if (!totalApplicantsCount) return;
+                totalApplicantsCount.textContent = allApplications.length;
+                pendingApplicantsCount.textContent = allApplications.filter(a => a.status === 'pending').length;
+                interviewingApplicantsCount.textContent = allApplications.filter(a => a.status === 'interviewing').length;
+                hiredApplicantsCount.textContent = allApplications.filter(a => a.status === 'accepted').length;
+                rejectedApplicantsCount.textContent = allApplications.filter(a => a.status === 'rejected').length;
+                if (shortlistedApplicantsCount) {
+                    shortlistedApplicantsCount.textContent = allApplications.filter(a => a.status === 'shortlisted').length;
+                }
+            }
+
+            function getFilteredList() {
+                return allApplications.filter(app => {
+                    // Pipeline Status
+                    if (currentFilterStatus !== 'all') {
+                        if (app.status !== currentFilterStatus) return false;
+                    }
+
+                    // Search
+                    if (currentSearchQuery) {
+                        const name = `${app.first_name} ${app.last_name}`.toLowerCase();
+                        const role = (app.profession || '').toLowerCase();
+                        const city = (app.city || '').toLowerCase();
+                        if (!name.includes(currentSearchQuery) && !role.includes(currentSearchQuery) && !city.includes(currentSearchQuery)) return false;
+                    }
+
+                    // Sidebar Filters
+                    if (selectedCategory && (app.category || 'Other') !== selectedCategory) return false;
+                    
+                    // Advanced Filters
+                    if (cvFilterState === 'has_cv' && !app.cv_path) return false;
+                    if (cvFilterState === 'no' && app.cv_path) return false;
+
+                    if (filterCity && (app.city || '').toLowerCase() !== filterCity.toLowerCase()) return false;
+                    
+                    if (filterGender && (app.gender || '').toLowerCase() !== filterGender.toLowerCase()) return false;
+
+                    // Age Filter
+                    const age = calculateAge(app.birthdate);
+                    if (filterMinAge && (age === null || age < filterMinAge)) return false;
+                    if (filterMaxAge && (age === null || age > filterMaxAge)) return false;
+
+                    // New Category & Profession Filters (Multi-select)
+                    // Logic: If categories selected, applicant must match AT LEAST ONE of the selected categories
+                    // How to determine applicant's category? 
+                    // We check if ANY of their interested_professions belongs to the selected categories.
+                    if (selectedCategories.length > 0 && window.globalCategoriesAndProfessions) {
+                        const applicantProfessions = app.interested_professions || [];
+                        let matchesCategory = false;
+                        
+                        // Find which categories the applicant's professions belong to
+                        for (const catName of selectedCategories) {
+                            const categoryObj = window.globalCategoriesAndProfessions.find(c => (c.name[lang] || c.name.en) === catName);
+                            if (categoryObj) {
+                                const catProfessions = categoryObj.professions.map(p => p[lang] || p.en);
+                                // Check if applicant has any profession in this category
+                                if (applicantProfessions.some(p => catProfessions.includes(p))) {
+                                    matchesCategory = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!matchesCategory) return false;
+                    }
+
+                    // Profession Filter: Applicant must have AT LEAST ONE of the selected professions
+                    if (selectedProfessions.length > 0) {
+                        const applicantProfessions = app.interested_professions || [];
+                        if (!applicantProfessions.some(p => selectedProfessions.includes(p))) return false;
+                    }
+
+                    return true;
+                });
+            }
+
+            function renderApplicants() {
+                const filtered = getFilteredList();
+                applicantsList.innerHTML = '';
+                
+                if (filtered.length === 0) {
+                    applicantsList.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-10 text-gray-400">
+                            <i class="fas fa-search fa-3x mb-4"></i>
+                            <p class="text-lg font-medium">${translate('no_applicants_found', 'No applicants found')}</p>
+                        </div>`;
+                    return;
+                }
+
+                filtered.forEach(app => {
+                    const el = document.createElement('div');
+                    const isActive = selectedApplicantId === app.id;
+                    
+                    // REFACTORED LIST ITEM (Card component with dramatic hover and active state)
+                    el.className = `
+                        p-4 rounded-xl mb-3 cursor-pointer 
+                        transition-all duration-300 
+                        flex items-center gap-4 
+                        transform hover:scale-[1.01] hover:shadow-xl hover:shadow-gray-200/50
+                        ${isActive 
+                            ? 'bg-primary-bg border-2 border-primary active-ring shadow-lg shadow-primary/20' 
+                            : 'bg-white border border-gray-100 hover:bg-white ring-1 ring-transparent'
+                        }
+                    `;
+                    el.onclick = () => selectApplicant(app.id); // PRESERVED JS HOOK
+                    
+                    const avatarUrl = app.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random`;
+                    const isStarred = isShortlisted(app.id);
+                    
+                    el.innerHTML = `
+                        <img src="${avatarUrl}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random'" class="w-14 h-14 rounded-full object-cover border-2 ${isActive ? 'border-primary' : 'border-gray-200'} shadow-md shrink-0" alt="Avatar">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-gray-900 truncate flex items-center text-lg">
+                                ${app.first_name} ${app.last_name}
+                                ${isStarred ? '<i class="fas fa-star text-warning text-sm ml-2"></i>' : ''}
+                            </div>
+                            <div class="text-sm font-medium text-gray-600 truncate mt-0.5">${getTranslatedProfession(app.profession)}</div>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
+                                <span class="flex items-center gap-1 font-medium"><i class="fas fa-map-marker-alt text-primary/70 text-xs"></i> ${getTranslatedCity(app.city)}</span>
+                                ${app.match_score ? `<span class="font-bold text-success flex items-center gap-1"><i class="fas fa-fire-alt text-success text-xs"></i> ${app.match_score}% ${translate('match_score_label', 'Match')}</span>` : ''}
+                                ${app.cv_path ? `<span class="text-primary-dark flex items-center gap-1 font-semibold"><i class="fas fa-file-pdf text-primary-light text-xs"></i> ${translate('cv_badge', 'CV')}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    applicantsList.appendChild(el);
+                });
+            }
+
+            function selectApplicant(appId) {
+                selectedApplicantId = appId;
+                renderApplicants(); // To update active state
+                const app = allApplications.find(a => a.id === appId);
+                renderDetailView(app);
+                
+                // Mobile View: Show Detail Pane
+                if (window.innerWidth < 1024) { // lg breakpoint
+                    const sidebar = document.querySelector('.applicants-sidebar');
+                    const detailPane = document.querySelector('.applicant-detail-pane');
+                    
+                    // Uses specific classes for clarity in style block (though original JS classes are still respected)
+                    if (sidebar) sidebar.classList.add('hide-mobile');
+                    if (detailPane) detailPane.classList.add('show-mobile');
+                }
+            }
+
+            function renderDetailView(app) {
+                if (!app) return;
+                
+                const avatarUrl = app.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random`;
+                const isStarred = isShortlisted(app.id);
+                const dateApplied = new Date(app.applied_at).toLocaleDateString(lang, { year: 'numeric', month: 'short', day: 'numeric' });
+                
+                let actionButtons = '';
+                
+                // Button Generators
+                // Increased shadow and hover effect for "lift"
+                const btnClass = "px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg transform hover:-translate-y-px";
+                
+                if (app.status === 'pending') {
+                    actionButtons = `
+                        <button class="${btnClass} border border-primary text-primary hover:bg-primary-dark hover:text-white hover:border-primary-dark shadow-primary/20" onclick="window.triggerInterview(${app.id})">
+                            <i class="fas fa-calendar-check"></i> ${translate('interview_btn', 'Interview')}
+                        </button>
+                        <button class="${btnClass} border border-danger text-danger hover:bg-danger-dark hover:text-white hover:border-danger-dark shadow-danger/20" onclick="window.triggerReject(${app.id})">
+                            <i class="fas fa-times-circle"></i> ${translate('reject_btn', 'Reject')}
+                        </button>
+                        <button class="${btnClass} bg-success text-white hover:bg-green-600 shadow-success/30" onclick="window.triggerHire(${app.id})">
+                            <i class="fas fa-check-circle"></i> ${translate('hire_btn', 'Hire')}
+                        </button>
+                    `;
+                } else if (app.status === 'interviewing') {
+                    actionButtons = `
+                        <button class="${btnClass} border border-gray-300 text-gray-600 hover:bg-gray-100 shadow-gray-300/20" onclick="window.triggerRevert(${app.id})">
+                            <i class="fas fa-undo"></i> ${translate('revert_btn', 'Revert')}
+                        </button>
+                        <button class="${btnClass} border border-danger text-danger hover:bg-danger-dark hover:text-white hover:border-danger-dark shadow-danger/20" onclick="window.triggerReject(${app.id})">
+                            <i class="fas fa-times-circle"></i> ${translate('reject_btn', 'Reject')}
+                        </button>
+                        <button class="${btnClass} bg-success text-white hover:bg-green-600 shadow-success/30" onclick="window.triggerHire(${app.id})">
+                            <i class="fas fa-check-circle"></i> ${translate('hire_btn', 'Hire')}
+                        </button>
+                    `;
+                } else if (app.status === 'shortlisted') {
+                     actionButtons = `
+                        <button class="${btnClass} border border-primary text-primary hover:bg-primary-dark hover:text-white hover:border-primary-dark shadow-primary/20" onclick="window.triggerInterview(${app.id})">
+                            <i class="fas fa-calendar-check"></i> ${translate('interview_btn', 'Interview')}
+                        </button>
+                        <button class="${btnClass} border border-danger text-danger hover:bg-danger-dark hover:text-white hover:border-danger-dark shadow-danger/20" onclick="window.triggerReject(${app.id})">
+                            <i class="fas fa-times-circle"></i> ${translate('reject_btn', 'Reject')}
+                        </button>
+                        <button class="${btnClass} bg-success text-white hover:bg-green-600 shadow-success/30" onclick="window.triggerHire(${app.id})">
+                            <i class="fas fa-check-circle"></i> ${translate('hire_btn', 'Hire')}
+                        </button>
+                    `;
+                } else if (app.status === 'rejected') {
+                    actionButtons = `
+                        <button class="${btnClass} border border-gray-300 text-gray-600 hover:bg-gray-100 shadow-gray-300/20" onclick="window.triggerRevert(${app.id})">
+                            <i class="fas fa-undo"></i> ${translate('revert_btn', 'Reconsider')}
+                        </button>
+                    `;
+                } else if (app.status === 'accepted') {
+                    actionButtons = `
+                        <span class="text-success font-bold text-base flex items-center gap-2 bg-success/10 p-3 rounded-xl ring-2 ring-success/30 shadow-md"><i class="fas fa-check-circle"></i> ${translate('hired_status', 'Hired')}</span>
+                    `;
+                }
+                
+                const getStatusColorClass = (status) => {
+                    switch(status) {
+                        case 'pending': return 'bg-warning/15 text-warning ring-warning/40';
+                        case 'interviewing': return 'bg-primary-bg text-primary ring-primary/40';
+                        case 'shortlisted': return 'bg-purple-100 text-purple-600 ring-purple-300';
+                        case 'accepted': return 'bg-success/15 text-success ring-success/40';
+                        case 'rejected': return 'bg-danger/15 text-danger ring-danger/40';
+                        default: return 'bg-gray-100 text-gray-800 ring-gray-300';
+                    }
+                }
+
+                // Translate Status Text
+                let statusText = app.status;
+                if (app.status === 'accepted') statusText = translate('hired_status', 'Hired');
+                else if (app.status === 'rejected') statusText = translate('rejected_status', 'Rejected');
+                else if (app.status === 'interviewing') statusText = translate('interviewing_status', 'Interviewing');
+                else if (app.status === 'pending') statusText = translate('pending_status', 'Pending');
+                else if (app.status === 'shortlisted') statusText = translate('shortlisted_label', 'Shortlisted');
+
+                // Main Detail HTML - Bolder, layered background
+                const detailHtml = `
+                    <div class="p-4 md:p-8 lg:p-12 max-w-5xl mx-auto w-full">
+                        
+                        <!-- Profile Header Card - Gradient and high lift -->
+                        <div class="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl shadow-primary/10 ring-2 ring-primary-light/20 p-8 mb-10 relative transform translate-y-0 hover:translate-y-px transition-transform duration-300">
+                            <!-- Back Button Mobile -->
+                            <button class="lg:hidden absolute top-6 left-6 w-11 h-11 flex items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors shadow-md" onclick="window.backToMobileList()">
+                                <i class="fas fa-arrow-left text-lg"></i>
+                            </button>
+
+                            <div class="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
+                                <img src="${avatarUrl}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random'" class="w-32 h-32 rounded-full object-cover shadow-2xl border-4 border-primary-light/50 shrink-0" alt="Profile">
+                                
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h2 class="text-4xl font-extrabold text-gray-900 mb-1">${app.first_name} ${app.last_name}</h2>
+                                            <p class="text-2xl font-semibold text-primary mb-3">${getTranslatedProfession(app.profession) || translate('general_applicant', 'General Applicant')}</p>
+                                            <span class="inline-block px-4 py-1.5 rounded-full text-sm font-bold uppercase ring-2 ${getStatusColorClass(app.status)} shadow-sm">${statusText}</span>
+                                        </div>
+                                        <div class="flex gap-3 mt-1 sm:mt-0">
+                                            <a href="/profile.html?id=${app.freelancer_id}" target="_blank" class="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors shadow-md transform hover:scale-105" title="${translate('view_full_profile_tooltip', 'View Full Profile')}">
+                                                <i class="fas fa-external-link-alt fa-lg"></i>
+                                            </a>
+                                            <button class="w-11 h-11 flex items-center justify-center rounded-xl transition-colors shadow-md transform hover:scale-105 ${isStarred ? 'bg-warning/15 text-warning hover:bg-warning/25' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}" 
+                                                    onclick="window.toggleShortlistWrapper(${app.id})" title="${translate('shortlist_tooltip', 'Shortlist')}">
+                                                <i class="${isStarred ? 'fas' : 'far'} fa-star fa-lg"></i>
+                                            </button>
+                                            ${app.cv_path ? `
+                                                <a href="${app.cv_path}" target="_blank" class="w-11 h-11 flex items-center justify-center rounded-xl bg-primary/15 text-primary hover:bg-primary hover:text-white transition-colors shadow-md transform hover:scale-105" title="${translate('view_cv_tooltip', 'View CV')}">
+                                                    <i class="fas fa-file-pdf fa-lg"></i>
+                                                </a>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-8 flex flex-wrap gap-4">
+                                        ${actionButtons}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Main Content Sections -->
+                        <div class="space-y-10">
+                            
+                            <!-- Contact & Key Details Grid - Sharp, elevated card -->
+                            <section class="p-8 bg-white rounded-2xl shadow-xl ring-1 ring-gray-100">
+                                <h3 class="text-sm font-extrabold text-gray-600 uppercase tracking-widest mb-6 border-b-2 border-primary/10 pb-3">${translate('key_details_title', 'Key Details')}</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 text-base">
+                                    
+                                    <div class="flex items-center gap-4 text-gray-800">
+                                        <i class="fas fa-envelope text-primary/80 w-5 text-lg"></i> 
+                                        <span class="font-semibold">${app.email}</span>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-gray-800">
+                                        <i class="fas fa-phone text-primary/80 w-5 text-lg"></i> 
+                                        <span class="font-semibold">${app.phone || translate('na', 'N/A')}</span>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-gray-800">
+                                        <i class="fas fa-map-marker-alt text-primary/80 w-5 text-lg"></i> 
+                                        <span class="font-semibold">${getTranslatedCity(app.city) || translate('na', 'N/A')}</span>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-gray-800">
+                                        <i class="fas fa-clock text-primary/80 w-5 text-lg"></i> 
+                                        <span class="font-semibold">${translate('applied_label', 'Applied')}: ${dateApplied}</span>
+                                    </div>
+                                    ${currentJobData && currentJobData.job_type && currentJobData.job_type.toLowerCase() === 'freelance' ? `
+                                    <div class="flex items-center gap-4 text-gray-800">
+                                        <i class="fas fa-money-bill-wave text-primary/80 w-5 text-lg"></i> 
+                                        <span class="font-semibold">${translate('bid_label', 'Bid')}: ${app.bid_amount ? `${app.bid_amount} ${currentJobData.currency || 'USD'}` : translate('na', 'N/A')}</span>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-gray-800">
+                                        <i class="fas fa-calendar-alt text-primary/80 w-5 text-lg"></i> 
+                                        <span class="font-semibold">${translate('timeline_label', 'Timeline')}: ${app.timeline || translate('na', 'N/A')}</span>
+                                    </div>
+                                    ` : ''}
+                                    <div class="flex items-center gap-4 text-gray-800">
+                                        <i class="fas fa-birthday-cake text-primary/80 w-5 text-lg"></i> 
+                                        <span class="font-semibold">${translate('age_label', 'Age')}: ${calculateAge(app.birthdate) || translate('na', 'N/A')}</span>
+                                    </div>
+
+                                </div>
+                                
+                                <!-- Professions Interested In -->
+                                <div class="mt-8">
+                                    <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">${translate('professions_interested_title', 'Professions Interested In')}</h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${app.interested_professions && app.interested_professions.length > 0 
+                                            ? app.interested_professions.map(p => `
+                                                <span class="px-3 py-1 bg-primary/5 text-primary-dark rounded-lg text-sm font-medium border border-primary/10 flex items-center gap-2">
+                                                    <i class="fas fa-briefcase text-xs opacity-70"></i> ${getTranslatedProfession(p)}
+                                                </span>
+                                            `).join('') 
+                                            : `<span class="text-gray-400 italic">${translate('no_professions_listed', 'No specific professions listed')}</span>`
+                                        }
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Cover Letter/Proposal -->
+                            ${app.proposal_message ? `
+                            <section class="p-8 bg-white rounded-2xl shadow-xl ring-1 ring-gray-100">
+                                <h3 class="text-sm font-extrabold text-gray-600 uppercase tracking-widest mb-6 border-b-2 border-primary/10 pb-3">${translate('cover_letter_title', 'Cover Letter / Proposal')}</h3>
+                                <div class="bg-primary-bg/70 p-5 rounded-xl border border-primary/10 shadow-inner">
+                                    <p class="text-gray-800 whitespace-pre-line leading-relaxed text-base">${app.proposal_message}</p>
+                                </div>
+                            </section>
+                            ` : ''}
+                            
+                            <!-- Skills Section -->
+                            ${app.skills ? `
+                            <section class="p-8 bg-white rounded-2xl shadow-xl ring-1 ring-gray-100">
+                                <h3 class="text-sm font-extrabold text-gray-600 uppercase tracking-widest mb-6 border-b-2 border-primary/10 pb-3">${translate('skills_expertise_title', 'Skills & Expertise')}</h3>
+                                <div class="flex flex-wrap gap-3">
+                                    ${app.skills.split(',').map(s => `<span class="px-5 py-2 bg-primary-bg text-primary-dark font-semibold rounded-full text-sm shadow-md hover:bg-primary-light/30 transition-colors transform hover:scale-[1.03]">${s.trim()}</span>`).join('')}
+                                </div>
+                            </section>
+                            ` : ''}
+                            
+                        </div>
+                    </div>
+                `;
+                
+                applicantDetailPane.innerHTML = detailHtml;
+            }
+
+            // Note: getStatusColorClass is defined inline in renderDetailView for scope reasons, but its logic is used correctly.
+
+            // --- Event Listeners Setup (Preserved structure, adjusted class toggling for new design) ---
+            function setupEventListeners() {
+                // Pipeline Tabs
+                pipelineTabButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // Cleanup all tabs
+                        pipelineTabButtons.forEach(b => {
+                            b.classList.remove('active', 'active-bg', 'text-white', 'shadow-lg', 'shadow-primary/40');
+                            b.classList.add('bg-gray-50', 'text-gray-700', 'hover:bg-primary-bg', 'hover:text-primary', 'shadow-inner', 'shadow-gray-100/50');
+                            // Reset counters style
+                            const count = b.querySelector('.tab-count');
+                            if(count) count.className = 'tab-count bg-gray-200 px-2 py-0.5 rounded-full text-xs font-semibold';
+                        });
+                        
+                        // Set active tab
+                        btn.classList.remove('bg-gray-50', 'text-gray-700', 'hover:bg-primary-bg', 'hover:text-primary', 'shadow-inner', 'shadow-gray-100/50');
+                        btn.classList.add('active', 'active-bg', 'text-white', 'shadow-lg', 'shadow-primary/40');
+                        const activeCount = btn.querySelector('.tab-count');
+                        if(activeCount) activeCount.className = 'tab-count bg-white/30 px-2 py-0.5 rounded-full text-xs font-bold';
+                        
+                        currentFilterStatus = btn.dataset.filter;
+                        renderApplicants();
+                    });
+                });
+
+                // Bulk Actions (Quick Organization)
+                const bulkActionsBtn = document.getElementById('bulkActionsBtn');
+                const bulkActionsInfoModal = document.getElementById('bulkActionsInfoModal');
+                if (bulkActionsBtn && bulkActionsInfoModal) {
+                    bulkActionsBtn.addEventListener('click', () => {
+                        showModal(bulkActionsInfoModal);
+                    });
+                }
+
+                // Advanced Filters
+                const advancedFilterBtn = document.getElementById('advancedFilterBtn');
+                const advancedFiltersModal = document.getElementById('advancedFiltersModal');
+                
+                if (advancedFilterBtn && advancedFiltersModal) {
+                    advancedFilterBtn.addEventListener('click', () => {
+                        showModal(advancedFiltersModal);
+                    });
+                }
+
+                const applyAdvancedFiltersBtn = document.getElementById('applyAdvancedFiltersBtn');
+                if (applyAdvancedFiltersBtn) {
+                    applyAdvancedFiltersBtn.addEventListener('click', () => {
+                        const minAgeInput = document.getElementById('filterMinAge');
+                        const maxAgeInput = document.getElementById('filterMaxAge');
+                        const genderSelect = document.querySelector('input[name="filterGender"]:checked');
+                        const citySelect = document.getElementById('filterCity');
+                        const cvRadio = document.querySelector('input[name="filterHasCV"]:checked');
+
+                        filterMinAge = minAgeInput ? parseInt(minAgeInput.value) || null : null;
+                        filterMaxAge = maxAgeInput ? parseInt(maxAgeInput.value) || null : null;
+                        filterGender = genderSelect ? genderSelect.value : '';
+                        filterCity = citySelect ? citySelect.value : '';
+                        
+                        // Note: selectedCategories and selectedProfessions are updated live by the dropdowns
+                        
+                        if (cvRadio) {
+                            cvFilterState = cvRadio.value; // 'all', 'has_cv', 'no'
+                        } else {
+                             cvFilterState = 'all';
+                        }
+
+                        renderApplicants();
+                        if (advancedFiltersModal) hideModal(advancedFiltersModal);
+                    });
+                }
+
+                const resetAdvancedFiltersBtn = document.getElementById('resetAdvancedFiltersBtn');
+                if (resetAdvancedFiltersBtn) {
+                    resetAdvancedFiltersBtn.addEventListener('click', () => {
+                        if(document.getElementById('filterMinAge')) document.getElementById('filterMinAge').value = '';
+                        if(document.getElementById('filterMaxAge')) document.getElementById('filterMaxAge').value = '';
+                        
+                         // Reset Gender Radios
+                         document.querySelectorAll('input[name="filterGender"]').forEach(r => r.checked = r.value === '');
+                        
+                        if(document.getElementById('filterCity')) document.getElementById('filterCity').value = '';
+                        
+                        // Reset CV radios
+                        document.querySelectorAll('input[name="filterHasCV"]').forEach(r => r.checked = r.value === '');
+                        
+                        // Reset Custom Dropdowns
+                        selectedCategories = [];
+                        selectedProfessions = [];
+                        
+                        // Reset UI for Categories
+                        document.getElementById('selectedCategoriesDisplay').textContent = translate('all_categories_placeholder', 'All Categories');
+                        document.querySelectorAll('[id^="cat-check-"]').forEach(el => {
+                            el.classList.remove('border-primary', 'bg-primary');
+                            el.classList.add('border-gray-300');
+                            el.querySelector('i').classList.add('opacity-0');
+                        });
+
+                        // Reset UI for Professions
+                        document.getElementById('selectedProfessionsDisplay').textContent = translate('all_professions_placeholder', 'All Professions');
+                        document.querySelectorAll('[id^="prof-check-"]').forEach(el => {
+                            el.classList.remove('border-primary', 'bg-primary');
+                            el.classList.add('border-gray-300');
+                            el.querySelector('i').classList.add('opacity-0');
+                        });
+                        
+                        // Refresh professions list (to show all again)
+                        if(window.populateProfessionsList) window.populateProfessionsList();
+
+                        filterMinAge = null;
+                        filterMaxAge = null;
+                        filterGender = '';
+                        filterCity = '';
+                        cvFilterState = 'all';
+
+                        renderApplicants();
+                        if (advancedFiltersModal) hideModal(advancedFiltersModal);
+                    });
+                }
+
+                // Smart Organization (Bulk Actions) Logic
+                const bulkRadios = document.querySelectorAll('input[name="bulkActionType"]');
+                bulkRadios.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        const val = e.target.value;
+                        const cityContainer = document.getElementById('bulkCitySelectContainer');
+                        const genderContainer = document.getElementById('bulkGenderSelectContainer');
+                        
+                        if (cityContainer) cityContainer.classList.add('hidden');
+                        if (genderContainer) genderContainer.classList.add('hidden');
+
+                        if (val === 'city' && cityContainer) cityContainer.classList.remove('hidden');
+                        if (val === 'gender' && genderContainer) genderContainer.classList.remove('hidden');
+                    });
+                });
+
+                const executeBulkActionBtn = document.getElementById('executeBulkActionBtn');
+                if (executeBulkActionBtn) {
+                    executeBulkActionBtn.addEventListener('click', async () => {
+                        const targetStatuses = [];
+                        if (document.getElementById('bulkStagePending').checked) targetStatuses.push('pending');
+                        if (document.getElementById('bulkStageInterview').checked) targetStatuses.push('interviewing');
+                        if (document.getElementById('bulkStageShortlist').checked) targetStatuses.push('shortlisted');
+
+                        if (targetStatuses.length === 0) {
+                            showToast('Please select at least one target stage.', 'error');
+                            return;
+                        }
+
+                        const actionTypeRadio = document.querySelector('input[name="bulkActionType"]:checked');
+                        const actionType = actionTypeRadio ? actionTypeRadio.value : 'all';
+                        
+                        const filters = {};
+                        if (actionType === 'city') {
+                            const cityVal = document.getElementById('bulkCitySelect').value;
+                            if (!cityVal) {
+                                showToast('Please select a city.', 'error');
+                                return;
+                            }
+                            filters.city = cityVal;
+                        } else if (actionType === 'gender') {
+                            const genderVal = document.getElementById('bulkGenderSelect').value;
+                            filters.gender = genderVal; // male/female is always selected by default usually
+                        } else if (actionType === 'no_cv') {
+                            filters.hasCV = 'no';
+                        }
+
+                        // Call API
+                        try {
+                            executeBulkActionBtn.disabled = true;
+                            executeBulkActionBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                            
+                            const res = await fetch(`/api/jobs/${currentJobId}/bulk-reject`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    targetStatuses,
+                                    filters
+                                })
+                            });
+
+                            const data = await res.json();
+                            if (data.success) {
+                                showToast(data.message || 'Bulk rejection completed.', 'success');
+                                fetchApplicants(); // Refresh list
+                                hideModal(document.getElementById('bulkActionsInfoModal'));
+                            } else {
+                                showToast(data.error || 'Failed to execute bulk action.', 'error');
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            showToast('Server error occurred.', 'error');
+                        } finally {
+                            executeBulkActionBtn.disabled = false;
+                            executeBulkActionBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Execute Rejection';
+                        }
+                    });
+                }
+
+                // Search & Filters (Preserved logic)
+                if (applicantSearchInput) {
+                    applicantSearchInput.addEventListener('input', (e) => {
+                        currentSearchQuery = e.target.value.toLowerCase();
+                        renderApplicants();
+                    });
+                }
+                
+                if (sidebarFilterToggle) {
+                    sidebarFilterToggle.addEventListener('click', () => {
+                        sidebarFilters.classList.toggle('hidden');
+                    });
+                }
+
+                const catSelect = document.getElementById('categoryFilterSelect');
+                if (catSelect) {
+                    catSelect.addEventListener('change', (e) => {
+                        selectedCategory = e.target.value;
+                        renderApplicants();
+                    });
+                }
+                
+                const cvSelect = document.getElementById('cvFilterSelect');
+                if (cvSelect) {
+                    cvSelect.addEventListener('change', (e) => {
+                        cvFilterState = e.target.value;
+                        renderApplicants();
+                    });
+                }
+
+                // Modals - Close Buttons (Preserved logic)
+                document.querySelectorAll('.modal-close-btn, .modal-close-btn-action').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const modal = this.closest('.modal-overlay');
+                        hideModal(modal);
+                    });
+                });
+
+                // Modal Actions (Preserved IDs/Logic)
+                if (sendInterviewBtn) {
+                    sendInterviewBtn.addEventListener('click', () => {
+                        if (!interviewDate.value) {
+                            showToast('Please select a date and time', 'error');
+                            return;
+                        }
+                        updateApplicationStatus(actingAppId, 'interviewing');
+                        hideModal(interviewModal);
+                        showToast('Interview invitation sent!', 'success');
+                    });
+                }
+
+                if (confirmHireBtn) {
+                    confirmHireBtn.addEventListener('click', () => {
+                        const keepOpen = keepJobOpenCheckbox.checked;
+                        updateApplicationStatus(actingAppId, 'accepted', null, keepOpen);
+                        hideModal(hireConfirmModal);
+                    });
+                }
+
+                if (confirmRejectBtn) {
+                    confirmRejectBtn.addEventListener('click', () => {
+                        const reason = rejectionReasonInput.value;
+                        updateApplicationStatus(actingAppId, 'rejected', reason);
+                        hideModal(rejectConfirmModal);
+                    });
+                }
+                
+                if (confirmRevertBtn) {
+                    confirmRevertBtn.addEventListener('click', () => {
+                        updateApplicationStatus(actingAppId, 'pending'); 
+                        hideModal(revertConfirmModal);
+                    });
+                }
+            }
+
+            // --- Status Update Logic (Preserved) ---
+            async function updateApplicationStatus(appId, status, reason = null, keepJobOpen = true) {
+                try {
+                    const payload = { status };
+                    if (reason) payload.rejectionReason = reason;
+                    
+                    const res = await fetch(`/api/applications/${appId}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                        const app = allApplications.find(a => a.id === appId);
+                        if (app) app.status = status;
+                        
+                        showToast(`Application marked as ${status}`, 'success');
+                        updateStats();
+                        renderApplicants();
+                        renderDetailView(app);
+                    } else {
+                        showToast(data.error || 'Failed to update status', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    // Fallback for demo if API fails
+                     const app = allApplications.find(a => a.id === appId);
+                     if (app) app.status = status;
+                     showToast(`(Demo) Application marked as ${status}`, 'success');
+                     updateStats();
+                     renderApplicants();
+                     renderDetailView(app);
+                }
+            }
+
+            // --- Global Window Functions (Preserved IDs/Logic) ---
+            window.triggerHire = (id) => {
+                actingAppId = id;
+                const app = allApplications.find(a => a.id === id);
+                if(hiringFreelancerName) hiringFreelancerName.textContent = `${app.first_name} ${app.last_name}`;
+                showModal(hireConfirmModal);
+            };
+
+            window.triggerReject = (id) => {
+                actingAppId = id;
+                const app = allApplications.find(a => a.id === id);
+                if(rejectingFreelancerName) rejectingFreelancerName.textContent = `${app.first_name} ${app.last_name}`;
+                if(rejectionReasonInput) rejectionReasonInput.value = '';
+                showModal(rejectConfirmModal);
+            };
+
+            window.triggerInterview = (id) => {
+                actingAppId = id;
+                const app = allApplications.find(a => a.id === id);
+                if(interviewCandidateName) interviewCandidateName.textContent = `${app.first_name} ${app.last_name}`;
+                if(interviewMessage) interviewMessage.value = '';
+                if(interviewDate) interviewDate.value = '';
+                showModal(interviewModal);
+            };
+            
+            window.triggerRevert = (id) => {
+                actingAppId = id;
+                const app = allApplications.find(a => a.id === id);
+                if(revertingFreelancerName) revertingFreelancerName.textContent = `${app.first_name} ${app.last_name}`;
+                showModal(revertConfirmModal);
+            };
+
+            window.toggleShortlistWrapper = (id) => {
+                toggleShortlist(id);
+            };
+
+            window.backToMobileList = () => {
+                const sidebar = document.querySelector('.applicants-sidebar');
+                const detailPane = document.querySelector('.applicant-detail-pane');
+                // The JS logic is simplified here to match the original function but uses the new structural classes (hide-mobile, show-mobile) defined in the style block for better visual effect.
+                if (sidebar) sidebar.classList.remove('hide-mobile');
+                if (detailPane) detailPane.classList.remove('show-mobile');
+            };
+
+            // Run Init
+            init();
+        });
+    </script>
+    <!-- AI Assistant Modal (Simplified) -->
+    <div id="aiAssistantModal" class="modal-overlay fixed inset-0 z-[3000] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="w-full max-w-2xl bg-slate-900 ai-modal-content rounded-3xl relative flex flex-col shadow-2xl shadow-emerald-500/20 ring-1 ring-emerald-500/30 overflow-hidden">
+            <!-- Close Button -->
+            <button id="closeAiModalBtn" class="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- Content Container -->
+            <div class="p-8 md:p-12 text-center relative">
+                <!-- Background Decoration -->
+                <div class="absolute top-0 left-0 w-full h-full ai-bg-pattern opacity-50 pointer-events-none"></div>
+                <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-emerald-500/10 to-transparent pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <!-- Icon -->
+                    <div class="w-20 h-20 mx-auto bg-slate-800/50 rounded-2xl flex items-center justify-center mb-8 ring-1 ring-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                        <i class="fas fa-robot text-4xl text-emerald-400"></i>
+                    </div>
+
+                    <!-- Intro View -->
+                    <div id="aiIntroView" class="transition-all duration-300">
+                        <h2 class="text-3xl font-black text-white mb-4">
+                            <span data-lang-key="ai_pilot_intro_title">Hirly Pilot: The Intelligent Hiring Ecosystem</span>
+                        </h2>
+                        
+                        <!-- Features Grid -->
+                        <div class="text-left max-w-lg mx-auto mb-10 space-y-4">
+                            <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                <div class="mt-1 text-emerald-400 shrink-0"><i class="fas fa-brain"></i></div>
+                                <p class="text-sm text-slate-300" data-lang-key="ai_feat_analysis">Deep candidate analysis, smart scoring, and actionable suggestions.</p>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                <div class="mt-1 text-blue-400 shrink-0"><i class="fas fa-bolt"></i></div>
+                                <p class="text-sm text-slate-300" data-lang-key="ai_feat_automation">Smart shortlisting, automated emails, and integrated interview system.</p>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                <div class="mt-1 text-purple-400 shrink-0"><i class="fas fa-gem"></i></div>
+                                <p class="text-sm text-slate-300" data-lang-key="ai_feat_ui">Super modern design and UI/UX tailored for maximum efficiency.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="/employers.html" target="_blank" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-all border border-slate-700">
+                                <span data-lang-key="ai_btn_pricing">Learn more - تعرف أكثر</span>
+                            </a>
+                            <button onclick="window.toggleAiPinView(true)" class="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/50 transition-all hover:scale-[1.02]">
+                                <span data-lang-key="ai_btn_verify">Enter Early Access PIN</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PIN View (Hidden by default) -->
+                    <div id="aiPinView" class="hidden transition-all duration-300">
+                        <h3 class="text-2xl font-bold text-white mb-2" data-lang-key="ai_unlock_title">Unlock Pilot</h3>
+                        <p class="text-slate-400 mb-8" data-lang-key="ai_unlock_desc">Enter your Early Access PIN to activate.</p>
+
+                        <div class="max-w-xs mx-auto mb-8">
+                            <div class="relative">
+                                <input type="text" id="pilotPinInput" maxlength="6" class="w-full bg-slate-950/50 border-2 border-slate-700 text-white pin-input py-4 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 outline-none transition-all placeholder-slate-800" placeholder="000000">
+                                <div id="pinSuccessIcon" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 text-xl hidden">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                            <div id="pinMessage" class="mt-3 text-center text-sm min-h-[20px] font-medium"></div>
+                        </div>
+
+                        <div class="flex flex-col gap-4 max-w-xs mx-auto">
+                            <button onclick="window.verifyPilotPin()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/50 transition-all">
+                                <span data-lang-key="ai_btn_verify">Verify PIN</span>
+                            </button>
+                            <button onclick="window.toggleAiPinView(false)" class="text-slate-500 hover:text-white text-sm transition-colors">
+                                <span data-lang-key="ai_demo_back">Back</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const aiBtn = document.getElementById('aiAssistantBtn');
+            const aiModal = document.getElementById('aiAssistantModal');
+            const closeAiBtn = document.getElementById('closeAiModalBtn');
+            const introView = document.getElementById('aiIntroView');
+            const pinView = document.getElementById('aiPinView');
+            const pinInput = document.getElementById('pilotPinInput');
+
+            // AI Modal Translation Helper
+            const updateAiModalTranslations = () => {
+                if (typeof translate !== 'function') return;
+                
+                const elements = document.querySelectorAll('#aiAssistantModal [data-lang-key]');
+                elements.forEach(el => {
+                    const key = el.getAttribute('data-lang-key');
+                    const defaultText = el.innerText.trim();
+                    const translation = translate(key, defaultText);
+                    if (translation) {
+                        el.innerText = translation;
+                    }
+                });
+            };
+
+            // Toggle Views
+            window.toggleAiPinView = (showPin) => {
+                if (showPin) {
+                    introView.classList.add('hidden');
+                    pinView.classList.remove('hidden');
+                    setTimeout(() => pinInput.focus(), 100);
+                } else {
+                    pinView.classList.add('hidden');
+                    introView.classList.remove('hidden');
+                }
+            };
+
+            // Event Delegation for AI Button
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('#aiAssistantBtn');
+                if (btn) {
+                    e.preventDefault();
+                    if(aiModal) {
+                        updateAiModalTranslations();
+                        window.toggleAiPinView(false); // Reset to intro
+                        
+                        aiModal.classList.remove('hidden');
+                        setTimeout(() => {
+                            aiModal.classList.remove('opacity-0');
+                            aiModal.classList.add('show');
+                        }, 10);
+                    }
+                }
+            });
+
+            // Close Modal
+            if(closeAiBtn) {
+                closeAiBtn.addEventListener('click', () => {
+                    aiModal.classList.remove('show');
+                    aiModal.classList.add('opacity-0');
+                    setTimeout(() => aiModal.classList.add('hidden'), 300);
+                });
+            }
+
+            // PIN Logic
+            window.verifyPilotPin = () => {
+                const input = document.getElementById('pilotPinInput');
+                const message = document.getElementById('pinMessage');
+                const successIcon = document.getElementById('pinSuccessIcon');
+                
+                // Get Job ID from URL to redirect correctly
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentJobId = urlParams.get('jobId');
+
+                if(input.value === '190904') {
+                    // Success
+                    input.classList.remove('border-slate-700', 'border-red-500', 'text-red-500');
+                    input.classList.add('border-emerald-500', 'text-emerald-500');
+                    successIcon.classList.remove('hidden');
+                    
+                    message.innerHTML = '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> Access Granted! Redirecting...</span>';
+                    
+                    // Redirect to AI page
+                    setTimeout(() => {
+                        if (currentJobId) {
+                            window.location.href = `/employer/ai.html?jobId=${encodeURIComponent(currentJobId)}`;
+                        } else {
+                            window.location.href = '/employer/ai.html';
+                        }
+                    }, 1000);
+                } else {
+                    // Error
+                    input.classList.add('border-red-500', 'text-red-500');
+                    input.classList.remove('border-slate-700', 'border-emerald-500', 'text-emerald-500');
+                    successIcon.classList.add('hidden');
+                    
+                    message.innerHTML = '<span class="text-red-400"><i class="fas fa-times-circle"></i> Invalid PIN.</span>';
+                    input.classList.add('animate-shake');
+                    setTimeout(() => input.classList.remove('animate-shake'), 500);
+                }
+            };
+        });
+    </script>
+</body>
+</html>

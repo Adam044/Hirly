@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html id="htmlTag">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>هايرلي - سوق العمل الحر في فلسطين</title>
+    <meta name="description" content="هايرلي - المنصة الأولى للعمل الحر والتوظيف الذكي في فلسطين. ابحث عن مواهب، أنشر وظيفة، أو ابنِ هويتك المهنية الرقمية.">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/pages/page-index.css">
+
+    <!-- Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-NHWNSKWN0N');
+    </script>
+
+    <!-- Translations -->
+    <script src="/language/language.js" defer></script>
+    <script src="/language/index-page-translations.js" defer></script>
+    <script src="/language/categories-professions-translations.js" defer></script>
+    <script src="/language/cities-translations.js" defer></script>
+</head>
+<body>
+    <div id="headerPlaceholder"></div>
+
+    <main class="landing-page">
+
+        <!-- ============================================================
+             HERO SECTION — Video Background
+        ============================================================ -->
+        <section class="hero-section" id="heroSection">
+            <!-- Video Background -->
+            <div class="hero-video-wrapper">
+                <video
+                    class="hero-video"
+                    src="/videos/hero-video.mp4"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    poster="/images/hero-bg.jpg">
+                </video>
+                <div class="hero-overlay"></div>
+            </div>
+
+            <div class="container hero-container">
+                <!-- Toggle: Hire / Work -->
+                <div class="hero-toggle">
+                    <button class="toggle-btn active" id="toggleHire" onclick="setHeroMode('hire')" data-lang-key="hero_toggle_hire_btn">أريد توظيف</button>
+                    <button class="toggle-btn" id="toggleWork" onclick="setHeroMode('work')" data-lang-key="hero_toggle_work_btn">أريد العمل</button>
+                </div>
+
+                <!-- Dynamic Heading -->
+                <div class="hero-text" id="heroText">
+                    <h1 class="hero-title" id="heroTitle" data-lang-key="hero_toggle_hire_title">
+                        وظّف أفضل المهنيين<br><span class="hero-accent">بثقة وسهولة</span>
+                    </h1>
+                    <p class="hero-subtitle" id="heroSubtitle" data-lang-key="hero_toggle_hire_subtitle">
+                        آلاف المحترفين في فلسطين جاهزون لمساعدتك اليوم — من مطورين ومصممين إلى محاسبين ومستشارين.
+                    </p>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="hero-search-bar">
+                    <i class="fas fa-search hero-search-icon"></i>
+                    <input
+                        type="text"
+                        class="hero-search-input"
+                        id="heroSearch"
+                        placeholder="ابحث عن مطور، مصمم، محاسب..."
+                        autocomplete="off">
+                    <button class="hero-search-btn" onclick="handleHeroSearch()" data-lang-key="hero_search_btn">بحث</button>
+                </div>
+
+                <!-- Quick Suggestion Pills -->
+                <div class="hero-pills" id="heroPills">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             STATS / TRUST BAR
+        ============================================================ -->
+        <section class="stats-bar">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number-row">
+                            <span class="stat-number" data-count="5000">0</span>
+                            <span class="stat-suffix">+</span>
+                        </div>
+                        <span class="stat-label" data-lang-key="stat_users">مستخدم مسجل</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number-row">
+                            <span class="stat-number" data-count="50">0</span>
+                            <span class="stat-suffix">+</span>
+                        </div>
+                        <span class="stat-label" data-lang-key="stat_companies">شركة مسجلة</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number-row">
+                            <span class="stat-number" data-count="200">0</span>
+                            <span class="stat-suffix">+</span>
+                        </div>
+                        <span class="stat-label" data-lang-key="stat_employers">صاحب عمل</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number-row">
+                            <span class="stat-number" data-count="350">0</span>
+                            <span class="stat-suffix">+</span>
+                        </div>
+                        <span class="stat-label" data-lang-key="stat_professions">تخصص مهني</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             TRUSTED BY — Company Logos Marquee
+        ============================================================ -->
+        <section class="trusted-section" style="display: none;">
+            <div class="container">
+                <p class="trusted-label" data-lang-key="trusted_label">موثوق من قِبَل الشركات والمؤسسات</p>
+            </div>
+            <div class="marquee-wrapper">
+                <div id="featuredCompaniesGrid" class="marquee-content">
+                    <!-- Populated by homepage.js -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             WHO IS HIRLY FOR? — Horizontal Scrollable Segment Cards
+        ============================================================ -->
+        <section class="segments-section">
+            <div class="container">
+                <div class="section-header-block">
+                    <span class="section-eyebrow" data-lang-key="segments_eyebrow">من يستخدم هايرلي؟</span>
+                    <h2 class="section-title" data-lang-key="segments_title">منصة واحدة، ثلاثة عوالم</h2>
+                    <p class="section-desc" data-lang-key="segments_desc">سواء كنت تبحث عن محترف، أو تدير مؤسسة، أو تبني هويتك المهنية — هايرلي صُمّمت لك.</p>
+                </div>
+
+                <div class="segments-track-wrapper">
+                    <div class="segments-track" id="segmentsTrack">
+
+                        <!-- Card 1: Individuals -->
+                        <a href="/for-individuals" class="segment-card" id="seg-individuals">
+                            <div class="segment-card-image">
+                                <img src="/images/hero-bg.jpg"
+                                     alt="أفراد وفرق"
+                                     onerror="this.onerror=null; this.parentElement.classList.add('img-fallback')">
+                                <div class="segment-card-badge">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                            <div class="segment-card-body">
+                                <span class="segment-tag" data-lang-key="seg_individuals_tag">للأفراد والفرق</span>
+                                <h3 class="segment-title" data-lang-key="seg_individuals_title">احتاج محترفاً لفريقي أو مشروعي</h3>
+                                <p class="segment-desc" data-lang-key="seg_individuals_desc">ابحث عن مطور، مصمم، فني، أو أي متخصص — لمشروع سريع أو تعاون طويل الأمد، بدون تعقيدات.</p>
+                                <span class="segment-cta"><span data-lang-key="seg_cta_learn_more">اكتشف المزيد</span> <i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </a>
+
+                        <!-- Card 2: Companies -->
+                        <a href="/for-companies" class="segment-card" id="seg-companies">
+                            <div class="segment-card-image">
+                                <img src="/images/cta-employer-bg.jpg"
+                                     alt="شركات ومؤسسات"
+                                     onerror="this.onerror=null; this.parentElement.classList.add('img-fallback')">
+                                <div class="segment-card-badge">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                            </div>
+                            <div class="segment-card-body">
+                                <span class="segment-tag" data-lang-key="seg_companies_tag">للشركات والمؤسسات</span>
+                                <h3 class="segment-title" data-lang-key="seg_companies_title">وظّف بذكاء وإدارة متكاملة</h3>
+                                <p class="segment-desc" data-lang-key="seg_companies_desc">أنشر وظائف، واستقبل طلبات، وأجرِ مقابلات بالذكاء الاصطناعي، وأدر كامل عملية التوظيف من لوحة تحكم واحدة.</p>
+                                <span class="segment-cta"><span data-lang-key="seg_cta_learn_more">اكتشف المزيد</span> <i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </a>
+
+                        <!-- Card 3: Professionals -->
+                        <a href="/for-professionals" class="segment-card" id="seg-professionals">
+                            <div class="segment-card-image">
+                                <img src="/images/cta-pro-bg.jpg"
+                                     alt="مستقلون ومحترفون"
+                                     onerror="this.onerror=null; this.parentElement.classList.add('img-fallback')">
+                                <div class="segment-card-badge">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                            </div>
+                            <div class="segment-card-body">
+                                <span class="segment-tag" data-lang-key="seg_professionals_tag">للمستقلين والمحترفين</span>
+                                <h3 class="segment-title" data-lang-key="seg_professionals_title">ابنِ هويتك المهنية الرقمية</h3>
+                                <p class="segment-desc" data-lang-key="seg_professionals_desc">أنشئ ملفك الشخصي، أضف خدماتك، اشترك بالشبكة، واحصل على رابطك ورمز QR الخاص — هويتك المهنية في مكان واحد.</p>
+                                <span class="segment-cta"><span data-lang-key="seg_cta_learn_more">اكتشف المزيد</span> <i class="fas fa-arrow-right"></i></span>
+                            </div>
+                        </a>
+
+                    </div>
+
+                    <!-- Scroll Arrows -->
+                    <button class="seg-arrow seg-arrow-prev" id="segPrev" aria-label="السابق">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="seg-arrow seg-arrow-next" id="segNext" aria-label="التالي">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Dots -->
+                <div class="segments-dots">
+                    <span class="seg-dot active" data-index="0"></span>
+                    <span class="seg-dot" data-index="1"></span>
+                    <span class="seg-dot" data-index="2"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             CATEGORIES SECTION
+        ============================================================ -->
+        <section class="section categories-section">
+            <div class="container">
+                <div class="section-header-block">
+                    <span class="section-eyebrow" data-lang-key="categories_eyebrow">تصفح حسب التخصص</span>
+                    <h2 class="section-title" data-lang-key="categories_title">ابحث في كل المجالات</h2>
+                </div>
+                <div class="categories-grid" id="homepageCategories">
+                    <!-- Injected by JS -->
+                </div>
+                <div class="categories-footer">
+                    <a href="/talent.html" class="btn-see-all"><span data-lang-key="categories_see_all">عرض جميع التخصصات</span> <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             FRESH OPPORTUNITIES — Recently Posted Jobs
+        ============================================================ -->
+        <section class="section fresh-jobs-section" id="freshOpportunities">
+            <div class="container">
+                <div class="section-header-centered">
+                    <span class="section-eyebrow" data-lang-key="fresh_jobs_eyebrow">فرص جديدة</span>
+                    <h2 class="section-title" data-lang-key="fresh_jobs_title">وظائف تم نشرها حديثاً</h2>
+                </div>
+
+                <div class="horizontal-scroll-wrapper">
+                    <div class="horizontal-track jobs-track" id="freshJobsContainer">
+                        <!-- Loading State -->
+                        <div class="home-skeleton-job-card"></div>
+                        <div class="home-skeleton-job-card"></div>
+                        <div class="home-skeleton-job-card"></div>
+                    </div>
+                    
+                    <button class="scroll-arrow prev-arrow" id="jobsPrev"><i class="fas fa-chevron-left"></i></button>
+                    <button class="scroll-arrow next-arrow" id="jobsNext"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <div class="section-footer-action">
+                    <a href="/jobs.html" class="btn-luxe-primary" data-lang-key="view_all_jobs">عرض جميع الوظائف <i class="fas fa-arrow-right"></i></a>
+                </div>
+
+                <!-- Empty State (Hidden) -->
+                <div class="fresh-jobs-empty" id="freshJobsEmpty" style="display: none;">
+                    <div class="empty-icon"><i class="fas fa-briefcase"></i></div>
+                    <h3 data-lang-key="no_jobs_title">لا توجد وظائف حالياً</h3>
+                    <p data-lang-key="no_jobs_desc">كن أول من ينشر وظيفة على هايرلي!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             DISCOVER TALENT — Featured Professionals
+        ============================================================ -->
+        <section class="section discover-talent-section" id="discoverTalent">
+            <div class="section-bg-accent"></div>
+            <div class="container">
+                <div class="section-header-centered">
+                    <span class="section-eyebrow" data-lang-key="discover_talent_eyebrow">اكتشف المواهب</span>
+                    <h2 class="section-title" data-lang-key="discover_talent_title">محترفون متميزون</h2>
+                    <p class="section-desc" data-lang-key="discover_talent_desc">مواهب مختارة بعناية — بروفايلات كاملة بتقييمات ومهارات حقيقية</p>
+                </div>
+
+                <div class="horizontal-scroll-wrapper">
+                    <div class="horizontal-track talent-track" id="talentContainer">
+                        <!-- Skeletons -->
+                        <div class="home-skeleton-talent-card"></div>
+                        <div class="home-skeleton-talent-card"></div>
+                        <div class="home-skeleton-talent-card"></div>
+                    </div>
+
+                    <button class="scroll-arrow prev-arrow" id="talentPrev"><i class="fas fa-chevron-left"></i></button>
+                    <button class="scroll-arrow next-arrow" id="talentNext"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <div class="section-footer-action">
+                    <a href="/talent.html" class="btn-luxe-outline" data-lang-key="explore_all_talent">استكشف جميع المحترفين <i class="fas fa-arrow-right"></i></a>
+                </div>
+
+                <!-- Empty State (Hidden) -->
+                <div class="talent-empty" id="talentEmpty" style="display: none;">
+                    <div class="empty-icon"><i class="fas fa-users"></i></div>
+                    <h3 data-lang-key="no_talent_title">لا يوجد محترفون متاحون حالياً</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SLEEK CTA BANNER
+        ============================================================ -->
+        <section class="cta-banner-section">
+            <div class="container">
+                <div class="cta-banner">
+                    <div class="cta-banner-left">
+                        <p class="cta-banner-label" data-lang-key="cta_eyebrow">هايرلي — المنصة المهنية الفلسطينية</p>
+                        <h2 class="cta-banner-title" data-lang-key="cta_title">جاهز للانطلاق؟</h2>
+                    </div>
+                    <div class="cta-banner-right">
+                        <a href="/signup" class="cta-banner-btn-primary" data-lang-key="cta_create_account">إنشاء حساب مجاني</a>
+                        <a href="/talent.html" class="cta-banner-btn-ghost" data-lang-key="cta_browse_talent">تصفح المهنيين</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="footerPlaceholder"></div>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Core Scripts -->
+    <script src="/auth.js" defer></script>
+    <script src="/components.js" defer></script>
+    <script src="/script.js" defer></script>
+    <!-- Page Script -->
+    <script src="/js/homepage.js" defer></script>
+
+    <!-- Homepage Inline JS -->
+    <script>
+        // Hero toggle logic
+        let currentHeroMode = 'hire';
+
+        function setHeroMode(mode) {
+            currentHeroMode = mode;
+            updateHeroTextContent();
+        }
+
+        function updateHeroTextContent() {
+            const title = document.getElementById('heroTitle');
+            const subtitle = document.getElementById('heroSubtitle');
+            const input = document.getElementById('heroSearch');
+            const btnHire = document.getElementById('toggleHire');
+            const btnWork = document.getElementById('toggleWork');
+            const pillsContainer = document.getElementById('heroPills');
+
+            const lang = window.currentLanguage || 'ar';
+            const trans = window.translations || {};
+
+            function getTrans(key, defaultVal) {
+                if (trans[key] && trans[key][lang]) return trans[key][lang];
+                return defaultVal;
+            }
+
+            if (currentHeroMode === 'hire') {
+                btnHire.classList.add('active');
+                btnWork.classList.remove('active');
+                title.innerHTML = getTrans('hero_toggle_hire_title', 'وظّف أفضل المهنيين<br><span class="hero-accent">بثقة وسهولة</span>');
+                subtitle.innerHTML = getTrans('hero_toggle_hire_subtitle', 'آلاف المحترفين في فلسطين جاهزون لمساعدتك اليوم — من مطورين ومصممين إلى محاسبين ومستشارين.');
+                input.placeholder = getTrans('hero_toggle_hire_placeholder', 'ابحث عن مطور، مصمم، محاسب...');
+                
+                // Set Pills for Hire Mode (Professions searching in talent.html)
+                const hirePills = [
+                    { key: 'pill_software_engineer', search: 'Software Engineer', label: 'مهندس برمجيات' },
+                    { key: 'pill_uiux_designer', search: 'UI/UX Designer', label: 'مصمم UI/UX' },
+                    { key: 'pill_accountant', search: 'Accountant', label: 'محاسب' },
+                    { key: 'pill_marketing_spec', search: 'Marketing Specialist', label: 'أخصائي تسويق' },
+                    { key: 'pill_project_manager', search: 'Project Manager', label: 'مدير مشاريع' }
+                ];
+                pillsContainer.innerHTML = hirePills.map(p => 
+                    `<a href="/talent.html?search=${encodeURIComponent(p.search)}" class="hero-pill" data-lang-key="${p.key}">${getTrans(p.key, p.label)}</a>`
+                ).join('');
+
+            } else {
+                btnWork.classList.add('active');
+                btnHire.classList.remove('active');
+                title.innerHTML = getTrans('hero_toggle_work_title', 'ابحث عن وظيفتك<br><span class="hero-accent">وابنِ مسيرتك</span>');
+                subtitle.innerHTML = getTrans('hero_toggle_work_subtitle', 'مئات الفرص الوظيفية تنتظرك — اعرض مهاراتك، قدّم على وظائف، وابدأ مسيرتك المهنية اليوم.');
+                input.placeholder = getTrans('hero_toggle_work_placeholder', 'ابحث عن وظيفة، مجال، أو شركة...');
+                
+                // Set Pills for Work Mode (Categories searching in jobs.html)
+                const workPills = [
+                    { key: 'pill_tech_dev', category: 'Tech & Development', label: 'تكنولوجيا وتطوير' },
+                    { key: 'pill_biz_finance', category: 'Business & Finance', label: 'أعمال ومالية' },
+                    { key: 'pill_creative_design', category: 'Creative & Design', label: 'إبداع وتصميم' },
+                    { key: 'pill_healthcare', category: 'Healthcare', label: 'رعاية صحية' },
+                    { key: 'pill_media_journalism', category: 'Media & Journalism', label: 'إعلام وصحافة' }
+                ];
+                pillsContainer.innerHTML = workPills.map(p => 
+                    `<a href="/jobs.html?category=${encodeURIComponent(JSON.stringify([p.category]))}" class="hero-pill" data-lang-key="${p.key}">${getTrans(p.key, p.label)}</a>`
+                ).join('');
+            }
+        }
+
+        window.addEventListener('translationsApplied', updateHeroTextContent);
+
+        function handleHeroSearch() {
+            const q = document.getElementById('heroSearch').value.trim();
+            if (!q) return;
+            // The search bar in the hero now switches based on current mode
+            if (currentHeroMode === 'hire') {
+                window.location.href = `/talent.html?search=${encodeURIComponent(q)}`;
+            } else {
+                window.location.href = `/jobs.html?search=${encodeURIComponent(q)}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Enter key on search
+            const input = document.getElementById('heroSearch');
+            if (input) input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') handleHeroSearch();
+            });
+
+            // Segment card scroll arrows
+            const track = document.getElementById('segmentsTrack');
+            const dots = document.querySelectorAll('.seg-dot');
+            let currentDot = 0;
+
+            function scrollToCard(index) {
+                if (!track) return;
+                const cards = track.querySelectorAll('.segment-card');
+                if (!cards[index]) return;
+                const cardWidth = cards[index].offsetWidth + 24; // gap
+                const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
+                
+                // For modern browsers, scrollLeft in RTL is 0 at the right and goes negative as you scroll left.
+                // However, scrollTo({ left: ... }) behavior can vary. 
+                // A safe way is to handle the sign based on direction.
+                let scrollPos = index * cardWidth;
+                if (isRTL) {
+                    // In RTL, we scroll to the left (negative values in most modern browsers)
+                    scrollPos = -scrollPos;
+                }
+                
+                track.scrollTo({ left: scrollPos, behavior: 'smooth' });
+                dots.forEach((d, i) => d.classList.toggle('active', i === index));
+                currentDot = index;
+            }
+
+            document.getElementById('segPrev')?.addEventListener('click', function() {
+                scrollToCard(Math.max(0, currentDot - 1));
+            });
+            document.getElementById('segNext')?.addEventListener('click', function() {
+                const cards = track?.querySelectorAll('.segment-card');
+                scrollToCard(Math.min((cards?.length || 1) - 1, currentDot + 1));
+            });
+
+            dots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    scrollToCard(parseInt(this.dataset.index));
+                });
+            });
+
+            // Animated number counters on scroll
+            const counters = document.querySelectorAll('.stat-number');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCounter(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            counters.forEach(c => observer.observe(c));
+
+            function animateCounter(el) {
+                const target = parseInt(el.dataset.count);
+                const duration = 1800;
+                const step = target / (duration / 16);
+                let current = 0;
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    // Always render English digits regardless of language
+                    el.textContent = Math.floor(current).toLocaleString('en-US');
+                }, 16);
+            }
+        });
+    </script>
+</body>
+</html>

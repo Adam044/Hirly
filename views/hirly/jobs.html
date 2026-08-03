@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="browse_jobs_title">Browse Jobs - Hirly</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/global-rtl.css">
+    <link rel="stylesheet" href="/styling/pages/page-jobs.css">
+
+    <!-- Language scripts (MUST be loaded first among JS) -->
+    <script src="/language/language.js"></script>
+    <script src="/language/jobs-translations.js"></script>
+    <script src="/language/categories-professions-translations.js"></script>
+    <script src="/language/cities-translations.js"></script>
+</head>
+<body>
+    <!-- Header will be loaded by components.js -->
+    <div id="headerPlaceholder"></div>
+
+    <main class="main job-listing-page-wrapper">
+        <!-- Jobs Specific Hero -->
+        <section class="jobs-hero-section">
+            <div class="container">
+                <h1 data-lang-key="find_your_next_opportunity">Find Your Next Opportunity</h1>
+                <p data-lang-key="explore_wide_range_jobs">Explore a wide range of freelance and full-time jobs in Palestine.</p>
+                <div class="search-bar-main">
+                    <input type="text" id="search" placeholder="Search by job title or keyword..." data-lang-placeholder="search_job_title_keyword">
+                    <button id="applyFilters" class="btn btn-primary" data-lang-key="search">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                <!-- NEW: Quick Filters Section moved inside hero for better visibility -->
+                <div class="quick-filters-grid-desktop-wrapper">
+                    <div class="quick-filters-grid-desktop" id="quickFiltersGridDesktop">
+                        <!-- Quick Filter Cards will be dynamically loaded here by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: Horizontal Filter Bar for Desktop -->
+        <section class="horizontal-filter-section desktop-only container">
+            <div class="filter-bar-container">
+                <div class="filter-bar-row">
+                    <!-- Category Dropdown -->
+                    <div class="filter-col">
+                        <div class="custom-dropdown" id="categoryDropdown">
+                            <button type="button" class="custom-dropdown-trigger form-control" id="categoryDropdownTrigger">
+                                <i class="fas fa-th-large filter-icon"></i> 
+                                <span class="trigger-label" data-lang-key="all_categories">Category</span> 
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                            <div class="custom-dropdown-menu checkbox-list" id="categoryDropdownMenu"></div>
+                        </div>
+                    </div>
+                    <!-- Profession Dropdown -->
+                    <div class="filter-col">
+                        <div class="custom-dropdown" id="professionDropdown">
+                            <button type="button" class="custom-dropdown-trigger form-control" id="professionDropdownTrigger">
+                                <i class="fas fa-user-tie filter-icon"></i> 
+                                <span class="trigger-label" data-lang-key="all_professions">Profession</span> 
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                            <div class="custom-dropdown-menu checkbox-list" id="professionDropdownMenu"></div>
+                        </div>
+                    </div>
+                    <!-- Work Mode -->
+                    <div class="filter-col">
+                        <div class="select-wrapper">
+                            <i class="fas fa-laptop-house filter-icon"></i>
+                            <select id="jobSiteTypeFilter" class="form-control">
+                                <option value="" data-lang-key="work_mode">Work Mode</option>
+                                <option value="On-site" data-lang-key="on_site">On-site</option>
+                                <option value="Remote" data-lang-key="remote">Remote</option>
+                                <option value="Hybrid" data-lang-key="hybrid">Hybrid</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-arrow"></i>
+                        </div>
+                    </div>
+                    <!-- Job Type -->
+                    <div class="filter-col">
+                        <div class="custom-dropdown" id="jobTypeDropdown">
+                            <button type="button" class="custom-dropdown-trigger form-control" id="jobTypeDropdownTrigger">
+                                <i class="fas fa-clock filter-icon"></i> 
+                                <span class="trigger-label" data-lang-key="job_type_label">Job Type</span> 
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                            <div class="custom-dropdown-menu checkbox-list" id="jobTypeDropdownMenu"></div>
+                        </div>
+                    </div>
+                    <!-- Country -->
+                    <div class="filter-col">
+                        <div class="select-wrapper">
+                            <i class="fas fa-globe filter-icon"></i>
+                            <select id="country" class="form-control">
+                                <option value="" data-lang-key="all_countries">All Countries</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-arrow"></i>
+                        </div>
+                    </div>
+                    <!-- Location -->
+                    <div class="filter-col" id="locationFilterGroup">
+                        <div class="select-wrapper">
+                            <i class="fas fa-map-marker-alt filter-icon"></i>
+                            <select id="location" class="form-control">
+                                <option value="" data-lang-key="all_cities">All Cities</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-arrow"></i>
+                        </div>
+                    </div>
+                    <!-- Clear -->
+                    <div class="filter-col-auto">
+                        <button type="button" id="clearFilters" class="btn-clear-filters" title="Clear Filters">
+                            <i class="fas fa-rotate-left"></i>
+                            <span data-lang-key="clear_filters">Clear</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Existing Quick Filters Section for Mobile Only -->
+        <section class="quick-filters-section-mobile container">
+            <div class="quick-filters-grid-mobile" id="quickFiltersGridMobile">
+                <!-- Quick Filter Cards will be dynamically loaded here by JS -->
+            </div>
+        </section>
+
+        <!-- NEW: Mobile Filters Bar with Toggle Button - MOVED HERE -->
+        <div class="mobile-filters-bar container">
+            <button id="mobileFilterToggle" class="btn btn-outline-secondary btn-block">
+                <i class="fas fa-filter"></i> <span data-lang-key="filters">Filters</span>
+            </button>
+        </div>
+
+        <div class="container jobs-content-area full-width-layout">
+            <!-- Mobile Filters Modal -->
+            <div class="mobile-filters-modal" id="mobileFiltersModal">
+                <div class="mobile-filters-modal-content">
+                    <div class="mobile-modal-header">
+                        <div class="modal-header-content">
+                            <i class="fas fa-filter modal-header-icon"></i>
+                            <h4 data-lang-key="filters">Filters</h4>
+                        </div>
+                        <button class="mobile-modal-close-btn" id="mobileModalCloseBtn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-filter-groups-container">
+                        <!-- NEW: Mobile Categories Dropdown -->
+                        <div class="filter-group">
+                            <label class="filter-label-with-icon">
+                                <i class="fas fa-tags filter-icon"></i>
+                                <span data-lang-key="all_categories">Categories</span>
+                            </label>
+                            <div class="custom-dropdown" id="categoryDropdownMobile">
+                                <button type="button" class="custom-dropdown-trigger form-control" id="categoryDropdownTriggerMobile">
+                                    <i class="fas fa-th-large filter-icon"></i>
+                                    <span data-lang-key="all_categories">Category</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="custom-dropdown-menu checkbox-list" id="categoryDropdownMenuMobile">
+                                    <!-- Category checkboxes will be populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        <!-- NEW: Mobile Professions Dropdown -->
+                        <div class="filter-group">
+                            <label class="filter-label-with-icon">
+                                <i class="fas fa-user-tie filter-icon"></i>
+                                <span data-lang-key="professions_label">Profession</span>
+                            </label>
+                            <div class="custom-dropdown" id="professionDropdownMobile">
+                                <button type="button" class="custom-dropdown-trigger form-control" id="professionDropdownTriggerMobile">
+                                    <i class="fas fa-user-tie filter-icon"></i>
+                                    <span data-lang-key="all_professions">Profession</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="custom-dropdown-menu checkbox-list" id="professionDropdownMenuMobile">
+                                    <!-- Profession checkboxes will be populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label for="jobSiteTypeFilterMobile" class="filter-label-with-icon">
+                                <i class="fas fa-laptop-house filter-icon"></i>
+                                <span data-lang-key="work_mode">Work Mode</span>
+                            </label>
+                            <div class="select-wrapper">
+                                <select id="jobSiteTypeFilterMobile" class="form-control">
+                                    <option value="" data-lang-key="work_mode">Work Mode</option>
+                                    <option value="On-site" data-lang-key="on_site">🏢 On-site</option>
+                                    <option value="Remote" data-lang-key="remote">🏠 Remote</option>
+                                    <option value="Hybrid" data-lang-key="hybrid">🌐 Hybrid</option>
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                        <!-- Job Type -->
+                        <div class="filter-group">
+                            <label class="filter-label-with-icon">
+                                <i class="fas fa-clock filter-icon"></i>
+                                <span data-lang-key="job_type_label">Job Type</span>
+                            </label>
+                            <div class="custom-dropdown" id="jobTypeDropdownMobile">
+                                <button type="button" class="custom-dropdown-trigger form-control" id="jobTypeDropdownTriggerMobile">
+                                    <i class="fas fa-clock filter-icon"></i>
+                                    <span data-lang-key="job_type_label">Job Type</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="custom-dropdown-menu checkbox-list" id="jobTypeDropdownMenuMobile">
+                                    <!-- Job type checkboxes will be populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label for="countryMobile" class="filter-label-with-icon">
+                                <i class="fas fa-globe filter-icon"></i>
+                                <span data-lang-key="country">Country</span>
+                            </label>
+                            <div class="select-wrapper">
+                                <select id="countryMobile" class="form-control">
+                                    <option value="" data-lang-key="all_countries">All Countries</option>
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                        <div class="filter-group" id="locationFilterGroupMobile">
+                            <label for="locationMobile" class="filter-label-with-icon">
+                                <i class="fas fa-map-marker-alt filter-icon"></i>
+                                <span data-lang-key="location">Location</span>
+                            </label>
+                            <div class="select-wrapper">
+                                <select id="locationMobile" class="form-control">
+                                    <option value="" data-lang-key="all_cities">All Cities</option>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label for="sortMobile" class="filter-label-with-icon">
+                                <i class="fas fa-sort filter-icon"></i>
+                                <span data-lang-key="sort_by">Sort By</span>
+                            </label>
+                            <div class="select-wrapper">
+                                <select id="sortMobile" class="form-control">
+                                    <option value="newest" data-lang-key="newest_first">🕒 Newest First</option>
+                                    <option value="budget-high" data-lang-key="budget_high_to_low">💰 Budget: High to Low</option>
+                                    <option value="budget-low" data-lang-key="budget_low_to_high">💵 Budget: Low to High</option>
+                                    <option value="deadline" data-lang-key="deadline_soonest">⏰ Deadline Soonest</option>
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mobile-modal-actions">
+                        <button id="mobileApplyFiltersBtn" class="btn btn-primary">
+                            <i class="fas fa-check"></i>
+                            <span data-lang-key="apply_filters">Apply Filters</span>
+                        </button>
+                        <button id="mobileResetFiltersBtn" class="btn btn-outline">
+                            <i class="fas fa-undo"></i>
+                            <span data-lang-key="clear_all">Clear All</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="job-list-content">
+                <section class="jobs-grid-section">
+                    <div class="jobs-grid" id="jobList">
+                        <!-- Job cards will be loaded here by JavaScript -->
+                    </div>
+                    <button id="loadMoreBtn" class="btn btn-primary load-more-btn btn-icon" style="display: none;" data-lang-key="load_more">
+                        <i class="fas fa-arrow-down"></i>
+                        <span class="button-text">Load More</span>
+                    </button>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <div id="footerPlaceholder"></div>
+
+    <script src="/auth.js"></script>
+    <script src="/components.js"></script>
+    <script src="/script.js" defer></script>
+    <script src="/js/jobs.js" defer></script>
+</body>
+</html>

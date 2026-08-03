@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag"> <!-- Ensure id="htmlTag" is here -->
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+     
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="employer_dashboard_title">Employer Dashboard - Hirly</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Core Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        'primary-hover': '#4f46e5',
+                        success: '#22c55e',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/styling/main.css">
+    <!-- Page-specific CSS (MUST be loaded after global-rtl.css) -->
+    <link rel="stylesheet" href="/styling/pages/page-hire-dashboard.css">
+    <link rel="stylesheet" href="/styling/components/modals.css"> <!-- Link to modals.css -->
+
+    <style>
+        /* Modal Transitions & Styles to match Job Dashboard */
+        .modal-overlay {
+            @apply fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300;
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in {
+            animation: scaleIn 0.3s ease-out forwards;
+        }
+
+        /* Ensure modal content looks consistent */
+         .modal-content {
+             @apply bg-white rounded-[2rem] shadow-2xl relative overflow-hidden;
+         }
+     </style>
+
+    <script src="/language/language.js"></script>
+    <script src="/language/hire-dashboard-translations.js"></script>
+    <script src="/language/categories-professions-translations.js"></script> <!-- NEW: Load categories/professions data -->
+    <script src="/language/cities-translations.js"></script> <!-- NEW: Load cities data -->
+</head>
+<body>
+    <!-- Header will be loaded by components.js -->
+    <div id="headerPlaceholder"></div>
+    <div id="pageLoadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-header">
+                <div class="user-avatar-large" id="sidebarUserAvatar">
+                    <img id="sidebarUserAvatarImg" src="" alt="User Avatar" style="display: none;">
+                    <span id="sidebarUserAvatarText">EM</span>
+                </div>
+                <span id="userNameSidebar" class="user-name-sidebar">Employer Name</span>
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="sidebarNavLinks">
+                    <li>
+                        <a href="#top" id="dashboardLink" class="scroll-link active" data-lang-key="dashboard_link">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </a>
+                    </li>
+                    <li id="personalDetailsLinkSidebar">
+                        <a href="#employerProfileSection" id="profileLink" class="scroll-link" data-lang-key="your_personal_profile">
+                            <i class="fas fa-id-card"></i> Profile
+                        </a>
+                    </li>
+                    <li id="companyDetailsLinkSidebar" style="display: none;">
+                        <a href="#companyDetailsSection" id="companyLink" class="scroll-link" data-lang-key="company_details">
+                            <i class="fas fa-building-user"></i> Company Details
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#postedJobsSection" id="postedJobsLink" class="scroll-link" data-lang-key="your_posted_jobs">
+                            <i class="fas fa-list-check"></i> Posted Jobs
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="#" id="logoutLinkSidebar" data-lang-key="logout">
+                            <i class="fas fa-right-from-bracket"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="dashboard-content" id="mainDashboardContent">
+            <h1 class="main-dashboard-title" data-lang-key="dashboard_welcome_simple">Welcome!</h1>
+
+            <section class="dashboard-section dashboard-stats-grid">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-briefcase"></i></div>
+                    <p class="number" id="totalPostedJobs">0</p>
+                    <p class="label" data-lang-key="jobs_posted">Jobs Posted</p>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-tasks"></i></div>
+                    <p class="number" id="activeJobs">0</p>
+                    <p class="label" data-lang-key="active_jobs">Active Jobs</p>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                    <p class="number" id="totalApplications">0</p>
+                    <p class="label" data-lang-key="total_applications">Total Applications</p>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-handshake"></i></div>
+                    <p class="number" id="hiredFreelancers">0</p>
+                    <p class="label" data-lang-key="hired_professionals">Hired Professionals</p>
+                </div>
+            </section>
+
+            <!-- Let's Get Started Section -->
+            <section class="dashboard-section text-center">
+                <h2 data-lang-key="lets_get_started">Let's Get Started</h2>
+                <div class="action-buttons-group">
+                    <!-- Changed to button element, JS will handle redirection -->
+                    <button id="postJobBtn" class="btn btn-primary btn-lg" data-lang-key="post_new_job_btn">
+                        <i class="fas fa-briefcase"></i> Post a New Job
+                    </button>
+                    <!-- Ensure this is a standard anchor tag -->
+                    <a href="/talent.html" id="browseProfessionsBtn" class="btn btn-outline-primary btn-lg" data-lang-key="browse_professions_btn">
+                        <i class="fas fa-search"></i> Browse Professions
+                    </a>
+                    <!-- NEW: Button to view public employer profile -->
+                    <a href="/employer/employer_profile.html" id="viewPublicProfileBtn" class="btn btn-outline-secondary btn-lg" data-lang-key="view_public_profile_btn">
+                        <i class="fas fa-user"></i> View My Public Profile
+                    </a>
+                </div>
+            </section>
+
+            <section class="dashboard-section" id="employerProfileSection">
+                <h2 data-lang-key="your_personal_profile">Your Personal Profile</h2>
+                <form id="employerProfileForm" class="profile-form">
+                    <div class="form-group">
+                        <label for="firstName" data-lang-key="first_name_label">First Name</label>
+                        <input type="text" id="firstName" name="firstName" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName" data-lang-key="last_name_label">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" data-lang-key="email_address_label">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" data-lang-key="phone_number_label">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="city" data-lang-key="city_label">City</label>
+                        <select id="city" name="city" class="form-control"></select>
+                    </div>
+
+
+                    <div class="form-actions full-width">
+                        <button type="button" id="editProfileBtn" class="btn btn-secondary btn-sm" data-lang-key="edit_profile_btn"><i class="fas fa-edit"></i> Edit Profile</button>
+                        <button type="submit" id="saveProfileBtn" class="btn btn-primary btn-sm" style="display: none;" data-lang-key="save_changes_btn"><i class="fas fa-save"></i> Save Changes</button>
+                        <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary btn-sm" style="display: none;" data-lang-key="cancel_btn">Cancel</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- NEW: Company Details Section - Initially hidden by JS -->
+            <section class="dashboard-section" id="companyDetailsSection" style="display: none;">
+                <h2 data-lang-key="company_details">Company Details</h2>
+                <form id="companyProfileForm" class="profile-form">
+                    <div class="form-group">
+                        <label for="companyName" data-lang-key="company_name_label">Company Name</label>
+                        <input type="text" id="companyName" name="companyName" class="form-control">
+                    </div>
+                    <!-- NEW: Company Email -->
+                    <div class="form-group">
+                        <label for="companyEmail" data-lang-key="company_email_label">Company Email</label>
+                        <input type="email" id="companyEmail" name="companyEmail" class="form-control">
+                    </div>
+                    <!-- NEW: Company Phone Number -->
+                    <div class="form-group">
+                        <label for="companyPhone" data-lang-key="company_phone_label">Company Phone Number</label>
+                        <input type="tel" id="companyPhone" name="companyPhone" class="form-control">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="address" data-lang-key="address_label">Address</label>
+                        <input type="text" id="address" name="address" class="form-control">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="companyDescription" data-lang-key="company_description_label">Company Description</label>
+                        <textarea id="companyDescription" name="companyDescription" class="form-control" rows="4" data-lang-key="company_description_placeholder_full" placeholder="Share your company's mission, values, and what makes it unique."></textarea>
+                    </div>
+                    <!-- NEW: Company Category Dropdown (Custom Implementation) -->
+                    <div class="form-group full-width">
+                        <label for="companyCategorySelect" data-lang-key="company_category_label">Company Industry/Category</label>
+                        <div class="custom-dropdown" id="companyCategoryDropdown">
+                            <button type="button" class="dropdown-toggle form-control" id="companyCategoryToggleButton" aria-haspopup="true" aria-expanded="false">
+                                <span id="companySelectedCategoryDisplay" data-lang-key="select_industry_category_display">Select Industry/Category</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                            <div class="dropdown-menu" id="companyCategoryList">
+                                <div class="dropdown-menu-checkboxes" id="companyCategoryCheckboxes">
+                                    <!-- Categories will be dynamically loaded here by JS -->
+                                </div>
+                                <div class="other-category-input-group" style="display:none;">
+                                    <input type="text" id="otherCompanyCategoryInput" class="form-control mt-2" placeholder="Enter custom category">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Hidden input to store the selected value for form submission -->
+                        <input type="hidden" id="companyCategoryHidden" name="companyCategory">
+                    </div>
+
+
+                    <!-- NEW: Company Logo Upload -->
+                    <div class="form-group full-width file-upload-group">
+                        <label data-lang-key="company_logo">Company Logo</label>
+                        <div class="company-logo-preview-container">
+                            <img id="companyLogoPreview" src="" alt="Company Logo Preview" style="display: none;">
+                            <div id="companyLogoPlaceholder" class="company-logo-placeholder" data-lang-key="no_logo">
+                                <i class="fas fa-image"></i>
+                                <span>No Logo</span>
+                            </div>
+                        </div>
+                        <div id="logoMessage" class="mt-2 form-message"></div>
+                        <div class="file-upload-container mt-2">
+                            <input type="file" id="companyLogoFile" class="file-input" accept=".jpg, .jpeg, .png, .gif, .svg">
+                            <label for="companyLogoFile" class="file-upload-label" style="display: none;" data-lang-key="choose_logo_btn">
+                                <i class="fas fa-upload"></i> Choose Logo
+                            </label>
+                            <span id="companyLogoFileNameDisplay" class="file-name-display" style="display: none;" data-lang-key="no_file_chosen">No file chosen</span>
+                            <button type="button" id="uploadCompanyLogoBtn" class="btn btn-primary btn-sm mt-2" style="display: none;" data-lang-key="upload_logo_btn"><i class="fas fa-cloud-upload-alt"></i> Upload Logo</button>
+                            <button type="button" id="removeCompanyLogoBtn" class="btn btn-danger btn-sm mt-2" style="display: none;" data-lang-key="remove_logo_btn"><i class="fas fa-trash-alt"></i> Remove Logo</button>
+                        </div>
+                    </div>
+
+                    <div class="form-actions full-width">
+                        <button type="button" id="editCompanyBtn" class="btn btn-secondary btn-sm" data-lang-key="edit_company_btn"><i class="fas fa-edit"></i> Edit Company</button>
+                        <button type="submit" id="saveCompanyBtn" class="btn btn-primary btn-sm" data-lang-key="save_company_changes_btn"><i class="fas fa-save"></i> Save Changes</button>
+                        <button type="button" id="cancelCompanyEditBtn" class="btn btn-outline-secondary btn-sm" style="display: none;" data-lang-key="cancel_company_edit_btn">Cancel</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="dashboard-section" id="postedJobsSection">
+                <h2 data-lang-key="your_posted_jobs">Your Posted Jobs</h2>
+                <div id="postedJobsList" class="posted-jobs-grid">
+                    <!-- Job cards will be dynamically loaded here by JavaScript -->
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+                <div id="noJobsMessage" class="empty-state" style="display: none;">
+                    <i class="fas fa-clipboard-list fa-3x"></i>
+                    <h3 data-lang-key="no_jobs_posted_yet">No Jobs Posted Yet</h3>
+                    <button id="postJobBtn2" class="btn btn-secondary mt-3" data-lang-key="post_job_now">Post a Job Now</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+
+
+
+    <!-- REDESIGNED: Introduction Modal v3 -->
+    <div id="introductionModal" class="modal-overlay">
+        <div class="modal-content intro-modal-v3">
+            <button class="modal-close-btn" id="skipIntroBtn" aria-label="Skip">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="intro-v3-wrapper">
+                <!-- Slides Container -->
+                <div class="intro-slides-container">
+                    <!-- Slide 1: Welcome -->
+                    <div id="introStep1" class="intro-slide active">
+                        <div class="slide-visual">
+                            <div class="visual-bg-gradient bg-welcome"></div>
+                            <i class="fas fa-hand-holding-heart slide-icon"></i>
+                        </div>
+                        <div class="slide-content">
+                            <h2 data-lang-key="intro_welcome_title">Welcome to the Hirly Family!</h2>
+                            <p data-lang-key="intro_welcome_desc">We're thrilled to have you with us. Let us show you the powerful features you can now access.</p>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: Modern Dashboard -->
+                    <div id="introStep2" class="intro-slide">
+                        <div class="slide-visual">
+                            <div class="visual-bg-gradient bg-blue"></div>
+                            <i class="fas fa-chart-line slide-icon"></i>
+                        </div>
+                        <div class="slide-content">
+                            <h2 data-lang-key="intro_slide1_title">Modern Advanced Dashboard</h2>
+                            <p data-lang-key="intro_slide1_desc">Take full control of your hiring process from one central hub. Track stats, manage postings, and monitor team growth with a sleek, intuitive interface.</p>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: Emailing System -->
+                    <div id="introStep3" class="intro-slide">
+                        <div class="slide-visual">
+                            <div class="visual-bg-gradient bg-purple"></div>
+                            <i class="fas fa-envelope-open-text slide-icon"></i>
+                        </div>
+                        <div class="slide-content">
+                            <h2 data-lang-key="intro_slide2_title">Seamless Emailing System</h2>
+                            <p data-lang-key="intro_slide2_desc">Connect with candidates directly through the platform. Send updates, schedule interviews, and keep communication flowing without ever leaving your dashboard.</p>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4: Personal Page -->
+                    <div id="introStep4" class="intro-slide">
+                        <div class="slide-visual">
+                            <div class="visual-bg-gradient bg-orange"></div>
+                            <i class="fas fa-id-card slide-icon"></i>
+                        </div>
+                        <div class="slide-content">
+                            <h2 data-lang-key="intro_slide3_title">Your Professional Brand</h2>
+                            <p data-lang-key="intro_slide3_desc">You now have a dedicated public employer profile. Showcase your company culture, list open roles, and build a brand that attracts top-tier talent.</p>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5: AI Dashboard -->
+                    <div id="introStep5" class="intro-slide">
+                        <div class="slide-visual">
+                            <div class="visual-bg-gradient bg-emerald"></div>
+                            <i class="fas fa-robot slide-icon"></i>
+                        </div>
+                        <div class="slide-content">
+                            <h2 data-lang-key="intro_slide4_title">Explore the AI Dashboard</h2>
+                            <p data-lang-key="intro_slide4_desc">Experience the power of AI in recruitment. Try our advanced tools for resume analysis and smart matching to supercharge your hiring efficiency.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Navigation -->
+                <div class="intro-v3-footer">
+                    <div class="v3-nav-dots">
+                        <span class="v3-dot active" data-step="1"></span>
+                        <span class="v3-dot" data-step="2"></span>
+                        <span class="v3-dot" data-step="3"></span>
+                        <span class="v3-dot" data-step="4"></span>
+                        <span class="v3-dot" data-step="5"></span>
+                    </div>
+                    
+                    <div class="v3-nav-actions">
+                        <button id="introPrevBtn" class="btn-v3-outline" style="visibility: hidden;">
+                            <i class="fas fa-arrow-left"></i> <span data-lang-key="prev_btn">Previous</span>
+                        </button>
+                        
+                        <div class="v3-action-right">
+                            <button id="introNextBtn" class="btn-v3-primary">
+                                <span data-lang-key="next_btn">Next</span> <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <button id="introFinishBtn" class="btn-v3-success" style="display: none;">
+                                <span data-lang-key="get_started_btn">Start Exploring</span> <i class="fas fa-rocket"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+
+    <!-- Reopen Job Modal with Deadline -->
+    <div id="reopenJobModal" class="modal-overlay">
+        <div class="modal-content small-modal">
+            <button class="modal-close-btn" id="closeReopenJobModalBtn" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header-icon-container">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <h2 id="reopenJobModalTitle" data-lang-key="reopen_job_title">Reopen Job</h2>
+            <p id="reopenJobModalMessage" data-lang-key="reopen_job_message">Are you sure you want to reopen this job? It will become visible for new applications.</p>
+            
+            <!-- Deadline input section (shown only when deadline has passed) -->
+            <div id="deadlineInputSection" class="form-group mt-3" style="display: none;">
+                <label for="newJobDeadline" class="form-label" data-lang-key="new_deadline_label">New Deadline</label>
+                <input type="date" id="newJobDeadline" class="form-control" data-lang-key="select_new_deadline" placeholder="Select a new deadline">
+                <div id="deadlineError" class="error-message" style="display: none;"></div>
+            </div>
+            
+            <div class="modal-actions mt-4">
+                <button type="button" id="cancelReopenJobBtn" class="btn btn-outline-secondary" data-lang-key="cancel_btn">Cancel</button>
+                <button type="button" id="confirmReopenJobBtn" class="btn btn-primary" data-lang-key="yes_reopen">Yes, Reopen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Job Modal -->
+    <div id="shareJobModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <h2 data-lang-key="share_job_title" class="text-2xl font-bold text-slate-900">Share Job</h2>
+                <button id="closeShareModal" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <p data-lang-key="share_job_subtitle" class="text-slate-500 mb-8">Share this job link or QR code with potential candidates.</p>
+            
+            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 mb-8">
+                <div id="shareQrCode" class="bg-white p-3 rounded-xl inline-block shadow-sm border border-slate-200 mb-4"></div>
+                
+                <button id="downloadShareQrBtn" class="flex items-center justify-center gap-2 w-full mb-6 py-2 text-sm font-medium text-primary hover:text-primary-hover transition-colors">
+                    <i class="fas fa-download"></i>
+                    <span data-lang-key="download_qr_code">Download QR Code</span>
+                </button>
+
+                <div class="text-left rtl:text-right">
+                    <label data-lang-key="share_job_link" class="block text-sm font-semibold text-slate-700 mb-2">Job Link</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="shareJobLink" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" readonly>
+                        <button id="copyShareLinkBtn" class="bg-primary text-white px-4 py-2 rounded-xl hover:bg-primary-hover transition-all">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="closeShareModalBtn" class="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-all" data-lang-key="close_btn">Close</button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutConfirmModal" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-content max-w-md animate-scale-in">
+            <div class="p-8">
+                <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mx-auto mb-6">
+                    <i class="fas fa-sign-out-alt text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-slate-900 text-center mb-2" data-lang-key="logout_confirm_title">Sign Out?</h2>
+                <p class="text-slate-500 text-center mb-8" data-lang-key="logout_confirm_text">Are you sure you want to sign out of your account?</p>
+                
+                <div class="flex gap-4">
+                    <button id="cancelLogoutBtn" class="flex-1 px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all" data-lang-key="cancel_btn">
+                        Cancel
+                    </button>
+                    <button id="confirmLogoutBtn" class="flex-1 px-6 py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-2xl shadow-lg shadow-rose-500/20 transition-all" data-lang-key="logout_btn">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/auth.js?v=2" defer></script> <!-- Auth.js must load before components.js -->
+    <script src="/components.js?v=2" defer></script>
+    <script src="/js/hire_dashboard.js?v=2" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+</body>
+</html>

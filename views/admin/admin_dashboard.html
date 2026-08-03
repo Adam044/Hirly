@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+     
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Hirly</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="/language/language.js"></script>
+    <script type="module" src="/language/categories-professions-translations.js"></script>
+    <script type="module" src="/language/cities-translations.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#6366f1', // Indigo-500
+                        secondary: '#4f46e5', // Indigo-600
+                        accent: '#a5b4fc', // Indigo-300
+                        dark: '#1e293b', // Slate-800
+                        light: '#f8fafc', // Slate-50
+                        info: '#3b82f6', // Blue-500
+                        success: '#22c55e', // Green-500
+                        warning: '#f97316', // Orange-500
+                        danger: '#ef4444', // Red-500
+                        'dark-bg': '#0f172a', // Slate-900
+                        'card-bg': '#1e293b', // Slate-800
+                        'nav-bg': '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+</head>
+<body class="bg-dark-bg text-gray-100">
+    <div class="dashboard-wrapper flex min-h-screen">
+        <aside id="sidebar" class="w-64 bg-nav-bg shadow-lg p-4 flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div class="sidebar-header text-center mb-8">
+                <h3 class="text-3xl font-bold text-primary">Admin Dashboard</h3>
+                <p class="text-sm text-gray-400">Hirly</p>
+                <p class="text-xs text-gray-500 mt-2 break-all">User ID: <span id="userIdDisplay">N/A</span></p>
+            </div>
+            <nav class="sidebar-nav flex-grow">
+                <ul>
+                    <li>
+                        <a href="#overviewSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="overviewLink">
+                            <i class="fas fa-tachometer-alt mr-3 w-5"></i> <span>Overview</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#freelancersSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="freelancersLink">
+                            <i class="fas fa-user-tie mr-3 w-5"></i> <span>Freelancers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#employersSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="employersLink">
+                            <i class="fas fa-building mr-3 w-5"></i> <span>Employers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#jobsSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="jobsLink">
+                            <i class="fas fa-briefcase mr-3 w-5"></i> <span>Jobs</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#reviewsSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="reviewsLink">
+                            <i class="fas fa-star mr-3 w-5"></i> <span>Reviews</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#jobAlertsSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="jobAlertsLink">
+                            <i class="fas fa-bullhorn mr-3 w-5"></i> <span>Job Alerts</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#jobApplicationNotificationsSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="jobApplicationNotificationsLink">
+                            <i class="fas fa-bell mr-3 w-5"></i> <span>Job Application Notifications</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#aggregatedJobsSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="aggregatedJobsLink">
+                            <i class="fas fa-database mr-3 w-5"></i> <span>Aggregated Jobs</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#jobSourcesSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="jobSourcesLink">
+                            <i class="fas fa-server mr-3 w-5"></i> <span>Intelligence Sources</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#emailCampaignsSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="emailCampaignsLink">
+                            <i class="fas fa-mail-bulk mr-3 w-5"></i> <span>Email Campaigns</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/auto-email" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="autoEmailLink">
+                            <i class="fas fa-robot mr-3 w-5"></i> <span>Auto Email System</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/job-aggregator" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="jobAggregatorLink">
+                            <i class="fas fa-project-diagram mr-3 w-5"></i> <span>Job Aggregator</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer mt-auto pt-4 border-t border-slate-700">
+                <button id="logoutLinkSidebar" class="block w-full text-left py-3 px-4 text-red-400 hover:bg-slate-700 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt mr-3 w-5"></i> <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-grow p-6 md:p-8 overflow-y-auto">
+            <button id="sidebarToggle" class="fixed top-4 left-4 z-50 text-white bg-dark p-3 rounded-full shadow-lg md:hidden">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-100">Admin Dashboard</h1>
+                    <p class="text-gray-400 mt-1" id="currentDateDisplay"></p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="bg-card-bg px-4 py-2 rounded-lg border border-slate-700 flex items-center gap-3">
+                        <div class="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Logged in as</p>
+                            <p class="text-sm font-medium text-white" id="adminEmailDisplay">Admin</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section id="overviewSection" class="dashboard-section mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-primary">Overview</h2>
+                        <p class="text-gray-400 text-sm">System performance and user metrics</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a href="/admin/live-view" class="text-sm bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all px-4 py-2 rounded-lg border border-indigo-500/20 flex items-center gap-2 font-bold">
+                            <i class="fas fa-satellite-dish animate-pulse"></i> Open Live View
+                        </a>
+                        <button id="refreshStatsBtn" class="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-700 hover:border-primary">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                    </div>
+                </div>
+                <div id="dashboardStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> <span>Loading stats...</span></div>
+                </div>
+            </section>
+
+            <!-- Email Load Balancer Stats -->
+            <section id="emailLoadBalancerSection" class="dashboard-section mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-semibold text-primary">Email Load Balancer (Last 24h)</h2>
+                </div>
+                <div id="emailStatsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-card-bg p-6 rounded-xl border border-slate-700 shadow-lg">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary text-xl">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Primary Sender</p>
+                                <p class="text-sm font-medium text-white" id="sender1Email">Loading...</p>
+                            </div>
+                        </div>
+                        <div class="flex items-end justify-between">
+                            <div>
+                                <h3 class="text-3xl font-bold text-white mb-1" id="sender1Count">0</h3>
+                                <p class="text-xs text-gray-400">Emails sent in last 24h</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Daily Capacity</p>
+                                <div class="w-32 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div id="sender1Progress" class="h-full bg-primary transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-1"><span id="sender1Percent">0</span>% of 500 limit</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-card-bg p-6 rounded-xl border border-slate-700 shadow-lg">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-indigo-500/20 rounded-full flex items-center justify-center text-indigo-400 text-xl">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Auto System Sender</p>
+                                <p class="text-sm font-medium text-white" id="sender2Email">Loading...</p>
+                            </div>
+                        </div>
+                        <div class="flex items-end justify-between">
+                            <div>
+                                <h3 class="text-3xl font-bold text-white mb-1" id="sender2Count">0</h3>
+                                <p class="text-xs text-gray-400">Emails sent in last 24h</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Daily Capacity</p>
+                                <div class="w-32 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div id="sender2Progress" class="h-full bg-indigo-500 transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-1"><span id="sender2Percent">0</span>% of 500 limit</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="freelancersSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Freelancer Management</h2>
+                        <p class="text-gray-400 text-sm">Review and manage professional profiles</p>
+                    </div>
+                    <button id="clearFreelancerFilters" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-primary transition-colors flex items-center gap-2">
+                        <i class="fas fa-undo-alt"></i> Reset Filters
+                    </button>
+                </div>
+
+                <div class="bg-card-bg p-6 rounded-2xl border border-slate-700/50 shadow-xl mb-8 space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                            <input type="text" id="freelancerSearchInput" class="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 transition-all outline-none" placeholder="Search by name, email or profession...">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div id="freelancerBulkActions" class="hidden flex-grow flex items-center justify-between bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl">
+                                <span class="text-xs font-bold text-primary"><span id="selectedFreelancersCount">0</span> Selected</span>
+                                <button id="bulkVerifyFreelancersBtn" class="bg-primary text-white px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-primary-dark transition-all">
+                                    Verify All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-4 pt-4 border-t border-slate-700/30">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Verification Status</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 freelancer-id-filter-btn active" data-filter-status="All">All</button>
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 freelancer-id-filter-btn" data-filter-status="Pending Verification">Pending</button>
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 freelancer-id-filter-btn" data-filter-status="Verified">Verified</button>
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 freelancer-id-filter-btn" data-filter-status="Rejected">Rejected</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Category</label>
+                            <select id="freelancerCategoryFilter" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs font-bold text-gray-300 outline-none focus:border-primary transition-colors min-w-[160px]">
+                                <option value="all">All Categories</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">City</label>
+                            <select id="freelancerCityFilter" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs font-bold text-gray-300 outline-none focus:border-primary transition-colors min-w-[140px]">
+                                <option value="all">All Cities</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card-bg rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="bg-slate-800/30 border-b border-slate-700">
+                                    <th class="py-4 px-4 text-center w-12">
+                                        <input type="checkbox" id="selectAllFreelancers" class="h-4 w-4 text-primary bg-slate-800 border-slate-700 rounded focus:ring-primary cursor-pointer">
+                                    </th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Freelancer</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Contact Info</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Profession</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                                    <th class="py-4 px-4 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="freelancersTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination Load More -->
+                    <div id="freelancerLoadMoreContainer" class="p-6 border-t border-slate-700/50 text-center hidden">
+                        <button id="loadMoreFreelancersBtn" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all border border-slate-700">
+                            Load More Freelancers
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="employersSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Employer Management</h2>
+                        <p class="text-gray-400 text-sm">Monitor and verify company accounts</p>
+                    </div>
+                    <button id="clearEmployerFilters" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-primary transition-colors flex items-center gap-2">
+                        <i class="fas fa-undo-alt"></i> Reset Filters
+                    </button>
+                </div>
+
+                <div class="bg-card-bg p-6 rounded-2xl border border-slate-700/50 shadow-xl mb-8 space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                            <input type="text" id="employerSearchInput" class="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 transition-all outline-none" placeholder="Search by company, name or email...">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div id="employerBulkActions" class="hidden flex-grow flex items-center justify-between bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl">
+                                <span class="text-xs font-bold text-primary"><span id="selectedEmployersCount">0</span> Selected</span>
+                                <button id="bulkVerifyEmployersBtn" class="bg-primary text-white px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-primary-dark transition-all">
+                                    Verify All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-8 pt-4 border-t border-slate-700/30">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Verification</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 employer-id-filter-btn active" data-filter-status="All">All</button>
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 employer-id-filter-btn" data-filter-status="Pending Verification">Pending</button>
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 employer-id-filter-btn" data-filter-status="Verified">Verified</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Account Type</label>
+                            <div class="flex gap-2">
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 employer-type-filter-btn active" data-type-filter="all">All</button>
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 employer-type-filter-btn" data-type-filter="company">Company</button>
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 employer-type-filter-btn" data-type-filter="individual">Individual</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Logo Filter</label>
+                            <div class="flex gap-2">
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 employer-logo-filter-btn active" data-logo-filter="all">All</button>
+                                <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 employer-logo-filter-btn" data-logo-filter="has-logo">Has Logo</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">City</label>
+                            <select id="employerCityFilter" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs font-bold text-gray-300 outline-none focus:border-primary transition-colors min-w-[140px]">
+                                <option value="all">All Cities</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card-bg rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="bg-slate-800/30 border-b border-slate-700">
+                                    <th class="py-4 px-4 text-center w-12">
+                                        <input type="checkbox" id="selectAllEmployers" class="h-4 w-4 text-primary bg-slate-800 border-slate-700 rounded focus:ring-primary cursor-pointer">
+                                    </th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Company / Employer</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Contact</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                                    <th class="py-4 px-4 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employersTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="employerLoadMoreContainer" class="p-6 border-t border-slate-700/50 text-center hidden">
+                        <button id="loadMoreEmployersBtn" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all border border-slate-700">
+                            Load More Employers
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="jobsSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-semibold text-primary">Job Management</h2>
+                    <button id="clearJobFilters" class="text-sm text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-times-circle mr-1"></i> Clear Filters
+                    </button>
+                </div>
+                <div class="bg-card-bg p-4 rounded-xl shadow-md mb-6">
+                    <div class="flex flex-col md:flex-row gap-4 items-center">
+                        <div class="relative flex-grow">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                            <input type="text" id="jobSearchInput" class="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 transition-all" placeholder="Search by job title or employer company name...">
+                        </div>
+                        <div id="jobBulkActions" class="hidden flex items-center gap-3">
+                            <span class="text-sm text-gray-400"><span id="selectedJobsCount">0</span> selected</span>
+                            <button id="bulkDeleteJobsBtn" class="bg-danger/20 text-danger hover:bg-danger hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
+                                <i class="fas fa-trash"></i> Bulk Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto bg-card-bg rounded-lg shadow-md p-4">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-slate-700">
+                                <th class="py-3 px-4 text-center">
+                                    <input type="checkbox" id="selectAllJobs" class="h-4 w-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-primary">
+                                </th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">ID</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Title</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Employer</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Status</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Created At</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobsTableBody">
+                            <tr><td colspan="7" class="text-center py-4 loading-spinner"><i class="fas fa-spinner fa-spin"></i> <span>Loading jobs...</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noJobsFound" class="empty-state hidden mt-4 text-gray-400 text-center">
+                    <i class="fas fa-briefcase-slash text-4xl mb-2"></i>
+                    <p>No jobs found matching your search.</p>
+                </div>
+            </section>
+
+            <section id="reviewsSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-semibold text-primary">Review Management</h2>
+                    <button id="clearReviewFilters" class="text-sm text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-times-circle mr-1"></i> Clear Filters
+                    </button>
+                </div>
+                <div class="overflow-x-auto bg-card-bg rounded-lg shadow-md p-4">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-slate-700">
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">ID</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Job Title</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Reviewer</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Reviewee</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Rating</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Comment</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Created At</th>
+                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviewsTableBody">
+                            <tr><td colspan="8" class="text-center py-4 loading-spinner"><i class="fas fa-spinner fa-spin"></i> <span>Loading reviews...</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noReviewsFound" class="empty-state hidden mt-4 text-gray-400 text-center">
+                    <i class="fas fa-star-half-alt text-4xl mb-2"></i>
+                    <p>No reviews found.</p>
+                </div>
+            </section>
+
+
+
+            <section id="jobAlertsSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-semibold text-primary">Manual Job Alerts</h2>
+                    <button id="clearJobAlertFilters" class="text-sm text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-times-circle mr-1"></i> Clear Filters
+                    </button>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-card-bg rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-200 mb-4">Job Selection</h3>
+                        <div class="flex flex-wrap items-center gap-4 mb-4">
+                            <input type="text" id="jobAlertSearchInput" class="flex-grow p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400" placeholder="Search jobs...">
+                            <div class="flex-grow"></div>
+                            <select id="jobFilterCity" class="p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="all">All Cities</option>
+                            </select>
+                            <select id="jobFilterCategory" class="p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="all">All Categories</option>
+                            </select>
+                             <select id="jobFilterSentStatus" class="p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="all">All Statuses</option>
+                                <option value="unsent">Unsent Only</option>
+                                <option value="sent">Sent Only</option>
+                            </select>
+                            <div class="flex items-center gap-2 text-gray-300">
+                                <input type="checkbox" id="jobAlertSelectAll" class="h-4 w-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-primary">
+                                <label for="jobAlertSelectAll">Select All</label>
+                            </div>
+                        </div>
+                        <div id="jobAlertsList" class="overflow-x-auto overflow-y-auto max-h-96">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-slate-700">
+                                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-400"></th>
+                                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-400">Title</th>
+                                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-400">Employer</th>
+                                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-400">Category</th>
+                                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-400">City</th>
+                                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-400">Sent Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jobAlertsTableBody">
+                                    <tr><td colspan="6" class="text-center py-4 loading-spinner"><i class="fas fa-spinner fa-spin"></i> <span>Loading jobs...</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="noJobAlertsFound" class="empty-state hidden mt-4 text-gray-400 text-center">
+                            <i class="fas fa-briefcase-slash text-4xl mb-2"></i>
+                            <p>No jobs found matching your criteria.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-card-bg rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-200 mb-4">Recipient Filters</h3>
+                        <div class="flex flex-wrap items-center gap-4 mb-4">
+                            <label class="inline-flex items-center text-gray-300">
+                                <input type="radio" name="jobAlertRecipientType" value="filtered" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary" checked>
+                                <span class="ml-2">Filter Freelancers</span>
+                            </label>
+                            <label class="inline-flex items-center text-gray-300">
+                                <input type="radio" name="jobAlertRecipientType" value="custom" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary">
+                                <span class="ml-2">Custom Email List</span>
+                            </label>
+                        </div>
+
+                        <div id="filteredJobAlertRecipientsSection">
+                            <p class="text-gray-400 mb-6">Use these filters to target freelancers who will receive the selected job alerts.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="form-group">
+                                    <label for="recipientFilterCity" class="block text-gray-300 text-sm font-bold mb-2">City</label>
+                                    <select id="recipientFilterCity" class="w-full p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="all">All Cities</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="recipientFilterCategory" class="block text-gray-300 text-sm font-bold mb-2">Category</label>
+                                    <select id="recipientFilterCategory" class="w-full p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="all">All Categories</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="customJobAlertRecipientsSection" class="hidden">
+                             <label for="customJobAlertEmails" class="block text-gray-300 text-sm font-bold mb-2">
+                                <i class="fas fa-envelope-open-text"></i> Custom Recipient Emails
+                            </label>
+                            <textarea id="customJobAlertEmails" class="w-full p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400" rows="5" placeholder="Enter emails, one per line or separated by commas"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="bg-card-bg rounded-lg shadow-md p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-gray-200">Alert Preview</h3>
+                            <button type="button" id="sendAlertsBtn" class="bg-primary text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 hover:bg-secondary">
+                                <i class="fas fa-paper-plane mr-2"></i> <span>Send Job Alerts</span>
+                            </button>
+                        </div>
+                        <p class="text-gray-400 mb-4">The email content is automatically generated based on the selected jobs. This is what your recipients will see.</p>
+                        <div id="emailPreviewContainer" class="bg-slate-800 p-4 rounded-lg border border-slate-700 max-h-96 overflow-y-auto">
+                            <p class="text-gray-400"><em>Select a job to see preview.</em></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Job Application Notifications Section -->
+            <section id="jobApplicationNotificationsSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-semibold text-primary">Job Application Notifications</h2>
+                    <button id="clearJobAppNotifFilters" class="text-sm text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-times-circle mr-1"></i> Clear Filters
+                    </button>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-card-bg rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-200 mb-4">Jobs with Applications</h3>
+                        <div class="flex flex-wrap items-center gap-4 mb-4">
+                            <input type="text" id="jobAppNotificationSearchInput" class="flex-grow p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400" placeholder="Search jobs...">
+                            <div class="flex-grow"></div>
+                            <select id="jobAppNotificationFilterCity" class="p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="all">All Cities</option>
+                            </select>
+                            <select id="jobAppNotificationFilterCategory" class="p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="all">All Categories</option>
+                            </select>
+                            <select id="jobAppNotificationFilterNotified" class="p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="all">All Jobs</option>
+                                <option value="not_notified">Not Notified</option>
+                                <option value="notified">Already Notified</option>
+                            </select>
+                            <div class="flex items-center gap-2 text-gray-300">
+                                <input type="checkbox" id="jobAppNotificationSelectAll" class="h-4 w-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-primary">
+                                <label for="jobAppNotificationSelectAll">Select All</label>
+                            </div>
+                        </div>
+                        <div id="jobAppNotificationsList" class="overflow-x-auto overflow-y-auto max-h-96">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b border-slate-700">
+                                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-400"></th>
+                                        <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Job & Employer</th>
+                                        <th class="py-3 px-4 text-left text-sm font-semibold text-gray-400">Details</th>
+                                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-400">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jobAppNotificationsTableBody">
+                                    <tr><td colspan="4" class="text-center py-4 loading-spinner"><i class="fas fa-spinner fa-spin"></i> <span>Loading jobs with applications...</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="noJobAppNotificationsFound" class="empty-state hidden mt-4 text-gray-400 text-center">
+                            <i class="fas fa-briefcase-slash text-4xl mb-2"></i>
+                            <p>No jobs with applications found matching your criteria.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-card-bg rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-200 mb-4">Send Notifications</h3>
+                        <div class="space-y-4">
+                            <div class="bg-slate-700 rounded-lg p-4">
+                                <h4 class="text-lg font-medium text-gray-200 mb-2">Selected Jobs Summary</h4>
+                                <div id="selectedJobsSummary" class="text-gray-300">
+                                    <p>No jobs selected</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <button type="button" id="sendJobAppNotificationsBtn" class="bg-primary hover:bg-secondary text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i class="fas fa-paper-plane mr-2"></i>
+                                    Send Application Notifications
+                                </button>
+                                <div id="jobAppNotificationProgress" class="hidden">
+                                    <div class="flex items-center gap-2 text-gray-300">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <span>Sending notifications...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Aggregated Jobs Section -->
+            <section id="aggregatedJobsSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Aggregated Jobs Management</h2>
+                        <p class="text-gray-400 text-sm">Manage logos for external jobs</p>
+                    </div>
+                    <button id="clearAggregatedJobFilters" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-primary transition-colors flex items-center gap-2">
+                        <i class="fas fa-undo-alt"></i> Reset Filters
+                    </button>
+                </div>
+
+                <div class="bg-card-bg p-6 rounded-2xl border border-slate-700/50 shadow-xl mb-8 space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                            <input type="text" id="aggregatedJobSearchInput" class="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 transition-all outline-none" placeholder="Search by title or company...">
+                        </div>
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div class="space-y-1 flex-grow">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Logo Status</label>
+                                <div class="flex gap-2">
+                                    <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 aggregated-logo-filter-btn active" data-logo-status="all">All</button>
+                                    <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 aggregated-logo-filter-btn" data-logo-status="no-logo">No Logo</button>
+                                    <button class="text-xs font-bold py-2 px-4 rounded-xl transition-all duration-200 border border-slate-700 text-gray-400 hover:bg-slate-700 aggregated-logo-filter-btn" data-logo-status="has-logo">Has Logo</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card-bg rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="bg-slate-800/30 border-b border-slate-700">
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Job & Company</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Logo</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Location</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Source</th>
+                                    <th class="py-4 px-4 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="aggregatedJobsTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="aggregatedJobLoadMoreContainer" class="p-6 border-t border-slate-700/50 text-center hidden">
+                        <button id="loadMoreAggregatedJobsBtn" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all border border-slate-700">
+                            Load More Jobs
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Job Sources (Intelligence) Section -->
+            <section id="jobSourcesSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Intelligence Sources</h2>
+                        <p class="text-gray-400 text-sm">Manage company career portals and local scrapers</p>
+                    </div>
+                    <button id="addNewSourceBtn" class="bg-primary hover:bg-secondary text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
+                        <i class="fas fa-plus"></i> Add New Source
+                    </button>
+                </div>
+
+                <div class="bg-card-bg rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="bg-slate-800/30 border-b border-slate-700">
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Source Name</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Type</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Base URL</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Last Sync</th>
+                                    <th class="py-4 px-4 text-left text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                                    <th class="py-4 px-4 text-right text-[10px] font-bold text-gray-500 uppercase tracking-widest">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jobSourcesTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="emailCampaignsSection" class="dashboard-section hidden mb-8">
+                <h2 class="text-2xl font-semibold text-primary mb-6">Email Campaigns</h2>
+                <form id="emailCampaignForm" class="space-y-4 bg-card-bg rounded-lg shadow-md p-6">
+                    <div class="form-group">
+                        <label for="emailTemplateSelect" class="block text-gray-300 text-sm font-bold mb-2">Campaign Templates</label>
+                        <select id="emailTemplateSelect" class="w-full p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="custom">Custom Email</option>
+                            <option value="id-verification">ID Verification Reminder</option>
+                            <option value="email-verification">Email Verification Reminder</option>
+                            <option value="general-welcome">General Welcome</option>
+                            <option value="freelancer-welcome">Welcome Freelancer</option>
+    
+                            <option value="employer-marketing">Employer Marketing Campaign</option>
+                            <option value="employer-engagement">Employer Engagement Campaign</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="emailSubject" class="block text-gray-300 text-sm font-bold mb-2">Subject</label>
+                        <input type="text" id="emailSubject" class="w-full p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400" required placeholder="Enter email subject">
+                    </div>
+                    <div class="form-group">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-gray-300 text-sm font-bold">Message</label>
+                            <span id="emailMessageCharCount" class="text-xs text-gray-500">0 characters</span>
+                        </div>
+                        <textarea id="emailMessage" class="w-full p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400" rows="8" required placeholder="Enter your email message (HTML allowed)"></textarea>
+                    </div>
+                    
+                    <div>
+                        <h4 class="block text-gray-300 text-sm font-bold mb-2 flex items-center gap-2">
+                             <i class="fas fa-filter"></i> Select Recipient Type
+                        </h4>
+                        <div class="flex flex-wrap gap-4 mb-4">
+                            <label class="inline-flex items-center text-gray-300">
+                                <input type="radio" name="recipientType" value="filtered" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary" checked>
+                                <span class="ml-2">Filter Users</span>
+                            </label>
+                            <label class="inline-flex items-center text-gray-300">
+                                <input type="radio" name="recipientType" value="custom" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary">
+                                <span class="ml-2">Custom Email List</span>
+                            </label>
+                        </div>
+
+                        <div id="filteredRecipientsSection">
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-gray-300 text-sm font-bold mb-2 flex items-center gap-2"><i class="fas fa-user-circle"></i> Recipients by User Type</label>
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="userTypeFilter" value="all" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary" checked>
+                                            <span class="ml-2">All Users</span>
+                                        </label>
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="userTypeFilter" value="freelancer" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary">
+                                            <span class="ml-2">Freelancers</span>
+                                        </label>
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="userTypeFilter" value="employer" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary">
+                                            <span class="ml-2">Employers</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-gray-300 text-sm font-bold mb-2 flex items-center gap-2"><i class="fas fa-id-card"></i> Recipients by ID Verification</label>
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="idVerificationFilter" value="all" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary" checked>
+                                            <span class="ml-2">All</span>
+                                        </label>
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="idVerificationFilter" value="Verified" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary">
+                                            <span class="ml-2">Verified</span>
+                                        </label>
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="idVerificationFilter" value="Not Verified" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary">
+                                            <span class="ml-2">Not Verified</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-gray-300 text-sm font-bold mb-2 flex items-center gap-2"><i class="fas fa-at"></i> Recipients by Email Verification</label>
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="emailVerificationFilter" value="all" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary" checked>
+                                            <span class="ml-2">All</span>
+                                        </label>
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="emailVerificationFilter" value="true" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary">
+                                            <span class="ml-2">Verified</span>
+                                        </label>
+                                        <label class="inline-flex items-center text-gray-300">
+                                            <input type="radio" name="emailVerificationFilter" value="false" class="h-4 w-4 text-primary bg-gray-700 border-gray-600 focus:ring-primary">
+                                            <span class="ml-2">Not Verified</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div id="customRecipientsSection" class="hidden">
+                            <label for="customRecipientEmails" class="block text-gray-300 text-sm font-bold mb-2">
+                                <i class="fas fa-envelope-open-text"></i> Custom Recipient Emails
+                            </label>
+                            <textarea id="customRecipientEmails" class="w-full p-3 bg-slate-700 border-2 border-slate-600 rounded-lg text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400" rows="5" placeholder="Enter emails, one per line or separated by commas"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" id="sendTestCampaignBtn" class="bg-info text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 hover:bg-blue-600 flex-1">
+                            <i class="fas fa-vial mr-2"></i> <span>Send Test Email</span>
+                        </button>
+                        <button type="button" id="confirmSendCampaignBtn" class="bg-primary text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 hover:bg-secondary flex-1">
+                            <i class="fas fa-paper-plane mr-2"></i> <span>Send Campaign</span>
+                            <span class="loading-spinner ml-2" id="campaignSpinner" style="display: none;"></span>
+                        </button>
+
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+
+
+
+
+    <div id="jobAlertConfirmModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-2xl">
+            <button class="modal-close-btn" id="closeJobAlertConfirmModalBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-semibold mb-4 text-primary">Confirm Job Alert Send</h3>
+            <p class="mb-4">You are about to send a job alert to the following recipients:</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold mb-2">Recipients (<span id="recipientCount">0</span>)</h4>
+                    <div id="recipientListContainer" class="bg-slate-800 p-3 rounded-lg max-h-40 overflow-y-auto border border-slate-700">
+                        <ul id="recipientList">
+                            <li class="text-gray-400">Loading recipients...</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2">Email Preview</h4>
+                    <div id="finalEmailPreview" class="bg-slate-800 p-3 rounded-lg max-h-40 overflow-y-auto border border-slate-700">
+                        <p class="text-gray-400">Loading preview...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button id="confirmSendAlertsBtn" class="bg-primary text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 hover:bg-secondary">
+                    <i class="fas fa-paper-plane mr-2"></i> <span>Send Alerts</span>
+                    <span class="loading-spinner ml-2" id="alertSpinner" style="display: none;"></span>
+                </button>
+                <button id="cancelSendAlertsBtn" class="bg-transparent border-2 border-primary text-primary font-medium py-2 px-4 rounded-lg transition-colors duration-200 hover:bg-primary hover:text-white">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="logoUploadModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-md">
+            <button class="modal-close-btn" id="closeLogoUploadModalBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-primary">
+                <i class="fas fa-image"></i>
+                <span>Upload Company Logo</span>
+            </h3>
+            <p class="text-sm text-gray-400 mb-6">Updating logo for: <strong id="logoModalCompanyName" class="text-white"></strong></p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-300 mb-3">Select Image</label>
+                <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-xl p-8 hover:border-primary transition-colors bg-slate-800/50 cursor-pointer group" onclick="document.getElementById('logoFileInput').click()">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-500 mb-3 group-hover:text-primary transition-colors"></i>
+                    <span class="text-sm text-gray-400">Click to browse or drag and drop</span>
+                    <span class="text-xs text-gray-500 mt-1">JPG, PNG or WEBP (Max 2MB)</span>
+                    <input type="file" id="logoFileInput" class="hidden" accept="image/*">
+                </div>
+            </div>
+
+            <div id="logoPreview" class="mb-6 hidden">
+                <label class="block text-sm font-medium text-gray-300 mb-3">Preview</label>
+                <div class="flex justify-center p-4 bg-slate-800 rounded-xl border border-slate-700">
+                    <img id="logoPreviewImage" src="" alt="Logo Preview" class="w-32 h-32 object-contain rounded-lg">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button id="cancelUploadLogoBtn" class="px-5 py-2 text-gray-400 hover:text-white transition-colors font-medium">Cancel</button>
+                <button id="confirmUploadLogoBtn" class="px-6 py-2 bg-primary hover:bg-secondary text-white rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20" disabled>
+                    Upload
+                    <span class="loading-spinner ml-2" id="uploadLogoSpinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="emailCampaignProgressModal" class="modal-overlay hidden">
+        <div class="modal-content w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-4 text-primary">Sending Email Campaign</h3>
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-gray-400 mb-1">
+                    <span id="campaignProgressStatus">Initializing...</span>
+                    <span id="campaignProgressStats">0 / 0</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                    <div id="campaignProgressBar" class="bg-primary h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+            <div id="campaignResult" class="hidden mb-4 p-3 rounded-lg bg-slate-800 border border-slate-700">
+                <p id="campaignResultMessage" class="text-sm"></p>
+            </div>
+            <div class="flex justify-end gap-2">
+                 <button id="closeCampaignProgressBtn" class="bg-primary text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 hover:bg-secondary hidden">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="aggregatedJobLogoModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-lg">
+            <button class="modal-close-btn" id="closeAggregatedJobLogoModalBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-primary">
+                <i class="fas fa-edit"></i>
+                <span>Update Job Logo</span>
+            </h3>
+            <p class="text-sm text-gray-400 mb-6">Updating logo for: <strong id="aggregatedLogoModalCompanyName" class="text-white"></strong></p>
+            
+            <div class="space-y-6">
+                <!-- Method 1: Website URL -->
+                <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Option 1: Fetch from Website</label>
+                    <div class="flex gap-2">
+                        <input type="url" id="companyWebsiteUrl" class="flex-grow p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-gray-100 focus:ring-1 focus:ring-primary focus:border-transparent outline-none" placeholder="https://example.com">
+                        <button id="fetchLogoFromUrlBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2">
+                            <i class="fas fa-sync-alt"></i> Fetch
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-2">Our AI will attempt to find the best logo from the website.</p>
+                </div>
+
+                <!-- Method 2: Manual Upload -->
+                <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Option 2: Manual Upload</label>
+                    <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-lg p-6 hover:border-primary transition-colors bg-slate-900/30 cursor-pointer group" onclick="document.getElementById('aggregatedLogoFileInput').click()">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-600 mb-2 group-hover:text-primary transition-colors"></i>
+                        <span class="text-xs text-gray-500">Click to browse image</span>
+                        <input type="file" id="aggregatedLogoFileInput" class="hidden" accept="image/*">
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div id="aggregatedLogoPreviewContainer" class="hidden p-4 bg-slate-800 rounded-xl border border-slate-700">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Logo Preview</label>
+                    <div class="flex justify-center">
+                        <img id="aggregatedLogoPreviewImage" src="" alt="Preview" class="w-24 h-24 object-contain rounded-lg bg-white/5 p-2">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-700/50">
+                <button id="cancelAggregatedLogoBtn" class="px-5 py-2 text-gray-400 hover:text-white transition-colors font-medium">Cancel</button>
+                <button id="saveAggregatedLogoBtn" class="px-8 py-2 bg-primary hover:bg-secondary text-white rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20" disabled>
+                    Save Changes
+                    <span class="loading-spinner ml-2" id="saveAggregatedLogoSpinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="jobSourceModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-2xl">
+            <button class="modal-close-btn" id="closeJobSourceModalBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-primary">
+                <i class="fas fa-server"></i>
+                <span id="sourceModalTitle">Add New Intelligence Source</span>
+            </h3>
+            
+            <form id="jobSourceForm" class="space-y-4">
+                <input type="hidden" id="sourceId">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Source Name</label>
+                        <input type="text" id="sourceName" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-gray-100 outline-none focus:border-primary" placeholder="e.g. Bank of Palestine" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Source Type</label>
+                        <select id="sourceType" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-gray-100 outline-none focus:border-primary">
+                            <option value="scraper">Direct Scraper</option>
+                            <option value="rss">RSS Feed</option>
+                            <option value="api">API</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Base URL / Endpoint</label>
+                    <input type="url" id="sourceBaseUrl" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-gray-100 outline-none focus:border-primary" placeholder="https://example.com/careers" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Country Code</label>
+                        <input type="text" id="sourceCountryCode" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-gray-100 outline-none focus:border-primary" placeholder="PS" value="PS" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Priority (Lower = Sooner)</label>
+                        <input type="number" id="sourcePriority" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-gray-100 outline-none focus:border-primary" value="100">
+                    </div>
+                </div>
+
+                <div id="scraperConfigSection" class="p-4 bg-slate-900/50 rounded-xl border border-slate-700 space-y-4">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-slate-700 pb-2 mb-2">Scraper Configuration (JSON)</h4>
+                    <textarea id="sourceConfig" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-indigo-300 font-mono outline-none focus:border-primary" rows="6">{
+  "collector": "static",
+  "selectors": {
+    "job_item": ".job-card",
+    "title": "h3",
+    "link": "a"
+  }
+}</textarea>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="sourceActive" checked class="h-4 w-4 text-primary bg-slate-800 border-slate-700 rounded">
+                    <label for="sourceActive" class="text-sm text-gray-300 font-medium">Active (Enable crawling)</label>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" id="cancelSourceBtn" class="px-5 py-2 text-gray-400 hover:text-white transition-colors font-medium">Cancel</button>
+                    <button type="submit" id="saveSourceBtn" class="px-8 py-2 bg-primary hover:bg-secondary text-white rounded-lg font-bold transition-all shadow-lg shadow-primary/20">
+                        Save Source
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirmationModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-md">
+            <button class="modal-close-btn" id="closeConfirmationModalBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-xl font-semibold mb-4 text-primary" id="confirmationModalTitle">Confirm Action</h3>
+            <div class="mb-6 text-gray-300" id="confirmationModalMessage">Are you sure you want to proceed?</div>
+            <div class="flex justify-end gap-3">
+                <button id="confirmationModalCancelBtn" class="bg-transparent border-2 border-gray-500 text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors duration-200 hover:bg-gray-700 hover:text-white">Cancel</button>
+                <button id="confirmationModalConfirmBtn" class="bg-primary text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 hover:bg-secondary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/language/categories-professions-translations.js"></script>
+    <script type="module" src="/js/admin/dashboard-core.js"></script>
+</body>
+</html>

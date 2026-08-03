@@ -1,0 +1,169 @@
+<header class="header">
+    <div class="container header-container">
+        <!-- Left side: Logo only -->
+        <div class="header-left">
+            <!-- Removed aria-label and data-lang-key from here -->
+            <a href="/" class="logo" id="headerLogoLink">
+                <!-- Image logo for English -->
+                <img src="/images/logo.jpg" alt="Logo" class="logo-img" id="headerImageLogo">
+                <!-- Text logo for Arabic -->
+                <span class="logo-text" id="headerTextLogo" data-lang-key="hirly_app_name">Dashboard</span>
+            </a>
+        </div>
+
+        <!-- Middle: Navigation Links (Desktop) -->
+        <nav class="main-nav" id="mainNav">
+            <ul id="navLinks">
+                <li><a href="/jobs.html" data-lang-key="jobs">وظائف</a></li>
+                <li><a href="/services.html" data-lang-key="services">خدمات</a></li>
+                <li><a href="/talent.html" data-lang-key="professionals">المهنيين</a></li>
+                <li><a href="/about.html" data-lang-key="about_us">حولنا</a></li>
+                <li><a href="/contact.html" data-lang-key="contact_us">اتصل بنا</a></li>
+                <li><a href="/employers.html" data-lang-key="for_employers_nav">For Employers</a></li>
+            </ul>
+        </nav>
+
+        <!-- Right side: Language Switcher and Auth Buttons/User Menu -->
+        <div class="header-right">
+            <!-- Language Switcher Button (Desktop) -->
+            <button class="lang-switcher-btn" id="langDropdownToggle" style="display: flex; align-items: center; gap: 0.5rem; background: none; border: 1px solid var(--border); padding: 0.5rem 0.8rem; border-radius: 50px; cursor: pointer; transition: all 0.2s;">
+                <img id="langFlagIcon" src="/images/flags/palestine-flag.svg" alt="Flag" style="width: 20px; height: 20px; border-radius: 2px;">
+                <span id="langLabel" style="font-weight: 600; font-size: 0.9rem; color: var(--dark);">AR</span>
+                <i class="fas fa-chevron-down" style="font-size: 0.7rem; opacity: 0.5;"></i>
+            </button>
+
+            <!-- Auth Buttons (shown when logged out) - Initially hidden to prevent flash -->
+            <div class="auth-buttons" id="authButtons" style="display: none;">
+                <a href="/login.html" class="btn btn-outline-primary" data-lang-key="login">تسجيل الدخول</a>
+                <a href="/signup.html" class="btn btn-primary" data-lang-key="sign_up">التسجيل</a>
+            </div>
+
+            <!-- User Menu (shown when logged in) -->
+            <div class="user-menu" id="userMenu" style="display: none;">
+                <a href="#" class="user-avatar-link" id="userAvatarHeader">
+                    <!-- The user-avatar div is where the magic happens -->
+                    <div class="user-avatar-container" id="userAvatarContainerDesktop">
+                        <img id="userAvatarImgDesktop" src="" alt="User Profile Picture" style="display: none;">
+                        <span id="userAvatarTextDesktop"></span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Hamburger Menu Icon for Mobile -->
+            <button class="hamburger-menu" id="hamburgerMenu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay">
+        <div class="mobile-menu-content">
+            <button class="mobile-menu-close" id="mobileMenuClose">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- Mobile Auth Section - User Info / Login/Signup -->
+            <div class="mobile-auth-section">
+                <!-- User Menu (shown when logged in on mobile) -->
+                <div class="user-menu" id="mobileUserMenu" style="display: none;">
+                    <a href="#" class="user-avatar-link" id="mobileUserAvatarLink">
+                        <div class="user-avatar-container" id="mobileUserAvatarContainer">
+                            <img id="mobileUserAvatarImg" src="" alt="User Profile Picture" style="display: none;">
+                            <span id="mobileUserAvatarText"></span>
+                        </div>
+                    </a>
+                    <div class="mobile-user-info">
+                        <span id="mobileUserName"></span>
+                    </div>
+                </div>
+                <!-- Auth Buttons (shown when logged out on mobile) -->
+                <div class="auth-buttons" id="mobileAuthButtons" style="display: none;">
+                    <a href="/login.html" class="btn btn-outline-primary" data-lang-key="login">تسجيل الدخول</a>
+                    <a href="/signup.html" class="btn btn-primary" data-lang-key="sign_up">التسجيل</a>
+                </div>
+            </div>
+
+            <!-- Placeholder for dynamically loaded grouped content -->
+            <div id="mobileMenuDynamicContent">
+                <!-- Content generated by components.js -->
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<!-- Global container for dynamically loaded modals. It must be present on every page. -->
+<div id="modalContainer"></div>
+
+<!-- Custom Logout/Confirmation Modal (Consistent with hire_dashboard.html) -->
+<!-- FIX: Set z-index to a high value so the modal appears above the mobile menu overlay -->
+<div id="logoutConfirmModal" class="modal-overlay" style="display: none; z-index: 2000;">
+    <div class="modal-content small-modal">
+        <span class="modal-close-btn" id="closeLogoutModalBtn">&times;</span>
+        <h2 data-lang-key="confirm_action_modal">تأكيد الإجراء</h2>
+        <p data-lang-key="are_you_sure_proceed_modal">هل أنت متأكد أنك تريد المتابعة؟</p>
+        <div class="modal-actions">
+            <button id="cancelLogoutBtn" class="btn btn-secondary" data-lang-key="cancel_modal">إلغاء</button>
+            <button id="confirmLogoutBtn" class="btn btn-primary" data-lang-key="yes_confirm_modal">نعم، تأكيد</button>
+        </div>
+    </div>
+</div>
+
+<!-- Simplified Language Selection Modal -->
+<div id="languageSelectionModal" class="modal-overlay" style="display: none; z-index: 3000;">
+    <div class="modal-content small-modal" style="max-width: 400px; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.15);">
+        <!-- Step 1: Selection -->
+        <div id="langModalStep1">
+            <div class="modal-header" style="border: none; margin-bottom: 1.5rem; padding: 0; text-align: center; display: block;">
+                <div style="width: 50px; background: var(--primary); height: 4px; border-radius: 10px; margin: 0 auto 1.5rem;"></div>
+                <h3 class="modal-title" data-lang-key="select_your_language" style="font-size: 1.5rem; font-weight: 800; color: var(--dark);">Select Language</h3>
+                <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.95rem;" data-lang-key="choose_preferred_language">Please choose your preferred language:</p>
+                <button id="closeLanguageModalBtn" class="modal-close-btn" style="top: 1.5rem; right: 1.5rem; background: var(--gray-100); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                    <i class="fas fa-times" style="font-size: 0.9rem; color: var(--text);"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0; margin: 0;">
+                <div class="language-options-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <button id="selectLanguageEn" class="language-row-btn" style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); background: var(--white); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 100%;">
+                        <div style="width: 44px; height: 44px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; shrink: 0;">
+                            <img src="/images/flags/united-kingdom-flag.svg" alt="English" style="width: 28px; height: 28px; border-radius: 4px; object-fit: cover;">
+                        </div>
+                        <div style="flex: 1; text-align: inherit;">
+                            <span style="display: block; font-weight: 700; font-size: 1.1rem; color: var(--dark);">English</span>
+                            <span style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Use English Language</span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="opacity: 0.2; font-size: 0.9rem;"></i>
+                    </button>
+                    <button id="selectLanguageAr" class="language-row-btn" style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); background: var(--white); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 100%;">
+                        <div style="width: 44px; height: 44px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; shrink: 0;">
+                            <img src="/images/flags/palestine-flag.svg" alt="Arabic" style="width: 28px; height: 28px; border-radius: 4px; object-fit: cover;">
+                        </div>
+                        <div style="flex: 1; text-align: inherit;">
+                            <span style="display: block; font-weight: 700; font-size: 1.1rem; color: var(--dark);">العربية</span>
+                            <span style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">استخدم اللغة العربية</span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="opacity: 0.2; font-size: 0.9rem;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Refresh Suggestion -->
+        <div id="langModalStep2" style="display: none; text-align: center; animation: fadeIn 0.4s ease-out;">
+            <div style="margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; background: var(--primary-extra-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-sync-alt fa-2x" style="color: var(--primary); animation: spin 4s linear infinite;"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--dark); margin-bottom: 0.75rem;" data-lang-key="refresh_recommended_title">Language Updated!</h3>
+                <p style="color: var(--text-body); font-size: 1rem; line-height: 1.6; margin-bottom: 2rem;" data-lang-key="refresh_recommended_desc">We highly recommend refreshing the page to apply all changes perfectly.</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <button id="refreshPageBtn" class="btn btn-primary" style="padding: 1rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                    <i class="fas fa-redo-alt"></i> <span data-lang-key="refresh_now">Refresh Now</span>
+                </button>
+                <button id="maybeLaterBtn" style="background: none; border: none; color: var(--text-light); font-weight: 600; cursor: pointer; padding: 0.5rem;" data-lang-key="maybe_later">Maybe Later</button>
+            </div>
+        </div>
+    </div>
+</div>

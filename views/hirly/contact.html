@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag"> <!-- Ensure id="htmlTag" is here -->
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NHWNSKWN0N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NHWNSKWN0N');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="contact_hirly_title">Contact Us - Hirly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Core Styling -->
+    <link rel="stylesheet" href="/styling/main.css">
+    <!-- Page-specific CSS (MUST be loaded after global-rtl.css) -->
+    <link rel="stylesheet" href="/styling/pages/page-contact.css">
+</head>
+<body>
+<!-- Header will be loaded by components.js -->
+<div id="headerPlaceholder"></div>
+
+    <main class="main-content-wrapper"> <!-- New wrapper to control overall page content padding -->
+        <section class="section-title text-center container"> <!-- Added container here to keep title centered and within bounds -->
+            <h1 data-lang-key="contact_hirly_title">Contact Hirly</h1>
+            <p data-lang-key="contact_hirly_subtitle">We'd love to hear from you! Send us a message and we'll respond as soon as possible.</p>
+        </section>
+
+        <section class="contact-form-section"> <!-- This section will now control its own width -->
+            <h2 data-lang-key="send_us_message">Send Us a Message</h2>
+            <form id="contactForm" class="contact-form">
+                <div class="form-group">
+                    <label for="name" class="form-label" data-lang-key="your_name">Your Name</label>
+                    <input type="text" id="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="email" class="form-label" data-lang-key="email_address">Email Address</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="subject" class="form-label" data-lang-key="subject">Subject</label>
+                    <input type="text" id="subject" class="form-control" placeholder="Inquiry about services" data-lang-key="subject_placeholder" required>
+                </div>
+                <div class="form-group">
+                    <label for="message" class="form-label" data-lang-key="message">Message</label>
+                    <textarea id="message" class="form-control" rows="6" placeholder="Your message here..." data-lang-key="message_placeholder" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" data-lang-key="send_message_btn">Send Message</button>
+            </form>
+            <!-- The inline message div is no longer needed, the modal will replace it. -->
+            <!-- But we will keep it for loading state -->
+            <div id="contactMessage" class="mt-3 text-center form-message"></div>
+        </section>
+    </main>
+
+    <!-- Success/Error Modal -->
+    <div id="confirmationModal" class="modal-overlay">
+        <div class="modal-content small-modal text-center">
+            <button class="modal-close-btn">&times;</button>
+            <div class="modal-header-icon-container" id="modalIcon"></div>
+            <h3 class="modal-title" id="modalTitle"></h3>
+            <p class="modal-message" id="modalMessage"></p>
+        </div>
+    </div>
+    
+    <div id="footerPlaceholder"></div>
+
+    <!-- Load scripts in correct order -->
+    <script src="/language/language.js"></script>
+    <script src="/language/contact-page-translations.js"></script>
+    <script src="/components.js"></script>
+    <script src="/auth.js"></script>
+    <script src="/script.js"></script>
+    <script src="/js/contact.js"></script>
+</body>
+</html>
