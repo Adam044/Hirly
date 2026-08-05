@@ -6,6 +6,47 @@ document.addEventListener('DOMContentLoaded', function() {
     const resetPasswordSpinner = document.getElementById('resetPasswordSpinner');
     const resetPasswordMessage = document.getElementById('resetPasswordMessage');
 
+    // Password requirement elements
+    const reqElements = {
+        length: document.getElementById('req-length'),
+        lowercase: document.getElementById('req-lowercase'),
+        uppercase: document.getElementById('req-uppercase'),
+        number: document.getElementById('req-number')
+    };
+
+    function validatePasswordUI(password) {
+        const hasMinLength = password.length >= 8;
+        const hasLowercase = /[a-z]/.test(password);
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasNumber = /\d/.test(password);
+
+        updateRequirement(reqElements.length, hasMinLength);
+        updateRequirement(reqElements.lowercase, hasLowercase);
+        updateRequirement(reqElements.uppercase, hasUppercase);
+        updateRequirement(reqElements.number, hasNumber);
+
+        return hasMinLength && hasLowercase && hasUppercase && hasNumber;
+    }
+
+    function updateRequirement(element, isValid) {
+        if (!element) return;
+        if (isValid) {
+            element.classList.add('valid', 'border-brand-200', 'bg-brand-50/50', 'text-brand-600');
+            element.classList.remove('border-slate-100', 'text-slate-400');
+            const icon = element.querySelector('i');
+            if (icon) icon.className = 'fas fa-check-circle text-[9px] text-brand-500';
+        } else {
+            element.classList.remove('valid', 'border-brand-200', 'bg-brand-50/50', 'text-brand-600');
+            element.classList.add('border-slate-100', 'text-slate-400');
+            const icon = element.querySelector('i');
+            if (icon) icon.className = 'fas fa-check-circle text-[9px] text-slate-300';
+        }
+    }
+
+    newPasswordInput.addEventListener('input', function() {
+        validatePasswordUI(newPasswordInput.value);
+    });
+
     function showSpinner(spinnerElement) {
         if (spinnerElement) {
             spinnerElement.style.display = 'inline-block';
@@ -63,8 +104,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        if (newPassword.length < 6) {
-            displayMessage('password_length_error', 'danger'); // Using translation key
+        if (!validatePasswordUI(newPassword)) {
+            displayMessage('password_simple_requirements', 'danger'); // Using translation key
             hideSpinner(resetPasswordSpinner);
             resetPasswordForm.querySelector('button[type="submit"]').disabled = false;
             return;

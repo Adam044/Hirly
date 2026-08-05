@@ -1,4 +1,4 @@
-const { generateEmailHtmlWrapper } = require('./layout');
+const { generateEmailHtmlWrapperLTR } = require('./layout');
 
 const sendPasswordResetEmailTemplate = (resetCode) => {
     const subject = 'Your Hirly Password Reset Code';
@@ -13,7 +13,7 @@ const sendPasswordResetEmailTemplate = (resetCode) => {
         <p>This code is valid for 15 minutes. If you did not request this, please ignore this email.</p>
         <p>Best regards,<br>The Hirly Team</p>
     `;
-    return { subject, html: generateEmailHtmlWrapper(subject, mainContentHtml) };
+    return { subject, html: generateEmailHtmlWrapperLTR(subject, mainContentHtml) };
 };
 
 module.exports = sendPasswordResetEmailTemplate;

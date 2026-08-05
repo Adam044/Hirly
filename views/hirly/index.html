@@ -57,17 +57,17 @@
             <div class="container hero-container">
                 <!-- Toggle: Hire / Work -->
                 <div class="hero-toggle">
-                    <button class="toggle-btn active" id="toggleHire" onclick="setHeroMode('hire')" data-lang-key="hero_toggle_hire_btn">أريد توظيف</button>
-                    <button class="toggle-btn" id="toggleWork" onclick="setHeroMode('work')" data-lang-key="hero_toggle_work_btn">أريد العمل</button>
+                    <button class="toggle-btn active" id="toggleWork" onclick="setHeroMode('work')" data-lang-key="hero_toggle_work_btn">أريد العمل</button>
+                    <button class="toggle-btn" id="toggleHire" onclick="setHeroMode('hire')" data-lang-key="hero_toggle_hire_btn">أريد توظيف</button>
                 </div>
 
                 <!-- Dynamic Heading -->
                 <div class="hero-text" id="heroText">
-                    <h1 class="hero-title" id="heroTitle" data-lang-key="hero_toggle_hire_title">
-                        وظّف أفضل المهنيين<br><span class="hero-accent">بثقة وسهولة</span>
+                    <h1 class="hero-title" id="heroTitle" data-lang-key="hero_work_title">
+                        Build Your Career. Discover Your Next Opportunity.
                     </h1>
-                    <p class="hero-subtitle" id="heroSubtitle" data-lang-key="hero_toggle_hire_subtitle">
-                        آلاف المحترفين في فلسطين جاهزون لمساعدتك اليوم — من مطورين ومصممين إلى محاسبين ومستشارين.
+                    <p class="hero-subtitle" id="heroSubtitle" data-lang-key="hero_work_subtitle">
+                        Create your professional identity, showcase your skills, and connect with jobs, projects, and companies looking for professionals.
                     </p>
                 </div>
 
@@ -78,7 +78,7 @@
                         type="text"
                         class="hero-search-input"
                         id="heroSearch"
-                        placeholder="ابحث عن مطور، مصمم، محاسب..."
+                        placeholder="Search jobs, companies, or skills..."
                         autocomplete="off">
                     <button class="hero-search-btn" onclick="handleHeroSearch()" data-lang-key="hero_search_btn">بحث</button>
                 </div>
@@ -355,7 +355,7 @@
     <!-- Homepage Inline JS -->
     <script>
         // Hero toggle logic
-        let currentHeroMode = 'hire';
+        let currentHeroMode = 'work'; // Default changed to 'work'
 
         function setHeroMode(mode) {
             currentHeroMode = mode;
@@ -381,17 +381,17 @@
             if (currentHeroMode === 'hire') {
                 btnHire.classList.add('active');
                 btnWork.classList.remove('active');
-                title.innerHTML = getTrans('hero_toggle_hire_title', 'وظّف أفضل المهنيين<br><span class="hero-accent">بثقة وسهولة</span>');
-                subtitle.innerHTML = getTrans('hero_toggle_hire_subtitle', 'آلاف المحترفين في فلسطين جاهزون لمساعدتك اليوم — من مطورين ومصممين إلى محاسبين ومستشارين.');
-                input.placeholder = getTrans('hero_toggle_hire_placeholder', 'ابحث عن مطور، مصمم، محاسب...');
+                title.innerHTML = getTrans('hero_hire_title', 'Find the Right Professional. Build Your Team.');
+                subtitle.innerHTML = getTrans('hero_hire_subtitle', 'Discover skilled professionals across Palestine and connect with developers, designers, consultants, and specialists.');
+                input.placeholder = getTrans('hero_hire_search_placeholder', 'Search professionals by skill, role, or expertise...');
                 
                 // Set Pills for Hire Mode (Professions searching in talent.html)
                 const hirePills = [
-                    { key: 'pill_software_engineer', search: 'Software Engineer', label: 'مهندس برمجيات' },
-                    { key: 'pill_uiux_designer', search: 'UI/UX Designer', label: 'مصمم UI/UX' },
-                    { key: 'pill_accountant', search: 'Accountant', label: 'محاسب' },
-                    { key: 'pill_marketing_spec', search: 'Marketing Specialist', label: 'أخصائي تسويق' },
-                    { key: 'pill_project_manager', search: 'Project Manager', label: 'مدير مشاريع' }
+                    { key: 'pill_software_engineer', search: 'Software Engineer', label: 'Software Engineer' },
+                    { key: 'pill_uiux_designer', search: 'UI/UX Designer', label: 'UI/UX Designer' },
+                    { key: 'pill_accountant', search: 'Accountant', label: 'Accountant' },
+                    { key: 'pill_marketing_spec', search: 'Marketing Specialist', label: 'Marketing Specialist' },
+                    { key: 'pill_project_manager', search: 'Project Manager', label: 'Project Manager' }
                 ];
                 pillsContainer.innerHTML = hirePills.map(p => 
                     `<a href="/talent.html?search=${encodeURIComponent(p.search)}" class="hero-pill" data-lang-key="${p.key}">${getTrans(p.key, p.label)}</a>`
@@ -400,17 +400,17 @@
             } else {
                 btnWork.classList.add('active');
                 btnHire.classList.remove('active');
-                title.innerHTML = getTrans('hero_toggle_work_title', 'ابحث عن وظيفتك<br><span class="hero-accent">وابنِ مسيرتك</span>');
-                subtitle.innerHTML = getTrans('hero_toggle_work_subtitle', 'مئات الفرص الوظيفية تنتظرك — اعرض مهاراتك، قدّم على وظائف، وابدأ مسيرتك المهنية اليوم.');
-                input.placeholder = getTrans('hero_toggle_work_placeholder', 'ابحث عن وظيفة، مجال، أو شركة...');
+                title.innerHTML = getTrans('hero_work_title', 'Build Your Career. Discover Your Next Opportunity.');
+                subtitle.innerHTML = getTrans('hero_work_subtitle', 'Create your professional identity, showcase your skills, and connect with jobs, projects, and companies looking for professionals.');
+                input.placeholder = getTrans('hero_work_search_placeholder', 'Search jobs, companies, or skills...');
                 
                 // Set Pills for Work Mode (Categories searching in jobs.html)
                 const workPills = [
-                    { key: 'pill_tech_dev', category: 'Tech & Development', label: 'تكنولوجيا وتطوير' },
-                    { key: 'pill_biz_finance', category: 'Business & Finance', label: 'أعمال ومالية' },
-                    { key: 'pill_creative_design', category: 'Creative & Design', label: 'إبداع وتصميم' },
-                    { key: 'pill_healthcare', category: 'Healthcare', label: 'رعاية صحية' },
-                    { key: 'pill_media_journalism', category: 'Media & Journalism', label: 'إعلام وصحافة' }
+                    { key: 'pill_tech_dev', category: 'Tech & Development', label: 'Tech & Development' },
+                    { key: 'pill_biz_finance', category: 'Business & Finance', label: 'Business & Finance' },
+                    { key: 'pill_creative_design', category: 'Creative & Design', label: 'Creative & Design' },
+                    { key: 'pill_healthcare', category: 'Healthcare', label: 'Healthcare' },
+                    { key: 'pill_media_journalism', category: 'Media & Journalism', label: 'Media & Journalism' }
                 ];
                 pillsContainer.innerHTML = workPills.map(p => 
                     `<a href="/jobs.html?category=${encodeURIComponent(JSON.stringify([p.category]))}" class="hero-pill" data-lang-key="${p.key}">${getTrans(p.key, p.label)}</a>`

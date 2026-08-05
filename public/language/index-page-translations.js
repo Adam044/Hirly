@@ -6,57 +6,9 @@
 // Check if window.addTranslations function is available before attempting to use it.
 if (typeof window.addTranslations === 'function') {
     window.addTranslations({
-        // Hero Toggle Texts
-        'hero_toggle_hire_btn': {
-            'ar': 'أريد توظيف',
-            'en': 'I want to hire'
-        },
-        'hero_toggle_work_btn': {
-            'ar': 'أريد العمل',
-            'en': 'I want to work'
-        },
-        'hero_toggle_hire_title': { 
-            'ar': 'وظّف أفضل المهنيين<br><span class="hero-accent">بثقة وسهولة</span>',
-            'en': 'Hire Top Professionals<br><span class="hero-accent">with Confidence</span>'
-        },
-        'hero_toggle_hire_subtitle': {
-            'ar': 'آلاف المحترفين في فلسطين جاهزون لمساعدتك اليوم — من مطورين ومصممين إلى محاسبين ومستشارين.',
-            'en': 'Thousands of professionals in Palestine are ready to help you today — from developers and designers to accountants and consultants.'
-        },
-        'hero_toggle_hire_placeholder': {
-            'ar': 'ابحث عن مطور، مصمم، محاسب...',
-            'en': 'Search for developer, designer, accountant...'
-        },
-        'hero_toggle_work_title': {
-            'ar': 'ابحث عن عمل<br><span class="hero-accent">وابنِ مسيرتك المهنية</span>',
-            'en': 'Find Your Job<br><span class="hero-accent">Build Your Career</span>'
-        },
-        'hero_toggle_work_subtitle': {
-            'ar': 'مئات الفرص الوظيفية تنتظرك — اعرض مهاراتك، قدّم على وظائف، وابدأ مسيرتك المهنية اليوم.',
-            'en': 'Hundreds of opportunities await you — showcase your skills, apply for jobs, and start your career today.'
-        },
-        'hero_toggle_work_placeholder': {
-            'ar': 'ابحث عن وظيفة، مجال، أو شركة...',
-            'en': 'Search for a job, field, or company...'
-        },
-        // Removed 'homepage_title' from here to avoid overwriting the global definition in language.js
-        'hero_main_title': { 'ar': 'فرصتك القادمة، على بعد كبسة واحدة.', 'en': 'One Professional Home for People and Opportunities.' },
-        'hero_main_subtitle': { 'ar': 'من الباحثين عن عمل والمستقلين إلى الشركات، يجمع هايرلي الجميع في نظام مهني موحّد حيث تُبنى هويتك المهنية مرة واحدة وتُستخدم في كل فرصة، من الوظائف إلى تقديم الخدمات، بينما تحصل الشركات على ملفات موحدة وواضحة.', 'en': 'From job seekers and freelancers to companies, Hirly brings everyone into one professional system: you build your profile once and reuse it for jobs, services, and your public career, while employers receive structured, comparable profiles instead of scattered CVs.' },
+        // Hero Content
         'start_now': { 'ar': 'ابدأ الآن', 'en': 'Start Now' },
         'how_it_works': { 'ar': 'كيف يعمل؟', 'en': 'How it works?' },
-        'what_is_hirly_title': { 'ar': 'ما هو هايرلي؟', 'en': 'What is Hirly?' },
-        'opening_question': { 'ar': 'هايرلي: مجتمع العمل والفرص في فلسطين', 'en': 'Hirly: Your Gateway to Opportunities in Palestine' },
-        'what_is_hirly_desc': {
-            'ar': 'هايرلي منصة فلسطينية تجمع بين المبدعين وأصحاب الأعمال في سوق عمل متكامل. سواء كنت تبحث عن خبير محترف أو ترغب في تطوير مسيرتك المهنية، نوفر لك وصولاً مباشراً لأكثر من 150 تخصصاً مهنياً وتقنياً. في هايرلي، نحن نبسط عملية التوظيف ونفتح آفاقاً جديدة للنمو.',
-            'en': 'Hirly is a professional ecosystem that connects job seekers, freelancers, professionals, and companies in one unified system. It acts as your professional identity layer: one public profile you can use to apply to jobs, offer services, and share your career, while employers receive structured, comparable profiles instead of scattered CVs. On top of this, Hirly Pilot — our optional AI engine — helps employers review and prioritize candidates faster.'
-        },
-        'feature_1_title': { 'ar': 'انطلاقة مهنية ذكية', 'en': 'Smart Career Launch' },
-        'feature_2_title': { 'ar': 'شفافية ومصداقية', 'en': 'Transparency & Trust' },
-        'feature_3_title': { 'ar': 'أمان وتقنية متطورة', 'en': 'Secure & Advanced Tech' },
-        'create_freelancer_profile_benefit': { 'ar': 'أنشئ ملفك الاحترافي في دقائق، ودع مهاراتك تتحدث عنك أمام نخبة الشركات والباحثين عن التميز.', 'en': 'Create one professional page in minutes and use it everywhere — for job applications, freelance services, and as your public career link.' },
-        'browse_company_profiles_benefit': { 'ar': 'استكشف فرص العمل بشفافية مطلقة؛ راجع تقييمات الشركات الحقيقية واتخذ قراراتك المهنية بثقة.', 'en': 'Explore opportunities in a standardized format, review real company profiles, and make decisions based on clear, comparable information.' },
-        'unprecedented_features_benefit': { 'ar': 'استخدم أدواتنا الذكية المصممة لضمان رحلة عمل حر سلسة، عادلة، ومحمية بالكامل بأحدث التقنيات.', 'en': 'Use our smart tools and Hirly Pilot, the AI engine for employers, to keep hiring fair, efficient, and insight‑driven.' },
-        'hirly_new_beginning_desc': { 'ar': 'هايرلي ليس مجرد منصة... هو بداية جديدة لفرص العمل في فلسطين. انضم الآن وكن جزءًا من التغيير. مستقبلك المهني يبدأ هنا!', 'en': 'Hirly is not just a platform... it\'s a new beginning for job opportunities in Palestine. Join now and be part of the change. Your professional future starts here!' },
         'find_your_perfect_match': { 'ar': 'اكتشف الفرص', 'en': 'Discover Opportunities' },
         'build_your_career': { 'ar': 'ابنِ مسيرتك المهنية', 'en': 'Build Your Career' },
         'view_all_opportunities': { 'ar': 'عرض جميع الفرص', 'en': 'View All Opportunities' },
@@ -184,39 +136,53 @@ if (typeof window.addTranslations === 'function') {
         'view_all_services_link': { 'ar': 'عرض جميع الخدمات', 'en': 'View All Services' },
         'loading_top_services': { 'ar': 'تحميل الخدمات المميزة...', 'en': 'Loading featured services...' },
         'no_featured_services': { 'ar': 'لا توجد خدمات مميزة حالياً.', 'en': 'No featured services currently.' },
-        // NEW TRANSLATIONS TO FIX THE ERRORS
-        'why_hirly_title': { 'ar': 'لماذا تختار هايرلي؟', 'en': 'Why Choose Hirly?' },
-        'why_hirly_subtitle': { 'ar': 'منصة واحدة، إمكانيات لا حدود لها.', 'en': 'One Platform, Endless Possibilities.' },
-        'why_hirly_feature1_title': { 'ar': 'منصة موثوقة ومحلية', 'en': 'Trusted & Local Platform' },
-        'why_hirly_feature1_desc': { 'ar': 'نحن نركز على بناء الثقة من خلال ضمان هوية جميع المستخدمين، مما يوفر بيئة آمنة للمهنيين وأصحاب العمل على حد سواء.', 'en': 'We focus on building trust by verifying the identity of all users, providing a secure environment for professionals and employers alike.' },
-        'why_hirly_feature2_title': { 'ar': 'بحث متقدم وفعال', 'en': 'Advanced & Efficient Search' },
-        'why_hirly_feature2_desc': { 'ar': 'يمكنك البحث بسهولة عن المواهب أو الوظائف باستخدام فلاتر متقدمة تضمن لك العثور على ما يناسبك تماماً، بسرعة ودقة.', 'en': 'Easily search for talent or jobs using advanced filters to ensure you find exactly what fits your needs, quickly and accurately.' },
-        'why_hirly_feature3_title': { 'ar': 'إدارة المشاريع بسهولة', 'en': 'Easy Project Management' },
-        'why_hirly_feature3_desc': { 'ar': 'تتيح لك أدواتنا المدمجة التواصل والتعاون وتتبع المشاريع بسلاسة، مما يضمن سير العمل بكفاءة عالية من البداية إلى النهاية.', 'en': 'Our built-in tools allow you to communicate, collaborate, and track projects seamlessly, ensuring an efficient workflow from start to finish.' },
+        // === REDESIGNED HERO (2026) ===
+        'hero_toggle_work_btn': { 'ar': 'أريد العمل', 'en': 'I Want to Work' },
+        'hero_toggle_hire_btn': { 'ar': 'أريد توظيف', 'en': 'I Want to Hire' },
+        
+        // Work Mode (Default)
+        'hero_work_title': { 
+            'ar': 'ابنِ مسيرتك المهنية. اكتشف فرصتك القادمة.', 
+            'en': 'Build Your Career. Discover Your Next Opportunity.' 
+        },
+        'hero_work_subtitle': { 
+            'ar': 'أنشئ هويتك المهنية، اعرض مهاراتك، وتواصل مع الوظائف والمشاريع والشركات التي تبحث عن محترفين.', 
+            'en': 'Create your professional identity, showcase your skills, and connect with jobs, projects, and companies looking for professionals.' 
+        },
+        'hero_work_search_placeholder': { 
+            'ar': 'ابحث عن وظائف، شركات، أو مهارات...', 
+            'en': 'Search jobs, companies, or skills...' 
+        },
+        
+        // Hire Mode
+        'hero_hire_title': { 
+            'ar': 'جد المحترف المناسب. ابنِ فريقك.', 
+            'en': 'Find the Right Professional. Build Your Team.' 
+        },
+        'hero_hire_subtitle': { 
+            'ar': 'اكتشف المهنيين المهرة في جميع أنحاء فلسطين وتواصل مع المطورين والمصممين والمستشارين والمتخصصين.', 
+            'en': 'Discover skilled professionals across Palestine and connect with developers, designers, consultants, and specialists.' 
+        },
+        'hero_hire_search_placeholder': { 
+            'ar': 'ابحث عن مهنيين حسب المهارة، الدور، أو الخبرة...', 
+            'en': 'Search professionals by skill, role, or expertise...' 
+        },
 
-        // === REDESIGNED HOMEPAGE (2026) ===
-        // Hero toggle
-        'toggle_hire': { 'ar': 'أريد توظيف', 'en': 'I Want to Hire' },
-        'toggle_work': { 'ar': 'أريد العمل', 'en': 'I Want to Work' },
-        'hero_hire_title': { 'ar': 'وظّف أفضل المواهب<br><span class="hero-accent">بثقة وسهولة</span>', 'en': 'Hire Top Professionals<br><span class="hero-accent">with Confidence</span>' },
-        'hero_work_title': { 'ar': 'ابحث عن وظيفتك<br><span class="hero-accent">وابنِ مسيرتك المهنية</span>', 'en': 'Find Your Job<br><span class="hero-accent">Build Your Career</span>' },
-        'hero_hire_subtitle': { 'ar': 'آلاف المحترفين في فلسطين جاهزون لمساعدتك اليوم — من مطورين ومصممين إلى محاسبين ومستشارين.', 'en': 'Thousands of professionals in Palestine ready to help you today — developers, designers, accountants, and more.' },
-        'hero_work_subtitle': { 'ar': 'مئات الفرص الوظيفية تنتظرك — اعرض مهاراتك، قدّم على وظائف، وابدأ مسيرتك المهنية اليوم.', 'en': 'Hundreds of job opportunities await — showcase your skills, apply for jobs, and start your career today.' },
-        'hero_hire_search_placeholder': { 'ar': 'ابحث عن مطور، مصمم، محاسب...', 'en': 'Search for a developer, designer, accountant...' },
-        'hero_work_search_placeholder': { 'ar': 'ابحث عن مطور، مصمم، محاسب...', 'en': 'Search for a developer, designer, accountant...' },
         'hero_search_btn': { 'ar': 'بحث', 'en': 'Search' },
-        // Hire Mode Pills (Professions)
-        'pill_software_engineer': { 'ar': 'مهندس برمجيات', 'en': 'Software Engineer' },
-        'pill_uiux_designer': { 'ar': 'مصمم UI/UX', 'en': 'UI/UX Designer' },
-        'pill_accountant': { 'ar': 'محاسب', 'en': 'Accountant' },
-        'pill_marketing_spec': { 'ar': 'أخصائي تسويق', 'en': 'Marketing Specialist' },
-        'pill_project_manager': { 'ar': 'مدير مشاريع', 'en': 'Project Manager' },
+
         // Work Mode Pills (Categories)
         'pill_tech_dev': { 'ar': 'تكنولوجيا وتطوير', 'en': 'Tech & Development' },
         'pill_biz_finance': { 'ar': 'أعمال ومالية', 'en': 'Business & Finance' },
         'pill_creative_design': { 'ar': 'إبداع وتصميم', 'en': 'Creative & Design' },
         'pill_healthcare': { 'ar': 'رعاية صحية', 'en': 'Healthcare' },
         'pill_media_journalism': { 'ar': 'إعلام وصحافة', 'en': 'Media & Journalism' },
+
+        // Hire Mode Pills (Professions)
+        'pill_software_engineer': { 'ar': 'مهندس برمجيات', 'en': 'Software Engineer' },
+        'pill_uiux_designer': { 'ar': 'مصمم UI/UX', 'en': 'UI/UX Designer' },
+        'pill_accountant': { 'ar': 'محاسب', 'en': 'Accountant' },
+        'pill_marketing_spec': { 'ar': 'أخصائي تسويق', 'en': 'Marketing Specialist' },
+        'pill_project_manager': { 'ar': 'مدير مشاريع', 'en': 'Project Manager' },
         // Stats
         'stat_users': { 'ar': 'مستخدم مسجل', 'en': 'Registered Users' },
         'stat_companies': { 'ar': 'شركة مسجلة', 'en': 'Companies' },

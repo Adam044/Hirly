@@ -27,7 +27,7 @@ html[dir="rtl"] [class*="fa-"] {
     font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
 }
 
-/* Remove letter-spacing for Arabic script - essential for connectivity */
+/* Remove letter-spacing and text-transform for Arabic script - essential for connectivity */
 html[dir="rtl"] h1,
 html[dir="rtl"] h2,
 html[dir="rtl"] h3,
@@ -41,6 +41,7 @@ html[dir="rtl"] [class*="tracking-"],
 html[dir="rtl"] .section-eyebrow,
 html[dir="rtl"] .trusted-label {
     letter-spacing: 0 !important;
+    text-transform: none !important;
 }
 
 /* Fix for "justified" text in Arabic - preventing gaps between letters on mobile */

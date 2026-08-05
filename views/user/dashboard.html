@@ -8,7 +8,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -114,6 +114,15 @@
             margin: 0;
             padding: 0;
         }
+
+        /* Arabic Script Reset: Fixes "spaces between letters" issue by removing letter-spacing in RTL mode */
+         /* Arabic Script Reset: Fixes "spaces between letters" issue by removing letter-spacing in RTL mode */
+          [dir="rtl"] *:not(i):not([class*="fa-"]), 
+          .rtl-mode *:not(i):not([class*="fa-"]) {
+              letter-spacing: normal !important;
+              text-transform: none !important;
+              font-family: 'Cairo', sans-serif !important;
+          }
         
         html {
             font-family: 'Inter', system-ui, sans-serif;
