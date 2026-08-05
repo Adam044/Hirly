@@ -159,7 +159,7 @@ module.exports = function registerJobsRoutes(app, pool, {
         const requirementsJsonString = JSON.stringify(requirementsArray);
 
         const jobInsertResult = await client.query(
-          'INSERT INTO jobs (employer_id, title, description, budget, currency, category, deadline, job_type, job_site_type, city, profession_required, job_image_path, external_apply_url, requirements, gender_requirement, age_min, age_max) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, $15::jsonb, $16, $17) RETURNING id',
+          'INSERT INTO jobs (employer_id, title, description, budget, currency, category, deadline, job_type, job_site_type, city, profession_required, job_image_path, external_apply_url, requirements, gender_requirement, age_min, age_max) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, $15, $16, $17) RETURNING id',
           [employerId, title, description, isBudgetProvided ? parseFloat(budget) : null, isBudgetProvided ? currency : null, category, deadline, jobType, jobSiteType, city, professionsJsonString, jobImagePath, normalizedExternalUrl, requirementsJsonString, genderRequirementValue, ageMinValue, ageMaxValue]
         );
         const jobId = jobInsertResult.rows[0].id;

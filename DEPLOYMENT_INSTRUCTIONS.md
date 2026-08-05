@@ -38,5 +38,3 @@ gcloud scheduler jobs create http daily-job-scrape `
   --uri="https://hirly.net/api/cron/trigger-scrape?secret=cgrgu66b7d2d4sg459a8c1f2e4d6c8b0f71a7gks7c2" `
   --http-method=GET `
   --location=europe-west1
-
-  test
