@@ -32,3 +32,6 @@ steps:
 
 images:
   - 'gcr.io/$PROJECT_ID/hirly-repo'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
