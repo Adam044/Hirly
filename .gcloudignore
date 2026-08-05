@@ -15,7 +15,7 @@ README.md
 public/styling/uploads/
 public/images/
 !public/images/logo.jpg
-!public/images/flags/
+# No longer using local flags folder
 
 # Testing and monitoring files (development only)
 test-optimization.js

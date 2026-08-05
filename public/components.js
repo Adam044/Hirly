@@ -393,7 +393,9 @@ async function initializeHeaderScripts() {
         if (!langLabel || !langFlagIcon) return;
         const currentLang = window.currentLanguage;
         langLabel.textContent = currentLang === 'ar' ? 'AR' : 'EN';
-        langFlagIcon.src = currentLang === 'ar' ? '/images/flags/palestine-flag.svg' : '/images/flags/united-kingdom-flag.svg';
+        langFlagIcon.src = currentLang === 'ar' 
+            ? 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/palestine-flag.svg' 
+            : 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/united-kingdom-flag.svg';
     };
 
     const langDropdownToggle = document.getElementById('langDropdownToggle');

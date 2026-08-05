@@ -15,4 +15,4 @@ public/styling/uploads/*
 !public/styling/uploads/.gitkeep
 public/images/*
 !public/images/logo.jpg
-!public/images/flags/*
+# No longer using local flags folder
