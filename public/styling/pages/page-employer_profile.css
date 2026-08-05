@@ -1,0 +1,1004 @@
+/* Hirly/styling/pages/page-employer_profile.css */
+
+/* --- General Page Layout & Background --- */
+.profile-container {
+    padding-top: var(--spacing-xxl);
+    padding-bottom: var(--spacing-xxl);
+    min-height: calc(100vh - var(--header-height, 90px) - var(--footer-height, 200px));
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxl); /* Space between major sections */
+}
+
+/* --- New Layout for Main Content and Sidebar (aligned with freelancer profile) --- */
+.profile-main-layout {
+    display: grid;
+    grid-template-columns: 1fr; /* Default to single column for mobile */
+    gap: var(--spacing-xl); /* Space between sections */
+    align-items: start; /* Align items to the top */
+}
+
+@media (min-width: 992px) { /* Desktop layout: Main content on left, sidebar on right */
+    .profile-main-layout {
+        grid-template-columns: 2.5fr 1fr; /* Main content wider than sidebar */
+        gap: var(--spacing-xxl); /* More space on desktop */
+    }
+}
+
+/* Main Content Area */
+.profile-content-area {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl); /* Space between profile header and first section, and between sections */
+}
+
+/* --- Profile Header Section (aligned with freelancer profile) --- */
+.profile-header-section {
+    padding: 0.7rem 1rem; /* Reduced vertical and added horizontal padding for a card-like feel */
+    margin-bottom: 0; /* No bottom margin, controlled by parent gap */
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-xs); /* Lighter shadow */
+    display: flex;
+    flex-direction: column; /* Stack on mobile */
+    align-items: center;
+    width: 100%; /* Ensure it takes full width within its parent */
+    box-sizing: border-box; /* Include padding in width */
+    text-align: center; /* Center text by default */
+}
+
+.profile-header-content {
+    display: flex;
+    flex-direction: row; /* Default to row for name/logo */
+    justify-content: space-between; /* Push name left, logo right */
+    align-items: center; /* Vertically align items */
+    gap: var(--spacing-md);
+    flex-grow: 1;
+    width: 100%;
+    padding-bottom: var(--spacing-sm); /* Space before divider */
+}
+
+.employer-info-main { /* New container for name and category */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Universal alignment */
+    text-align: start; /* Universal alignment */
+    flex-grow: 1;
+    overflow: hidden; /* Hide overflow for long names */
+}
+
+.employer-logo-lg {
+    width: 80px; /* Adjusted size for better visual balance */
+    height: 80px;
+    object-fit: cover; /* Ensure image covers the area */
+    border: 4px solid transparent; /* Base transparent border */
+    background: var(--primary-extra-light); /* Fallback background for initials */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem; /* Adjusted font size for initials */
+    font-weight: 700;
+    color: var(--primary); /* Color for initials */
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: all 0.2s ease; /* Smooth transitions for hover/state changes */
+    /* Adjust position slightly higher */
+    transform: translateY(-5px);
+}
+
+/* Shape based on type */
+.employer-logo-lg.company {
+    border-radius: var(--radius-sm); /* Square with slight radius for companies */
+}
+
+.employer-logo-lg.individual {
+    border-radius: 50%; /* Circle for individuals */
+}
+
+.employer-logo-lg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit; /* Inherits from parent container */
+}
+
+.employer-logo-initials {
+    font-size: inherit; /* Inherit font size from parent .employer-logo-lg */
+    font-weight: inherit; /* Inherit font weight */
+    color: inherit; /* Inherit color */
+}
+
+
+.employer-info { /* This class is no longer directly used for layout, kept for potential nested elements */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.employer-info-main h1 { /* This targets the h1 inside employer-info-main */
+    font-size: var(--font-size-xl); /* Reduced size for prominence */
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-xxs); /* Smaller margin to bring category closer */
+    line-height: 1.2;
+    font-weight: 700;
+    white-space: normal; /* Allow text to wrap */
+    word-break: keep-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    /* Align with logo vertically */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.employer-category-display { /* New style for category display */
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    font-weight: 500;
+    margin-top: 0; /* Remove default paragraph margin */
+    text-align: start; /* Universal alignment */
+}
+
+.employer-category-display i {
+    color: var(--primary); /* Icon color for category */
+}
+
+
+.profile-header-divider { /* New divider style */
+    width: 100%;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: var(--spacing-sm) 0; /* Space above and below divider */
+}
+
+.employer-meta-details { /* New container for all meta items below divider */
+    display: flex;
+    flex-direction: column; /* Stack vertically by default for mobile */
+    align-items: flex-start; /* Universal alignment */
+    gap: var(--spacing-sm); /* Space between stacked items */
+    width: 100%;
+    text-align: start; /* Universal alignment */
+}
+
+.employer-meta-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    font-weight: 500;
+    word-break: break-all; /* Allow long text to break */
+}
+
+.employer-meta-item i {
+    color: var(--primary);
+    font-size: var(--font-size-md);
+    flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+/* Specific styling for gold star in rating */
+.employer-average-rating .gold-star {
+    color: #FFD700; /* Gold color for the star */
+}
+
+/* REMOVED: Verification Badge styles have been removed */
+.employer-average-rating {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    font-weight: 500;
+    justify-content: flex-start; /* Universal alignment */
+}
+
+.employer-average-rating .stars {
+    color: #FFD700;
+    font-size: var(--font-size-md);
+}
+
+.employer-average-rating .count {
+    font-size: var(--font-size-sm);
+    color: var(--text-light);
+}
+
+
+/* --- Sidebar Styles (aligned with freelancer profile) --- */
+.profile-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl); /* Space between sidebar sections */
+    position: sticky; /* Make sidebar sticky on scroll */
+    top: calc(var(--header-height, 60px) + var(--spacing-xl)); /* Stick below header with some margin */
+    align-self: start; /* Ensures sticky behavior within grid */
+}
+
+.sidebar-section {
+    background-color: var(--white);
+    padding: var(--spacing-xl); /* Consistent padding for sidebar cards */
+    border-radius: var(--border-radius-lg); /* Consistent rounded corners */
+    box-shadow: var(--shadow-sm); /* Lighter shadow for sidebar cards */
+    border: 1px solid var(--border-color); /* Subtle border */
+}
+
+.sidebar-section h3 {
+    font-size: var(--font-size-lg);
+    color: var(--primary-dark);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color-light);
+    font-weight: 600;
+    text-align: start; /* Universal alignment */
+}
+
+.info-details-list { /* Renamed from contact-details-list */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.info-details-list li { /* Renamed from contact-details-list li */
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    text-align: start; /* Universal alignment */
+    word-break: break-word; /* Allow long words to break within the container */
+    overflow-wrap: break-word; /* Ensure wrapping on long words like email */
+}
+
+/* FIX: This rule hides the first icon in the category list item,
+        leaving only the dynamically loaded category icon. */
+.info-details-list li#employerCategoryItemSidebar i:first-child {
+    display: none;
+}
+
+.info-details-list li i { /* Renamed from contact-details-list li i */
+    color: var(--primary);
+    font-size: var(--font-size-lg);
+    flex-shrink: 0;
+    margin-top: 2px;
+    margin-inline-end: var(--spacing-md); /* Universal margin */
+}
+
+/* FIX: Ensure the correct icon is used and prevent duplicates */
+.info-details-list li#employerCategoryItemSidebar {
+    display: flex !important; /* Make sure this line item is always a flex container */
+}
+.info-details-list li#employerCategoryItemSidebar i {
+    display: inline-block; /* Show the icon */
+}
+
+.info-details-list li span { /* Renamed from contact-details-list li span */
+    word-break: break-all;
+}
+
+.contact-employer-btn-wrapper {
+    text-align: center;
+    margin-top: var(--spacing-xl);
+}
+
+
+/* --- Section Styling (aligned with freelancer profile) --- */
+.profile-section {
+    background-color: var(--white);
+    padding: var(--spacing-xl); /* Consistent padding for all main sections */
+    border-radius: var(--border-radius-lg); /* Consistent rounded corners */
+    box-shadow: var(--shadow-sm); /* Consistent shadow */
+    border: 1px solid var(--border-color); /* Consistent border */
+    margin-bottom: 0; /* Controlled by parent flex gap */
+}
+
+.profile-section h2 {
+    font-family: inherit;
+    font-size: var(--font-size-xl); /* Adjusted for section headers */
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: var(--spacing-sm);
+    font-weight: 600;
+    text-align: start; /* Universal alignment */
+}
+
+.profile-section p {
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+    text-align: start; /* Universal alignment */
+}
+
+.profile-section p:last-child {
+    margin-bottom: 0;
+}
+
+/* Section Header with button (e.g., Reviews) */
+.profile-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 2px solid var(--border-color-light);
+    padding-bottom: var(--spacing-md);
+    flex-direction: row; /* Default for LTR */
+}
+
+.profile-section .section-header h2 {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+
+/* --- Job Cards (aligned with freelancer profile's review cards) --- */
+.jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+}
+
+.job-card {
+    background-color: var(--background-light);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.job-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+/* FIX: Job Card Header for Employer Profile - Centered Title, No Avatar */
+.job-card-header {
+    display: flex;
+    justify-content: center; /* Center the content */
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px dashed var(--border-color-light);
+    flex-direction: row; /* Keep row direction for centering */
+}
+
+.job-card-info { /* Ensure job-card-info itself is centered */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center items within info */
+    text-align: center; /* Center text within info */
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.job-title {
+    font-size: var(--font-size-lg);
+    color: var(--primary-dark);
+    margin: 0;
+    font-weight: 700;
+    text-align: center; /* FIX: Center the job title */
+}
+
+.job-badge.urgent-badge {
+    background-color: var(--danger);
+    color: var(--white);
+    padding: 0.3em 0.6em;
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.job-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-light);
+    margin-bottom: var(--spacing-sm);
+    justify-content: center; /* FIX: Center meta info */
+}
+
+.job-description {
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+    flex-grow: 1;
+    text-align: center; /* FIX: Center description */
+}
+
+.job-card-footer {
+    display: flex;
+    justify-content: center; /* FIX: Center the button */
+    align-items: center;
+    padding-top: var(--spacing-sm);
+    border-top: 1px dashed var(--border-color-light);
+    margin-top: auto;
+    flex-direction: row; /* Default for LTR */
+}
+
+.job-budget, .job-type {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xxs);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.job-card .btn {
+    padding: 0.75rem 1.5rem; /* FIX: Corrected padding for consistency */
+    font-size: var(--font-size-base);
+}
+
+/* --- Reviews Section (aligned with freelancer profile) --- */
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+}
+
+.review-card {
+    background-color: var(--background-light);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    flex-direction: row; /* Default for LTR */
+}
+
+.reviewer-avatar {
+    width: 45px;
+    height: 45px;
+    background-color: var(--secondary);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.reviewer-info {
+    display: flex;
+    flex-direction: column;
+    text-align: start; /* Universal alignment */
+}
+
+.reviewer-name-link {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: var(--font-size-base);
+    text-decoration: underline;
+    transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.reviewer-name-link:hover {
+    color: var(--primary-dark);
+    text-decoration: none;
+}
+
+.review-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-light);
+    text-align: start; /* Universal alignment */
+}
+
+.review-rating {
+    color: #FFD700;
+    font-size: var(--font-size-md);
+    text-align: start; /* Universal alignment */
+}
+
+.review-rating .fas {
+    margin-inline-end: 2px; /* Universal margin */
+}
+
+.review-comment {
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    line-height: 1.6;
+    text-align: start; /* Universal alignment */
+}
+
+.review-card .empty-state {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+.review-job-title .job-title-link {
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: underline;
+    transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.review-job-title .job-title-link:hover {
+    color: var(--accent-dark);
+    text-decoration: none;
+}
+
+.review-actions {
+    display: flex;
+    justify-content: flex-end; /* Universal alignment */
+    margin-top: var(--spacing-sm);
+    gap: var(--spacing-xs);
+}
+
+.delete-review-btn, .reply-review-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: var(--border-radius);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.delete-review-btn {
+    background-color: var(--danger);
+    color: var(--white);
+    border: 1px solid var(--danger-dark);
+}
+
+.delete-review-btn:hover {
+    background-color: var(--danger-dark);
+    border-color: var(--danger-darker);
+    box-shadow: var(--shadow-xxs);
+}
+
+.reply-review-btn {
+    background-color: var(--primary);
+    color: var(--white);
+    border: 1px solid var(--primary-dark);
+}
+
+.reply-review-btn:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-darker);
+    box-shadow: var(--shadow-xxs);
+}
+
+.reply-review-btn i {
+    font-size: 1rem;
+    color: var(--white);
+    margin-inline-end: 0.5rem; /* Universal margin */
+}
+
+.employer-reply-section {
+    background-color: var(--primary-extra-light);
+    border-inline-start: 4px solid var(--primary); /* Universal border */
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-top: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--text-body);
+    line-height: 1.5;
+    text-align: start; /* Universal alignment */
+}
+
+.employer-reply-section strong {
+    color: var(--primary-dark);
+    display: block;
+    margin-bottom: var(--spacing-xxs);
+}
+
+
+/* --- Star Rating Input in Modal --- */
+.star-rating {
+    display: flex;
+    gap: 0.3rem;
+    font-size: 2.2rem;
+    color: var(--gray);
+    cursor: pointer;
+    margin-bottom: var(--spacing-md);
+    justify-content: center;
+}
+
+.star-rating i {
+    transition: color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.star-rating i:hover {
+    transform: scale(1.1);
+}
+
+.star-rating .fas {
+    color: #FFC107;
+}
+
+/* --- Employer Profile Modal Specific Styles --- */
+.employer-profile-modal-body {
+    padding: var(--spacing-md);
+}
+
+.employer-profile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    flex-direction: row; /* Default for LTR */
+}
+
+.employer-avatar-large {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 4px solid transparent;
+    background: var(--primary-extra-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.employer-avatar-large.company {
+    border-radius: var(--radius-sm);
+}
+
+.employer-avatar-large.individual {
+    border-radius: 50%;
+}
+
+.employer-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+
+.employer-info h3 {
+    font-size: var(--font-size-xl);
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-xs);
+    text-align: start;
+}
+
+.employer-modal-company,
+.employer-modal-location {
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    margin-bottom: var(--spacing-xs);
+    text-align: start;
+}
+
+.employer-modal-location i {
+    margin-inline-end: var(--spacing-xs);
+    color: var(--primary);
+}
+
+.employer-profile-details h4 {
+    font-size: var(--font-size-lg);
+    color: var(--text-dark);
+    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--border-color-light);
+    text-align: start;
+}
+
+.employer-profile-details p {
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+    text-align: start;
+}
+
+.employer-profile-details p i {
+    margin-inline-end: var(--spacing-xs);
+    color: var(--primary);
+}
+
+/* --- Empty States & Loading --- */
+.no-employer-jobs, .empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+    color: var(--text-light);
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--border-color);
+    margin-top: var(--spacing-lg);
+}
+
+.no-employer-jobs i, .empty-state i {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--gray);
+}
+
+.no-reviews-icon {
+    font-size: 4rem;
+    color: var(--gray);
+    margin-bottom: var(--spacing-md);
+}
+
+.no-employer-jobs h3, .empty-state h3 {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-sm);
+}
+
+.no-employer-jobs p, .empty-state p {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Loading and Error States */
+.loading-spinner-large {
+    border: 6px solid var(--border-color-light);
+    border-top: 6px solid var(--primary);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin: 100px auto;
+    display: block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-message {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background-color: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: var(--border-radius-lg);
+    margin: 50px auto;
+    max-width: 600px;
+    font-size: var(--font-size-base);
+}
+
+/* --- Responsive Adjustments --- */
+@media (min-width: 768px) {
+    .profile-header-section {
+        flex-direction: row;
+        align-items: center;
+        text-align: start;
+        padding: var(--spacing-xl);
+        justify-content: space-between;
+    }
+    .profile-header-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0;
+        width: auto;
+        flex-grow: 0;
+    }
+    .employer-info-main {
+        align-items: flex-start;
+        flex-grow: 1;
+        overflow: hidden;
+    }
+    .employer-info-main h1 {
+        font-size: var(--font-size-xxl);
+        height: auto;
+        display: block;
+        align-items: flex-start;
+        margin-bottom: 0;
+    }
+    .employer-logo-lg {
+        width: 100px;
+        height: 100px;
+        font-size: 3rem;
+        margin-inline-start: var(--spacing-lg);
+        order: 2;
+        transform: translateY(0);
+    }
+    .employer-category-display {
+        display: none !important;
+    }
+    .profile-header-divider {
+        display: none;
+    }
+    .employer-meta-details-mobile {
+        display: none !important;
+    }
+    .employer-meta-details {
+        display: none;
+    }
+
+    .info-details-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+        font-size: var(--font-size-base);
+        color: var(--text-body);
+        text-align: start;
+    }
+    .info-details-list li i {
+        color: var(--primary);
+        font-size: var(--font-size-lg);
+        flex-shrink: 0;
+        margin-top: 2px;
+        margin-inline-end: var(--spacing-md);
+    }
+    .info-details-list li span {
+        word-break: break-all;
+    }
+    .info-details-list .gold-star {
+        color: #FFD700;
+    }
+}
+
+@media (max-width: 1024px) {
+    .profile-section {
+        padding: var(--spacing-xl);
+    }
+    .profile-header-section {
+        padding: var(--spacing-xl);
+    }
+    .employer-info h1 {
+        font-size: var(--font-size-xxl);
+    }
+    .jobs-grid, .reviews-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 767px) { /* Mobile specific adjustments */
+    .profile-container {
+        padding: var(--spacing-xl) 0;
+    }
+    .profile-main-layout {
+        gap: var(--spacing-lg);
+    }
+    .profile-header-section {
+        padding: var(--spacing-md);
+        text-align: start;
+    }
+    .profile-header-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0;
+    }
+    .employer-info-main {
+        align-items: flex-start;
+    }
+    .employer-info-main h1 {
+        font-size: var(--font-size-xl);
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        height: 70px;
+        white-space: normal;
+        word-break: keep-all;
+    }
+    .employer-logo-lg {
+        width: 70px;
+        height: 70px;
+        font-size: 2.2rem;
+        order: 2;
+        margin-inline-start: var(--spacing-md);
+        transform: translateY(-5px);
+    }
+    .employer-category-display {
+        margin-top: var(--spacing-xxs);
+    }
+    .profile-header-divider {
+        display: block;
+        margin: var(--spacing-md) 0;
+    }
+    .employer-meta-details-mobile {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+        width: 100%;
+        text-align: start;
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+    .employer-meta-item {
+        font-size: var(--font-size-sm);
+    }
+    .profile-section {
+        padding: var(--spacing-md);
+    }
+    .profile-section h2 {
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-sm);
+        padding-bottom: var(--spacing-xs);
+    }
+    .profile-section p {
+        font-size: var(--font-size-sm);
+    }
+    .job-card {
+        padding: var(--spacing-md);
+    }
+    .job-title {
+        font-size: var(--font-size-base);
+    }
+    .job-card-meta, .job-description, .job-budget, .job-type {
+        font-size: var(--font-size-sm);
+    }
+    .job-card .btn {
+        padding: 0.75rem 1rem;
+        font-size: var(--font-size-base);
+    }
+    .sidebar-section {
+        padding: var(--spacing-md);
+    }
+    .sidebar-section h3 {
+        font-size: var(--font-size-base);
+    }
+    .info-details-list li {
+        font-size: var(--font-size-sm);
+    }
+    .info-details-list li i {
+        font-size: var(--font-size-base);
+    }
+}
+
+@media (max-width: 480px) {
+    .employer-logo-lg {
+        width: 60px;
+        height: 60px;
+        font-size: 1.8rem;
+    }
+    .employer-info-main h1 {
+        height: 60px;
+        font-size: var(--font-size-lg);
+    }
+    .employer-meta-item {
+        font-size: var(--font-size-sm);
+    }
+}
+/* FIX: Center the job title */
+.job-card-header .job-title-main {
+    text-align: center;
+    width: 100%;
+}
+
+@media (max-width: 991px) {
+    /* Hide the entire sidebar on mobile and tablet screens */
+    .profile-sidebar {
+        display: none;
+    }
+}

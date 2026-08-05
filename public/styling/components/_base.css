@@ -1,0 +1,161 @@
+/* Hirly/styling/components/_base.css */
+
+/* Universal Box Sizing */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Body Base Styles */
+html, body { /* MODIFIED: Added html to this selector */
+    height: 100%; /* Ensure html and body take full height */
+    min-height: 100vh; /* Ensure html and body take at least viewport height */
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    color: var(--text-body);
+    background-color: var(--background-light);
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    scroll-behavior: smooth; /* Added for smooth scrolling */
+}
+
+/* Base Font Sizes and Weights */
+html {
+    font-size: 16px; /* Base font size */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+h1 { font-size: var(--font-size-xxxl); }
+h2 { font-size: var(--font-size-xxl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+h5 { font-size: var(--font-size-base); }
+h6 { font-size: var(--font-size-sm); }
+
+p {
+    margin-top: 0;
+    margin-bottom: 1em;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--primary-dark);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Container for Centering Content */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Section Padding */
+.section-padding {
+    padding: 4rem 0;
+}
+
+/* Text Utilities - Using logical properties for directionality */
+.text-center { text-align: center; }
+.text-start { text-align: start; } /* Aligns left in LTR, right in RTL */
+.text-end { text-align: end; }     /* Aligns right in LTR, left in RTL */
+
+/* Explicit overrides if 'left'/'right' alignment is always desired regardless of direction */
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-primary { color: var(--primary); }
+.text-secondary { color: var(--secondary); }
+.text-accent { color: var(--accent); }
+.text-white { color: var(--white); }
+.text-dark { color: var(--text-dark); }
+.text-body { color: var(--text-body); }
+.text-small { font-size: var(--font-size-sm); }
+.text-large { font-size: var(--font-size-lg); }
+.font-weight-bold { font-weight: 700; }
+.font-weight-normal { font-weight: 400; }
+
+/* Default text alignment for the body and most content to 'start' */
+body {
+    text-align: start; /* Default to logical start alignment */
+}
+
+/* Explicitly force right alignment for body text in RTL mode */
+html[dir="rtl"] body {
+    text-align: right !important; /* Force right alignment for all body text in RTL */
+}
+
+
+/* Hidden Utility */
+.d-none {
+    display: none !important;
+}
+
+/* Body Scroll Control for Modals */
+body.modal-open {
+    overflow: hidden; /* Prevent scrolling when modal is open */
+}
+
+/* Spacing Utilities - Margins and paddings remain physical as they define specific spatial relationships,
+   not directional flow. Only logical properties (inline-start/end) are used for direction-dependent spacing. */
+/* Margin Top */
+.mt-xs { margin-top: var(--spacing-xs); }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+.mt-xxl { margin-top: var(--spacing-xxl); }
+
+/* Margin Bottom */
+.mb-xs { margin-bottom: var(--spacing-xs); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
+.mb-xxl { margin-bottom: var(--spacing-xxl); }
+
+/* Padding Top */
+.pt-xs { padding-top: var(--spacing-xs); }
+.pt-sm { padding-top: var(--spacing-sm); }
+.pt-md { padding-top: var(--spacing-md); }
+.pt-lg { padding-top: var(--spacing-lg); }
+.pt-xl { padding-top: var(--spacing-xl); }
+.pt-xxl { padding-top: var(--spacing-xxl); }
+
+/* Padding Bottom */
+.pb-xs { padding-bottom: var(--spacing-xs); }
+.pb-sm { padding-bottom: var(--spacing-sm); }
+.pb-md { padding-bottom: var(--spacing-md); }
+.pb-lg { padding-bottom: var(--spacing-lg); }
+.pb-xl { padding-bottom: var(--spacing-xl); }
+.pb-xxl { padding-bottom: var(--spacing-xxl); }
+
+/* Responsive utility classes */
+@media (min-width: 768px) {
+    .d-md-block { display: block !important; }
+    .d-md-flex { display: flex !important; }
+    .d-md-none { display: none !important; }
+}
+
+@media (min-width: 992px) {
+    .d-lg-block { display: block !important; }
+    .d-lg-flex { display: flex !important; }
+    .d-lg-none { display: none !important; }
+}

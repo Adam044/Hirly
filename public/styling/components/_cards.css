@@ -1,0 +1,899 @@
+/* Hirly/styling/components/_cards.css */
+/* Reusable Card Styles - Redesigned for a lighter, modern look */
+
+/* Base card style for feature, category, step cards */
+.feature-card,
+.category-card,
+.step-card,
+.Hirly-feature-card-item,
+.step-item,
+.category-card-modern {
+    /* Include new class names */
+    background-color: var(--white);
+    /* Cards are white on light background */
+    border-radius: var(--border-radius-lg);
+    /* More rounded corners */
+    box-shadow: var(--shadow-sm);
+    /* Soft shadow for lift */
+    padding: var(--spacing-xl);
+    /* More internal padding */
+    text-align: center;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    border: 1px solid var(--border-color);
+    /* Subtle border */
+}
+
+.feature-card:hover,
+.category-card:hover,
+.step-card:hover,
+.Hirly-feature-card-item:hover,
+.step-item:hover,
+.category-card-modern:hover {
+    transform: translateY(-5px);
+    /* Lift effect */
+    box-shadow: var(--shadow-md);
+    /* More pronounced shadow on hover */
+    border-color: var(--primary-light);
+    /* Subtle border highlight with new primary-light */
+}
+
+.feature-card h3,
+.category-card span,
+.step-card h3,
+.Hirly-feature-card-item h3,
+.step-item h3,
+.category-card-modern span {
+    color: var(--text-dark);
+    /* Darker headings */
+    margin-bottom: var(--spacing-sm);
+    font-weight: 600;
+}
+
+.feature-card p,
+.step-card p,
+.Hirly-feature-card-item p,
+.step-item p {
+    font-size: var(--font-size-base);
+    /* Consistent body text size */
+    color: var(--text-body);
+    margin-bottom: 0;
+    line-height: 1.6;
+}
+
+/* Job Card (for listings) - Cleaned up and enhanced */
+.job-card {
+    background-color: var(--white);
+    /* White for job cards */
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-lg);
+    /* Adjusted padding for a more compact look */
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    /* Reduced gap between internal elements */
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    /* Subtle, clean border */
+    text-align: right;
+    /* Default RTL layout */
+}
+
+.job-card:hover {
+    transform: translateY(-3px);
+    /* Gentle lift effect on hover */
+    box-shadow: var(--shadow-md);
+    /* More pronounced shadow on hover */
+    border-color: var(--primary-light);
+    /* Highlight border on hover with new primary-light */
+}
+
+.job-card h3 {
+    font-size: var(--font-size-sm);
+    /* Further reduced title size */
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-xs);
+    /* Closer to meta info */
+    line-height: 1.3;
+    font-weight: 600;
+    /* Bolder title */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.job-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-light);
+    margin-bottom: var(--spacing-sm);
+    justify-content: flex-end;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px dashed var(--border-color-light);
+}
+
+.job-meta span {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-direction: row-reverse;
+    background-color: var(--primary-extra-light);
+    padding: 0.3em 0.6em;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.job-meta span:hover {
+    background-color: var(--primary-light);
+}
+
+.job-meta span i {
+    color: var(--primary);
+    font-size: var(--font-size-sm);
+}
+
+/* NEW: Style for job location display */
+.job-location-display {
+    font-size: var(--font-size-sm);
+    /* Consistent with meta info */
+    color: var(--text-body);
+    /* Slightly darker than meta for prominence */
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+    /* Space before tags/button */
+    justify-content: flex-end;
+    /* Default RTL: Align location to the right */
+}
+
+.job-location-display i {
+    color: var(--accent);
+    /* Accent color for location icon */
+    font-size: var(--font-size-sm);
+}
+
+.job-description {
+    /* This class is now removed from HTML, but keeping style for reference if needed */
+    font-size: var(--font-size-base);
+    /* Standard body text size */
+    color: var(--text-body);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+    /* Space before tags/button */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    /* Limit description to 3 lines */
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.job-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-top: auto;
+    /* Push tags to the bottom if content is short */
+    margin-bottom: var(--spacing-md);
+    /* Space before the button */
+    justify-content: flex-end;
+    /* Default RTL: Align tags to the right */
+}
+
+.tag {
+    background-color: var(--primary-light);
+    /* Use new primary-light for tags */
+    color: var(--primary-dark);
+    /* Use new primary-dark for tag text */
+    padding: 0.3em 0.8em;
+    /* Slightly less padding for a tighter look */
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    /* Consistent small font size */
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.tag:hover {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+.job-card .btn-secondary {
+    align-self: flex-end;
+    /* Default RTL: Align button to the right */
+    margin-top: var(--spacing-xs);
+    /* Small margin above button */
+    padding: 0.6rem 1.2rem;
+    /* Smaller padding for button */
+    font-size: var(--font-size-sm);
+    /* Smaller font for button */
+}
+
+/* Talent / Professional Card (Redesigned for clean, sharp, modern look) */
+.talent-card {
+    background: linear-gradient(to bottom, #ffffff, #fcfcfc);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.talent-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+    /* Softer, elevated shadow */
+    border-color: var(--primary-light);
+}
+
+.talent-card-header {
+    display: flex;
+    justify-content: flex-start;
+    /* Removed space-between to keep them together if needed */
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.talent-avatar-container {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-extra-light));
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    transition: transform 0.3s ease;
+}
+
+.talent-card:hover .talent-avatar-container {
+    transform: scale(1.05);
+}
+
+.talent-avatar-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.talent-name-and-location {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.talent-name {
+    font-size: var(--font-size-md);
+    color: var(--text-dark);
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.talent-card-divider {
+    height: 1px;
+    background-color: var(--border-color-light);
+    /* Changed to use variable if exists, or light grey */
+    width: 100%;
+    margin: 0;
+}
+
+.talent-details-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    flex-grow: 1;
+}
+
+.talent-location-display {
+    font-size: var(--font-size-sm);
+    color: var(--text-body);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin: 0;
+}
+
+.talent-location-display i {
+    color: var(--text-light);
+}
+
+.talent-rating {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.talent-rating i {
+    color: #ffc107;
+    /* Star color */
+}
+
+.talent-skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-top: auto;
+}
+
+.talent-skills-container .skill-tag {
+    background-color: var(--background-hover);
+    color: var(--text-body);
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+}
+
+.talent-skills-container .skill-tag.skill-more {
+    background-color: transparent;
+    color: var(--text-light);
+    border: 1px dashed var(--border-color);
+}
+
+.talent-actions {
+    margin-top: auto;
+    width: 100%;
+}
+
+.talent-actions .view-profile-btn {
+    width: 100%;
+    justify-content: center;
+    background-color: var(--white);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.talent-actions .view-profile-btn:hover {
+    background-color: var(--primary);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(10, 37, 64, 0.15);
+    /* Sleek shadow */
+}
+
+/* Application Card (for dashboards) - Cleaned up */
+.application-card {
+    background-color: var(--white);
+    /* White for application cards */
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    border: 1px solid var(--border-color);
+}
+
+.application-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+    /* Highlight border on hover with new primary-light */
+}
+
+.application-card .card-header-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px dashed var(--border-color);
+    /* Use border-color */
+}
+
+.freelancer-avatar-small {
+    width: 45px;
+    height: 45px;
+    background-color: var(--accent);
+    /* Using accent for these avatars */
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.freelancer-details-compact h4 {
+    margin: 0;
+    color: var(--text-dark);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+}
+
+.freelancer-details-compact p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-body);
+}
+
+.application-card .card-body-info {
+    flex-grow: 1;
+}
+
+.application-card .card-body-info p {
+    font-size: var(--font-size-sm);
+    color: var(--text-body);
+    margin-bottom: var(--spacing-xxs);
+    line-height: 1.4;
+}
+
+.application-card .card-body-info p:last-child {
+    margin-bottom: 0;
+}
+
+.application-card .card-actions-footer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px dashed var(--border-color);
+    /* Use border-color */
+    align-items: flex-start;
+}
+
+.application-status {
+    font-weight: 600;
+    text-transform: capitalize;
+    font-size: var(--font-size-xs);
+    padding: 0.2em 0.5em;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-bottom: var(--spacing-xs);
+}
+
+.application-status.applied {
+    background-color: var(--primary-light);
+    /* Use primary-light for applied */
+    color: var(--primary-dark);
+    /* Use primary-dark for text */
+}
+
+.application-status.interviewing {
+    background-color: var(--accent-light);
+    /* Use accent-light for interviewing */
+    color: var(--accent);
+    /* Use accent for text */
+}
+
+.application-status.accepted {
+    background-color: var(--success);
+    /* Use success color */
+    color: var(--white);
+    /* White text on success */
+}
+
+.application-status.rejected {
+    background-color: var(--danger);
+    /* Use danger color */
+    color: var(--white);
+    /* White text on danger */
+}
+
+.action-buttons-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xxs);
+    justify-content: flex-start;
+}
+
+.action-buttons-group .btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+}
+
+/* Specific button styles for actions */
+.action-buttons-group .btn-success {
+    /* Shortlist / Accept */
+    background-color: var(--success);
+    color: var(--white);
+    border-color: var(--success);
+}
+
+.action-buttons-group .btn-danger {
+    /* Reject */
+    background-color: var(--danger);
+    /* Use danger for reject button */
+    color: var(--white);
+    border-color: var(--danger);
+}
+
+.action-buttons-group .btn-outline-secondary {
+    /* Profile / Move to Pending */
+    background-color: transparent;
+    color: var(--secondary);
+    border-color: var(--secondary-light);
+}
+
+.action-buttons-group .btn-outline-info {
+    /* Email / Move to Pending (from Rejected) */
+    background-color: transparent;
+    color: var(--info);
+    border-color: var(--info);
+    /* Use info for border */
+}
+
+.action-buttons-group .btn-outline-primary {
+    /* CV */
+    background-color: transparent;
+    color: var(--primary);
+    border-color: var(--primary-light);
+}
+
+.action-buttons-group .btn-outline-success {
+    /* Move to Shortlisted */
+    background-color: transparent;
+    color: var(--success);
+    border-color: var(--success);
+    /* Use success for border */
+}
+
+/* Styling for disabled buttons */
+.action-buttons-group button.disabled {
+    opacity: 0.6;
+    /* Make them slightly transparent */
+    cursor: not-allowed;
+    /* Change cursor to 'not-allowed' */
+    background-color: #e9ecef;
+    /* A light grey background */
+    border-color: #ced4da;
+    /* A light grey border */
+    color: #6c757d;
+    /* Darker grey text color */
+}
+
+/* Optional: Prevent hover effects on disabled buttons */
+.action-buttons-group button.disabled:hover,
+.action-buttons-group button.disabled:active {
+    background-color: #e9ecef !important;
+    border-color: #ced4da !important;
+    color: #6c757d !important;
+    box-shadow: none !important;
+}
+
+
+/* Empty state for no applicants */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background-color: var(--white);
+    /* White background */
+    border-radius: var(--border-radius);
+    color: var(--text-light);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-state i {
+    font-size: var(--font-size-xxxl);
+    margin-bottom: var(--spacing-md);
+    color: var(--text-light);
+    /* Use text-light for icons */
+}
+
+.small-empty-state {
+    /* For empty states within modal sections */
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+    background-color: var(--primary-extra-light);
+    /* Light primary background */
+}
+
+.small-empty-state i {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-xs);
+}
+
+.small-empty-state p {
+    font-size: var(--font-size-sm);
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--primary);
+    font-size: var(--font-size-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner i {
+    font-size: var(--font-size-xxl);
+    margin-right: var(--spacing-sm);
+}
+
+
+/* RTL for Job/Talent Cards (to be applied when html[dir="rtl"] is active) */
+html[dir="ltr"] .job-card,
+html[dir="ltr"] .talent-card {
+    text-align: start;
+    /* Switch to LTR when translated */
+}
+
+html[dir="ltr"] .job-meta,
+html[dir="ltr"] .job-tags,
+html[dir="ltr"] .job-location-display {
+    justify-content: flex-start;
+    /* Switch to LTR: Align items to the left */
+}
+
+html[dir="ltr"] .job-meta span {
+    flex-direction: row;
+    /* Switch to LTR: Icon on the left */
+}
+
+html[dir="rtl"] .job-card h3,
+html[dir="rtl"] .talent-card h3 {
+    text-align: start;
+    /* Native start is better than end */
+}
+
+/* Reverse order for flex containers that should flip but ONLY for jobs if needed */
+html[dir="rtl"] .job-meta,
+html[dir="rtl"] .job-tags {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+/* Job location display needs center alignment for proper icon-text alignment */
+html[dir="rtl"] .job-location-display {
+    flex-direction: row-reverse;
+    /* Reverse order of flex items */
+    justify-content: center;
+    /* Keep centered */
+    align-items: center;
+    /* Center align for proper vertical alignment */
+}
+
+/* Specific adjustments for icons and text spacing in RTL */
+html[dir="rtl"] .job-meta span i,
+html[dir="rtl"] .job-location-display i {
+    margin-right: 0;
+    /* Remove LTR margin */
+    margin-left: var(--spacing-xs);
+    /* Add margin to the left of the icon */
+}
+
+/* Talent rating and location icons come after text in Arabic RTL */
+html[dir="rtl"] .talent-rating i,
+html[dir="rtl"] .talent-location-display i {
+    margin-right: 0;
+    /* Remove LTR margin */
+    margin-left: var(--spacing-xs);
+    /* Add margin to the left of the icon (after text) */
+}
+
+html[dir="rtl"] .talent-avatar-container {
+    order: -1;
+    /* Move avatar to the left in RTL */
+    margin-left: 0;
+    /* Remove LTR margin */
+    margin-right: 0.5rem;
+    /* Add margin to the right of the avatar */
+}
+
+html[dir="ltr"] .job-card .btn-secondary,
+html[dir="ltr"] .talent-actions .btn {
+    align-self: flex-start;
+    /* Switch to LTR: Align button to the left */
+}
+
+/* Application Card RTL */
+html[dir="rtl"] .application-card .card-header-info,
+html[dir="rtl"] .application-card .card-actions-footer {
+    flex-direction: row-reverse;
+    align-items: flex-end;
+}
+
+html[dir="rtl"] .freelancer-details-compact {
+    text-align: end;
+}
+
+html[dir="rtl"] .application-status {
+    align-self: flex-end;
+}
+
+html[dir="rtl"] .action-buttons-group {
+    justify-content: flex-end;
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .dashboard-wrapper {
+        flex-direction: column;
+    }
+
+    .dashboard-sidebar {
+        width: 100%;
+        position: static;
+        height: auto;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: var(--spacing-md);
+    }
+
+    .sidebar-header {
+        padding-bottom: 0;
+        border-bottom: none;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .user-avatar-large {
+        width: 50px;
+        height: 50px;
+        font-size: var(--font-size-lg);
+        margin: 0;
+    }
+
+    .user-name-sidebar,
+    .user-type-sidebar {
+        text-align: left;
+        margin-top: 0;
+    }
+
+    .sidebar-nav {
+        width: 100%;
+        margin-top: var(--spacing-md);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: var(--spacing-md);
+    }
+
+    .sidebar-nav ul {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .sidebar-nav a {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-xs);
+    }
+
+    .sidebar-nav a i {
+        font-size: var(--font-size-base);
+    }
+
+    .dashboard-content {
+        padding: var(--spacing-lg);
+    }
+
+    .main-dashboard-title {
+        font-size: var(--font-size-xl);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .application-management-section {
+        padding: var(--spacing-md);
+    }
+
+    .application-filters {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .application-filters .filter-btn {
+        width: 100%;
+    }
+
+    .applicants-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .application-card {
+        flex-direction: column;
+        /* Stack elements in card on smaller screens */
+        align-items: flex-start;
+    }
+
+    .application-card .card-header-info {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        padding-bottom: var(--spacing-xs);
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+    .application-card .card-body-info {
+        width: 100%;
+    }
+
+    .application-card .card-actions-footer {
+        width: 100%;
+        align-items: flex-start;
+    }
+
+    .action-buttons-group {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-content {
+        padding: var(--spacing-md);
+    }
+
+    .main-dashboard-title {
+        font-size: var(--font-size-lg);
+    }
+
+    .application-management-section h2 {
+        font-size: var(--font-size-md);
+    }
+
+    .application-filters .filter-btn {
+        font-size: var(--font-size-sm);
+        padding: 0.6rem 1rem;
+    }
+
+    .freelancer-avatar-small {
+        width: 35px;
+        height: 35px;
+        font-size: var(--font-size-xs);
+    }
+
+    .freelancer-details-compact h4 {
+        font-size: var(--font-size-sm);
+    }
+
+    .freelancer-details-compact p {
+        font-size: var(--font-size-xs);
+    }
+
+    .application-card .card-body-info p {
+        font-size: var(--font-size-xs);
+    }
+
+    .application-status {
+        font-size: var(--font-size-xxs);
+    }
+
+    .action-buttons-group .btn-sm {
+        font-size: var(--font-size-xxs);
+        padding: 0.3rem 0.5rem;
+    }
+}

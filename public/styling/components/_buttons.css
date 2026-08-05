@@ -1,0 +1,424 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.8rem; /* Slightly more padding */
+  border-radius: var(--border-radius); /* Use the new default border-radius */
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all var(--transition);
+  text-align: center;
+  white-space: nowrap; /* Keep text on one line by default */
+  user-select: none;
+  text-decoration: none;
+  position: relative; /* For potential pseudo-elements/animations */
+  /* REMOVED: overflow: hidden; */ /* This was causing text clipping */
+}
+
+/* Use margin-inline-end for icons to respect text direction */
+.btn i { margin-inline-end: var(--spacing-xs); }
+
+/* Primary Button - Stunning Gradient */
+.btn-primary {
+    background: var(--primary-gradient);
+    color: var(--white);
+    border: none;
+    box-shadow: var(--shadow-primary);
+    position: relative;
+    overflow: hidden;
+}
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient-hover);
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+.btn-primary:hover::before {
+    opacity: 1;
+}
+.btn-primary:hover {
+    color: var(--white);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+}
+.btn-primary:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+.btn-primary * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Accent Button - Gorgeous Pink Gradient */
+.btn-accent {
+    background: var(--accent-gradient);
+    color: var(--white);
+    border: none;
+    box-shadow: var(--shadow-accent);
+    position: relative;
+    overflow: hidden;
+}
+.btn-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #e879f9 0%, #ec4899 100%);
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+.btn-accent:hover::before {
+    opacity: 1;
+}
+.btn-accent:hover {
+    color: var(--white);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+}
+.btn-accent:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+.btn-accent * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Outline Button - Clean and Modern */
+.btn-outline {
+    background-color: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    box-shadow: none;
+    backdrop-filter: blur(10px);
+}
+.btn-outline:hover {
+    background: var(--primary-gradient);
+    color: var(--white);
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-primary);
+}
+.btn-outline:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Secondary Button - Beautiful Turquoise Gradient */
+.btn-secondary {
+    background: var(--secondary-gradient);
+    color: var(--white);
+    border: none;
+    box-shadow: var(--shadow-secondary);
+    position: relative;
+    overflow: hidden;
+}
+.btn-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--secondary-dark) 0%, #0891b2 100%);
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+.btn-secondary:hover::before {
+    opacity: 1;
+}
+.btn-secondary:hover {
+    color: var(--white);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+}
+.btn-secondary:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+.btn-secondary * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Outline Secondary Button */
+.btn-outline-secondary {
+    background-color: transparent;
+    color: var(--secondary);
+    border-color: var(--secondary);
+}
+.btn-outline-secondary:hover {
+    background-color: var(--secondary-light);
+    color: var(--secondary-dark); /* This should be fine if secondary-dark is a dark color */
+    border-color: var(--secondary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xs);
+}
+
+/* New: White Button (for CTA section on dark background) */
+.btn-white {
+    background-color: var(--white);
+    color: var(--primary); /* Primary color text on white */
+    border-color: var(--white);
+    box-shadow: var(--shadow-sm);
+}
+.btn-white:hover {
+    background-color: var(--primary-light); /* New primary-light for hover background */
+    color: var(--primary-dark); /* New primary-dark text on hover */
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+.btn-white:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-xs);
+}
+
+/* New: Outline White Button (for CTA section on dark background) */
+.btn-outline-white {
+    background-color: transparent;
+    color: var(--white);
+    border-color: var(--white);
+    box-shadow: none;
+}
+.btn-outline-white:hover {
+    background-color: rgba(255, 255, 255, 0.15); /* Subtle white overlay */
+    color: var(--white);
+    border-color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xs);
+}
+.btn-outline-white:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Status Buttons - Modern & Beautiful */
+.btn-success {
+    background: linear-gradient(135deg, var(--success) 0%, #38a169 100%);
+    color: var(--white);
+    border: none;
+    box-shadow: var(--shadow-outline-success);
+}
+.btn-success:hover {
+    background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, var(--info) 0%, #3182ce 100%);
+    color: var(--white);
+    border: none;
+    box-shadow: 0 10px 20px rgba(66, 153, 225, 0.15);
+}
+.btn-info:hover {
+    background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger) 0%, #e53e3e 100%);
+    color: var(--white);
+    border: none;
+    box-shadow: var(--shadow-outline-danger);
+}
+.btn-danger:hover {
+    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning) 0%, #dd6b20 100%);
+    color: var(--white);
+    border: none;
+    box-shadow: 0 10px 20px rgba(237, 137, 54, 0.15);
+}
+.btn-warning:hover {
+    background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Outline Status Buttons */
+.btn-outline-success {
+    background-color: transparent;
+    color: var(--success);
+    border: 2px solid var(--success);
+}
+.btn-outline-success:hover {
+    background: linear-gradient(135deg, var(--success) 0%, #38a169 100%);
+    color: var(--white);
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-outline-success);
+}
+
+.btn-outline-info {
+    background-color: transparent;
+    color: var(--info);
+    border: 2px solid var(--info);
+}
+.btn-outline-info:hover {
+    background: linear-gradient(135deg, var(--info) 0%, #3182ce 100%);
+    color: var(--white);
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(66, 153, 225, 0.15);
+}
+
+.btn-outline-danger {
+    background-color: transparent;
+    color: var(--danger);
+    border: 2px solid var(--danger);
+}
+.btn-outline-danger:hover {
+    background: linear-gradient(135deg, var(--danger) 0%, #e53e3e 100%);
+    color: var(--white);
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-outline-danger);
+}
+
+/* Sizes - Adjusted padding and font sizes */
+.btn-large { padding: 1.1rem 2.2rem; font-size: var(--font-size-lg); border-radius: var(--border-radius-lg); }
+.btn-sm { padding: 0.6rem 1.2rem; font-size: var(--font-size-sm); }
+.btn-block { display: flex; width: 100%; margin-top: var(--spacing-md); }
+
+/* Disabled */
+.btn:disabled, .btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Tactile press feedback (already good) */
+.btn:active {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+/* Button with text only (e.g., "Learn More" links) */
+.btn-text {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    transition: color var(--transition);
+    white-space: normal; /* Allow text to wrap if needed */
+    overflow: visible;   /* Ensure text is not hidden by overflow */
+    text-overflow: clip; /* Prevent ellipsis */
+}
+.btn-text:hover {
+    color: var(--primary-dark);
+    transform: none;
+    box-shadow: none;
+}
+/* Use logical properties for icon margin and transform */
+.btn-text i {
+    margin-inline-start: var(--spacing-xs); /* Icon on the logical start side */
+    margin-inline-end: 0; /* No margin on the logical end side */
+    transition: transform var(--transition);
+}
+.btn-text:hover i {
+    /* Adjust transform based on text direction */
+    transform: translateX(4px);
+}
+html[dir="rtl"] .btn-text:hover i {
+    transform: translateX(-4px); /* Reverse direction for RTL */
+}
+
+/* Specific fix for buttons in application cards to ensure text visibility */
+.action-buttons-group .btn-sm {
+    white-space: normal; /* Allow text to wrap if needed */
+    overflow: visible;   /* Ensure text is not hidden by overflow */
+    text-overflow: clip; /* Prevent ellipsis */
+}
+
+/* Smart Hint Button - Professional and Eye-catching */
+.smart-hint-container {
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.smart-hint-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 2px solid var(--primary);
+    border-radius: var(--border-radius-lg);
+    color: var(--primary);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.smart-hint-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0;
+    transition: opacity var(--transition);
+    z-index: 0;
+}
+
+.smart-hint-btn:hover::before {
+    opacity: 1;
+}
+
+.smart-hint-btn:hover {
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: transparent;
+}
+
+.smart-hint-btn i {
+    margin-inline-end: var(--spacing-sm);
+    font-size: 1.1em;
+    transition: transform var(--transition);
+    position: relative;
+    z-index: 1;
+}
+
+.smart-hint-btn span {
+    position: relative;
+    z-index: 1;
+}
+
+.smart-hint-btn:hover i {
+    transform: scale(1.1);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1.1); }
+    50% { transform: scale(1.2); }
+}

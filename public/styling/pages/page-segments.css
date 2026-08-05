@@ -1,0 +1,572 @@
+/*
+ * Hirly — Segment Pages CSS (page-segments.css)
+ * Blog-style premium design for: for-individuals, for-companies, for-professionals
+ */
+
+/* ============================================================
+   SEGMENT HERO — Full-bleed image background
+============================================================ */
+.seg-hero {
+    position: relative;
+    min-height: 600px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.seg-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(10,15,40,0.78) 0%, rgba(40,10,80,0.62) 100%);
+    z-index: 1;
+}
+
+.seg-hero-inner {
+    position: relative;
+    z-index: 2;
+    padding: 5.5rem 0 4.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    max-width: 780px;
+    margin: 0 auto;
+}
+
+/* Badge */
+.seg-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 50px;
+    padding: 0.4rem 1.15rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    backdrop-filter: blur(6px);
+}
+
+/* Heading */
+.seg-hero-h1 {
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    line-height: 1.2;
+    margin: 0;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.3);
+}
+
+.seg-hero-accent {
+    color: #60a5fa;
+    background: none;
+    -webkit-text-fill-color: initial;
+    background-clip: initial;
+}
+
+/* Subtitle */
+.seg-hero-p {
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    color: rgba(255,255,255,0.85);
+    max-width: 580px;
+    line-height: 1.75;
+    margin: 0 auto;
+}
+
+/* Buttons */
+.seg-hero-btns {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.seg-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    padding: 0.85rem 2.2rem;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 20px rgba(102,126,234,0.35);
+}
+
+.seg-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102,126,234,0.45);
+    opacity: 0.95;
+}
+
+.seg-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.12);
+    color: #ffffff;
+    border: 1.5px solid rgba(255,255,255,0.45);
+    border-radius: 50px;
+    padding: 0.85rem 2.2rem;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    transition: all 0.25s ease;
+}
+
+.seg-btn-ghost:hover {
+    background: rgba(255,255,255,0.22);
+    border-color: rgba(255,255,255,0.7);
+    transform: translateY(-2px);
+}
+
+/* Hero mini stats */
+.seg-hero-stats {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 14px;
+    padding: 0.75rem 1.5rem;
+    backdrop-filter: blur(8px);
+    justify-content: center;
+}
+
+.seg-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1.25rem;
+}
+
+.seg-stat strong {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.seg-stat span {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.seg-stat-div {
+    width: 1px;
+    height: 32px;
+    background: rgba(255,255,255,0.25);
+}
+
+/* ============================================================
+   INTRO STRIP
+============================================================ */
+.seg-intro-strip {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 2rem 0;
+}
+
+.seg-intro-text {
+    color: rgba(255,255,255,0.95);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    font-weight: 500;
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.seg-quote-icon {
+    font-size: 1.4rem;
+    color: rgba(255,255,255,0.5);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* ============================================================
+   SECTIONS
+============================================================ */
+.seg-section {
+    padding: 5rem 0;
+}
+
+.seg-alt-bg {
+    background: #f8fafc;
+}
+
+/* Section label block */
+.seg-section-label {
+    margin-bottom: 3rem;
+}
+
+.seg-section-label.seg-center {
+    text-align: center;
+}
+
+.seg-section-label.seg-center .seg-section-sub {
+    margin: 0 auto;
+}
+
+.seg-eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--primary, #667eea);
+    background: #f0f0ff;
+    padding: 0.3rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 0.75rem;
+}
+
+.seg-section-h2 {
+    font-size: clamp(1.55rem, 3vw, 2.1rem);
+    font-weight: 800;
+    color: #1a202c;
+    line-height: 1.28;
+    margin: 0 0 0.75rem;
+}
+
+.seg-section-sub {
+    font-size: 1.05rem;
+    color: #64748b;
+    max-width: 520px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* ============================================================
+   HORIZONTAL FEATURE ROWS
+============================================================ */
+.seg-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.seg-feat {
+    display: flex;
+    gap: 1.1rem;
+    align-items: flex-start;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.28s ease;
+}
+
+.seg-feat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(102,126,234,0.1);
+    border-color: #c7d3ff;
+}
+
+.seg-feat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f0f0ff, #e4e8ff);
+    color: var(--primary, #667eea);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: all 0.28s ease;
+}
+
+.seg-feat:hover .seg-feat-icon {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #ffffff;
+}
+
+.seg-feat-body h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 0.4rem;
+}
+
+.seg-feat-body p {
+    font-size: 0.88rem;
+    color: #64748b;
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* ============================================================
+   STEPS ROW
+============================================================ */
+.seg-steps-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.seg-step-card {
+    flex: 1;
+    min-width: 200px;
+    max-width: 280px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: all 0.28s ease;
+}
+
+.seg-step-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(102,126,234,0.12);
+    border-color: #c7d3ff;
+}
+
+.seg-step-num {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    box-shadow: 0 6px 18px rgba(102,126,234,0.3);
+    font-family: 'Cairo', sans-serif;
+}
+
+.seg-step-card h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 0.5rem;
+}
+
+.seg-step-card p {
+    font-size: 0.88rem;
+    color: #64748b;
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* Arrow between steps */
+.seg-steps-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    color: #c7d3ff;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* ============================================================
+   SPLIT ROW (image + text)
+============================================================ */
+.seg-split-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.seg-split-img-wrap {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(102,126,234,0.15);
+}
+
+.seg-split-img {
+    width: 100%;
+    height: 380px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.45s ease;
+}
+
+.seg-split-img-wrap:hover .seg-split-img {
+    transform: scale(1.04);
+}
+
+/* Floating badge over image */
+.seg-split-badge-float {
+    position: absolute;
+    bottom: 1.5rem;
+    inset-inline-end: 1.5rem;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 0.65rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #1a202c;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.14);
+    border: 1px solid #e2e8f0;
+}
+
+.seg-split-badge-float i {
+    color: var(--primary, #667eea);
+    font-size: 1.1rem;
+}
+
+.seg-badge-purple i {
+    color: #764ba2;
+}
+
+/* Split text side */
+.seg-split-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.seg-split-desc {
+    font-size: 1rem;
+    color: #64748b;
+    line-height: 1.75;
+    margin: 0.25rem 0 1rem;
+}
+
+/* Checklist */
+.seg-checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.seg-checklist li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: #334155;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.seg-checklist li i {
+    color: var(--primary, #667eea);
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   CTA BOTTOM STRIP
+============================================================ */
+.seg-cta-strip {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 4rem 0;
+}
+
+.seg-cta-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.seg-cta-text h2 {
+    font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 0.4rem;
+}
+
+.seg-cta-text p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.82);
+    margin: 0;
+}
+
+.seg-cta-btns {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.seg-btn-ghost-dark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.12);
+    color: #ffffff;
+    border: 1.5px solid rgba(255,255,255,0.4);
+    border-radius: 50px;
+    padding: 0.85rem 2rem;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.seg-btn-ghost-dark:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.7);
+    transform: translateY(-2px);
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 900px) {
+    .seg-split-row {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+    .seg-split-img { height: 280px; }
+}
+
+@media (max-width: 768px) {
+    .seg-hero { min-height: 480px; }
+    .seg-hero-inner { padding: 4.5rem 0 3.5rem; max-width: 100%; }
+    .seg-hero-h1 { font-size: 2rem; }
+    .seg-hero-stats { flex-wrap: wrap; gap: 0.5rem; }
+    .seg-stat-div { display: none; }
+    .seg-steps-row { gap: 1rem; }
+    .seg-steps-arrow { display: none; }
+    .seg-step-card { min-width: 100%; max-width: 100%; }
+    .seg-cta-inner { flex-direction: column; text-align: center; }
+    .seg-cta-btns { justify-content: center; }
+    .seg-features-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+    .seg-hero-btns { flex-direction: column; align-items: flex-start; }
+    .seg-btn-primary, .seg-btn-ghost { width: 100%; justify-content: center; }
+    .seg-cta-btns { flex-direction: column; }
+    .seg-btn-ghost-dark { justify-content: center; }
+}

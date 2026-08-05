@@ -1,0 +1,145 @@
+/* Hirly/styling/pages/page-job-dashboard.css */
+/* Minimal custom CSS for animations not easily done with Tailwind */
+
+/* Redefining buttons and other elements to use modern tactile styling */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 1rem;
+    transition: var(--transition-tactile);
+}
+
+.btn-primary {
+    background-color: var(--slate-900);
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: var(--slate-800);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-primary:active {
+    transform: scale(0.95);
+}
+
+.btn-secondary {
+    background-color: var(--slate-50);
+    color: var(--slate-600);
+    border: 1px solid var(--slate-100);
+}
+
+.btn-secondary:hover {
+    background-color: var(--slate-100);
+    color: var(--slate-900);
+}
+
+.btn-danger {
+    background-color: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #ffe4e6;
+}
+
+.btn-danger:hover {
+    background-color: #ffe4e6;
+    color: #be123c;
+}
+
+/* User tier badges - Simplified and professional */
+.user-tier-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    font-weight: 800;
+    border-radius: 12px;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid transparent;
+}
+
+.user-tier-badge.tier-premium {
+    background-color: #fffbeb;
+    color: #b45309;
+    border-color: #fef3c7;
+}
+
+.user-tier-badge.tier-pro {
+    background-color: var(--slate-50);
+    color: var(--slate-600);
+    border-color: var(--slate-100);
+}
+
+.user-tier-badge.tier-unlimited {
+    background-color: #ecfdf5;
+    color: #047857;
+    border-color: #d1fae5;
+}
+
+/* Editorial Design System Classes */
+.editorial-heading {
+    letter-spacing: -0.02em;
+    color: var(--slate-900);
+    font-weight: 800;
+}
+
+.editorial-subheading {
+    letter-spacing: 0.1em;
+    color: var(--slate-400);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.625rem;
+}
+
+/* Sidebar Link Overhaul */
+.sidebar-link {
+    @apply flex items-center gap-4 px-6 py-4 rounded-2xl text-slate-400 font-bold transition-all duration-300 relative overflow-hidden;
+    transition: var(--transition-tactile);
+}
+
+.sidebar-link i {
+    @apply text-lg transition-transform duration-300;
+}
+
+.sidebar-link:hover {
+    @apply bg-slate-50 text-slate-900;
+}
+
+.sidebar-link:hover i {
+    @apply scale-110 text-emerald-500;
+}
+
+.sidebar-link.active {
+    @apply bg-slate-900 text-white shadow-xl shadow-slate-900/10;
+}
+
+.sidebar-link.active i {
+    @apply text-emerald-400;
+}
+
+/* Card Overhaul - Strictly 32px */
+.clean-card, .stat-card, .application-card {
+    background-color: #ffffff;
+    border-radius: 32px;
+    border: 1px solid var(--slate-100);
+    transition: var(--transition-tactile);
+}
+
+.clean-card:hover, .stat-card:hover, .application-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.12);
+    border-color: var(--slate-200);
+}
+
+/* Responsive Radius Adjustments */
+@media (max-width: 640px) {
+    .clean-card, .stat-card, .application-card, .modal-container {
+        border-radius: 24px !important;
+    }
+}

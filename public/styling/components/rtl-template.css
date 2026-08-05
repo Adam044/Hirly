@@ -1,0 +1,83 @@
+/* RTL Template CSS - Include in each page-specific CSS file */
+
+/* This template contains common RTL styles that should be included in each page CSS file */
+/* When implementing in a page-specific file, use the page's specific class prefix where appropriate */
+
+/* Base RTL Text Direction */
+html[dir="rtl"] .page-specific-class {
+    /* 1. Text Alignment */
+    text-align: right;
+    
+    /* 2. Flexbox Direction */
+    flex-direction: row-reverse;
+    
+    /* 3. Justify Content */
+    justify-content: flex-end;
+    
+    /* 4. Logical Margins for Icons */
+    /* For icons followed by text */
+    .icon-with-text {
+        margin-left: 0.5rem;
+        margin-right: 0;
+    }
+    
+    /* 5. Logical Positioning for Absolute Elements */
+    .positioned-element {
+        left: auto;
+        right: 0;
+    }
+    
+    /* 6. Borders */
+    .bordered-element {
+        border-left: none;
+        border-right: 3px solid var(--primary);
+    }
+}
+
+/* Common RTL Patterns */
+
+/* 1. Flex Container Reversal */
+html[dir="rtl"] .flex-container {
+    flex-direction: row-reverse;
+}
+
+/* 2. Icon + Text Combinations */
+html[dir="rtl"] .icon-text-combo {
+    flex-direction: row-reverse;
+}
+
+html[dir="rtl"] .icon-text-combo i {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+/* 3. Alignment Classes */
+html[dir="rtl"] .text-start {
+    text-align: right;
+}
+
+html[dir="rtl"] .ms-auto {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+html[dir="rtl"] .me-auto {
+    margin-right: 0;
+    margin-left: auto;
+}
+
+/* 4. Form Elements */
+html[dir="rtl"] .form-group label {
+    text-align: right;
+}
+
+html[dir="rtl"] .input-with-icon i {
+    left: auto;
+    right: 10px;
+}
+
+/* 5. Dropdown/Popover Positioning */
+html[dir="rtl"] .dropdown-menu {
+    left: auto;
+    right: 0;
+}

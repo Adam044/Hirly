@@ -1,0 +1,1103 @@
+// job_details.js
+document.addEventListener('DOMContentLoaded', async function() {
+    // --- DOM Elements ---
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const pageLoadingOverlay = document.getElementById('pageLoadingOverlay') || loadingOverlay;
+    const pageErrorMessage = document.getElementById('pageErrorMessage');
+    const jobDetailsContent = document.getElementById('jobDetailsContent');
+
+    // Job Overview Section
+    const jobTitleElem = document.getElementById('jobTitle');
+    const jobCountryElem = document.getElementById('jobCountry');
+    const jobCityElem = document.getElementById('jobCity');
+    const jobTypeElem = document.getElementById('jobType');
+    const jobSiteTypeElem = document.getElementById('jobSiteType');
+    const jobGenderElem = document.getElementById('jobGender');
+    const jobAgeRangeElem = document.getElementById('jobAgeRange');
+    const jobBudgetElem = document.getElementById('jobBudget');
+    const jobPostedDateElem = document.getElementById('jobPostedDate');
+
+    // Dividers for conditional showing
+    const dividerCountry = document.getElementById('dividerCountry');
+    const dividerCity = document.getElementById('dividerCity');
+    const dividerType = document.getElementById('dividerType');
+    const dividerSiteType = document.getElementById('dividerSiteType');
+    const dividerBudget = document.getElementById('dividerBudget');
+    const dividerGender = document.getElementById('dividerGender');
+    const dividerAge = document.getElementById('dividerAge');
+
+    // About Employer Section
+    const aboutEmployerSection = document.querySelector('.about-employer-section');
+
+    // Job Description Section
+    const jobDescriptionElem = document.getElementById('jobDescription');
+
+    // Job Requirements Section
+    const jobRequirementsSection = document.getElementById('jobRequirementsSection');
+    const jobRequirementsList = document.getElementById('jobRequirementsList');
+    const noRequirementsMessage = document.getElementById('noRequirementsMessage');
+
+    // Required Professions Section
+    const requiredProfessionsContainer = document.getElementById('requiredProfessions');
+    const noRequiredProfessionsMessage = document.getElementById('noRequiredProfessions');
+    const infoJobSiteType = document.getElementById('infoJobSiteType');
+    const infoGender = document.getElementById('infoGender');
+    const infoAgeRange = document.getElementById('infoAgeRange');
+
+    // Job Image Section
+    const jobImageSection = document.getElementById('jobImageSection');
+    const jobImageElem = document.getElementById('jobImage');
+
+    // Apply Section
+    const applyNowBtn = document.getElementById('applyNowBtn');
+    const alreadyAppliedBtn = document.getElementById('alreadyAppliedBtn');
+    const jobClosedBtn = document.getElementById('jobClosedBtn');
+    const deadlinePassedBtn = document.getElementById('deadlinePassedBtn');
+    const applyStatusMessage = document.getElementById('applyStatusMessage');
+
+    // Application Modal
+    const applicationModal = document.getElementById('applicationModal');
+    const closeApplicationModalBtn = document.getElementById('closeApplicationModalBtn');
+    const applicationForm = document.getElementById('applicationForm');
+    const jobTitleModalElem = document.getElementById('jobTitleModal');
+    const proposalMessageInput = document.getElementById('proposalMessage');
+    const bidAmountInput = document.getElementById('bidAmount');
+    const currencyDisplay = document.getElementById('currencyDisplay');
+    const timelineInput = document.getElementById('timeline');
+    const applicationMessageStatus = document.getElementById('applicationMessageStatus');
+    const cancelApplicationBtn = document.getElementById('cancelApplicationBtn');
+    const submitApplicationBtn = document.getElementById('submitApplicationBtn');
+
+    // Login Modals
+    const employerLoginModal = document.getElementById('employerLoginModal');
+    const freelancerLoginModal = document.getElementById('freelancerLoginModal');
+    
+    // Modals for Apply Button Logic
+    const employerCannotApplyModal = document.getElementById('employerCannotApplyModal');
+    const idVerificationModal = document.getElementById('idVerificationModal');
+    const lowCompletenessModal = document.getElementById('lowCompletenessModal');
+    const externalApplyModal = document.getElementById('externalApplyModal');
+    const continueToExternalBtn = document.getElementById('continueToExternalBtn');
+    const externalApplyRingProgress = document.getElementById('externalApplyRingProgress');
+    const externalApplyPercentText = document.getElementById('externalApplyPercentText');
+
+    const completeAccountBtnText = document.getElementById('completeAccountBtnText');
+
+    const lowCompletenessApplyAnywayBtn = document.getElementById('lowCompletenessApplyAnywayBtn');
+    const lowCompletenessImproveBtn = document.getElementById('lowCompletenessImproveBtn');
+    const lowCompletenessRingProgress = document.getElementById('lowCompletenessRingProgress');
+    const lowCompletenessPercent = document.getElementById('lowCompletenessPercent');
+    const lowCompletenessDynamicDesc = document.getElementById('lowCompletenessDynamicDesc');
+    const lowCompletenessMissingList = document.getElementById('lowCompletenessMissingList');
+
+    const modalCloseButtons = document.querySelectorAll('.modal-close, .modal-close-btn, .modal-cancel-btn');
+
+
+    let currentJobId = null;
+    let currentJobData = null;
+    let currentLoggedInUser = null;
+
+    // Access global translation objects directly from window scope
+    const globalTalentCategories = window.globalCategoriesAndProfessions || [];
+    const palestinianCitiesTranslations = window.palestinianCitiesTranslations || {};
+
+
+    // --- Helper Functions ---
+    function updateTranslations() {
+        const t = window.translations || {};
+        const lang = window.currentLanguage || 'en';
+        
+        // This part handles data-lang-key attributes on static HTML elements
+        document.querySelectorAll('[data-lang-key]').forEach(element => {
+            const key = element.getAttribute('data-lang-key');
+            const translatedText = (t[key] && t[key][lang]) || key; // Safely access translation
+
+            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                element.placeholder = translatedText;
+            } else if (element.tagName === 'TITLE') {
+                document.title = translatedText;
+            } else if (element.classList.contains('btn-icon')) { // Handle buttons with icons
+                const buttonTextSpan = element.querySelector('.button-text');
+                if (buttonTextSpan) {
+                    buttonTextSpan.textContent = translatedText;
+                } else {
+                    // Fallback if .button-text span is missing
+                    element.textContent = translatedText;
+                }
+            } else if (element.tagName === 'H2' || element.tagName === 'H3' || element.tagName === 'A') {
+                // For H2, H3, A tags, specifically handle their content to preserve icons
+                const existingIcon = element.querySelector('i');
+                if (existingIcon) {
+                    element.innerHTML = `${existingIcon.outerHTML} ${translatedText}`;
+                } else {
+                    element.textContent = translatedText;
+                }
+            } else {
+                element.textContent = translatedText;
+            }
+        });
+
+        // Re-render dynamic content that relies on translations
+        if (currentJobData) {
+            renderJobDetails(currentJobData);
+        }
+    }
+
+    // This listener ensures updateTranslations runs when language.js signals readiness
+    window.addEventListener('translationsApplied', updateTranslations);
+
+    function createLoadingSpinnerHtml(textKey = 'loading_text', defaultText = 'Loading...') {
+        const t = window.translations[window.currentLanguage] || {}; // Safely get translations for current language
+        const text = t[textKey] || defaultText;
+        return `<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> <span>${text}</span></div>`;
+    }
+
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type} show`;
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function getCurrencySymbol(currencyCode) {
+        switch (currencyCode) {
+            case 'USD': return '$';
+            case 'ILS': return '₪';
+            case 'JOD': return 'JD';
+            case 'EUR': return '€';
+            default: return '';
+        }
+    }
+
+    function formatDate(dateString) {
+        const t = window.translations[window.currentLanguage] || {}; // Use current language
+        if (!dateString) return t['not_available']?.[window.currentLanguage] || 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString(window.currentLanguage, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function getPlaceholderUrl(text, width = 60, height = 60) {
+        return `https://placehold.co/${width}x${height}/999999/ffffff?text=${encodeURIComponent(text)}`;
+    }
+
+    function showModal(modalElement) {
+        if (!modalElement) {
+            console.error('[showModal] Modal element not found. Cannot show modal.');
+            return;
+        }
+        modalElement.classList.add('show');
+        document.body.classList.add('modal-open');
+    }
+
+    function hideModal(modalElement) {
+        if (!modalElement) {
+            console.error('[hideModal] Modal element not found. Cannot hide modal.');
+            return;
+        }
+        modalElement.classList.remove('show');
+        document.body.classList.remove('modal-open');
+    }
+
+    modalCloseButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            hideModal(employerLoginModal);
+            hideModal(freelancerLoginModal);
+            hideModal(applicationModal);
+            hideModal(employerCannotApplyModal);
+            hideModal(idVerificationModal);
+            hideModal(lowCompletenessModal);
+            hideModal(externalApplyModal);
+        });
+    });
+
+    function computeProfileCompletenessFromUser(user, overrideProfile = null) {
+        // Fallback function that tries to match the server-side logic in routes/user.js
+        const u = overrideProfile || {
+            ...(user || {}),
+            ...(user && user.profile ? user.profile : {})
+        };
+        
+        let score = 0;
+        
+        // 1. Personal Info (20% total - 4% each)
+        if (u.first_name || u.firstName) score += 4;
+        if (u.last_name || u.lastName) score += 4;
+        if (u.phone) score += 4;
+        if (u.city) score += 4;
+        if (u.birthdate) score += 4;
+
+        // 2. Profile Picture (10%)
+        if (u.profile_picture_url || u.profile_pic_url || u.avatar_url) score += 10;
+
+        // 3. Bio (10%)
+        const bio = u.bio || u.about_me || u.description;
+        if (bio && String(bio).length > 10) score += 10;
+
+        // 4. Skills (15%)
+        const skills = u.skills || u.skills_text;
+        if (skills && (Array.isArray(skills) ? skills.length > 0 : String(skills).length > 0)) score += 15;
+
+        // 5. Interested Professions (10%)
+        const profs = u.interested_professions || u.professions;
+        if (profs && Array.isArray(profs) && profs.length > 0) score += 10;
+
+        // 6. CV / Resume (15%)
+        const cv = u.cv_path || u.cv_url || u.resume_url;
+        if (cv) score += 15;
+
+        // 7. Status & Work/Education Details (20%)
+        const status = u.current_status || u.status;
+        if (status) {
+            score += 5; // Base for having a status
+            if (status === 'Student') {
+                const studentType = u.student_type;
+                if (studentType === 'School') {
+                    if (u.school_grade) score += 15;
+                } else if (studentType === 'University') {
+                    if (u.university) score += 5;
+                    if (u.degree) score += 5;
+                    if (u.study_status) score += 5;
+                } else {
+                    score += 5;
+                }
+            } else {
+                if (u.profession) score += 15;
+            }
+        }
+
+        return Math.min(100, score);
+    }
+
+    function updateLowCompletenessRing(percent) {
+        if (!lowCompletenessRingProgress || !lowCompletenessPercent) return;
+        const r = 54;
+        const circumference = 2 * Math.PI * r;
+        lowCompletenessRingProgress.setAttribute('stroke-dasharray', `${circumference} ${circumference}`);
+        const offset = circumference - (percent / 100) * circumference;
+        lowCompletenessRingProgress.style.strokeDashoffset = offset;
+        lowCompletenessPercent.textContent = `${percent}%`;
+    }
+
+    function updateExternalApplyCompletenessRing(percent) {
+        if (!externalApplyRingProgress || !externalApplyPercentText) return;
+        const r = 30;
+        const circumference = 2 * Math.PI * r;
+        externalApplyRingProgress.setAttribute('stroke-dasharray', `${circumference} ${circumference}`);
+        const offset = circumference - (percent / 100) * circumference;
+        externalApplyRingProgress.style.strokeDashoffset = offset;
+        externalApplyPercentText.textContent = `${percent}%`;
+    }
+
+    function populateLowCompletenessDetails(user, percent, overrideProfile = null) {
+        const t = window.translations;
+        if (lowCompletenessMissingList) {
+            lowCompletenessMissingList.innerHTML = '';
+            const raw = overrideProfile || ((user && user.profile) ? user.profile : {});
+            const get = (obj, keys) => keys.find(k => obj && obj[k] !== undefined) ? obj[keys.find(k => obj[k] !== undefined)] : undefined;
+            const profile = {
+                cv_path: get(raw, ['cv_path','cv','cv_url','resume_url','cvPath']),
+                profile_picture_url: get(raw, ['profile_picture_url','profile_pic_url','picture_url','photo_url','avatar_url']),
+                interested_professions: get(raw, ['interested_professions','interestedProfessions','professions_interested','professions']) || [],
+                current_status: get(raw, ['current_status','status']),
+                skills: get(raw, ['skills','skills_text']),
+                bio: get(raw, ['bio','about_me','description']),
+            };
+            const missing = [];
+            if (!profile.cv_path) missing.push(t['missing_cv']?.[window.currentLanguage] || 'CV');
+            if (!profile.profile_picture_url) missing.push(t['missing_profile_picture']?.[window.currentLanguage] || 'Profile Picture');
+            const profs = Array.isArray(profile.interested_professions) ? profile.interested_professions : (typeof profile.interested_professions === 'string' ? profile.interested_professions.split(',').map(s=>s.trim()).filter(Boolean) : []);
+            if (profs.length === 0) missing.push(t['missing_professions']?.[window.currentLanguage] || 'Interested Professions');
+            if (!profile.current_status) missing.push(t['missing_current_status']?.[window.currentLanguage] || 'Current Status');
+            const skillsVal = Array.isArray(profile.skills) ? profile.skills.join(',') : String(profile.skills || '').trim();
+            if (skillsVal.length === 0) missing.push(t['missing_skills']?.[window.currentLanguage] || 'Skills');
+            const bioVal = String(profile.bio || '').trim();
+            if (bioVal.length === 0) missing.push(t['missing_bio']?.[window.currentLanguage] || 'Bio');
+            missing.slice(0, 4).forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                lowCompletenessMissingList.appendChild(li);
+            });
+        }
+        if (lowCompletenessDynamicDesc) {
+            const hasCv = !!(overrideProfile ? (overrideProfile.cv_path || overrideProfile.cv || overrideProfile.cv_url || overrideProfile.resume_url || overrideProfile.cvPath) : (user && user.profile && (user.profile.cv_path || user.profile.cv || user.profile.cv_url || user.profile.resume_url || user.profile.cvPath)));
+            if (!hasCv) {
+                lowCompletenessDynamicDesc.textContent = (t['low_profile_modal_desc_cv_missing']?.[window.currentLanguage] || 'Your profile is missing a CV. Are you sure you want to continue?');
+            } else {
+                lowCompletenessDynamicDesc.textContent = (t['low_profile_modal_desc_low']?.[window.currentLanguage] || 'Your profile completeness is low. Are you sure you want to continue?');
+            }
+        }
+    }
+
+
+
+    function openApplicationModal() {
+        if (jobTitleModalElem && currentJobData) {
+            jobTitleModalElem.textContent = currentJobData.title;
+        }
+        const jobType = currentJobData.job_type?.toLowerCase();
+        if (jobType === 'full-time' || jobType === 'part-time' || jobType === 'internship' || jobType === 'temporary') {
+            if (bidAmountInput) bidAmountInput.closest('.form-group').style.display = 'none';
+            if (timelineInput) timelineInput.closest('.form-group').style.display = 'none';
+            bidAmountInput.removeAttribute('required');
+            timelineInput.removeAttribute('required');
+        } else {
+            if (bidAmountInput) bidAmountInput.closest('.form-group').style.display = 'block';
+            if (timelineInput) timelineInput.closest('.form-group').style.display = 'block';
+            bidAmountInput.setAttribute('required', 'true');
+            timelineInput.setAttribute('required', 'true');
+        }
+        showModal(applicationModal);
+    }
+
+
+    // --- Main Fetch Function ---
+    async function fetchJobDetails() {
+        if (pageLoadingOverlay) pageLoadingOverlay.classList.add('show');
+        if (jobDetailsContent) jobDetailsContent.style.display = 'none';
+        if (pageErrorMessage) pageErrorMessage.style.display = 'none';
+
+        const pathParts = window.location.pathname.split('/');
+        let lastPart = pathParts[pathParts.length - 1];
+
+        if (lastPart.endsWith('.html')) {
+            lastPart = lastPart.replace('.html', '');
+        }
+
+        if (lastPart && !isNaN(lastPart) && parseInt(lastPart) > 0) {
+            currentJobId = lastPart;
+        } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentJobId = urlParams.get('id');
+        }
+
+        if (!currentJobId) {
+            if (pageErrorMessage) {
+                const t = window.translations[window.currentLanguage] || {};
+                pageErrorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i><h3>${t['error_loading_job'] || 'Error loading job details.'}</h3><p>${t['job_id_missing'] || 'Job ID is missing from the URL.'}</p>`;
+                pageErrorMessage.style.display = 'block';
+            }
+            if (pageLoadingOverlay) pageLoadingOverlay.classList.remove('show');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/jobs/${currentJobId}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || (window.translations[window.currentLanguage]?.['failed_fetch_job_details'] || 'Failed to fetch job details.'));
+            }
+            currentJobData = await response.json();
+
+            // Record a view for this job (counts any visitor)
+            try {
+                fetch(`/api/jobs/${currentJobId}/view`, { method: 'POST' });
+            } catch (e) {}
+
+            await checkAuthStatus();
+
+            // IMPORTANT: Call renderJobDetails directly here after data is loaded and auth is checked.
+            // This ensures the dynamic content is built with the latest data.
+            renderJobDetails(currentJobData);
+
+            // Now, trigger the general translation update for data-lang-key elements
+            // and any other elements that might not be covered by renderJobDetails.
+            updateTranslations(); 
+            
+            // Removed: fetchMoreJobsFromEmployer(currentJobData.employer_user_id, currentJobData.id);
+            checkApplicationStatus(currentJobData.id, currentLoggedInUser ? currentLoggedInUser.id : null);
+
+
+            if (jobDetailsContent) {
+                jobDetailsContent.style.display = 'grid';
+            }
+        } catch (error) {
+            console.error('Error fetching job details:', error);
+            if (pageErrorMessage) {
+                const t = window.translations[window.currentLanguage] || {};
+                const errorPrefix = t['error_prefix']?.[window.currentLanguage] || 'Error: ';
+                const errorText = `${errorPrefix}${error.message}`;
+                pageErrorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i><h3>${t['error_loading_job'] || 'Error loading job details.'}</h3><p>${errorText}</p><p>${t['try_again_later'] || 'Please try again later.'}</p>`;
+                pageErrorMessage.style.display = 'block';
+            }
+        } finally {
+            if (pageLoadingOverlay) pageLoadingOverlay.classList.remove('show');
+        }
+    }
+
+    // --- Render Job Details (Enhanced for Translation and Consistency) ---
+function renderJobDetails(job) {
+    if (!job) {
+        console.error('No job data provided to renderJobDetails');
+        return;
+    }
+    const lang = window.currentLanguage || 'en';
+    const t = window.translations;
+    const cityTranslations = window.palestinianCitiesTranslations || {};
+    
+    // --- 1. Job Overview Section (Meta Info) ---
+    if (jobTitleElem) jobTitleElem.textContent = job.title;
+    
+    // **A. Location/City Logic**
+    // Handle both aliased and non-aliased property names from different API routes
+    const city = job.job_city || job.city;
+    const country = job.job_country || job.country;
+
+    const cityExists = city && city.trim() !== '' && city.toLowerCase() !== 'n/a' && city.toLowerCase() !== 'unknown';
+    const countryExists = country && country.trim() !== '' && country.toLowerCase() !== 'n/a' && country.toLowerCase() !== 'unknown';
+    
+    let translatedCountry = '';
+    if (countryExists) {
+        const countryKey = `country_${country.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`;
+        translatedCountry = cityTranslations?.[countryKey]?.[lang] || country;
+    }
+
+    let translatedCity = '';
+    if (cityExists) {
+        const cityKey = `city_${city.toLowerCase().replace(/'/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
+        translatedCity = cityTranslations?.[cityKey]?.[lang] || city;
+    }
+
+    // Render Country
+    if (jobCountryElem) {
+        if (translatedCountry) {
+            jobCountryElem.innerHTML = `<i class="fas fa-globe"></i> ${translatedCountry}`;
+            jobCountryElem.style.display = 'inline-flex';
+            if (dividerCountry) dividerCountry.style.display = 'inline';
+        } else {
+            jobCountryElem.style.display = 'none';
+            if (dividerCountry) dividerCountry.style.display = 'none';
+        }
+    }
+
+    // Render City
+    if (jobCityElem) {
+        if (translatedCity && 
+            translatedCity.toLowerCase() !== translatedCountry.toLowerCase() && 
+            translatedCity.toLowerCase() !== 'other' && 
+            city.toLowerCase() !== 'other') {
+            jobCityElem.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${translatedCity}`;
+            jobCityElem.style.display = 'inline-flex';
+            if (dividerCity) dividerCity.style.display = 'inline';
+        } else {
+            jobCityElem.style.display = 'none';
+            if (dividerCity) dividerCity.style.display = 'none';
+        }
+    }
+
+    // **B. Job Type Translation**
+    const jobTypeKey = (job.job_type || '').toLowerCase().replace(/[\s&()]/g, '_').replace(/[^a-z0-9_]/g, '');
+    const translatedJobType = t?.[jobTypeKey]?.[lang] || job.job_type;
+    if (jobTypeElem) {
+        if (translatedJobType && translatedJobType.toLowerCase() !== 'n/a') {
+            jobTypeElem.innerHTML = `<i class="fas fa-briefcase"></i> ${translatedJobType}`;
+            jobTypeElem.style.display = 'inline-flex';
+            if (dividerType) dividerType.style.display = 'inline';
+        } else {
+            jobTypeElem.style.display = 'none';
+            if (dividerType) dividerType.style.display = 'none';
+        }
+    }
+
+    // **C. Job Site Type (Remote/Hybrid/On-site)**
+    if (jobSiteTypeElem) {
+        const siteType = job.job_site_type || 'On-site';
+        const translatedSiteType = t[siteType.toLowerCase().replace('-', '_')]?.[lang] || siteType;
+        
+        // Hide if it's "N/A" or "Unknown"
+        if (translatedSiteType.toLowerCase() === 'n/a' || translatedSiteType.toLowerCase() === 'unknown') {
+            jobSiteTypeElem.style.display = 'none';
+            if (dividerSiteType) dividerSiteType.style.display = 'none';
+        } else {
+            jobSiteTypeElem.innerHTML = `<i class="fas fa-laptop-house"></i> ${translatedSiteType}`;
+            jobSiteTypeElem.style.display = 'inline-flex';
+            if (dividerSiteType) dividerSiteType.style.display = 'inline';
+        }
+    }
+
+    // **D. Budget**
+    if (jobBudgetElem) {
+        const budgetValue = job.budget ? `${getCurrencySymbol(job.currency)}${job.budget.toLocaleString()}` : (t?.['negotiable']?.[lang] || 'Negotiable');
+        if (budgetValue && budgetValue.toLowerCase() !== 'n/a') {
+            jobBudgetElem.innerHTML = `<i class="fas fa-money-bill-wave"></i> ${budgetValue}`;
+            jobBudgetElem.style.display = 'inline-flex';
+            if (dividerBudget) dividerBudget.style.display = 'inline';
+        } else {
+            jobBudgetElem.style.display = 'none';
+            if (dividerBudget) dividerBudget.style.display = 'none';
+        }
+    }
+    
+    // **E. Gender**
+    if (jobGenderElem) {
+        const gender = job.gender_requirement || 'any';
+        if (gender === 'any' || gender.toLowerCase() === 'n/a') {
+            jobGenderElem.style.display = 'none';
+            if (dividerGender) dividerGender.style.display = 'none';
+        } else {
+            const translatedGender = t[`${gender}_option`]?.[lang] || t[`select_gender_${gender}`]?.[lang] || gender;
+            jobGenderElem.innerHTML = `<i class="fas fa-venus-mars"></i> ${translatedGender}`;
+            jobGenderElem.style.display = 'inline-flex';
+            if (dividerGender) dividerGender.style.display = 'inline';
+        }
+    }
+
+    // **F. Age Range**
+    if (jobAgeRangeElem) {
+        if ((job.age_min || job.age_max) && (String(job.age_min).toLowerCase() !== 'n/a' && String(job.age_max).toLowerCase() !== 'n/a')) {
+            const from = job.age_min || '';
+            const to = job.age_max || '';
+            jobAgeRangeElem.innerHTML = `<i class="fas fa-user-clock"></i> ${from} - ${to}`;
+            jobAgeRangeElem.style.display = 'inline-flex';
+            if (dividerAge) dividerAge.style.display = 'inline';
+        } else {
+            jobAgeRangeElem.style.display = 'none';
+            if (dividerAge) dividerAge.style.display = 'none';
+        }
+    }
+
+    // **G. Date Display (Always show Post Date in meta)**
+    if (jobPostedDateElem) {
+        jobPostedDateElem.innerHTML = `<i class="fas fa-clock"></i> ${formatDate(job.created_at)}`;
+    }
+
+    // --- 2. Job Description Section ---
+    if (jobDescriptionElem) {
+        jobDescriptionElem.innerHTML = job.description ? job.description.replace(/\n/g, '<br>') : t['no_description_provided']?.[lang] || 'No description provided.';
+        const textContent = jobDescriptionElem.textContent.trim();
+        const isRTL = /[\u0600-\u06FF]/.test(textContent); // Check for Arabic characters
+        jobDescriptionElem.style.direction = isRTL ? 'rtl' : 'ltr';
+        jobDescriptionElem.style.textAlign = isRTL ? 'right' : 'left';
+    }
+
+    // --- 3. Required Professions Section ---
+    if (requiredProfessionsContainer) {
+        if (job.profession_required && job.profession_required.length > 0) {
+            requiredProfessionsContainer.innerHTML = job.profession_required.map(prof => {
+                let translatedProf = prof;
+                // Search in the full global list for the correct translation
+                for (const cat of globalTalentCategories) {
+                    const found = cat.professions.find(p => p.en === prof);
+                    if (found) {
+                        translatedProf = (found.ar && lang === 'ar') ? found.ar : found.en;
+                        break;
+                    }
+                }
+                return `<span class="job-tag">${translatedProf}</span>`;
+            }).join('');
+            noRequiredProfessionsMessage.style.display = 'none';
+        } else {
+            requiredProfessionsContainer.innerHTML = '';
+            noRequiredProfessionsMessage.style.display = 'block';
+        }
+    }
+
+    // --- 4. Job Image Section ---
+    if (jobImageSection && jobImageElem) {
+        if (job.job_image_path) {
+            jobImageElem.src = job.job_image_path;
+            jobImageSection.style.display = 'block';
+        } else {
+            jobImageSection.style.display = 'none';
+        }
+    }
+
+    // --- 5. About Employer Section ---
+    if (aboutEmployerSection) {
+        let employerDisplayName = job.display_employer_name || 'N/A';
+        const employerLogo = job.display_employer_logo;
+        const employerType = job.display_employer_type || 'individual';
+        
+        // Hide name if it indicates hidden identity
+        const hiddenIdentities = [
+            'هوية صاحب العمل مخفية',
+            'Employer identity hidden',
+            'Confidential',
+            'Hidden Identity'
+        ];
+        
+        const isHidden = hiddenIdentities.includes(employerDisplayName);
+        if (isHidden) {
+            employerDisplayName = '';
+        }
+
+        let avatarHtml = '';
+        let avatarClass = `employer-logo-sm ${employerType}`;
+        
+        if (employerLogo) {
+            const safeName = employerDisplayName.replace(/"/g, '&quot;');
+            avatarHtml = `<img src="${employerLogo}" onerror="this.onerror=null; this.outerHTML='<i class=&quot;fas fa-briefcase fallback-job-icon&quot;></i>';" alt="${safeName} Logo">`;
+        } else {
+            avatarHtml = `<i class="fas fa-briefcase fallback-job-icon"></i>`;
+        }
+
+        const translatedAboutEmployer = t['about_the_employer']?.[lang] || 'About the Employer';
+        const translatedViewProfile = t['view_employer_profile']?.[lang] || 'View Employer Profile';
+        
+        if (job.is_external) {
+            const translatedApplyExternally = t['apply_externally']?.[lang] || 'Apply Externally';
+            
+            aboutEmployerSection.innerHTML = `
+                <h2 data-lang-key="about_the_employer"><i class="fas fa-info-circle"></i> ${translatedAboutEmployer}</h2>
+                <div class="employer-info-card">
+                    <div class="employer-card-header-main">
+                        <div class="${avatarClass}" id="employerLogoContainer">
+                            ${avatarHtml}
+                        </div>
+                        <div class="employer-details-main">
+                            ${employerDisplayName ? `<h3 class="employer-name-header" id="employerName">${employerDisplayName}</h3>` : ''}
+                        </div>
+                    </div>
+                    <button id="externalApplyBtnDetails" class="btn btn-primary btn-icon">
+                        <i class="fas fa-external-link-alt"></i> <span class="button-text">${translatedApplyExternally}</span>
+                    </button>
+                </div>
+            `;
+            
+            const extBtn = aboutEmployerSection.querySelector('#externalApplyBtnDetails');
+            if (extBtn) {
+                extBtn.addEventListener('click', () => applyNowBtn.click());
+            }
+        } else {
+            // Manual/Internal Job
+            aboutEmployerSection.innerHTML = `
+                <h2 data-lang-key="about_the_employer"><i class="fas fa-info-circle"></i> ${translatedAboutEmployer}</h2>
+                <div class="employer-info-card">
+                    <div class="employer-card-header-main">
+                        <div class="${avatarClass}" id="employerLogoContainer">
+                            ${avatarHtml}
+                        </div>
+                        <div class="employer-details-main">
+                            ${employerDisplayName ? `<h3 class="employer-name-header" id="employerName">${employerDisplayName}</h3>` : ''}
+                        </div>
+                    </div>
+                    ${!isHidden ? `
+                    <a href="/employer_profile.html?id=${job.employer_user_id}" id="viewEmployerProfileBtn" class="btn btn-primary btn-icon" data-lang-key="view_employer_profile">
+                        <i class="fas fa-user-tie"></i> <span class="button-text">${translatedViewProfile}</span>
+                    </a>
+                    ` : ''}
+                </div>
+            `;
+
+            const employerProfileBtn = aboutEmployerSection.querySelector('#viewEmployerProfileBtn');
+            if (employerProfileBtn) {
+                employerProfileBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentLoggedInUser && currentLoggedInUser.user_type === 'freelancer') {
+                        window.location.href = `/employer_profile.html?id=${job.employer_user_id}`;
+                    } else {
+                        showModal(freelancerLoginModal);
+                    }
+                });
+            }
+        }
+    }
+
+    // --- 6. Deadline Display Section ---
+    const deadlineSection = document.getElementById('deadlineSection');
+    const deadlineDateElem = document.getElementById('deadlineDate');
+    
+    if (deadlineSection && deadlineDateElem && job.deadline) {
+        const deadlineDate = new Date(job.deadline);
+        const formattedDeadline = formatDate(job.deadline);
+        
+        deadlineDateElem.textContent = formattedDeadline;
+        deadlineSection.style.display = 'block';
+    } else if (deadlineSection) {
+        deadlineSection.style.display = 'none';
+    }
+
+    // --- 7. Requirements Section ---
+    if (jobRequirementsList && jobRequirementsSection) {
+        const reqs = Array.isArray(job.requirements) ? job.requirements.filter(r => (r || '').trim().length > 0) : [];
+        if (reqs.length > 0) {
+            jobRequirementsList.innerHTML = '';
+            reqs.forEach(r => {
+                const li = document.createElement('li');
+                li.className = 'requirement-item';
+                
+                // RTL/LTR logic for each requirement
+                const isRTL = /[\u0600-\u06FF]/.test(r);
+                li.style.direction = isRTL ? 'rtl' : 'ltr';
+                li.style.textAlign = isRTL ? 'right' : 'left';
+                
+                li.innerHTML = `<i class="fas fa-check-circle requirement-icon" style="${isRTL ? 'margin-left: 10px; margin-right: 0;' : ''}"></i><span class="requirement-text">${r}</span>`;
+                jobRequirementsList.appendChild(li);
+            });
+            if (noRequirementsMessage) noRequirementsMessage.style.display = 'none';
+            jobRequirementsList.style.display = 'block';
+            jobRequirementsSection.style.display = 'block';
+        } else {
+            jobRequirementsList.style.display = 'none';
+            if (noRequirementsMessage) noRequirementsMessage.style.display = 'none';
+            jobRequirementsSection.style.display = 'none';
+        }
+    }
+
+    // --- 8. Dossier Sections (Responsibilities, Preferred Qualifications, Benefits) ---
+    const dossier = job.job_dossier || {};
+    
+    // Helper to render a section
+    const renderDossierSection = (id, data, icon) => {
+        const container = document.getElementById(id);
+        if (!container) return;
+        
+        const list = container.querySelector('ul') || container.querySelector('.dossier-list');
+        const section = container.closest('.job-details-section') || container;
+        
+        const items = Array.isArray(data) ? data.filter(i => (i || '').trim().length > 0) : [];
+        
+        if (items.length > 0 && list) {
+            list.innerHTML = items.map(item => {
+                const isRTL = /[\u0600-\u06FF]/.test(item);
+                const style = `direction: ${isRTL ? 'rtl' : 'ltr'}; text-align: ${isRTL ? 'right' : 'left'};`;
+                const iconStyle = isRTL ? 'margin-left: 10px; margin-right: 0;' : '';
+                
+                return `
+                    <li class="requirement-item" style="${style}">
+                        <i class="${icon} requirement-icon" style="${iconStyle}"></i>
+                        <span class="requirement-text">${item}</span>
+                    </li>
+                `;
+            }).join('');
+            section.style.display = 'block';
+        } else if (section) {
+            section.style.display = 'none';
+        }
+    };
+
+    renderDossierSection('jobResponsibilities', dossier.responsibilities, 'fas fa-tasks');
+    renderDossierSection('jobPreferredQualifications', dossier.preferred_qualifications, 'fas fa-star');
+    renderDossierSection('jobBenefits', dossier.benefits, 'fas fa-gift');
+}
+
+
+    async function checkApplicationStatus(jobId, freelancerId) {
+        const t = window.translations[window.currentLanguage] || {};
+
+        // If external apply is available, always show Apply Now (bypass internal application gating)
+        if (currentJobData && currentJobData.external_apply_url) {
+            // Check deadline even for external URL
+            if (currentJobData.deadline) {
+                const deadlineDate = new Date(currentJobData.deadline);
+                const currentDate = new Date();
+                if (currentDate > deadlineDate) {
+                    applyNowBtn.style.display = 'none';
+                    alreadyAppliedBtn.style.display = 'none';
+                    jobClosedBtn.style.display = 'none';
+                    deadlinePassedBtn.style.display = 'block';
+                    return;
+                }
+            }
+            applyNowBtn.style.display = 'block';
+            alreadyAppliedBtn.style.display = 'none';
+            jobClosedBtn.style.display = 'none';
+            deadlinePassedBtn.style.display = 'none';
+            return;
+        }
+
+        if (!freelancerId || currentLoggedInUser.user_type !== 'freelancer') {
+            // Check deadline for employers/guest views
+            if (currentJobData.deadline) {
+                const deadlineDate = new Date(currentJobData.deadline);
+                const currentDate = new Date();
+                if (currentDate > deadlineDate) {
+                    applyNowBtn.style.display = 'none';
+                    alreadyAppliedBtn.style.display = 'none';
+                    jobClosedBtn.style.display = 'none';
+                    deadlinePassedBtn.style.display = 'block';
+                    return;
+                }
+            }
+            applyNowBtn.style.display = 'block';
+            alreadyAppliedBtn.style.display = 'none';
+            jobClosedBtn.style.display = 'none';
+            deadlinePassedBtn.style.display = 'none';
+            return;
+        }
+
+        if (currentJobData.status && currentJobData.status.toLowerCase() !== 'open') {
+            applyNowBtn.style.display = 'none';
+            alreadyAppliedBtn.style.display = 'none';
+            jobClosedBtn.style.display = 'block';
+            deadlinePassedBtn.style.display = 'none';
+            return;
+        }
+
+        // Check if deadline has passed
+        if (currentJobData.deadline) {
+            const deadlineDate = new Date(currentJobData.deadline);
+            const currentDate = new Date();
+            
+            if (currentDate > deadlineDate) {
+                applyNowBtn.style.display = 'none';
+                alreadyAppliedBtn.style.display = 'none';
+                jobClosedBtn.style.display = 'none';
+                deadlinePassedBtn.style.display = 'block';
+                return;
+            }
+        }
+
+        try {
+            const response = await fetch(`/api/applications/check?jobId=${jobId}&freelancerId=${freelancerId}`);
+            const data = await response.json();
+
+            if (data.success && data.hasApplied) {
+                applyNowBtn.style.display = 'none';
+                alreadyAppliedBtn.style.display = 'block';
+                jobClosedBtn.style.display = 'none';
+                deadlinePassedBtn.style.display = 'none';
+            } else {
+                applyNowBtn.style.display = 'block';
+                alreadyAppliedBtn.style.display = 'none';
+                jobClosedBtn.style.display = 'none';
+                deadlinePassedBtn.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error checking application status:', error);
+            showToast(t['failed_check_app_status']?.[window.currentLanguage] || 'Failed to check application status.', 'error');
+            applyNowBtn.style.display = 'block';
+            alreadyAppliedBtn.style.display = 'none';
+            jobClosedBtn.style.display = 'none';
+            deadlinePassedBtn.style.display = 'none';
+        }
+    }
+
+    if (applyNowBtn) {
+        applyNowBtn.addEventListener('click', async () => {
+            const t = window.translations;
+
+            // Guard: if logged out, show freelancer login modal and prevent action (even for external URL jobs)
+            if (!currentLoggedInUser) {
+                showModal(freelancerLoginModal);
+                return;
+            }
+
+            // If the job has an external apply URL, show the branded modal
+            if (currentJobData && currentJobData.external_apply_url) {
+                // Ensure we have fresh user data for completeness calculation
+                let completeness = 0;
+                try {
+                    const profileResp = await fetch('/api/user/profile');
+                    if (profileResp.ok) {
+                        const profileData = await profileResp.json();
+                        completeness = profileData.data.profile_completeness || 0;
+                    } else {
+                        // Fallback to client-side calculation if API fails
+                        await checkAuthStatus();
+                        completeness = computeProfileCompletenessFromUser(currentLoggedInUser);
+                    }
+                } catch (e) {
+                    await checkAuthStatus();
+                    completeness = computeProfileCompletenessFromUser(currentLoggedInUser);
+                }
+                
+                updateExternalApplyCompletenessRing(completeness);
+                showModal(externalApplyModal);
+                return;
+            }
+
+            if (!currentLoggedInUser) {
+                showModal(freelancerLoginModal);
+                return;
+            }
+
+            if (currentLoggedInUser.user_type !== 'freelancer') {
+                showModal(employerCannotApplyModal);
+                return;
+            }
+            
+            // Ensure we have fresh user data from the profile API for accurate completeness
+            let completeness = 0;
+            let detailedProfile = null;
+            try {
+                const profileResp = await fetch('/api/user/profile');
+                if (profileResp.ok) {
+                    const profileData = await profileResp.json();
+                    detailedProfile = profileData.data;
+                    completeness = detailedProfile.profile_completeness || 0;
+                } else {
+                    await checkAuthStatus();
+                    detailedProfile = currentLoggedInUser ? currentLoggedInUser.profile : null;
+                    completeness = computeProfileCompletenessFromUser(currentLoggedInUser);
+                }
+            } catch (e) {
+                await checkAuthStatus();
+                detailedProfile = currentLoggedInUser ? currentLoggedInUser.profile : null;
+                completeness = computeProfileCompletenessFromUser(currentLoggedInUser);
+            }
+
+            let hasCv = !!(detailedProfile && (detailedProfile.cv_path || detailedProfile.cv || detailedProfile.cv_url || detailedProfile.resume_url || detailedProfile.cvPath));
+
+            try {
+                const cachedPercentStr = localStorage.getItem('hirly_profile_completeness_percent');
+                const cachedPercent = cachedPercentStr ? parseInt(cachedPercentStr, 10) : NaN;
+                if (!isNaN(cachedPercent)) completeness = cachedPercent;
+                const cachedHasCvStr = localStorage.getItem('hirly_has_cv');
+                if (cachedHasCvStr === 'true' || cachedHasCvStr === 'false') {
+                    hasCv = hasCv || (cachedHasCvStr === 'true');
+                }
+                const snapshotStr = localStorage.getItem('hirly_profile_snapshot');
+                if (snapshotStr) {
+                    const snapshot = JSON.parse(snapshotStr);
+                    if (isNaN(cachedPercent)) {
+                        completeness = computeProfileCompletenessFromUser(null, snapshot);
+                    }
+                    hasCv = hasCv || !!(snapshot && snapshot.cv_path);
+                }
+            } catch (e) {}
+
+            if (completeness < 75 || !hasCv) {
+                updateLowCompletenessRing(completeness);
+                lowCompletenessMissingList.innerHTML = '';
+                if (!hasCv) {
+                    const li = document.createElement('li');
+                    li.textContent = (window.translations['missing_cv']?.[window.currentLanguage] || 'CV');
+                    lowCompletenessMissingList.appendChild(li);
+                    if (lowCompletenessDynamicDesc) {
+                        lowCompletenessDynamicDesc.textContent = (window.translations['low_profile_modal_desc_cv_missing']?.[window.currentLanguage] || 'Your profile is missing a CV. Are you sure you want to continue?');
+                    }
+                } else if (lowCompletenessDynamicDesc) {
+                    lowCompletenessDynamicDesc.textContent = (window.translations['low_profile_modal_desc_low']?.[window.currentLanguage] || 'Your profile completeness is low. Are you sure you want to continue?');
+                }
+                showModal(lowCompletenessModal);
+                return;
+            }
+            openApplicationModal();
+        });
+    }
+
+    if (closeApplicationModalBtn) closeApplicationModalBtn.addEventListener('click', () => hideModal(applicationModal));
+    if (cancelApplicationBtn) cancelApplicationBtn.addEventListener('click', () => hideModal(applicationModal));
+
+    if (applicationForm) {
+        applicationForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const t = window.translations;
+
+            if (!currentJobData || !currentLoggedInUser) {
+                showToast((t['job_user_data_missing']?.[window.currentLanguage] || 'Error: Job data or user data missing.'), 'error');
+                return;
+            }
+
+            const proposalMessage = proposalMessageInput.value.trim();
+            const bidAmount = bidAmountInput.value.trim();
+            const timeline = timelineInput.value.trim();
+
+            applicationMessageStatus.textContent = (t['submitting_application']?.[window.currentLanguage] || 'Submitting application...');
+            applicationMessageStatus.className = 'form-message info show';
+            submitApplicationBtn.disabled = true;
+
+            try {
+                const jobType = currentJobData.job_type?.toLowerCase();
+                const payload = { proposalMessage };
+                if (jobType === 'full-time' || jobType === 'part-time' || jobType === 'internship' || jobType === 'temporary') {
+                    // Do not include timeline in payload for employment-type jobs
+                    // bidAmount not needed; backend will normalize to 0
+                } else {
+                    // Freelance/Contract or other types: include bidAmount and timeline when provided
+                    const parsed = parseFloat(bidAmount);
+                    if (!isNaN(parsed)) payload.bidAmount = parsed;
+                    if (timeline) payload.timeline = timeline;
+                }
+
+                const response = await fetch(`/api/jobs/${currentJobId}/apply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || (t['failed_submit_application']?.[window.currentLanguage] || 'Failed to submit application.'));
+                }
+
+                showToast(data.message || (t['app_submitted_success']?.[window.currentLanguage] || 'Application submitted successfully!'), 'success');
+                hideModal(applicationModal);
+                checkApplicationStatus(currentJobId, currentLoggedInUser.id);
+            } catch (error) {
+                console.error('Error submitting application:', error);
+                applicationMessageStatus.textContent = `${(t['error_prefix']?.[window.currentLanguage] || 'Error: ')}${error.message}`;
+                applicationMessageStatus.className = 'form-message error show';
+            } finally {
+                submitApplicationBtn.disabled = false;
+                setTimeout(() => applicationMessageStatus.classList.remove('show'), 3000);
+            }
+        });
+    }
+
+    if (lowCompletenessApplyAnywayBtn) {
+        lowCompletenessApplyAnywayBtn.addEventListener('click', () => {
+            hideModal(lowCompletenessModal);
+            openApplicationModal();
+        });
+    }
+
+    if (lowCompletenessImproveBtn) {
+        lowCompletenessImproveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = '/dashboard.html';
+        });
+    }
+
+    if (continueToExternalBtn) {
+        continueToExternalBtn.addEventListener('click', async () => {
+            if (!currentJobData || !currentJobData.external_apply_url) return;
+            
+            const originalContent = continueToExternalBtn.innerHTML;
+            continueToExternalBtn.disabled = true;
+            continueToExternalBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${window.translations['redirecting']?.[window.currentLanguage] || 'Redirecting...'}`;
+
+            try {
+                // Record the click
+                await fetch(`/api/jobs/${currentJobId}/external-apply-click`, { method: 'POST' });
+            } catch (err) {
+                console.warn('Failed to record external apply click:', err);
+            }
+
+            // Small delay for UX then open in new tab
+            setTimeout(() => {
+                window.open(currentJobData.external_apply_url, '_blank');
+                hideModal(externalApplyModal);
+                continueToExternalBtn.disabled = false;
+                continueToExternalBtn.innerHTML = originalContent;
+            }, 800);
+        });
+    }
+
+    async function checkAuthStatus() {
+        try {
+            const response = await fetch('/api/user');
+            if (response.ok) {
+                const userData = await response.json();
+                currentLoggedInUser = userData.user;
+            } else {
+                currentLoggedInUser = null;
+            }
+        } catch (error) {
+            console.error('Failed to fetch auth status:', error);
+            currentLoggedInUser = null;
+        }
+    }
+
+    function initializePage() {
+        updateTranslations();
+        fetchJobDetails();
+    }
+
+    if (window.translations && window.currentLanguage) {
+        initializePage();
+    } else {
+        window.addEventListener('translationsApplied', () => {
+            initializePage();
+        }, { once: true });
+    }
+});

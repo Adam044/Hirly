@@ -1,0 +1,59 @@
+/* Hirly/styling/components/_dropdowns.css */
+/* User Menu Dropdown Styles - Cleaned up */
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px); /* Position slightly further below the user avatar */
+    inset-inline-end: 0; /* Position to logical end */
+    background-color: var(--white); /* Use white from variables */
+    border-radius: var(--border-radius); /* Use default border-radius */
+    box-shadow: var(--shadow-md); /* Use shadow-md from variables */
+    min-width: 220px; /* Slightly wider */
+    padding: var(--spacing-sm) 0;
+    z-index: var(--z-index-dropdown);
+    display: none;
+    transform: translateY(10px);
+    opacity: 0;
+    transition: opacity var(--transition), transform var(--transition);
+    border: 1px solid var(--border-color); /* Subtle border */
+}
+
+/* .show class toggled by JS */
+.user-menu:hover .dropdown-menu,
+.dropdown-menu.show {
+    display: block;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md); /* Increased gap for icons and text */
+    padding: var(--spacing-sm) var(--spacing-lg); /* More padding */
+    color: var(--text-body); /* Standard text color */
+    font-size: var(--font-size-base);
+    transition: background-color var(--transition), color var(--transition);
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.dropdown-item i {
+    color: var(--text-light); /* Lighter icon color by default */
+    font-size: var(--font-size-md); /* Consistent icon size */
+    transition: color var(--transition);
+}
+
+.dropdown-item:hover, .dropdown-item.active {
+    background-color: var(--primary-extra-light); /* Very light primary background on hover */
+    color: var(--primary-dark); /* Dark primary text on hover */
+}
+
+.dropdown-item:hover i, .dropdown-item.active i {
+    color: var(--primary); /* Primary color for icon on hover */
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--border-color); /* Lighter divider */
+    margin: var(--spacing-xs) 0;
+}

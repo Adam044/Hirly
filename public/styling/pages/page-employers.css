@@ -1,0 +1,39 @@
+/* Page Employers Styles */
+
+/* Instant Professional Connect - Talent Scroller */
+.talent-showcase-scroller {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1.5rem;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    /* Hide scrollbar for cleaner look but allow scrolling */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.talent-showcase-scroller::-webkit-scrollbar {
+    display: none;
+}
+
+.talent-card-mock {
+    min-width: 300px;
+    flex: 0 0 auto;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden; /* Ensure content doesn't overflow rounded corners */
+}
+
+.talent-card-mock:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Ensure images inside mock cards behave well */
+.talent-card-mock img {
+    object-fit: cover;
+}

@@ -1,0 +1,623 @@
+/* Hirly/styling/components/modals.css */
+
+/* General Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: none;
+}
+
+.modal-overlay.show {
+    visibility: visible;
+    opacity: 1;
+    display: flex !important;
+}
+
+.modal-overlay.show .modal-content {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+}
+
+.modal-content {
+    background-color: var(--white);
+    padding: 2.5rem;
+    border-radius: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 650px; /* Stretched a bit as requested */
+    width: 95%;
+    max-height: 90vh; /* Ensure it doesn't exceed viewport height */
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    position: relative;
+    overflow: hidden; /* Header/Footer will be fixed if we use flex */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modal-header {
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.modal-header i {
+    font-size: 2rem;
+    color: var(--primary);
+    background: var(--primary-lightest);
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1.25rem;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-dark);
+    letter-spacing: -0.025em;
+}
+
+.modal-body {
+    flex-grow: 1;
+    overflow-y: auto; /* Enable scrolling for body content */
+    padding-right: 0.5rem; /* Space for scrollbar */
+    margin-bottom: 1.5rem;
+    color: var(--text-body);
+    text-align: start; /* Better for forms */
+}
+
+/* Custom scrollbar for modal body */
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modal-body::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0; /* Keep buttons visible */
+}
+
+/* REVISED: Elegant close button with visible icon */
+.modal-close-btn,
+.modal-close {
+    position: absolute;
+    top: 0.75rem;
+    inset-inline-end: 0.75rem;
+    background: var(--background-light);
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    line-height: 1;
+    z-index: 10;
+    opacity: 0.8;
+}
+
+.modal-close-btn i,
+.modal-close i {
+    font-size: 1.25rem;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-close-btn:hover,
+.modal-close:hover {
+    background-color: var(--background-hover);
+    color: var(--text-dark);
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.modal-close-btn:hover i,
+.modal-close:hover i {
+    transform: rotate(90deg);
+}
+
+.modal-close-btn:active,
+.modal-close:active {
+    transform: scale(0.95);
+}
+
+
+/* Specific styling for the access denied modal */
+#accessDeniedModal .modal-content {
+    background-color: var(--white);
+    padding: 3.5rem 2.5rem 2.5rem;
+    border-radius: var(--border-radius-xl);
+    box-shadow: var(--shadow-2xl);
+    max-width: 480px;
+    width: 95%;
+    text-align: center;
+    border: none;
+    position: relative;
+    overflow: visible;
+}
+
+#accessDeniedModal .modal-close {
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease-in-out !important;
+    padding: 0 !important;
+    outline: none !important;
+}
+
+#accessDeniedModal .modal-close:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+    transform: rotate(90deg) !important;
+}
+
+#accessDeniedModal .modal-close:active {
+    transform: rotate(90deg) scale(0.95) !important;
+}
+
+#accessDeniedModal .modal-close::before,
+#accessDeniedModal .modal-close::after {
+    content: '' !important;
+    position: absolute !important;
+    width: 16px !important;
+    height: 2px !important;
+    background-color: #666 !important;
+    border-radius: 1px !important;
+    transition: background-color 0.2s ease-in-out !important;
+}
+
+#accessDeniedModal .modal-close:hover::before,
+#accessDeniedModal .modal-close:hover::after {
+    background-color: #333 !important;
+}
+
+#accessDeniedModal .modal-close::before {
+    transform: rotate(45deg) !important;
+}
+
+#accessDeniedModal .modal-close::after {
+    transform: rotate(-45deg) !important;
+}
+
+#accessDeniedModal .modal-icon {
+    margin-bottom: 1.5rem;
+    transform: translateY(-10px);
+    opacity: 0;
+    animation: slideDownFade 0.4s ease-out 0.2s forwards;
+}
+
+#accessDeniedModal .modal-icon i {
+    color: var(--primary);
+    font-size: 3.5rem;
+    display: inline-block;
+    background: var(--primary-lightest);
+    padding: 1.25rem;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.15);
+}
+
+@keyframes slideDownFade {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+#accessDeniedModal .modal-title {
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: calc(var(--font-size-xl) + 0.125rem);
+}
+
+#accessDeniedModal .modal-body {
+    color: var(--text-body);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+#accessDeniedModal .modal-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+    width: 90% !important;
+    max-width: 600px !important;
+    margin: 2rem auto 0 !important;
+    padding: 0 1rem !important;
+}
+
+#accessDeniedModal .modal-actions .btn {
+    min-width: 160px !important;
+    padding: 0.875rem 2rem !important;
+    font-size: var(--font-size-base) !important;
+    white-space: normal !important;
+    flex: 1 1 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1.4 !important;
+    height: auto !important;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 480px) {
+    #accessDeniedModal .modal-content {
+        padding: 3rem 1.5rem 2rem !important;
+        width: 92% !important;
+    }
+
+    #accessDeniedModal .modal-actions {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        padding: 0 !important;
+        width: 95% !important;
+        margin: 2rem auto 0 !important;
+        max-width: 320px !important;
+    }
+
+    #accessDeniedModal .modal-actions .btn {
+        width: 100% !important;
+        min-width: 100% !important;
+        padding: 1rem !important;
+        font-size: calc(var(--font-size-base) + 0.0625rem) !important;
+        display: flex !important;
+        white-space: normal !important;
+        text-align: center !important;
+        line-height: 1.4 !important;
+        height: auto !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+}
+
+/* Enhanced Language Selection Modal - Modern UI/UX Design removed */
+
+/* Mobile menu styles removed - now handled in main.css to avoid conflicts */
+
+/* Mobile auth section styles removed - now handled in main.css to avoid conflicts */
+
+/* Loading Spinner */
+.loading-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-inline-start: 8px; /* Use logical property */
+    display: none; /* Hidden by default */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Page Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(2px);
+    z-index: 1500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-overlay.show {
+    display: flex;
+}
+
+.loading-overlay .loading-spinner {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    margin-inline-start: 0;
+}
+
+.loading-overlay .loading-text {
+    margin-top: 10px;
+    color: var(--text-body);
+    font-weight: 500;
+}
+
+/* Minimal skeleton placeholders */
+.skeleton-block {
+    height: 1rem;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #e9ecef 0%, #f5f7fa 50%, #e9ecef 100%);
+    background-size: 200% 100%;
+    animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Button Flex Container */
+.btn {
+    display: flex; /* Make buttons a flex container */
+    justify-content: center;
+    align-items: center; /* Vertically align content */
+}
+
+/* Text Color Utilities */
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-info { color: var(--info); }
+
+/* Additional mobile menu styles removed - now handled in main.css to avoid conflicts */
+
+/* Mobile navigation styles removed - now handled in main.css to avoid conflicts */
+
+/* Introduction Modal Styles - Complete Redesign */
+.intro-modal {
+    max-width: 650px;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-radius: var(--border-radius-lg);
+    background-color: var(--white);
+    box-shadow: var(--shadow-lg);
+    overflow: visible;
+    position: relative;
+    height: auto;
+    transform: scale(0.95);
+}
+
+/* Adjust welcome section to be more compact */
+.intro-welcome {
+    text-align: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.intro-welcome h2 {
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 1.5rem;
+}
+
+.intro-welcome p {
+    color: var(--text-body);
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+
+/* Make step indicators more compact */
+.intro-steps-indicator {
+    display: flex;
+    justify-content: center;
+    margin: 0.75rem 0;
+    position: relative;
+}
+
+.intro-steps-indicator::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 30%; /* Use logical property */
+    inset-inline-end: 30%;   /* Use logical property */
+    height: 2px;
+    background-color: var(--border-color);
+    z-index: 1;
+}
+
+.step-indicator {
+    height: 32px;
+    width: 32px;
+    border-radius: 50%;
+    background-color: var(--white);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--text-body);
+    position: relative;
+    z-index: 2;
+    margin: 0 1.25rem;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.step-indicator.active {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+    transform: scale(1.1);
+    transition: all 0.3s ease;
+}
+
+.step-indicator.completed {
+    border-color: var(--success);
+    background-color: var(--success);
+    color: var(--white);
+    transition: all 0.3s ease;
+}
+
+.step-indicator span {
+    transition: color 0.3s ease;
+}
+
+/* Adjust step content to be more compact */
+.intro-steps-content {
+    position: relative;
+    min-height: 260px;
+}
+
+.intro-step {
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0; /* Use logical property */
+    width: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transform: translateX(20px);
+}
+
+/* RTL override for intro step animation */
+html[dir="rtl"] .intro-step {
+    transform: translateX(-20px); /* Move in opposite direction */
+}
+
+.intro-step.active {
+    opacity: 1;
+    visibility: visible;
+    position: relative;
+    transform: translateX(0);
+}
+
+.intro-step-icon {
+    font-size: 1.75rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    height: 45px;
+    width: 45px;
+    background-color: var(--primary-extra-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem;
+}
+
+.intro-step h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.intro-step p {
+    margin-bottom: 0.75rem;
+    color: var(--text-body);
+    font-size: 0.9rem;
+}
+
+.intro-checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+    text-align: start; /* Use logical property */
+    display: inline-block;
+}
+
+.intro-tip {
+    background-color: var(--background-light);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--border-radius);
+    border-inline-start: 3px solid var(--primary); /* Use logical property */
+    text-align: start; /* Use logical property */
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.intro-action {
+    margin-top: 0.75rem;
+}
+
+/* Navigation buttons */
+.intro-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.intro-navigation button {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .intro-modal {
+        padding: 1.25rem;
+        width: 95%;
+        max-width: 550px;
+        transform: scale(0.9);
+    }
+    
+    .intro-steps-indicator::before {
+        inset-inline-start: 20%; /* Use logical property */
+        inset-inline-end: 20%;   /* Use logical property */
+    }
+    
+    .step-indicator {
+        margin: 0 0.5rem;
+        height: 28px;
+        width: 28px;
+        font-size: 0.8rem;
+    }
+    
+    .intro-steps-content {
+        min-height: 240px;
+    }
+}

@@ -1,0 +1,151 @@
+// public/language/job-details-translations.js
+// These are translations specific to the job_details.html page.
+// They will be added to the main translations object in language.js
+// by calling window.addTranslations().
+
+// Check if window.addTranslations function is available before attempting to use it.
+if (typeof window.addTranslations === 'function') {
+    window.addTranslations({
+        'job_details_title': { 'ar': 'تفاصيل الوظيفة - هايرلي', 'en': 'Job Details - Hirly' },
+        'error_loading_job': { 'ar': 'خطأ في تحميل تفاصيل الوظيفة.', 'en': 'Error loading job details.' },
+        'job_title_placeholder': { 'ar': 'عنوان الوظيفة', 'en': 'Job Title' },
+        'not_available': { 'ar': 'غير متاح', 'en': 'N/A' },
+        'about_the_employer': { 'ar': 'عن صاحب العمل', 'en': 'About the Employer' },
+        'employer_name_placeholder': { 'ar': 'اسم صاحب العمل', 'en': 'Employer Name' },
+        'employer_type_placeholder': { 'ar': 'النوع', 'en': 'Type' },
+        'employer_description_loading': { 'ar': 'جارٍ تحميل وصف صاحب العمل...', 'en': 'Loading employer description...' },
+        // Removed: 'employer_description_placeholder' as the description is removed
+        'reviews': { 'ar': 'مراجعات', 'en': 'Reviews' },
+        'view_employer_profile': { 'ar': 'عرض ملف صاحب العمل', 'en': 'View Employer Profile' },
+        'job_description': { 'ar': 'وصف الوظيفة', 'en': 'Job Description' },
+        'requirements': { 'ar': 'المتطلبات', 'en': 'Requirements' },
+        'no_requirements_listed': { 'ar': 'لا توجد متطلبات.', 'en': 'No requirements listed.' },
+        'job_description_placeholder': { 'ar': 'جارٍ تحميل وصف الوظيفة...', 'en': 'Loading job description...' },
+        'required_professions': { 'ar': 'المهن المطلوبة', 'en': 'Required Professions' },
+        'no_required_professions': { 'ar': 'لا توجد مهن محددة مدرجة.', 'en': 'No specific professions listed.' },
+        'job_image': { 'ar': 'صورة الوظيفة', 'en': 'Job Image' },
+        // Removed: 'more_jobs_from' and 'this_employer' as the section is removed
+        // Removed: 'no_more_jobs' as the section is removed
+        'apply_for_this_job': { 'ar': 'تقدم لهذه الوظيفة', 'en': 'Apply for this Job' },
+        'apply_now': { 'ar': 'تقدم الآن', 'en': 'Apply Now' },
+        'already_applied': { 'ar': 'تم التقديم بالفعل', 'en': 'Already Applied' },
+        'job_closed': { 'ar': 'الوظيفة مغلقة', 'en': 'Job Closed' },
+        'apply_for_job_modal_title': { 'ar': 'التقدم للوظيفة', 'en': 'Apply for Job' },
+        'proposal_message': { 'ar': 'رسالة مقترح', 'en': 'Proposal Message' },
+        'proposal_message_placeholder': { 'ar': 'أخبر صاحب العمل لماذا أنت الأنسب لهذه الوظيفة...', 'en': 'Tell the employer why you are the best fit for this job...' },
+        'your_bid_amount': { 'ar': 'مبلغ عرضك', 'en': 'Your Bid Amount' },
+        'bid_amount_placeholder': { 'ar': 'مثال: 500', 'en': 'e.g., 500' },
+        'estimated_timeline': { 'ar': 'الجدول الزمني المقدر', 'en': 'Estimated Timeline' },
+        'timeline_placeholder': { 'ar': 'مثال: أسبوعين', 'en': 'e.g., 2 weeks' },
+        'cancel': { 'ar': 'إلغاء', 'en': 'Cancel' },
+        'submit_application': { 'ar': 'إرسال الطلب', 'en': 'Submit Application' },
+        'login_as_employer_title': { 'ar': 'تسجيل الدخول كصاحب عمل', 'en': 'Login as an Employer' },
+        'login_as_employer_message': { 'ar': 'يجب عليك تسجيل الدخول كصاحب عمل لعرض ملفات المهنيين.', 'en': 'You need to log in as an employer to view freelancer profiles.' },
+        'signup': { 'ar': 'إنشاء حساب', 'en': 'Sign Up' },
+        'login_as_freelancer_title': { 'ar': 'تسجيل الدخول كباحث عن عمل أو مقدم خدمة', 'en': 'Login as a Freelancer' },
+        'login_as_freelancer_message': { 'ar': 'يجب عليك تسجيل الدخول كمهني لعرض ملفات الشركات والتقدم للوظائف.', 'en': 'You need to log in as a freelancer to view company profiles and apply to jobs.' },
+        'footer_text': { 'ar': 'ربط المهنيين بفرص أحلامهم، وتعزيز النمو الاقتصادي والتمكين.', 'en': 'Connecting professionals with their dream opportunities, fostering economic growth and empowerment.' },
+        'company': { 'ar': 'الشركة', 'en': 'Company' },
+        'about_us': { 'ar': 'حولنا', 'en': 'About Us' },
+        'contact_us': { 'ar': 'اتصل بنا', 'en': 'Contact Us' },
+        'all_rights_reserved': { 'ar': '© 2025 هايرلي. جميع الحقوق محفوظة. فخورون بكوننا فلسطينيين.', 'en': '© 2025 Hirly. All rights reserved. Proudly Palestinian.' },
+        'hirly_app_name': { 'ar': 'هايرلي', 'en': 'Hirly' },
+        'support': { 'ar': 'الدعم', 'en': 'Support' },
+        'how_it_works': { 'ar': 'كيف يعمل', 'en': 'How it Works' },
+        'close_modal': { 'ar': 'إغلاق', 'en': 'Close' },
+        'loading_text': { 'ar': 'جارٍ التحميل...', 'en': 'Loading...' },
+        'failed_check_app_status': { 'ar': 'فشل التحقق من حالة الطلب.', 'en': 'Failed to check application status.' },
+        // Removed: 'failed_load_more_jobs'
+        'only_freelancers_apply': { 'ar': 'فقط المهنيون يمكنهم التقدم للوظائف.', 'en': 'Only freelancers can apply for jobs.' },
+        'id_verification_required': { 'ar': 'يجب توثيق هويتك للتقدم للوظائف. يرجى توثيق هويتك في ملفك الشخصي.', 'en': 'Your ID must be verified to apply for jobs. Please verify your ID on your profile.' },
+        'job_user_data_missing': { 'ar': 'خطأ: بيانات الوظيفة أو بيانات المستخدم مفقودة.', 'en': 'Error: Job data or user data missing.' },
+        'submitting_application': { 'ar': 'جارٍ إرسال الطلب...', 'en': 'Submitting application...' },
+        'failed_submit_application': { 'ar': 'فشل إرسال الطلب.', 'en': 'Failed to submit application.' },
+        'app_submitted_success': { 'ar': 'تم إرسال الطلب بنجاح!', 'en': 'Application submitted successfully!' },
+        'error_prefix': { 'ar': 'خطأ: ', 'en': 'Error: ' },
+        // Removed: 'loading_more_jobs'
+
+        'view_details': { 'ar': 'عرض التفاصيل', 'en': 'View Details' },
+        'try_again_later': { 'ar': 'الرجاء المحاولة مرة أخرى لاحقًا.', 'en': 'Please try again later.' },
+        // Job Types
+        'full-time': { 'ar': 'دوام كامل', 'en': 'Full-time' },
+        'part-time': { 'ar': 'دوام جزئي', 'en': 'Part-time' },
+        'contract': { 'ar': 'عقد', 'en': 'Contract' },
+        'freelance': { 'ar': 'عمل حر', 'en': 'Freelance' },
+        'internship': { 'ar': 'تدريب', 'en': 'Internship' },
+        'temporary': { 'ar': 'مؤقت', 'en': 'Temporary' },
+        // Job Site Types
+        'on-site': { 'ar': 'في الموقع', 'en': 'On-site' },
+        'remote': { 'ar': 'عن بعد', 'en': 'Remote' },
+        'hybrid': { 'ar': 'مختلط', 'en': 'Hybrid' },
+        // Verification Statuses
+        'Verified': { 'ar': 'موثق', 'en': 'Verified' },
+        'Pending Verification': { 'ar': 'قيد التوثيق', 'en': 'Pending Verification' },
+        'Rejected': { 'ar': 'مرفوض', 'en': 'Rejected' },
+        'Not Submitted': { 'ar': 'لم يتم التقديم', 'en': 'Not Submitted' },
+        // Employer Types
+        'company': { 'ar': 'شركة', 'en': 'Company' },
+        'individual': { 'ar': 'فرد', 'en': 'Individual' },
+        // Added missing translation for job description default
+        'no_description_provided': { 'ar': 'لم يتم تقديم وصف.', 'en': 'No description provided.' },
+        'job_id_missing': { 'ar': 'معرف الوظيفة مفقود من الرابط.', 'en': 'Job ID is missing from the URL.' },
+        // NEW MODAL TRANSLATIONS (Ensure these are present and correct)
+        'employer_cannot_apply_title': { 'ar': 'حساب صاحب عمل', 'en': 'Employer Account' },
+        'employer_cannot_apply_desc': { 'ar': 'أنت مسجل الدخول كصاحب عمل. يمكن للمهنيين فقط التقدم للوظائف.', 'en': 'You are logged in as an employer. Only freelancers can apply for jobs.' },
+        'go_to_dashboard': { 'ar': 'اذهب إلى لوحة التحكم', 'en': 'Go to Dashboard' },
+        'verification_required_modal_title': { 'ar': 'توثيق الهوية مطلوب', 'en': 'Verification Required' },
+        'verification_required_modal_desc': { 'ar': 'يجب توثيق هويتك للتقدم للوظائف. يرجى توثيق هويتك في لوحة التحكم الخاصة بك للمتابعة.', 'en': 'Your profile must be verified to apply for jobs. Please verify your ID on your dashboard to continue.' },
+        'verify_now_btn': { 'ar': 'وثّق الآن', 'en': 'Verify Now' },
+        // Missing translation keys for job details
+        'city': { 'ar': 'المدينة', 'en': 'City' },
+        'posted_date': { 'ar': 'تاريخ النشر', 'en': 'Posted Date' },
+        'negotiable': { 'ar': 'قابل للتفاوض', 'en': 'Negotiable' },
+        'deadline': { 'ar': 'آخر موعد للتقديم', 'en': 'Deadline' },
+        'deadline_passed': { 'ar': 'انتهى الموعد النهائي', 'en': 'Deadline Passed' }
+        ,
+        'low_profile_modal_title': { 'ar': 'الملف الشخصي غير مكتمل', 'en': 'Profile Incomplete' },
+        'low_profile_modal_desc': { 'ar': 'يبدو أن ملفك الشخصي منخفض أو ينقصه بعض العناصر. هل تريد المتابعة؟', 'en': 'Your profile seems low or missing some things. Are you sure you want to continue?' },
+        'low_profile_modal_desc_cv_missing': { 'ar': 'ملفك ينقصه سيرة ذاتية (CV). هل تريد المتابعة؟', 'en': 'Your profile is missing a CV. Are you sure you want to continue?' },
+        'low_profile_modal_desc_low': { 'ar': 'اكتمال ملفك منخفض. هل تريد المتابعة؟', 'en': 'Your profile completeness is low. Are you sure you want to continue?' },
+        'low_profile_modal_desc_cv_missing': { 'ar': 'ملفك ينقصه سيرة ذاتية (CV). هل تريد المتابعة؟', 'en': 'Your profile is missing a CV. Are you sure you want to continue?' },
+        'low_profile_modal_desc_low': { 'ar': 'اكتمال ملفك منخفض. هل تريد المتابعة؟', 'en': 'Your profile completeness is low. Are you sure you want to continue?' },
+        'improve_profile_btn': { 'ar': 'حسّن ملفي', 'en': 'Improve My Profile' },
+        'apply_anyway_btn': { 'ar': 'التقديم على أي حال', 'en': 'Apply Either Way' },
+        'profile_completeness_title': { 'ar': 'اكتمال الملف الشخصي', 'en': 'Profile Completeness' }
+        ,
+        'missing_cv': { 'ar': 'السيرة الذاتية', 'en': 'CV' },
+        'missing_profile_picture': { 'ar': 'الصورة الشخصية', 'en': 'Profile Picture' },
+        'missing_professions': { 'ar': 'المهن المهتم بها', 'en': 'Interested Professions' },
+        'missing_current_status': { 'ar': 'الوضع الحالي', 'en': 'Current Status' },
+        'missing_skills': { 'ar': 'المهارات', 'en': 'Skills' },
+        'missing_bio': { 'ar': 'نبذة', 'en': 'Bio' },
+        'external_apply_modal_title': { 'ar': 'وفّر وقتك مع هايرلي', 'en': 'Save Time with Hirly' },
+        'external_apply_modal_desc': { 'ar': 'أنت على وشك التقديم في موقع خارجي. هل تعلم؟ التقديم مباشرة عبر ملفك الشخصي في هايرلي أسرع بكثير ويحفظ جميع طلباتك في مكان واحد.', 'en': "You're about to apply on an external site. Did you know? Applying directly with your Hirly profile is much faster and keeps all your applications in one place." },
+        'benefit_1': { 'ar': 'مشاركة الملف الشخصي بضغطة واحدة', 'en': 'One-click profile sharing' },
+        'benefit_2': { 'ar': 'تتبع حالة طلبك', 'en': 'Track your application status' },
+        'benefit_3': { 'ar': 'سيرة ذاتية احترافية مدعومة بالذكاء الاصطناعي', 'en': 'Professional AI-enhanced CV' },
+        'continue_to_site': { 'ar': 'المتابعة إلى الموقع الخارجي', 'en': 'Continue to External Site' },
+        'redirecting': { 'ar': 'جارٍ التوجيه...', 'en': 'Redirecting...' },
+        'apply_externally': { 'ar': 'تقدم خارجياً', 'en': 'Apply Externally' },
+        'hirly_benefit_title': { 'ar': 'تقدم بأولوية هايرلي', 'en': 'Apply with Hirly Priority' },
+        'hirly_benefit_desc': { 'ar': 'أنت على وشك التقديم خارجياً. لضمان تميزك، تأكد من إكمال ملفك الشخصي على هايرلي. مشاركة رابطك الخاص أو رمز QR يمنحك الأولوية، ويظهرك بشكل أكثر احترافية، ويسهل العملية على أصحاب العمل.', 'en': 'You\'re about to apply externally. To stand out, ensure your Hirly profile is complete. Sharing your unique Hirly link or QR code gives you priority, looks more professional, and makes the process seamless for employers.' },
+
+        'complete_account': { 'ar': 'أكمل حسابك', 'en': 'Complete Your Account' },
+        'visit_external_site': { 'ar': 'زيارة الموقع', 'en': 'Visit the Site' },
+        'source': { 'ar': 'المصدر', 'en': 'Source' },
+        'job_requirements': { 'ar': 'متطلبات الوظيفة', 'en': 'Job Requirements' },
+        'job_info': { 'ar': 'معلومات الوظيفة', 'en': 'Job Information' },
+        'job_site_type_label': { 'ar': 'نوع العمل', 'en': 'Work Type' },
+        'gender_label': { 'ar': 'الجنس', 'en': 'Gender' },
+        'age_range_label': { 'ar': 'الفئة العمرية', 'en': 'Age Range' },
+        'select_gender_any': { 'ar': 'أي جنس', 'en': 'Any' },
+        'male_option': { 'ar': 'ذكر', 'en': 'Male' },
+        'female_option': { 'ar': 'أنثى', 'en': 'Female' },
+        'any_option': { 'ar': 'أي جنس', 'en': 'Any' },
+        'responsibilities': { 'ar': 'المسؤوليات', 'en': 'Responsibilities' },
+        'preferred_qualifications': { 'ar': 'المؤهلات المفضلة', 'en': 'Preferred Qualifications' },
+        'benefits': { 'ar': 'المميزات والفوائد', 'en': 'Benefits' }
+    });
+} else {
+    console.error("window.addTranslations is not defined. Ensure language.js is loaded correctly before job-details-translations.js.");
+}

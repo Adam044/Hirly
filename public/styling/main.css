@@ -1,0 +1,648 @@
+/* Hirly/styling/main.css */
+/* This file contains all global/core styles by importing smaller component files. */
+
+/* External Fonts & Icons - Keep these at the very top */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap'); /* Added 800 weight */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* Core Components - Imported in a logical order */
+
+/* 1. Variables & Base Styles (Foundational) */
+@import 'components/_variables.css'; /* All your :root variables */
+@import 'components/_base.css';     /* Universal resets, body, img, h1-h6, p, .container, .section-padding, text utilities */
+
+/* 2. Reusable UI Elements (Buttons, Forms, Cards, Dropdowns, Modals) */
+@import 'components/_buttons.css';  /* All .btn, .btn-primary, etc. */
+@import 'components/_forms.css';    /* .form-group, .form-control, file-upload styles */
+@import 'components/_layout.css';   /* .header, .footer, .dashboard-header, .user-menu, .nav-links, general layout elements */
+/* @import 'components/_utilities.css'; This file was not provided, assuming utilities are in _base.css or handled otherwise */
+@import 'components/_cards.css';    /* .feature-card, .category-card, .step-card, .job-card, .application-card, .talent-card */
+@import 'components/_dropdown.css'; /* Styles for dropdown menus */
+@import 'components/modals.css';   /* Styles for modals, loading spinners, and toast notifications */
+
+
+/* Page Specific Styles - Imported last to allow overrides */
+/* These paths assume a 'pages' subdirectory within 'styling' */
+@import 'pages/page-index.css';
+@import 'pages/page-about.css';
+@import 'pages/page-contact.css';
+@import 'pages/page-jobs.css';
+@import 'pages/page-talent.css'; /* Ensure talent page CSS is imported */
+@import 'pages/page-job-details.css'; /* Ensure job details page CSS is imported */
+@import 'pages/page-employer_profile.css';
+@import 'pages/page-hire-dashboard.css';
+@import 'pages/page-job-dashboard.css';
+@import 'pages/page-employers.css';
+@import 'pages/page-segments.css'; /* Segment landing pages */
+
+/* Global RTL overrides - Ensures Arabic script connectivity and layout alignment */
+@import 'components/global-rtl.css';
+
+/* IMPORTANT: global-ltr.css MUST be imported AFTER all other CSS files
+   to ensure its rules can override RTL-specific styles. */
+/* You would typically load global-ltr.css conditionally or use CSS-in-JS to apply LTR-specific styles.
+   For a robust RTL-first approach, we rely on the `dir` attribute and logical properties,
+   with specific RTL overrides as needed. If global-ltr.css exists and contains LTR-only
+   overrides, it should be managed carefully. For now, I'm assuming we'll handle this with `dir` attribute.
+*/
+/* @import 'components/global-ltr.css'; */ /* Commented out as we rely on dir attribute for RTL/LTR */
+
+
+/* RTL Layout Fix for Header: Ensure Logo and Nav/Auth stay in place */
+.header .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Ensure default flex-direction: row is maintained */
+    flex-direction: row;
+}
+
+.header .main-nav {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Allow main-nav to take available space */
+    justify-content: flex-end; /* Push content to the logical end (right) in LTR */
+    gap: var(--spacing-md); /* Space between nav links and auth/lang buttons */
+}
+
+html[dir="rtl"] .header .main-nav {
+    /* In RTL, we still want the nav links to be left of auth/lang buttons,
+       and the whole main-nav (including auth/lang buttons) to be on the left of the mobile button.
+       The flex-direction: row on header-container should keep the logo left,
+       and main-nav/mobile button right.
+       Inside main-nav, we want the links to be on the right, and auth/lang on the left.
+       So, we reverse the direction *within* main-nav.
+    */
+    flex-direction: row-reverse; /* Reverse order of children within main-nav */
+    justify-content: flex-start; /* Push content to the logical start (left) in RTL */
+}
+
+/* Ensure the order of elements within the header-container is fixed */
+.header .header-container .header-left {
+    order: 0; /* Always first */
+}
+
+.header .header-container .main-nav {
+    order: 1; /* Always second */
+}
+
+.header .header-container .header-right {
+    order: 2; /* Always third */
+}
+
+/* Specific adjustment for auth-buttons and user-menu within main-nav */
+.header .main-nav .auth-buttons,
+.header .main-nav .user-menu {
+    display: flex; /* Ensure these are flex containers too */
+    align-items: center;
+    gap: var(--spacing-sm); /* Space between login/signup buttons or avatar/menu */
+}
+
+html[dir="rtl"] .header .main-nav .auth-buttons,
+html[dir="rtl"] .header .main-nav .user-menu {
+    /* If main-nav is row-reverse, these groups will naturally be on the left.
+       Their internal order should still be row.
+    */
+    flex-direction: row; /* Keep internal order LTR */
+}
+
+/* --- Global RTL Utility Classes --- */
+html[dir="rtl"] .fa-chevron-right, 
+html[dir="rtl"] .fa-chevron-left,
+html[dir="rtl"] .fa-arrow-right,
+html[dir="rtl"] .fa-arrow-left,
+html[dir="rtl"] .btn-link-arrow i,
+html[dir="rtl"] .seg-steps-arrow i,
+html[dir="rtl"] .view-profile-cta i {
+    transform: scaleX(-1) !important;
+}
+
+html[dir="rtl"] .fa-flip-rtl {
+    transform: scaleX(-1);
+}
+
+
+/* Responsive adjustment for small screens: hide text, show only flag */
+@media (max-width: 576px) {
+    .header .lang-switcher .lang-label {
+        display: none; /* Hide the language text */
+    }
+    .header .lang-switcher {
+        padding: var(--spacing-xs); /* Smaller padding for icon-only button */
+        width: 40px; /* Make it a square button for the flag */
+        height: 32px; /* Maintain height */
+        justify-content: center; /* Center the flag */
+        margin-inline-start: var(--spacing-sm); /* Use logical property */
+    }
+    .header .lang-switcher .lang-flag {
+        width: 28px; /* Slightly larger flag when text is hidden */
+        height: 18px;
+    }
+    html[dir="rtl"] .header .lang-switcher {
+        margin-inline-start: var(--spacing-sm); /* Use logical property for RTL */
+    }
+}
+
+
+/* Sidebar Language Switcher Styling */
+.sidebar-lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background-color: transparent;
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: start; /* Use logical property */
+    margin: var(--spacing-sm) 0;
+    flex-direction: row; /* Default to LTR order */
+}
+
+.sidebar-lang-switcher:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-lang-switcher .lang-flag {
+    width: 24px;
+    height: 16px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+}
+
+.sidebar-lang-switcher .lang-label {
+    line-height: 1;
+    flex-grow: 1;
+}
+
+/* --- Mobile Menu Overlay Styles (Global in main.css) --- */
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1100;
+    display: flex;
+    justify-content: flex-start; /* LTR: Align to left */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+html[dir="rtl"] .mobile-menu-overlay {
+    justify-content: flex-end; /* RTL: Align to right */
+}
+
+.mobile-menu-content {
+    background-color: var(--white);
+    width: 80%;
+    max-width: 300px;
+    height: 100%;
+    position: relative;
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%); /* LTR: Starts off-screen on the left */
+    transition: transform 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+html[dir="rtl"] .mobile-menu-content {
+    transform: translateX(100%); /* RTL: Starts off-screen on the right */
+}
+
+.mobile-menu-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-menu-overlay.show .mobile-menu-content {
+    transform: translateX(0);
+}
+
+.mobile-menu-close {
+    position: absolute;
+    top: var(--spacing-md);
+    inset-inline-start: var(--spacing-md); /* Position on the logical start */
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    color: var(--text-light);
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* RTL override for mobile menu close button */
+html[dir="rtl"] .mobile-menu-close {
+    inset-inline-start: auto;
+    inset-inline-end: var(--spacing-md); /* Position on the logical end */
+}
+
+/* Mobile Auth Section (User Info / Login/Signup) */
+.mobile-auth-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.mobile-auth-section .user-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.mobile-auth-section .user-avatar-container {
+    width: 70px;
+    height: 70px;
+    font-size: var(--font-size-xxl);
+}
+
+.mobile-auth-section .mobile-user-info {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxs);
+}
+
+.mobile-auth-section .mobile-user-info span {
+    display: block;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+}
+
+.mobile-auth-section .mobile-user-info span:last-child {
+    font-size: var(--font-size-sm);
+    color: var(--text-body);
+    font-weight: 500;
+}
+
+.mobile-auth-section .auth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+.mobile-auth-section .auth-buttons .btn {
+    width: 100%;
+}
+
+/* NEW: Mobile Menu Grouping Styles */
+.mobile-menu-group {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.mobile-menu-group:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.mobile-menu-group .group-title {
+    font-size: var(--font-size-sm);
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-sm);
+    padding-inline-start: var(--spacing-xs); /* Use logical property */
+}
+
+.mobile-menu-group ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mobile-menu-group ul li {
+    margin-bottom: var(--spacing-xxs);
+}
+
+.mobile-menu-group ul li:last-child {
+    margin-bottom: 0;
+}
+
+.mobile-menu-group .mobile-nav-link,
+.mobile-menu-group .sidebar-lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-xs);
+    color: var(--text-dark);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    text-align: start; /* Use logical property */
+    cursor: pointer;
+}
+
+.mobile-menu-group .mobile-nav-link:hover,
+.mobile-menu-group .mobile-nav-link.active,
+.mobile-menu-group .sidebar-lang-switcher:hover {
+    background-color: var(--background-hover);
+    color: var(--primary-dark);
+}
+
+.mobile-menu-group .mobile-nav-link i,
+.mobile-menu-group .sidebar-lang-switcher i {
+    font-size: var(--font-size-base);
+    color: var(--text-light);
+    flex-shrink: 0;
+}
+
+.mobile-menu-group .mobile-nav-link:hover i,
+.mobile-menu-group .mobile-nav-link.active i,
+.mobile-menu-group .sidebar-lang-switcher:hover i {
+    color: var(--primary);
+}
+
+
+/* Specific styles for mobile language switcher within the menu */
+.mobile-menu-group .sidebar-lang-switcher {
+    justify-content: flex-start;
+}
+.mobile-menu-group .sidebar-lang-switcher .lang-flag {
+    width: 24px;
+    height: 16px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+}
+.mobile-menu-group .sidebar-lang-switcher .lang-label {
+    line-height: 1;
+    flex-grow: 1;
+    color: var(--text-dark);
+}
+.mobile-menu-group .sidebar-lang-switcher:hover .lang-label {
+    color: var(--primary-dark);
+}
+
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 1024px) {
+    .dashboard-sidebar {
+        width: 200px;
+        padding: var(--spacing-md);
+    }
+    .dashboard-content {
+        padding: var(--spacing-xl);
+        padding-top: calc(var(--spacing-xl) + var(--header-height));
+    }
+    .main-dashboard-title {
+        font-size: var(--font-size-xl);
+    }
+    .dashboard-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    .stat-card .icon {
+        font-size: 1.8rem;
+    }
+    .stat-card .number {
+        font-size: var(--font-size-xl);
+    }
+    .stat-card .label {
+        font-size: var(--font-size-xs);
+    }
+
+    .action-buttons-group .btn {
+        min-width: 180px;
+        font-size: var(--font-size-base);
+        padding: var(--spacing-sm) var(--spacing-lg);
+    }
+
+    .profile-form {
+        grid-template-columns: 1fr;
+    }
+    .profile-form .form-actions {
+        flex-direction: column;
+    }
+    .file-upload-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .file-upload-label, .file-name-display, .file-upload-container .btn {
+        width: 100%;
+        text-align: center;
+    }
+    .file-name-display {
+        max-width: none;
+    }
+    .application-filters {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+    .application-filters .filter-btn {
+        width: 100%;
+    }
+    /* Intro Modal Responsiveness */
+    .intro-header h2 {
+        font-size: var(--font-size-lg);
+    }
+    .intro-header p {
+        font-size: var(--font-size-xs);
+    }
+    .intro-icon {
+        font-size: 2.5rem;
+    }
+    .intro-step h3 {
+        font-size: var(--font-size-md);
+    }
+    .intro-step p {
+        font-size: var(--font-size-xs);
+    }
+    .intro-navigation .btn {
+        font-size: var(--font-size-xs);
+    }
+    .step-indicators.horizontal::before {
+        inset-inline-start: var(--spacing-lg); /* Use logical property */
+        inset-inline-end: var(--spacing-lg);   /* Use logical property */
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-wrapper {
+        flex-direction: column;
+    }
+    .dashboard-sidebar {
+        width: 100%;
+        position: fixed;
+        height: calc(100vh - var(--header-height));
+        top: var(--header-height);
+        inset-inline-start: 0; /* Use logical property */
+        transform: translateX(-100%);
+        z-index: 99;
+        padding: var(--spacing-lg);
+        border-radius: 0;
+        box-shadow: var(--shadow-lg);
+    }
+
+    html[dir="rtl"] .dashboard-sidebar {
+        transform: translateX(100%); /* Slide in from right for RTL */
+    }
+
+    .dashboard-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        overflow-y: auto;
+        padding-bottom: var(--spacing-lg);
+    }
+    
+    .dashboard-content {
+        padding: var(--spacing-lg);
+        padding-top: calc(var(--spacing-lg) + var(--header-height));
+        height: calc(100vh - var(--header-height));
+    }
+    .main-dashboard-title {
+        font-size: var(--font-size-lg);
+    }
+    .dashboard-section h2 {
+        font-size: var(--font-size-md);
+    }
+    .stat-card .icon {
+        font-size: 1.5rem;
+    }
+    .stat-card .number {
+        font-size: var(--font-size-lg);
+    }
+    .stat-card .label {
+        font-size: var(--font-size-xs);
+    }
+    .file-upload-label, .file-name-display, .file-upload-container .btn {
+        font-size: var(--font-size-xs);
+        padding: 0.5rem 0.8rem;
+    }
+    .badge {
+        font-size: var(--font-size-xxs);
+    }
+    .posted-job-card {
+        padding: var(--spacing-sm);
+    }
+    .posted-job-header h3 {
+        font-size: var(--font-size-sm);
+    }
+    .posted-job-meta p, .posted-job-stats p {
+        font-size: var(--font-size-xs);
+    }
+    .posted-job-actions .btn {
+        font-size: var(--font-size-xs);
+    }
+    /* Intro Modal Responsiveness */
+    .intro-header h2 {
+        font-size: var(--font-size-lg);
+    }
+    .intro-header p {
+        font-size: var(--font-size-xs);
+    }
+    .intro-icon {
+        font-size: 2.5rem;
+    }
+    .intro-step h3 {
+        font-size: var(--font-size-md);
+    }
+    .intro-step p {
+        font-size: var(--font-size-xs);
+    }
+    .intro-navigation .btn {
+        font-size: var(--font-size-xs);
+    }
+    .step-indicators.horizontal::before {
+        inset-inline-start: var(--spacing-md); /* Use logical property */
+        inset-inline-end: var(--spacing-md);   /* Use logical property */
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-content {
+        padding: var(--spacing-md);
+        padding-top: calc(var(--spacing-md) + var(--header-height));
+    }
+    .main-dashboard-title {
+        font-size: var(--font-size-lg);
+    }
+    .dashboard-section h2 {
+        font-size: var(--font-size-md);
+    }
+    .stat-card .icon {
+        font-size: 1.5rem;
+    }
+    .stat-card .number {
+        font-size: var(--font-size-lg);
+    }
+    .stat-card .label {
+        font-size: var(--font-size-xs);
+    }
+    .file-upload-label, .file-name-display, .file-upload-container .btn {
+        font-size: var(--font-size-xs);
+        padding: 0.5rem 0.8rem;
+    }
+    .badge {
+        font-size: var(--font-size-xxs);
+    }
+    .posted-job-card {
+        padding: var(--spacing-sm);
+    }
+    .posted-job-header h3 {
+        font-size: var(--font-size-sm);
+    }
+    .posted-job-meta p, .posted-job-stats p {
+        font-size: var(--font-size-xs);
+    }
+    .posted-job-actions .btn {
+        font-size: var(--font-size-xs);
+    }
+}
+/* Page transitions */
+body.page-enter {
+    animation: pageFadeIn 220ms ease-out;
+}
+
+@keyframes pageFadeIn {
+    from { opacity: 0; filter: saturate(80%); }
+    to { opacity: 1; filter: saturate(100%); }
+}
+
+.page-transition-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease-in;
+}
+
+.page-transition-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}

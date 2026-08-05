@@ -1,0 +1,264 @@
+/* Hirly/styling/pages/page-contact.css */
+/* Styles specific to the Contact Us page */
+
+/* New wrapper for main content to apply consistent padding */
+.main-content-wrapper {
+    padding-top: var(--spacing-xxl);
+    padding-bottom: var(--spacing-xxl);
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+    gap: var(--spacing-xxl); /* Space between major sections */
+}
+
+/* Section Title (consistent with other pages) */
+.section-title {
+    text-align: center; /* This section title is intentionally centered */
+    margin-bottom: var(--spacing-xl);
+    width: 100%; /* Ensure it spans the width of its container */
+}
+
+.section-title h1 {
+    font-size: var(--font-size-xxxl);
+    color: var(--primary-dark);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.2;
+}
+
+.section-title p {
+    font-size: var(--font-size-lg);
+    color: var(--text-light);
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+
+/* Contact Form Section - Now controls its own width and centering */
+.contact-form-section {
+    background-color: var(--white);
+    padding: var(--spacing-xl) var(--spacing-xxl); /* Generous padding */
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    max-width: 900px; /* Set a specific max-width for the form itself */
+    width: 100%; /* Ensure it's responsive */
+    margin: 0 auto; /* Center the form section */
+}
+
+.contact-form-section h2 {
+    font-size: var(--font-size-xxl);
+    color: var(--primary-dark);
+    margin-bottom: var(--spacing-lg);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-md);
+    text-align: center; /* This heading is intentionally centered */
+}
+
+/* Contact Form Styles (leveraging main.css form styles) */
+.contact-form .form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.contact-form .form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: var(--font-size-base);
+    text-align: start; /* Universal alignment */
+}
+
+/* Force text alignment for labels in RTL */
+html[dir="rtl"] .contact-form .form-label {
+    text-align: right !important;
+}
+
+.contact-form .form-control {
+    padding: 0.9rem 1.2rem;
+    font-size: var(--font-size-base);
+    text-align: start; /* Universal alignment */
+}
+
+/* Force text alignment for form controls in RTL */
+html[dir="rtl"] .contact-form .form-control {
+    text-align: right !important;
+}
+
+.contact-form textarea.form-control {
+    min-height: 150px;
+}
+
+.contact-form .btn-block {
+    margin-top: var(--spacing-xl);
+    padding: 1rem 2rem;
+    font-size: var(--font-size-lg);
+}
+
+/* Form Message (Success/Error) */
+.form-message {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-top: var(--spacing-lg);
+    font-size: var(--font-size-base);
+    text-align: center; /* This message is intentionally centered */
+}
+
+/* Force text alignment for form messages in RTL */
+html[dir="rtl"] .form-message {
+    text-align: right !important;
+}
+
+.form-message.success {
+    background-color: var(--success-light);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.form-message.error {
+    background-color: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+
+/* MODAL STYLES */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-xl);
+    width: 90%;
+    max-width: 450px;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.modal-overlay.show .modal-content {
+    transform: translateY(0);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: var(--font-size-xxl);
+    color: var(--text-light);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-header-icon-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-header-icon-container i {
+    font-size: var(--font-size-xxl);
+    color: var(--white);
+}
+
+.modal-header-icon-container.success-icon-bg {
+    background-color: var(--success);
+}
+
+.modal-header-icon-container.error-icon-bg {
+    background-color: var(--danger);
+}
+
+.modal-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: var(--spacing-sm);
+}
+
+.modal-message {
+    font-size: var(--font-size-base);
+    color: var(--text-body);
+    line-height: 1.6;
+    margin-bottom: 0; /* Changed this to 0 since there is no button below it */
+}
+
+.modal-actions {
+    display: none; /* No need to display this since we're removing the button */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .section-title h1 {
+        font-size: var(--font-size-xxl);
+    }
+    .section-title p {
+        font-size: var(--font-size-md);
+    }
+    .contact-form-section {
+        padding: var(--spacing-lg); /* Adjust padding for medium screens */
+    }
+    .contact-form-section h2 {
+        font-size: var(--font-size-xl);
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 767px) { /* Adjustments for smaller screens (mobile) */
+    .main-content-wrapper {
+        padding-left: var(--spacing-md);
+        padding-right: var(--spacing-md);
+        gap: var(--spacing-xl);
+    }
+    .contact-form-section {
+        padding: var(--spacing-md); /* Adjust padding for small screens */
+    }
+    .contact-form-section h2 {
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-sm);
+        padding-bottom: var(--spacing-xs);
+    }
+    .contact-form .form-control {
+        padding: 0.8rem 1rem;
+        font-size: var(--font-size-base);
+    }
+    .contact-form textarea.form-control {
+        min-height: 120px;
+    }
+    .contact-form .btn-block {
+        padding: 0.9rem 1.5rem;
+        font-size: var(--font-size-base);
+        margin-top: var(--spacing-lg);
+    }
+}

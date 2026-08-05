@@ -1,0 +1,568 @@
+/* Hirly/styling/components/_layout.css */
+
+/* --- Header Specific Styles (Sticky & Responsive) --- */
+
+/* NEW: Apply sticky properties to the headerPlaceholder, which is a direct child of body */
+#headerPlaceholder {
+    position: sticky; /* Makes the header sticky */
+    top: 0; /* Sticks it to the top of the viewport */
+    width: 100%; /* Ensure it takes full width */
+    z-index: 1000; /* Ensure it stays on top of other content */
+    /* No background-color or box-shadow here, these are on the <header> element inside */
+    /* No padding here, padding is on the <header> element inside */
+}
+
+/* The <header> element itself, now inside the sticky #headerPlaceholder */
+.header {
+    background: var(--background-card);
+    background-image: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease-in-out;
+    padding: 1rem 0;
+    width: 100%;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px; /* Match your content width */
+    margin: 0 auto;
+    padding: 0 2rem; /* Add horizontal padding */
+    flex-direction: row; /* Default LTR order */
+}
+
+.header-left .logo {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all var(--transition);
+}
+
+.header-left .logo:hover {
+    background: var(--primary-gradient-hover);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transform: scale(1.05);
+}
+
+.header-left .logo .logo-img {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+.header-left .logo i {
+    font-size: var(--font-size-xxl);
+    color: var(--primary);
+}
+
+/* Default LTR logo display (image) */
+.header-left .logo .logo-img {
+    display: block; /* Show image logo by default (for LTR) */
+}
+.header-left .logo .logo-text {
+    display: none; /* Hide text logo by default (for LTR) */
+}
+
+/* RTL logo display (text) */
+html[dir="rtl"] .header-left .logo .logo-img {
+    display: none; /* Hide image logo in RTL */
+}
+html[dir="rtl"] .header-left .logo .logo-text {
+    display: block; /* Show text logo in RTL */
+}
+
+/* Ensure aria-label content is never displayed visually */
+/* This rule is kept as a general safeguard, though specific aria-label manipulation is removed from JS/HTML */
+[aria-label]::before,
+[aria-label]::after {
+    content: none !important;
+}
+
+
+/* Desktop Navigation - Default to LTR behavior */
+.main-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 1.5rem;
+    flex-direction: row; /* Default to LTR order for nav items */
+}
+
+.main-nav li a {
+    text-decoration: none;
+    color: var(--text-dark);
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    transition: all var(--transition);
+    position: relative;
+    border-radius: var(--border-radius);
+    backdrop-filter: blur(10px);
+}
+
+.main-nav li a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0;
+    border-radius: var(--border-radius);
+    transition: opacity var(--transition);
+    z-index: -1;
+}
+
+.main-nav li a:hover::before {
+    opacity: 0.1;
+}
+
+.main-nav li a:hover,
+.main-nav li a.active {
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.main-nav li a.active::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 50%;
+    bottom: -8px;
+    width: 20px;
+    height: 3px;
+    background: var(--primary-gradient);
+    border-radius: 2px;
+    transform: translateX(-50%);
+    box-shadow: var(--shadow-primary);
+}
+
+/* Header Right Section - Default to LTR behavior */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-direction: row; /* Default to LTR order for items within header-right */
+}
+
+.header .main-nav,
+.header-right .auth-buttons,
+.header-right .user-menu {
+    display: none !important;
+}
+
+/* Language Switcher Dropdown Styling - Default to LTR behavior */
+.lang-dropdown-container {
+    position: relative;
+    display: inline-block; /* Allows it to sit next to other flex items */
+    margin-inline-start: var(--spacing-md); /* Default margin for logical start */
+    z-index: 1060; /* Higher than modal overlay's 1050, ensures it's on top */
+}
+
+.lang-dropdown-toggle {
+    display: flex; /* Arrange flag, text, and arrow horizontally */
+    align-items: center;
+    gap: var(--spacing-xs); /* Space between elements */
+    background-color: var(--white); /* White background */
+    color: var(--primary-dark); /* Dark text */
+    border: 1px solid var(--border-color); /* Subtle border */
+    padding: var(--spacing-xs) var(--spacing-sm); /* Adjust padding */
+    border-radius: var(--border-radius-pill); /* Pill-like shape */
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-xs); /* Subtle shadow */
+    white-space: nowrap; /* Prevent text from wrapping */
+    min-width: 90px; /* Ensure enough space for "English" or "العربية" */
+    justify-content: space-between; /* Space out content within the toggle */
+    flex-direction: row; /* Default to LTR order for toggle items */
+}
+
+.lang-dropdown-toggle:hover {
+    background-color: var(--background-light);
+    border-color: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.lang-dropdown-toggle .lang-flag {
+    width: 24px;
+    height: 16px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+}
+
+.lang-dropdown-toggle .lang-label {
+    line-height: 1;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.lang-dropdown-toggle .dropdown-arrow {
+    font-size: var(--font-size-xs);
+    color: var(--text-light);
+    transition: transform 0.2s ease;
+}
+
+.lang-dropdown-container.active .lang-dropdown-toggle .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Language Dropdown Menu (inherits from .dropdown-menu in _dropdown.css) */
+.lang-dropdown-menu {
+    min-width: 150px;
+    padding: var(--spacing-xs) 0;
+    z-index: 1070;
+    inset-inline-end: 0; /* Position to logical end */
+    inset-inline-start: auto;
+}
+
+.lang-dropdown-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-weight: 500;
+    justify-content: flex-start; /* Align content to the logical start */
+    width: 100%;
+    text-align: start; /* Align text to the logical start */
+    flex-direction: row; /* Default to LTR order for dropdown items */
+}
+
+.lang-dropdown-menu .dropdown-item .lang-flag {
+    width: 20px;
+    height: 14px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 2px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+/* Auth Buttons - Default to LTR behavior */
+.auth-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-direction: row; /* Default to LTR order */
+}
+
+.auth-buttons .btn {
+    padding: 0.6rem 1.2rem;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    border-radius: var(--border-radius-sm);
+}
+
+/* User Menu - Default to LTR behavior */
+.user-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-direction: row; /* Default to LTR order */
+}
+
+/* NEW: Unified user avatar styles for both desktop and mobile headers */
+.user-avatar-link {
+    display: block;
+    text-decoration: none;
+}
+
+.user-avatar-container {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+    cursor: pointer;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.user-avatar-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.user-avatar-container:hover {
+    transform: scale(1.1);
+}
+
+/* Mobile Menu Avatar overrides */
+.mobile-auth-section .user-avatar-container {
+    width: 60px;
+    height: 60px;
+    font-size: var(--font-size-xl);
+}
+
+/* Hamburger Menu (Mobile Only) */
+.hamburger-menu {
+    display: block;
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    color: var(--text-dark);
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+/* Responsive Adjustments for Header Layout */
+@media (max-width: 768px) {
+    .header {
+        padding: 0.75rem 0;
+    }
+
+    .header-container {
+        padding: 0 1rem;
+    }
+
+    /* IMPORTANT: Ensure these are explicitly hidden on the main header when mobile */
+    .main-nav,
+    .header-right .auth-buttons,
+    .header-right .user-menu,
+    .header-right .lang-dropdown-container {
+        display: none !important;
+    }
+
+    .header-right {
+        gap: 0.5rem;
+        display: flex;
+    }
+
+    .hamburger-menu {
+        display: block;
+    }
+}
+
+
+/* Mobile menu styles removed - now handled in global-rtl.css and main.css to avoid conflicts */
+
+/* --- Other Layout Elements (Sidebar, Footer, etc.) --- */
+
+/* Sidebar Language Switcher Styling */
+.sidebar-lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background-color: transparent;
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: start; /* Use logical property */
+    margin: var(--spacing-sm) 0;
+    flex-direction: row; /* Default to LTR order */
+}
+
+.sidebar-lang-switcher:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-lang-switcher .lang-flag {
+    width: 24px;
+    height: 16px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+}
+
+.sidebar-lang-switcher .lang-label {
+    line-height: 1;
+    flex-grow: 1;
+}
+
+/* Base styles for footer - Default to LTR behavior */
+/* --- Modern Responsive Footer --- */
+.footer {
+    background-color: #0f172a; /* Deep slate dark */
+    color: #94a3b8;
+    padding: 5rem 0 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 4rem;
+    margin-bottom: 4rem;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.footer-logo-img {
+    height: 40px;
+    width: auto;
+    border-radius: 8px;
+}
+
+.footer-logo .logo-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+}
+
+.footer-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 320px;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    background: var(--primary);
+    transform: translateY(-3px);
+    color: #fff;
+}
+
+.footer-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.footer-links a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: var(--primary);
+    padding-inline-start: 4px;
+}
+
+.footer-bottom {
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer-bottom-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.copyright {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* RTL Specific Footer Adjustments */
+html[dir="rtl"] .footer-grid {
+    text-align: right;
+}
+
+html[dir="rtl"] .footer-links a:hover {
+    padding-inline-start: 0;
+    padding-inline-end: 4px;
+}
+
+/* Responsive Footer */
+@media (max-width: 1024px) {
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+    }
+    .brand-col {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 640px) {
+    .footer {
+        padding: 4rem 0 2rem;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        text-align: center;
+    }
+    .brand-col {
+        grid-column: span 1;
+        align-items: center;
+    }
+    .footer-logo {
+        justify-content: center;
+    }
+    .footer-desc {
+        max-width: 100%;
+    }
+    .social-links {
+        justify-content: center;
+    }
+    .footer-col {
+        align-items: center;
+    }
+}
