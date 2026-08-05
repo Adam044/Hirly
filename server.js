@@ -5,7 +5,6 @@ const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const cookieParser = require('cookie-parser');
-const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
 const path = require('path');
 const multer = require('multer');
@@ -37,6 +36,14 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
     }
 });
 
+// Standard Supabase client for non-admin auth operations
+const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+});
+
 
 app.set('trust proxy', 1);
 
@@ -45,6 +52,7 @@ const {
     sendContactFormEmail,
     sendPasswordResetEmail,
     sendPasswordResetConfirmationEmail,
+    sendAccountActivationEmail,
     sendApplicationAcceptedEmail,
     sendApplicationRejectedEmail,
     sendJobOfferEmail,
@@ -73,12 +81,11 @@ const {
     uploadCompanyLogo,
     uploadServiceImage,
     uploadJobImage,
-    uploadIdDocument,
+    uploadIDDocument,
     deleteFile,
     getOptimizedImageUrl,
     extractFilePathFromUrl,
-    validateFileType,
-    validateFileSize
+    validateFile
 } = require('./utils/supabaseStorage');
 
 const { resetSequence, initializeDatabaseSchema, cleanupLegacyEducationColumns } = require('./database/schema');
@@ -122,11 +129,11 @@ async function initializeDatabase() {
         });
 
         await initializeDatabaseSchema(pool);
+        // Note: Migrations are now managed directly in Supabase
+        // Remaining Node.js initialization:
         await resetSequence(pool);
         await populateSlugs();
         await populateEmailPreferences();
-        await migrateEducationData();
-        await cleanupLegacyEducationColumns(pool);
         logger.info('Database initialization completed successfully');
     } catch (error) {
         logger.error('Database initialization failed:', error);
@@ -740,7 +747,7 @@ async function storeFileInSupabase(userId, fileType, file) {
                 uploadResult = await uploadJobImage(file.buffer, file.originalname, file.mimetype, userId);
                 break;
             case 'id_verification':
-                uploadResult = await uploadIdDocument(file.buffer, file.originalname, file.mimetype, userId);
+                uploadResult = await uploadIDDocument(file.buffer, file.originalname, file.mimetype, userId);
                 break;
             default:
                 throw new Error(`Unsupported file type: ${fileType}`);
@@ -757,8 +764,32 @@ async function deleteFileFromSupabase(fileUrl, bucket = 'uploads') {
     try {
         if (!fileUrl) return false;
 
-        const filePath = extractFilePathFromUrl(fileUrl);
-        if (!filePath) return false;
+        // 1. Try to extract path from full Supabase URL
+        let filePath = extractFilePathFromUrl(fileUrl);
+        
+        // 2. If it's not a URL, it might be a direct path or a legacy ID
+        if (!filePath) {
+            if (typeof fileUrl === 'string' && fileUrl.includes('/')) {
+                filePath = fileUrl; // It's already a path
+            } else {
+                // It's likely a legacy file ID from the file_storage table
+                const fileId = parseInt(fileUrl);
+                if (!isNaN(fileId)) {
+                    let client;
+                    try {
+                        client = await pool.connect();
+                        await client.query('DELETE FROM file_storage WHERE id = $1', [fileId]);
+                        return true;
+                    } catch (err) {
+                        logger.error('Error deleting legacy file from database:', err);
+                        return false;
+                    } finally {
+                        if (client) client.release();
+                    }
+                }
+                return false;
+            }
+        }
 
         const success = await deleteFile(filePath, bucket);
         return success;
@@ -881,8 +912,7 @@ const isEmailVerified = async (req, res, next) => {
 };
 
 
-const registerPagesRoutes = require('./routes/pages');
-registerPagesRoutes(app, { isAuthenticated, isProfessional, isEmployer, isEmployerVerified, isAdmin, pool });
+// Routes are registered below...
 
 
 
@@ -1104,6 +1134,10 @@ const userService = require('./services/userService');
 const EducationService = require('./services/educationService');
 const educationService = new EducationService(pool);
 
+// Initialize Job Aggregation Service early for route registration
+const jobAggregator = new JobAggregationService(pool);
+app.set('jobAggregator', jobAggregator);
+
 registerUserRoutes(app, pool, {
     isAuthenticated,
     isProfessional,
@@ -1180,8 +1214,10 @@ registerAuthRoutes(app, pool, {
     sendVerificationEmail,
     sendPasswordResetEmail,
     sendPasswordResetConfirmationEmail,
+    sendAccountActivationEmail,
     supabaseAdmin,
-    autoCloseExpiredJobs
+    autoCloseExpiredJobs,
+    educationService
 });
 
 // --- Talent routes registered in routes/talent.js ---
@@ -1204,6 +1240,14 @@ registerStorageRoutes(app, pool, {
     getCacheDuration,
     cleanupCache
 });
+
+// --- Cron routes (External triggers) ---
+const registerCronRoutes = require('./routes/cron');
+registerCronRoutes(app, pool, { jobAggregator });
+
+// --- Pages routes (SPA) - Must be registered AFTER all API and Admin routes ---
+const registerPagesRoutes = require('./routes/pages');
+registerPagesRoutes(app, { isAuthenticated, isProfessional, isEmployer, isEmployerVerified, isAdmin, pool });
 
 // Existing endpoints
 // ... (All existing routes remain the same)
@@ -1316,13 +1360,14 @@ const server = app.listen(PORT, () => {
     // Initialize Socket.io
     initRealtime(server, pool);
 
-    // Initialize Job Aggregation Service immediately
-    const jobAggregator = new JobAggregationService(pool);
-    app.set('jobAggregator', jobAggregator);
-    logger.info('Job Aggregation Service created.');
-
     // Initialize schedule and database asynchronously
-    jobAggregator.initSchedule();
+    if (process.env.DISABLE_INTERNAL_CRON === 'true') {
+        logger.info('Internal cron scheduler is DISABLED (External trigger mode)');
+    } else {
+        jobAggregator.initSchedule();
+        logger.info('Internal cron scheduler is ACTIVE');
+    }
+
     initializeDatabase().then(async () => {
         logger.info('Job Aggregation Service ready for full operation.');
     });

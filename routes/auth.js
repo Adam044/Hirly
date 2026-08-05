@@ -1,7 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
 const rateLimit = require('express-rate-limit');
-const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
 const AuthService = require('../services/authService');
@@ -21,8 +20,10 @@ module.exports = function registerAuthRoutes(
     sendVerificationEmail,
     sendPasswordResetEmail,
     sendPasswordResetConfirmationEmail,
+    sendAccountActivationEmail,
     supabaseAdmin,
-    autoCloseExpiredJobs
+    autoCloseExpiredJobs,
+    educationService
   }
 ) {
   const router = express.Router();
@@ -33,19 +34,24 @@ module.exports = function registerAuthRoutes(
     authLimiter,
     [
       body('firstName')
-        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
         .trim()
         .isLength({ min: 2, max: 50 })
         .matches(/^[\u0600-\u06FFa-zA-Z0-9\s]+$/)
         .withMessage('First name must be 2-50 characters and contain only letters and numbers'),
       body('lastName')
-        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
         .trim()
         .isLength({ min: 2, max: 50 })
         .matches(/^[\u0600-\u06FFa-zA-Z0-9\s]+$/)
         .withMessage('Last name must be 2-50 characters and contain only letters and numbers'),
+      body('country')
+        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Country is required'),
       body('city')
-        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
         .trim()
         .isLength({ min: 2, max: 100 })
         .withMessage('City must be between 2 and 100 characters'),
@@ -84,13 +90,13 @@ module.exports = function registerAuthRoutes(
         .withMessage('Please provide a valid email address'),
       passwordValidation,
       body('phone')
-        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
         .matches(/^[\+]?[1-9][\d]{0,15}$/)
         .withMessage('Please provide a valid phone number'),
-      body('userType').isIn(['professional', 'freelancer', 'employer']).withMessage('User type must be professional, freelancer, or employer'),
+      body('userType').isIn(['professional', 'employer']).withMessage('User type must be professional or employer'),
       body('employerType').optional().isIn(['individual', 'company']).withMessage('Employer type must be individual or company'),
       body('interests')
-        .if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer')
+        .if((value, { req }) => req.body.userType === 'professional')
         .optional()
         .custom((value) => {
           if (typeof value === 'string') {
@@ -101,23 +107,23 @@ module.exports = function registerAuthRoutes(
         })
         .withMessage('Interests must be an array'),
       body('currentStatus')
-        .if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer')
+        .if((value, { req }) => req.body.userType === 'professional')
         .notEmpty()
         .withMessage('Current status is required'),
       body('mainCategory')
-        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') && (req.body.currentStatus === 'Working' || req.body.currentStatus === 'Freelancing'))
+        .if((value, { req }) => req.body.userType === 'professional' && (req.body.currentStatus === 'Working' || req.body.currentStatus === 'Freelancing'))
         .notEmpty()
         .withMessage('Main category is required for working/freelancing status'),
       body('mainProfession')
-        .if((value, { req }) => (req.body.userType === 'professional' || req.body.userType === 'freelancer') && (req.body.currentStatus === 'Working' || req.body.currentStatus === 'Freelancing'))
+        .if((value, { req }) => req.body.userType === 'professional' && (req.body.currentStatus === 'Working' || req.body.currentStatus === 'Freelancing'))
         .notEmpty()
         .withMessage('Main profession is required for working/freelancing status'),
-      body('gender').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().isIn(['male', 'female']).withMessage('Gender must be either "male" or "female"'),
-      body('birthdate').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().isISO8601().withMessage('Birthdate must be a valid date'),
-      body('website_link').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().isURL().withMessage('Website link must be a valid URL'),
-      body('degree').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Degree must be between 2 and 100 characters'),
-      body('degree_field').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Degree field must be between 2 and 100 characters'),
-      body('university').if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'freelancer').optional().trim().isLength({ min: 2, max: 200 }).withMessage('University must be between 2 and 200 characters')
+      body('gender').if((value, { req }) => req.body.userType === 'professional').optional().isIn(['male', 'female']).withMessage('Gender must be either "male" or "female"'),
+      body('birthdate').if((value, { req }) => req.body.userType === 'professional').optional().isISO8601().withMessage('Birthdate must be a valid date'),
+      body('website_link').if((value, { req }) => req.body.userType === 'professional').optional().isURL().withMessage('Website link must be a valid URL'),
+      body('degree').if((value, { req }) => req.body.userType === 'professional').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Degree must be between 2 and 100 characters'),
+      body('degree_field').if((value, { req }) => req.body.userType === 'professional').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Degree field must be between 2 and 100 characters'),
+      body('university').if((value, { req }) => req.body.userType === 'professional').optional().trim().isLength({ min: 2, max: 200 }).withMessage('University must be between 2 and 200 characters')
     ],
     handleValidationErrors,
     async (req, res, next) => {
@@ -201,7 +207,10 @@ module.exports = function registerAuthRoutes(
           if (error.redirect) {
             return res.status(error.statusCode).json({ success: false, error: error.message, redirect: error.redirect });
           }
-          return res.status(error.statusCode).json({ error: error.message });
+          return res.status(error.statusCode).json({ 
+            error: error.message, 
+            needsActivation: error.needsActivation || false 
+          });
         }
         next(error);
       }
@@ -239,7 +248,7 @@ module.exports = function registerAuthRoutes(
       }
       client = await pool.connect();
       const userResult = await client.query(
-        'SELECT id, first_name, last_name, email, phone, city, user_type, is_email_verified, profile_picture_url, auth_user_id, gender, birthdate, website_link, slug FROM users WHERE id = $1',
+        'SELECT id, first_name, last_name, email, phone, country, city, user_type, is_email_verified, profile_picture_url, auth_user_id, gender, birthdate, slug FROM users WHERE id = $1',
         [req.session.userId]
       );
       let user = userResult.rows[0];
@@ -256,8 +265,8 @@ module.exports = function registerAuthRoutes(
           `SELECT
             skills, bio, profession, current_status, interested_professions,
             cv_path, profile_views_count, rating,
-            degree, degree_field, university,
-            privacy_visible_to_all, privacy_visible_companies_only, privacy_hide_account, privacy_hide_contact_info
+            verification_status, website_link,
+            privacy_visibility, privacy_hide_contact_info
           FROM professionals WHERE user_id = $1`,
           [user.id]
         );
@@ -266,8 +275,28 @@ module.exports = function registerAuthRoutes(
             ...professionalProfileResult.rows[0],
             interested_professions: professionalProfileResult.rows[0].interested_professions || []
           };
-          // Force verification status to Verified
-          user.profile.verification_status = 'Verified';
+          
+          // Fetch education from the new table and merge it
+          if (educationService) {
+            try {
+              const educationEntries = await educationService.getUserEducation(user.id);
+              user.education_history = educationEntries.map(e => ({
+                id: e.id,
+                type: e.type.charAt(0).toUpperCase() + e.type.slice(1),
+                organization: e.institution_name,
+                orgId: e.institution_id,
+                title: e.title,
+                field: e.field_of_study,
+                date: e.end_date,
+                link: e.credential_url,
+                is_current: e.is_current
+              }));
+            } catch (e) {
+              logger.error('Error fetching education in /api/user:', e);
+              user.education_history = [];
+            }
+          }
+
           const applicationsCountResult = await client.query('SELECT COUNT(*) AS count FROM applications WHERE professional_id = $1', [user.id]);
           user.profile.applications_count = parseInt(applicationsCountResult.rows[0].count, 10) || 0;
         }
@@ -275,14 +304,13 @@ module.exports = function registerAuthRoutes(
         const employerProfileResult = await client.query(
           `SELECT
             company_name, company_description, address, employer_type,
-            company_email, company_phone, company_logo_path, company_category
+            company_email, company_phone, company_logo_path, company_category,
+            verification_status, website_link
           FROM employers WHERE user_id = $1`,
           [user.id]
         );
         if (employerProfileResult.rows.length > 0) {
           user.profile = employerProfileResult.rows[0];
-          // Force verification status to Verified
-          user.profile.verification_status = 'Verified';
         }
         const activeJobsCountResult = await client.query(`
           SELECT COUNT(id) AS count 
@@ -291,10 +319,7 @@ module.exports = function registerAuthRoutes(
             AND status = 'open' 
             AND (
               deadline IS NULL 
-              OR CASE 
-                   WHEN deadline ~ '^\\d{4}-\\d{2}-\\d{2}' THEN deadline::TIMESTAMP > NOW() 
-                   ELSE FALSE 
-                 END
+              OR deadline >= CURRENT_DATE
             )
         `, [user.id]);
         user.profile.active_jobs_count = parseInt(activeJobsCountResult.rows[0].count, 10) || 0;
@@ -317,7 +342,7 @@ module.exports = function registerAuthRoutes(
     handleValidationErrors,
     async (req, res) => {
       let client;
-      const { email } = req.body;
+      const email = (req.body.email || '').trim().toLowerCase();
       try {
         client = await pool.connect();
         const userResult = await client.query('SELECT id FROM users WHERE email = $1', [email]);
@@ -354,7 +379,8 @@ module.exports = function registerAuthRoutes(
     handleValidationErrors,
     async (req, res) => {
       let client;
-      const { email, code } = req.body;
+      const email = (req.body.email || '').trim().toLowerCase();
+      const { code } = req.body;
       try {
         client = await pool.connect();
         await client.query('BEGIN');
@@ -408,8 +434,9 @@ module.exports = function registerAuthRoutes(
         }
         const userResult = await client.query('SELECT email, first_name FROM users WHERE id = $1', [resetToken.user_id]);
         const user = userResult.rows[0];
-        const passwordHash = await bcrypt.hash(newPassword, 10);
-        await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, resetToken.user_id]);
+        
+        await authService.resetPassword(resetToken.user_id, newPassword);
+
         await client.query('DELETE FROM password_reset_tokens WHERE token = $1', [token]);
         await client.query('COMMIT');
         try {
@@ -425,13 +452,146 @@ module.exports = function registerAuthRoutes(
     }
   );
 
+  router.post(
+    '/request-activation',
+    passwordResetLimiter,
+    [emailValidation],
+    handleValidationErrors,
+    async (req, res) => {
+      let client;
+      const email = (req.body.email || '').trim().toLowerCase();
+      try {
+        client = await pool.connect();
+        const userResult = await client.query('SELECT id, first_name, auth_user_id FROM users WHERE email = $1', [email]);
+        const user = userResult.rows[0];
+
+        if (!user) {
+          // Silent failure for security
+          return res.json({ success: true, message: 'Activation code sent if account exists.' });
+        }
+
+        if (user.auth_user_id) {
+          return res.status(400).json({ success: false, error: 'Account already active.' });
+        }
+
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+        await client.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [user.id]);
+        await client.query('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)', [user.id, otpCode, expiresAt]);
+
+        await sendAccountActivationEmail(email, otpCode, user.first_name);
+
+        res.json({ success: true, message: 'Activation code sent.' });
+      } catch (error) {
+        logger.error('Error requesting activation:', error);
+        res.status(500).json({ success: false, error: 'An error occurred.' });
+      } finally {
+        if (client) client.release();
+      }
+    }
+  );
+
+  router.post(
+    '/verify-activation-otp',
+    passwordResetLimiter,
+    [emailValidation, body('otp').isLength({ min: 6, max: 6 }).isNumeric()],
+    handleValidationErrors,
+    async (req, res) => {
+      let client;
+      const email = (req.body.email || '').trim().toLowerCase();
+      const { otp } = req.body;
+      try {
+        client = await pool.connect();
+        const userResult = await client.query('SELECT id FROM users WHERE email = $1', [email]);
+        const user = userResult.rows[0];
+
+        if (!user) return res.status(400).json({ success: false, error: 'Invalid request.' });
+
+        const tokenResult = await client.query(
+          'SELECT token, expires_at FROM password_reset_tokens WHERE user_id = $1 AND token = $2',
+          [user.id, otp]
+        );
+        const resetToken = tokenResult.rows[0];
+
+        if (!resetToken || new Date() > new Date(resetToken.expires_at)) {
+          return res.status(400).json({ success: false, error: 'Invalid or expired code.' });
+        }
+
+        // Return a temporary "verified token" to use for the password step
+        const verifiedToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+        await client.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [user.id]);
+        await client.query('INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)', [user.id, verifiedToken, expiresAt]);
+
+        res.json({ success: true, token: verifiedToken });
+      } catch (error) {
+        logger.error('Error verifying activation OTP:', error);
+        res.status(500).json({ success: false, error: 'An error occurred.' });
+      } finally {
+        if (client) client.release();
+      }
+    }
+  );
+
+  router.post(
+    '/complete-activation',
+    passwordResetLimiter,
+    [body('token').notEmpty(), newPasswordValidation],
+    handleValidationErrors,
+    async (req, res) => {
+      let client;
+      const { token, newPassword } = req.body;
+      try {
+        client = await pool.connect();
+        await client.query('BEGIN');
+        const tokenResult = await client.query('SELECT user_id, expires_at FROM password_reset_tokens WHERE token = $1 FOR UPDATE', [token]);
+        const resetToken = tokenResult.rows[0];
+
+        if (!resetToken || new Date() > new Date(resetToken.expires_at)) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ success: false, error: 'Session expired. Please start over.' });
+        }
+
+        await authService.resetPassword(resetToken.user_id, newPassword);
+        await client.query('DELETE FROM password_reset_tokens WHERE token = $1', [token]);
+        
+        // Auto-login the user by setting session
+        const userResult = await client.query('SELECT id, user_type, email, auth_user_id, is_email_verified FROM users WHERE id = $1', [resetToken.user_id]);
+        const user = userResult.rows[0];
+
+        req.session.userId = user.id;
+        req.session.userType = user.user_type === 'freelancer' ? 'professional' : user.user_type;
+        req.session.authUserId = user.auth_user_id;
+        req.session.email = user.email;
+        req.session.isEmailVerified = user.is_email_verified;
+
+        await client.query('COMMIT');
+        
+        let redirectUrl = '/';
+        if (user.user_type === 'professional') redirectUrl = '/dashboard.html';
+        else if (user.user_type === 'employer') redirectUrl = '/hire_dashboard.html';
+
+        res.json({ success: true, message: 'Activated!', redirect: redirectUrl });
+      } catch (error) {
+        if (client) await client.query('ROLLBACK');
+        logger.error('Error completing activation:', error);
+        res.status(500).json({ success: false, error: 'An error occurred.' });
+      } finally {
+        if (client) client.release();
+      }
+    }
+  );
+
   router.post('/verify-email', async (req, res) => {
     let client;
-    const { code, email } = req.body;
+    const email = (req.body.email || '').trim().toLowerCase();
+    const { code } = req.body;
     try {
       client = await pool.connect();
       await client.query('BEGIN');
-      const userResult = await client.query('SELECT id, is_email_verified, user_type, auth_user_id, referred_by_code FROM users WHERE email = $1 FOR UPDATE', [email]);
+      const userResult = await client.query('SELECT id, is_email_verified, user_type, auth_user_id FROM users WHERE email = $1 FOR UPDATE', [email]);
       const user = userResult.rows[0];
       if (!user) {
         await client.query('ROLLBACK');
@@ -468,7 +628,7 @@ module.exports = function registerAuthRoutes(
 
   router.post('/resend-verification-email', resendVerificationLimiter, async (req, res) => {
     let client;
-    const { email } = req.body;
+    const email = (req.body.email || '').trim().toLowerCase();
     try {
       client = await pool.connect();
       await client.query('BEGIN');

@@ -21,23 +21,13 @@ async function initializeDatabaseSchema(pool) {
                 email TEXT NOT NULL UNIQUE,
                 phone TEXT,
                 city TEXT,
-                password_hash TEXT NOT NULL,
-                user_type TEXT NOT NULL CHECK (user_type IN ('professional', 'freelancer', 'employer', 'admin')),
+                user_type TEXT NOT NULL CHECK (user_type IN ('professional', 'employer', 'admin')),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 is_email_verified BOOLEAN DEFAULT false,
                 profile_picture_url TEXT,
-                referral_code TEXT,
-                reffered_by_code TEXT,
-                has_redeemed_referral_code BOOLEAN DEFAULT false,
-                referred_by_user_id UUID,
-                has_received_referral_bonus BOOLEAN DEFAULT false,
                 auth_user_id UUID UNIQUE,
-                monthly_profile_views_count INTEGER DEFAULT 0,
-                last_profile_views_reset_date TIMESTAMP WITH TIME ZONE,
-                tier_expiration_date DATE,
                 gender TEXT CHECK (gender IN ('male', 'female')),
                 birthdate DATE,
-                website_link TEXT,
                 slug TEXT UNIQUE,
                 country TEXT
             );
@@ -63,7 +53,8 @@ async function initializeDatabaseSchema(pool) {
                 job_post_credits INTEGER DEFAULT 0 CHECK (job_post_credits >= 0),
                 profile_view_credits INTEGER DEFAULT 0 CHECK (profile_view_credits >= 0),
                 has_claimed_free_credit BOOLEAN DEFAULT false,
-                rating REAL DEFAULT 0
+                rating REAL DEFAULT 0,
+                website_link TEXT
             );
         `);
 
@@ -80,7 +71,6 @@ async function initializeDatabaseSchema(pool) {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 profession TEXT,
                 current_status TEXT DEFAULT 'Don''t Work',
-                current_profession TEXT,
                 interested_professions JSONB,
                 profile_views_count INTEGER,
                 rating REAL,
@@ -91,7 +81,8 @@ async function initializeDatabaseSchema(pool) {
                 privacy_hide_contact_info BOOLEAN DEFAULT false,
                 cv_text TEXT,
                 cv_text_updated_at TIMESTAMP,
-                employer_views_count INTEGER DEFAULT 0
+                employer_views_count INTEGER DEFAULT 0,
+                website_link TEXT
             );
         `);
 
@@ -104,7 +95,7 @@ async function initializeDatabaseSchema(pool) {
                 description TEXT NOT NULL,
                 category TEXT NOT NULL,
                 budget DOUBLE PRECISION,
-                deadline TEXT,
+                deadline DATE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 status TEXT DEFAULT 'open',
                 job_type TEXT,
@@ -113,7 +104,6 @@ async function initializeDatabaseSchema(pool) {
                 timeline TEXT,
                 profession_required JSONB,
                 job_image_path TEXT,
-                is_urgent INTEGER DEFAULT 0,
                 currency TEXT,
                 auto_outreach_sent BOOLEAN DEFAULT false,
                 has_been_sent BOOLEAN DEFAULT false,
@@ -184,18 +174,6 @@ async function initializeDatabaseSchema(pool) {
                 viewer_id INTEGER REFERENCES employers(id),
                 professional_id INTEGER REFERENCES professionals(id),
                 viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-
-        // 9. Messages Table (Unified)
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS messages (
-                id SERIAL PRIMARY KEY,
-                sender_id INTEGER NOT NULL REFERENCES users(id),
-                receiver_id INTEGER NOT NULL REFERENCES users(id),
-                order_id INTEGER REFERENCES contracts(id),
-                content TEXT NOT NULL,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
 
@@ -272,7 +250,8 @@ async function initializeDatabaseSchema(pool) {
             );
         `);
 
-        // 17. File Storage Table
+        // 17. File Storage Table (Legacy - Deprecated in favor of Supabase Storage)
+        /*
         await client.query(`
             CREATE TABLE IF NOT EXISTS file_storage (
                 id SERIAL PRIMARY KEY,
@@ -286,6 +265,7 @@ async function initializeDatabaseSchema(pool) {
                 parent_file_id INTEGER REFERENCES file_storage(id)
             );
         `);
+        */
 
         // 18. User Sessions Table
         await client.query(`
@@ -577,8 +557,8 @@ async function initializeDatabaseSchema(pool) {
                 title TEXT NOT NULL,
                 field_of_study TEXT,
                 education_level TEXT,
-                start_date TEXT,
-                end_date TEXT,
+                start_date DATE,
+                end_date DATE,
                 is_current BOOLEAN DEFAULT false,
                 grade_score TEXT,
                 credential_url TEXT,
@@ -586,35 +566,6 @@ async function initializeDatabaseSchema(pool) {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        `);
-
-        // Add education_level column to education if it doesn't exist
-        await client.query(`
-            DO $$ 
-            BEGIN 
-                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='education' AND column_name='education_level') THEN
-                    ALTER TABLE education ADD COLUMN education_level TEXT;
-                END IF;
-            END $$;
-        `);
-
-        // Update user_type constraint to allow 'freelancer'
-        await client.query(`
-            DO $$ 
-            BEGIN 
-                -- Check if the constraint exists and needs to be updated
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.table_constraints 
-                    WHERE table_name = 'users' 
-                    AND constraint_name = 'users_user_type_check'
-                ) THEN
-                    -- Drop the existing constraint
-                    ALTER TABLE users DROP CONSTRAINT users_user_type_check;
-                    -- Add the new constraint with 'freelancer' included
-                    ALTER TABLE users ADD CONSTRAINT users_user_type_check 
-                        CHECK (user_type IN ('professional', 'freelancer', 'employer', 'admin'));
-                END IF;
-            END $$;
         `);
 
         await client.query('COMMIT');
@@ -637,9 +588,9 @@ async function resetSequence(pool) {
     try {
         const tables = [
             'users', 'employers', 'professionals', 'jobs', 'applications', 
-            'contracts', 'payments', 'profile_views', 'messages', 'categories', 
+            'contracts', 'payments', 'profile_views', 'categories', 
             'job_categories', 'email_notifications', 'email_verification_tokens', 
-            'reviews', 'file_storage', 'password_reset_tokens', 'services', 
+            'reviews', 'password_reset_tokens', 'services', 
             'job_application_notifications', 'gift_codes', 'gift_code_redemptions', 
             'gift_code_items', 'application_ai_evaluations', 'interview_sessions', 
             'interview_messages', 'interview_reports', 'employer_reviews', 

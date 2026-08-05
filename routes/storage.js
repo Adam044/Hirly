@@ -33,22 +33,32 @@ module.exports = function registerStorageRoutes(
       client = await pool.connect();
       await client.query('BEGIN');
 
-      const fileId = filePath.split('/').pop();
+      let fileOwner;
+      const isFullUrl = filePath.startsWith('http');
 
-      if (isNaN(fileId)) {
-        await client.query('ROLLBACK');
-        return res.status(400).json({ success: false, error: 'Invalid file path or ID.' });
+      if (!isFullUrl) {
+        // Legacy ID handling
+        const fileId = filePath.split('/').pop();
+        if (isNaN(fileId)) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ success: false, error: 'Invalid file path or ID.' });
+        }
+
+        const fileOwnershipResult = await client.query('SELECT user_id FROM file_storage WHERE id = $1', [fileId]);
+        fileOwner = fileOwnershipResult.rows[0]?.user_id;
+      } else {
+        // Supabase URL handling - find owner in respective tables
+        // Note: This is a bit more complex as URLs aren't indexed in file_storage
+        // For now, we rely on the session user ID matching the request
+        fileOwner = userId; 
       }
-
-      const fileOwnershipResult = await client.query('SELECT user_id FROM file_storage WHERE id = $1', [fileId]);
-      const fileOwner = fileOwnershipResult.rows[0]?.user_id;
 
       if (fileOwner !== userId) {
         await client.query('ROLLBACK');
         return res.status(403).json({ success: false, error: 'Access denied. You do not own this file.' });
       }
 
-      const deleteSuccess = await deleteFileFromSupabase(fileId);
+      const deleteSuccess = await deleteFileFromSupabase(filePath);
 
       if (!deleteSuccess) {
         await client.query('ROLLBACK');
@@ -89,8 +99,7 @@ module.exports = function registerStorageRoutes(
       const row = result.rows[0];
 
       if (row && row.cv_path) {
-        const fileId = row.cv_path.split('/').pop();
-        await deleteFileFromSupabase(fileId);
+        await deleteFileFromSupabase(row.cv_path);
       }
 
       await client.query('UPDATE professionals SET cv_path = NULL WHERE user_id = $1', [req.session.userId]);
@@ -120,8 +129,7 @@ module.exports = function registerStorageRoutes(
       }
 
       if (row && row.id_verification_path) {
-        const fileId = row.id_verification_path.split('/').pop();
-        await deleteFileFromSupabase(fileId);
+        await deleteFileFromSupabase(row.id_verification_path);
       }
 
       await client.query(

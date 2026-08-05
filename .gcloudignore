@@ -11,6 +11,12 @@ Hirly.db
 readme.md
 README.md
 
+# Exclude local uploads and large assets
+public/styling/uploads/
+public/images/
+!public/images/logo.jpg
+!public/images/flags/
+
 # Testing and monitoring files (development only)
 test-optimization.js
 monitor-egress.js

@@ -1,127 +1,82 @@
 const logger = require('../utils/logger');
 
 /**
- * Service to handle user and professional profile updates
+ * User Service
+ * Handles data logic for users and professionals
  */
 const userService = {
     /**
-     * Update basic personal information in users table
+     * Update personal info in users table
      */
     async updatePersonalInfo(client, userId, data) {
         logger.info('Updating personal info', { userId, data });
-        const { firstName, lastName, phone, city, country, gender, birthdate, website_link } = data;
+        const { firstName, lastName, phone, city, gender, birthdate } = data;
         
         const updateFields = [];
         const updateValues = [];
         let paramIndex = 1;
-
-        if (firstName !== undefined) { updateFields.push(`first_name = $${paramIndex++}`); updateValues.push(firstName || null); }
-        if (lastName !== undefined) { updateFields.push(`last_name = $${paramIndex++}`); updateValues.push(lastName || null); }
-        if (phone !== undefined) { updateFields.push(`phone = $${paramIndex++}`); updateValues.push(phone || null); }
-        if (city !== undefined) { updateFields.push(`city = $${paramIndex++}`); updateValues.push(city || null); }
-        if (country !== undefined) { updateFields.push(`country = $${paramIndex++}`); updateValues.push(country || null); }
-        if (gender !== undefined) { updateFields.push(`gender = $${paramIndex++}`); updateValues.push(gender === '' || !gender ? null : gender.toLowerCase()); }
-        if (birthdate !== undefined) { updateFields.push(`birthdate = $${paramIndex++}`); updateValues.push(birthdate === '' || !birthdate ? null : birthdate); }
-        if (website_link !== undefined) { updateFields.push(`website_link = $${paramIndex++}`); updateValues.push(website_link === '' || !website_link ? null : website_link); }
+ 
+        if (firstName !== undefined) { updateFields.push(`first_name = $${paramIndex++}`); updateValues.push(firstName); }
+        if (lastName !== undefined) { updateFields.push(`last_name = $${paramIndex++}`); updateValues.push(lastName); }
+        if (phone !== undefined) { updateFields.push(`phone = $${paramIndex++}`); updateValues.push(phone); }
+        if (city !== undefined) { updateFields.push(`city = $${paramIndex++}`); updateValues.push(city); }
+        if (gender !== undefined) { updateFields.push(`gender = $${paramIndex++}`); updateValues.push(gender); }
+        if (birthdate !== undefined) { updateFields.push(`birthdate = $${paramIndex++}`); updateValues.push(birthdate); }
 
         if (updateFields.length === 0) {
-            logger.warn('No fields to update in personal info', { userId });
+            logger.warn('No personal fields to update', { userId });
             return null;
         }
 
         updateValues.push(userId);
         const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
         
-        logger.debug('Executing update query on users', { query, updateValues });
+        logger.debug('Executing UPDATE query on users', { query, updateValues });
         const result = await client.query(query, updateValues);
-        
-        if (result.rowCount === 0) {
-            logger.error('No user found to update', { userId });
-        } else {
-            logger.info('User personal info updated successfully', { userId });
-        }
-        
         return result.rows[0];
     },
 
     /**
-     * Update professional data in professionals table
-     * Uses UPSERT logic to ensure record exists
+     * Update professional profile data in professionals table
+     * Uses UPSERT to ensure record exists
      */
     async updateProfessionalData(client, userId, data) {
         logger.info('Updating professional data', { userId, data });
         const { 
-            skills, bio, profession, current_status, 
-            interested_professions
+            profession, 
+            bio, 
+            skills, 
+            interested_professions, 
+            current_status,
+            website_link
         } = data;
-
+ 
         const updateFields = [];
         const updateValues = [];
         const insertFields = ['user_id'];
         const insertValues = [userId];
         let paramIndex = 1;
+ 
+        const fields = {
+            profession, bio, skills, interested_professions, 
+            current_status, website_link
+        };
 
-        if (skills !== undefined) { 
-            const val = skills || '';
-            updateFields.push(`skills = $${paramIndex++}`); 
-            updateValues.push(val);
-            insertFields.push('skills');
-            insertValues.push(val);
-        }
-        if (bio !== undefined) { 
-            const val = bio || '';
-            updateFields.push(`bio = $${paramIndex++}`); 
-            updateValues.push(val);
-            insertFields.push('bio');
-            insertValues.push(val);
-        }
-        if (profession !== undefined) { 
-            const val = profession || null;
-            updateFields.push(`profession = $${paramIndex++}`); 
-            updateValues.push(val);
-            insertFields.push('profession');
-            insertValues.push(val);
-        }
-        if (current_status !== undefined) { 
-            const val = current_status || 'Don\'t Work';
-            updateFields.push(`current_status = $${paramIndex++}`); 
-            updateValues.push(val);
-            insertFields.push('current_status');
-            insertValues.push(val);
-        }
-        
-        if (interested_professions !== undefined) {
-            let finalProfessions = '[]';
-            try {
-                const parsed = typeof interested_professions === 'string' ? JSON.parse(interested_professions) : interested_professions;
-                if (Array.isArray(parsed)) {
-                    finalProfessions = JSON.stringify(parsed.map(p => String(p).trim()).filter(p => p.length > 0).slice(0, 5));
-                }
-            } catch (e) {
-                logger.error('Error parsing interested_professions:', e);
+        for (const [key, value] of Object.entries(fields)) {
+            if (value !== undefined) {
+                updateFields.push(`${key} = $${paramIndex++}`);
+                updateValues.push(value);
+                insertFields.push(key);
+                insertValues.push(value);
             }
-            updateFields.push(`interested_professions = $${paramIndex++}::jsonb`);
-            updateValues.push(finalProfessions);
-            insertFields.push('interested_professions');
-            insertValues.push(finalProfessions);
         }
 
-        if (updateFields.length === 0) return null;
+        if (updateFields.length === 0) {
+            logger.warn('No professional fields to update', { userId });
+            return null;
+        }
 
-        // Add userId to values for the WHERE clause (if needed for non-upsert)
-        // However, for UPSERT, we need a different approach.
-        
-        // Build UPSERT query
-        const placeholders = [];
-        insertFields.forEach((field, i) => {
-            const val = insertValues[i];
-            if (field === 'interested_professions' || field === 'education_history') {
-                placeholders.push(`$${i + 1}::jsonb`);
-            } else {
-                placeholders.push(`$${i + 1}`);
-            }
-        });
-
+        const placeholders = insertValues.map((_, i) => `$${i + 1}`).join(', ');
         const doUpdateSet = updateFields.map(field => {
             const colName = field.split(' = ')[0];
             return `${colName} = EXCLUDED.${colName}`;
@@ -129,7 +84,7 @@ const userService = {
 
         const query = `
             INSERT INTO professionals (${insertFields.join(', ')})
-            VALUES (${placeholders.join(', ')})
+            VALUES (${placeholders})
             ON CONFLICT (user_id) DO UPDATE SET 
                 ${doUpdateSet}
             RETURNING *`;
@@ -144,15 +99,11 @@ const userService = {
     /**
      * Update privacy settings in professionals table
      * Uses UPSERT to ensure record exists
+     * Simplified: privacy_visibility (ALL/companies/none) + privacy_hide_contact_info
      */
     async updatePrivacySettings(client, userId, data) {
         logger.info('Updating privacy settings', { userId, data });
-        const { 
-            privacy_visible_to_all, 
-            privacy_visible_companies_only, 
-            privacy_hide_account, 
-            privacy_hide_contact_info 
-        } = data;
+        const { privacy_visibility, privacy_hide_contact_info } = data;
 
         const updateFields = [];
         const updateValues = [];
@@ -160,25 +111,11 @@ const userService = {
         const insertValues = [userId];
         let paramIndex = 1;
 
-        if (privacy_visible_to_all !== undefined) { 
-            const val = !!privacy_visible_to_all;
-            updateFields.push(`privacy_visible_to_all = $${paramIndex++}`); 
+        if (privacy_visibility !== undefined) { 
+            const val = ['ALL', 'companies', 'none'].includes(privacy_visibility) ? privacy_visibility : 'ALL';
+            updateFields.push(`privacy_visibility = $${paramIndex++}`); 
             updateValues.push(val); 
-            insertFields.push('privacy_visible_to_all');
-            insertValues.push(val);
-        }
-        if (privacy_visible_companies_only !== undefined) { 
-            const val = !!privacy_visible_companies_only;
-            updateFields.push(`privacy_visible_companies_only = $${paramIndex++}`); 
-            updateValues.push(val); 
-            insertFields.push('privacy_visible_companies_only');
-            insertValues.push(val);
-        }
-        if (privacy_hide_account !== undefined) { 
-            const val = !!privacy_hide_account;
-            updateFields.push(`privacy_hide_account = $${paramIndex++}`); 
-            updateValues.push(val); 
-            insertFields.push('privacy_hide_account');
+            insertFields.push('privacy_visibility');
             insertValues.push(val);
         }
         if (privacy_hide_contact_info !== undefined) { 
@@ -211,6 +148,59 @@ const userService = {
         const result = await client.query(query, insertValues);
         
         logger.info('Privacy settings saved successfully (UPSERT)', { userId });
+        return result.rows[0];
+    },
+
+    /**
+     * Update employer profile data in employers table
+     */
+    async updateEmployerData(client, userId, data) {
+        logger.info('Updating employer data', { userId, data });
+        const { 
+            companyName, 
+            companyDescription, 
+            address, 
+            employerType, 
+            companyEmail, 
+            companyPhone, 
+            companyCategory,
+            website_link
+        } = data;
+
+        const updateFields = [];
+        const updateValues = [];
+        let paramIndex = 1;
+
+        const fieldMap = {
+            company_name: companyName,
+            company_description: companyDescription,
+            address: address,
+            employer_type: employerType,
+            company_email: companyEmail,
+            company_phone: companyPhone,
+            company_category: companyCategory,
+            website_link: website_link
+        };
+
+        for (const [colName, value] of Object.entries(fieldMap)) {
+            if (value !== undefined) {
+                updateFields.push(`${colName} = $${paramIndex++}`);
+                updateValues.push(value);
+            }
+        }
+
+        if (updateFields.length === 0) {
+            logger.warn('No employer fields to update', { userId });
+            return null;
+        }
+
+        updateValues.push(userId);
+        const query = `UPDATE employers SET ${updateFields.join(', ')} WHERE user_id = $${paramIndex} RETURNING *`;
+        
+        logger.debug('Executing UPDATE query on employers', { query, updateValues });
+        const result = await client.query(query, updateValues);
+        
+        logger.info('Employer data updated successfully', { userId });
         return result.rows[0];
     }
 };

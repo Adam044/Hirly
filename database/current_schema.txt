@@ -1,501 +1,718 @@
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
+## Table `users`
 
-CREATE TABLE public.users (
-  id integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
-  first_name text NOT NULL,
-  last_name text NOT NULL,
-  email text NOT NULL UNIQUE,
-  phone text,
-  city text,
-  password_hash text NOT NULL,
-  user_type text NOT NULL CHECK (user_type = ANY (ARRAY['freelancer'::text, 'employer'::text, 'admin'::text])),
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  is_email_verified boolean DEFAULT false,
-  profile_picture_url text,
-  referral_code text,
-  reffered_by_code text,
-  has_redeemed_referral_code boolean DEFAULT false,
-  referred_by_user_id uuid,
-  has_received_referral_bonus boolean DEFAULT false,
-  referred_by_code text,
-  auth_user_id uuid UNIQUE,
-  monthly_profile_views_count integer DEFAULT 0,
-  last_profile_views_reset_date timestamp with time zone,
-  tier_expiration_date date,
-  gender text CHECK (gender = ANY (ARRAY['male'::text, 'female'::text])),
-  birthdate date,
-  website_link text,
-  slug text UNIQUE,
-  CONSTRAINT users_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.employers (
-  id integer NOT NULL DEFAULT nextval('employers_id_seq'::regclass),
-  user_id integer UNIQUE,
-  company_name text,
-  company_description text,
-  address text,
-  id_verification_path text,
-  verification_status text DEFAULT 'Not Submitted'::text CHECK (verification_status = ANY (ARRAY['Not Submitted'::text, 'Pending Verification'::text, 'Verified'::text, 'Rejected'::text])),
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  id_rejection_reason text,
-  employer_type text,
-  company_email text,
-  company_phone text,
-  company_logo_path text,
-  company_category text,
-  job_post_credits integer DEFAULT 0 CHECK (job_post_credits >= 0),
-  profile_view_credits integer DEFAULT 0 CHECK (profile_view_credits >= 0),
-  has_claimed_free_credit boolean DEFAULT false,
-  rating real DEFAULT 0,
-  CONSTRAINT employers_pkey PRIMARY KEY (id),
-  CONSTRAINT employers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.freelancers (
-  id integer NOT NULL DEFAULT nextval('freelancers_id_seq'::regclass),
-  user_id integer UNIQUE,
-  skills text,
-  bio text,
-  cv_path text,
-  id_verification_path text,
-  verification_status text DEFAULT 'Not Submitted'::text CHECK (verification_status = ANY (ARRAY['Not Submitted'::text, 'Pending Verification'::text, 'Verified'::text, 'Rejected'::text])),
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  profession text,
-  current_status text DEFAULT 'Don''t Work'::text,
-  current_profession text,
-  interested_professions jsonb,
-  profile_views_count integer,
-  rating real,
-  id_rejection_reason text,
-  degree text,
-  degree_field text,
-  university text,
-  privacy_visible_to_all boolean DEFAULT true,
-  privacy_visible_companies_only boolean DEFAULT false,
-  privacy_hide_account boolean DEFAULT false,
-  privacy_hide_contact_info boolean DEFAULT false,
-  cv_text text,
-  cv_text_updated_at timestamp without time zone,
-  student_type text,
-  study_status text,
-  school_grade text,
-  field_category text,
-  has_education boolean DEFAULT false,
-  employer_views_count integer DEFAULT 0,
-  CONSTRAINT freelancers_pkey PRIMARY KEY (id),
-  CONSTRAINT freelancers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.jobs (
-  id integer NOT NULL DEFAULT nextval('jobs_id_seq'::regclass),
-  employer_id integer,
-  title text NOT NULL,
-  description text NOT NULL,
-  category text NOT NULL,
-  budget double precision,
-  deadline text,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  status text DEFAULT 'open'::text,
-  job_type text,
-  city text,
-  job_site_type text,
-  timeline text,
-  profession_required jsonb,
-  job_image_path text,
-  is_urgent integer DEFAULT 0,
-  currency text,
-  auto_outreach_sent boolean DEFAULT false,
-  has_been_sent boolean DEFAULT false,
-  external_apply_url text,
-  requirements jsonb,
-  external_apply_clicks integer DEFAULT 0,
-  views_count integer DEFAULT 0,
-  gender_requirement text CHECK (gender_requirement = ANY (ARRAY['male'::text, 'female'::text, 'any'::text])),
-  age_min integer,
-  age_max integer,
-  job_dossier jsonb,
-  is_external boolean DEFAULT false,
-  external_source text,
-  external_company_name text,
-  external_company_logo text,
-  external_id text,
-  country character varying,
-  CONSTRAINT jobs_pkey PRIMARY KEY (id),
-  CONSTRAINT jobs_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.applications (
-  id integer NOT NULL DEFAULT nextval('applications_id_seq'::regclass),
-  job_id integer,
-  freelancer_id integer,
-  proposal_message text,
-  bid_amount double precision,
-  cv_path text,
-  timeline text,
-  status text DEFAULT 'pending'::text,
-  applied_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  rejection_reason text,
-  CONSTRAINT applications_pkey PRIMARY KEY (id),
-  CONSTRAINT applications_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.jobs(id),
-  CONSTRAINT applications_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.contracts (
-  id integer NOT NULL DEFAULT nextval('contracts_id_seq'::regclass),
-  job_id integer UNIQUE,
-  freelancer_id integer NOT NULL,
-  employer_id integer NOT NULL,
-  start_date date,
-  end_date date,
-  agreed_amount real,
-  status text DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'completed'::text, 'cancelled'::text])),
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT contracts_pkey PRIMARY KEY (id),
-  CONSTRAINT contracts_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.jobs(id),
-  CONSTRAINT contracts_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.users(id),
-  CONSTRAINT contracts_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.payments (
-  id integer NOT NULL DEFAULT nextval('payments_id_seq'::regclass),
-  contract_id integer,
-  amount double precision,
-  status text CHECK (status = ANY (ARRAY['pending'::text, 'completed'::text, 'failed'::text])),
-  transaction_id text,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT payments_pkey PRIMARY KEY (id),
-  CONSTRAINT payments_contract_id_fkey FOREIGN KEY (contract_id) REFERENCES public.contracts(id)
-);
-CREATE TABLE public.profile_views (
-  id integer NOT NULL DEFAULT nextval('profile_views_id_seq'::regclass),
-  viewer_id integer,
-  freelancer_id integer,
-  viewed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT profile_views_pkey PRIMARY KEY (id),
-  CONSTRAINT profile_views_viewer_id_fkey FOREIGN KEY (viewer_id) REFERENCES public.employers(id),
-  CONSTRAINT profile_views_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.freelancers(id)
-);
-CREATE TABLE public.Messages (
-  id integer NOT NULL DEFAULT nextval('"Messages_id_seq"'::regclass),
-  sender_id integer NOT NULL,
-  receiver_id integer NOT NULL,
-  order_id integer,
-  content text NOT NULL,
-  timestamp timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT Messages_pkey PRIMARY KEY (id),
-  CONSTRAINT Messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id),
-  CONSTRAINT Messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES public.users(id),
-  CONSTRAINT Messages_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.contracts(id)
-);
-CREATE TABLE public.categories (
-  id integer NOT NULL DEFAULT nextval('categories_id_seq'::regclass),
-  name text NOT NULL UNIQUE,
-  CONSTRAINT categories_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.job_categories (
-  id integer NOT NULL DEFAULT nextval('job_categories_id_seq'::regclass),
-  name text NOT NULL UNIQUE,
-  CONSTRAINT job_categories_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.messages (
-  id integer NOT NULL DEFAULT nextval('messages_id_seq'::regclass),
-  sender_id integer NOT NULL,
-  receiver_id integer NOT NULL,
-  order_id integer,
-  content text NOT NULL,
-  timestamp timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT messages_pkey PRIMARY KEY (id),
-  CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id),
-  CONSTRAINT messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES public.users(id),
-  CONSTRAINT messages_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.contracts(id)
-);
-CREATE TABLE public.email_notifications (
-  id integer NOT NULL DEFAULT nextval('email_notifications_id_seq'::regclass),
-  user_id integer,
-  job_id integer,
-  email_type text NOT NULL,
-  sent_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT email_notifications_pkey PRIMARY KEY (id),
-  CONSTRAINT email_notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
-  CONSTRAINT email_notifications_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.jobs(id)
-);
-CREATE TABLE public.email_preferences (
-  user_id integer NOT NULL,
-  notifications_enabled boolean DEFAULT true,
-  notification_frequency text DEFAULT 'daily'::text CHECK (notification_frequency = ANY (ARRAY['daily'::text, 'weekly'::text, 'monthly'::text, 'none'::text])),
-  last_notification_sent timestamp without time zone,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT email_preferences_pkey PRIMARY KEY (user_id),
-  CONSTRAINT email_preferences_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.email_verification_tokens (
-  id integer NOT NULL DEFAULT nextval('email_verification_tokens_id_seq'::regclass),
-  user_id integer,
-  token text NOT NULL UNIQUE,
-  expires_at timestamp without time zone NOT NULL,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT email_verification_tokens_pkey PRIMARY KEY (id),
-  CONSTRAINT email_verification_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.job_outreach_recipients (
-  job_id integer NOT NULL,
-  freelancer_id integer NOT NULL,
-  sent_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT job_outreach_recipients_pkey PRIMARY KEY (job_id, freelancer_id),
-  CONSTRAINT job_outreach_recipients_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.jobs(id),
-  CONSTRAINT job_outreach_recipients_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.reviews (
-  id integer NOT NULL DEFAULT nextval('reviews_id_seq'::regclass),
-  job_id integer NOT NULL,
-  freelancer_id integer NOT NULL,
-  reviewer_id integer NOT NULL,
-  rating integer CHECK (rating >= 1 AND rating <= 5),
-  comment text,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT reviews_pkey PRIMARY KEY (id),
-  CONSTRAINT reviews_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.jobs(id),
-  CONSTRAINT reviews_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.users(id),
-  CONSTRAINT reviews_reviewer_id_fkey FOREIGN KEY (reviewer_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.file_storage (
-  id integer NOT NULL DEFAULT nextval('file_storage_id_seq'::regclass),
-  user_id integer,
-  file_type character varying NOT NULL CHECK (file_type::text = ANY (ARRAY['cv'::character varying, 'cv_webp'::character varying, 'id_verification'::character varying, 'id_verification_webp'::character varying, 'company_logo'::character varying, 'company_logo_webp'::character varying, 'job_image'::character varying, 'job_image_webp'::character varying, 'profile_picture'::character varying, 'profile_picture_webp'::character varying, 'service_image'::character varying, 'service_image_webp'::character varying]::text[])),
-  file_name text NOT NULL,
-  mime_type text NOT NULL,
-  file_data bytea NOT NULL,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  parent_file_id integer,
-  CONSTRAINT file_storage_pkey PRIMARY KEY (id),
-  CONSTRAINT file_storage_parent_file_id_fkey FOREIGN KEY (parent_file_id) REFERENCES public.file_storage(id),
-  CONSTRAINT file_storage_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.user_sessions (
-  sid character varying NOT NULL,
-  sess json NOT NULL,
-  expire timestamp without time zone NOT NULL,
-  CONSTRAINT user_sessions_pkey PRIMARY KEY (sid)
-);
-CREATE TABLE public.password_reset_tokens (
-  id integer NOT NULL DEFAULT nextval('password_reset_tokens_id_seq'::regclass),
-  user_id integer,
-  token text NOT NULL UNIQUE,
-  expires_at timestamp without time zone NOT NULL,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (id),
-  CONSTRAINT password_reset_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.services (
-  id integer NOT NULL DEFAULT nextval('services_id_seq'::regclass),
-  freelancer_id integer NOT NULL,
-  service_title text NOT NULL,
-  service_description text,
-  price real,
-  currency text,
-  delivery_time text,
-  service_image_path text,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  category text,
-  CONSTRAINT services_pkey PRIMARY KEY (id),
-  CONSTRAINT services_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.freelancers(id)
-);
-CREATE TABLE public.job_application_notifications (
-  id integer NOT NULL DEFAULT nextval('job_application_notifications_id_seq'::regclass),
-  job_id integer UNIQUE,
-  sent_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  sent_by_admin_id integer,
-  CONSTRAINT job_application_notifications_pkey PRIMARY KEY (id),
-  CONSTRAINT job_application_notifications_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.jobs(id),
-  CONSTRAINT job_application_notifications_sent_by_admin_id_fkey FOREIGN KEY (sent_by_admin_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.gift_codes (
-  id integer NOT NULL DEFAULT nextval('gift_codes_id_seq'::regclass),
-  code text NOT NULL UNIQUE,
-  gift_type text NOT NULL CHECK (gift_type = ANY (ARRAY['pro_membership'::text, 'job_credits'::text, 'profile_view_credits'::text])),
-  credits_value integer,
-  pro_duration_days integer,
-  notes text,
-  is_redeemed boolean DEFAULT false,
-  redeemed_by_user_id integer,
-  redeemed_at timestamp with time zone,
-  expires_at timestamp with time zone,
-  created_by_admin_id integer,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  usage_limit integer,
-  used_count integer DEFAULT 0,
-  CONSTRAINT gift_codes_pkey PRIMARY KEY (id),
-  CONSTRAINT gift_codes_redeemed_by_user_id_fkey FOREIGN KEY (redeemed_by_user_id) REFERENCES public.users(id),
-  CONSTRAINT gift_codes_created_by_admin_id_fkey FOREIGN KEY (created_by_admin_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.gift_code_redemptions (
-  id integer NOT NULL DEFAULT nextval('gift_code_redemptions_id_seq'::regclass),
-  code_id integer NOT NULL,
-  user_id integer NOT NULL,
-  redeemed_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT gift_code_redemptions_pkey PRIMARY KEY (id),
-  CONSTRAINT gift_code_redemptions_code_id_fkey FOREIGN KEY (code_id) REFERENCES public.gift_codes(id),
-  CONSTRAINT gift_code_redemptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.gift_code_items (
-  id integer NOT NULL DEFAULT nextval('gift_code_items_id_seq'::regclass),
-  code_id integer NOT NULL,
-  item_type text NOT NULL CHECK (item_type = ANY (ARRAY['pro_membership'::text, 'job_credits'::text, 'profile_view_credits'::text])),
-  credits_value integer,
-  pro_duration_days integer,
-  CONSTRAINT gift_code_items_pkey PRIMARY KEY (id),
-  CONSTRAINT gift_code_items_code_id_fkey FOREIGN KEY (code_id) REFERENCES public.gift_codes(id)
-);
-CREATE TABLE public.application_ai_evaluations (
-  id integer NOT NULL DEFAULT nextval('application_ai_evaluations_id_seq'::regclass),
-  application_id integer UNIQUE,
-  match_score integer,
-  summary text,
-  strengths jsonb,
-  weaknesses jsonb,
-  verdict text,
-  analyzed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  full_report text,
-  parameters jsonb,
-  CONSTRAINT application_ai_evaluations_pkey PRIMARY KEY (id),
-  CONSTRAINT application_ai_evaluations_application_id_fkey FOREIGN KEY (application_id) REFERENCES public.applications(id)
-);
-CREATE TABLE public.deep_reports (
-  application_id integer NOT NULL,
-  detailed_summary text,
-  detailed_strengths jsonb,
-  detailed_weaknesses jsonb,
-  interview_questions jsonb,
-  detailed_report_html text,
-  analyzed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT deep_reports_pkey PRIMARY KEY (application_id),
-  CONSTRAINT deep_reports_application_id_fkey FOREIGN KEY (application_id) REFERENCES public.applications(id)
-);
-CREATE TABLE public.interview_sessions (
-  id integer NOT NULL DEFAULT nextval('interview_sessions_id_seq'::regclass),
-  application_id integer,
-  job_id integer,
-  employer_id integer,
-  freelancer_id integer,
-  token text NOT NULL UNIQUE,
-  instructions text,
-  language text DEFAULT 'ar'::text,
-  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'completed'::text, 'expired'::text])),
-  expires_at timestamp without time zone,
-  started_at timestamp without time zone,
-  completed_at timestamp without time zone,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  invitation_response text DEFAULT 'pending'::text,
-  duration_minutes integer,
-  CONSTRAINT interview_sessions_pkey PRIMARY KEY (id),
-  CONSTRAINT interview_sessions_application_id_fkey FOREIGN KEY (application_id) REFERENCES public.applications(id),
-  CONSTRAINT interview_sessions_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.jobs(id),
-  CONSTRAINT interview_sessions_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.users(id),
-  CONSTRAINT interview_sessions_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.interview_messages (
-  id integer NOT NULL DEFAULT nextval('interview_messages_id_seq'::regclass),
-  session_id integer,
-  sender text NOT NULL CHECK (sender = ANY (ARRAY['ai'::text, 'applicant'::text])),
-  content text NOT NULL,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT interview_messages_pkey PRIMARY KEY (id),
-  CONSTRAINT interview_messages_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.interview_sessions(id)
-);
-CREATE TABLE public.interview_reports (
-  id integer NOT NULL DEFAULT nextval('interview_reports_id_seq'::regclass),
-  session_id integer UNIQUE,
-  summary text,
-  score integer,
-  wage_expectation text,
-  budget_alignment text,
-  readiness text,
-  concerns jsonb,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT interview_reports_pkey PRIMARY KEY (id),
-  CONSTRAINT interview_reports_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.interview_sessions(id)
-);
-CREATE TABLE public.job_calibrations (
-  job_id integer NOT NULL,
-  analysis_json jsonb,
-  created_at timestamp without time zone DEFAULT now(),
-  CONSTRAINT job_calibrations_pkey PRIMARY KEY (job_id)
-);
-CREATE TABLE public.employer_reviews (
-  id integer NOT NULL DEFAULT nextval('employer_reviews_id_seq'::regclass),
-  employer_id integer NOT NULL,
-  reviewer_id integer NOT NULL,
-  rating integer CHECK (rating >= 1 AND rating <= 5),
-  comment text,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT employer_reviews_pkey PRIMARY KEY (id),
-  CONSTRAINT employer_reviews_employer_id_fkey FOREIGN KEY (employer_id) REFERENCES public.users(id),
-  CONSTRAINT employer_reviews_reviewer_id_fkey FOREIGN KEY (reviewer_id) REFERENCES public.users(id)
-);
-CREATE TABLE public.email_logs (
-  id integer NOT NULL DEFAULT nextval('email_logs_id_seq'::regclass),
-  sender_email text NOT NULL,
-  recipient_email text NOT NULL,
-  subject text,
-  sent_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT email_logs_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.visitor_logs (
-  id integer NOT NULL DEFAULT nextval('visitor_logs_id_seq'::regclass),
-  visitor_id text NOT NULL,
-  ip_address text,
-  user_agent text,
-  page_path text,
-  created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  referrer text,
-  device_type text,
-  CONSTRAINT visitor_logs_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.system_settings (
-  key text NOT NULL,
-  value jsonb NOT NULL,
-  updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT system_settings_pkey PRIMARY KEY (key)
-);
-CREATE TABLE public.job_sources (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  name character varying NOT NULL,
-  type character varying NOT NULL CHECK (type::text = ANY (ARRAY['api'::character varying, 'rss'::character varying, 'scraper'::character varying]::text[])),
-  country_code character varying,
-  base_url text,
-  config jsonb DEFAULT '{}'::jsonb,
-  active boolean DEFAULT true,
-  priority integer DEFAULT 100,
-  last_sync timestamp with time zone,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT job_sources_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.raw_jobs (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  source_id uuid,
-  external_id character varying,
-  external_url text,
-  raw_payload jsonb NOT NULL,
-  status character varying DEFAULT 'pending'::character varying CHECK (status::text = ANY (ARRAY['pending'::character varying, 'processing'::character varying, 'processed'::character varying, 'failed'::character varying, 'duplicate'::character varying, 'spam'::character varying]::text[])),
-  fetch_timestamp timestamp with time zone DEFAULT now(),
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT raw_jobs_pkey PRIMARY KEY (id),
-  CONSTRAINT raw_jobs_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.job_sources(id)
-);
-CREATE TABLE public.job_review_queue (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  raw_job_id uuid,
-  final_job_id integer,
-  ai_extracted jsonb,
-  ai_confidence_score numeric,
-  duplicate_warnings jsonb,
-  status character varying DEFAULT 'pending_review'::character varying CHECK (status::text = ANY (ARRAY['pending_review'::character varying, 'approved'::character varying, 'rejected'::character varying, 'auto_approved'::character varying]::text[])),
-  reviewed_by integer,
-  reviewed_at timestamp with time zone,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT job_review_queue_pkey PRIMARY KEY (id),
-  CONSTRAINT job_review_queue_raw_job_id_fkey FOREIGN KEY (raw_job_id) REFERENCES public.raw_jobs(id),
-  CONSTRAINT job_review_queue_final_job_id_fkey FOREIGN KEY (final_job_id) REFERENCES public.jobs(id),
-  CONSTRAINT job_review_queue_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES public.users(id)
-);
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `first_name` | `text` |  |
+| `last_name` | `text` |  |
+| `email` | `text` |  Unique |
+| `phone` | `text` |  Nullable |
+| `city` | `text` |  Nullable |
+| `user_type` | `text` |  |
+| `created_at` | `timestamp` |  Nullable |
+| `is_email_verified` | `bool` |  Nullable |
+| `profile_picture_url` | `text` |  Nullable |
+| `auth_user_id` | `uuid` |  Nullable Unique |
+| `gender` | `text` |  Nullable |
+| `birthdate` | `date` |  Nullable |
+| `slug` | `text` |  Nullable Unique |
+| `country` | `varchar` |  Nullable |
+
+## Table `employers`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `user_id` | `int4` |  Nullable Unique |
+| `company_name` | `text` |  Nullable |
+| `company_description` | `text` |  Nullable |
+| `address` | `text` |  Nullable |
+| `id_verification_path` | `text` |  Nullable |
+| `verification_status` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `id_rejection_reason` | `text` |  Nullable |
+| `employer_type` | `text` |  Nullable |
+| `company_email` | `text` |  Nullable |
+| `company_phone` | `text` |  Nullable |
+| `company_logo_path` | `text` |  Nullable |
+| `company_category` | `text` |  Nullable |
+| `job_post_credits` | `int4` |  Nullable |
+| `profile_view_credits` | `int4` |  Nullable |
+| `has_claimed_free_credit` | `bool` |  Nullable |
+| `rating` | `float4` |  Nullable |
+| `website_link` | `text` |  Nullable |
+
+## Table `professionals`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `user_id` | `int4` |  Nullable Unique |
+| `skills` | `text` |  Nullable |
+| `bio` | `text` |  Nullable |
+| `cv_path` | `text` |  Nullable |
+| `id_verification_path` | `text` |  Nullable |
+| `verification_status` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `profession` | `text` |  Nullable |
+| `current_status` | `text` |  Nullable |
+| `interested_professions` | `jsonb` |  Nullable |
+| `profile_views_count` | `int4` |  Nullable |
+| `rating` | `float4` |  Nullable |
+| `id_rejection_reason` | `text` |  Nullable |
+| `privacy_hide_contact_info` | `bool` |  Nullable |
+| `employer_views_count` | `int4` |  Nullable |
+| `website_link` | `text` |  Nullable |
+| `privacy_visibility` | `text` |  Nullable |
+
+## Table `jobs`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `employer_id` | `int4` |  Nullable |
+| `title` | `text` |  |
+| `description` | `text` |  |
+| `category` | `text` |  |
+| `budget` | `float8` |  Nullable |
+| `deadline` | `date` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `status` | `text` |  Nullable |
+| `job_type` | `text` |  Nullable |
+| `city` | `text` |  Nullable |
+| `job_site_type` | `text` |  Nullable |
+| `timeline` | `text` |  Nullable |
+| `profession_required` | `jsonb` |  Nullable |
+| `job_image_path` | `text` |  Nullable |
+| `currency` | `text` |  Nullable |
+| `auto_outreach_sent` | `bool` |  Nullable |
+| `has_been_sent` | `bool` |  Nullable |
+| `external_apply_url` | `text` |  Nullable |
+| `requirements` | `jsonb` |  Nullable |
+| `external_apply_clicks` | `int4` |  Nullable |
+| `views_count` | `int4` |  Nullable |
+| `gender_requirement` | `text` |  Nullable |
+| `age_min` | `int4` |  Nullable |
+| `age_max` | `int4` |  Nullable |
+| `job_dossier` | `jsonb` |  Nullable |
+| `is_external` | `bool` |  Nullable |
+| `external_source` | `text` |  Nullable |
+| `external_company_name` | `text` |  Nullable |
+| `external_company_logo` | `text` |  Nullable |
+| `external_id` | `text` |  Nullable |
+| `country` | `varchar` |  Nullable |
+
+## Table `applications`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `job_id` | `int4` |  Nullable |
+| `professional_id` | `int4` |  Nullable |
+| `proposal_message` | `text` |  Nullable |
+| `bid_amount` | `float8` |  Nullable |
+| `cv_path` | `text` |  Nullable |
+| `timeline` | `text` |  Nullable |
+| `status` | `text` |  Nullable |
+| `applied_at` | `timestamp` |  Nullable |
+| `rejection_reason` | `text` |  Nullable |
+
+## Table `contracts`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `job_id` | `int4` |  Nullable Unique |
+| `professional_id` | `int4` |  |
+| `employer_id` | `int4` |  |
+| `start_date` | `date` |  Nullable |
+| `end_date` | `date` |  Nullable |
+| `agreed_amount` | `float4` |  Nullable |
+| `status` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `payments`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `contract_id` | `int4` |  Nullable |
+| `amount` | `float8` |  Nullable |
+| `status` | `text` |  Nullable |
+| `transaction_id` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `profile_views`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `viewer_id` | `int4` |  Nullable |
+| `professional_id` | `int4` |  Nullable |
+| `viewed_at` | `timestamp` |  Nullable |
+
+## Table `categories`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `name` | `text` |  Unique |
+
+## Table `job_categories`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `name` | `text` |  Unique |
+
+## Table `email_notifications`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `user_id` | `int4` |  Nullable |
+| `job_id` | `int4` |  Nullable |
+| `email_type` | `text` |  |
+| `sent_at` | `timestamp` |  Nullable |
+
+## Table `email_preferences`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `user_id` | `int4` | Primary |
+| `notifications_enabled` | `bool` |  Nullable |
+| `notification_frequency` | `text` |  Nullable |
+| `last_notification_sent` | `timestamp` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `updated_at` | `timestamp` |  Nullable |
+
+## Table `email_verification_tokens`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `user_id` | `int4` |  Nullable |
+| `token` | `text` |  Unique |
+| `expires_at` | `timestamp` |  |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `job_outreach_recipients`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `job_id` | `int4` | Primary |
+| `professional_id` | `int4` | Primary |
+| `sent_at` | `timestamp` |  Nullable |
+
+## Table `reviews`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `job_id` | `int4` |  |
+| `professional_id` | `int4` |  |
+| `reviewer_id` | `int4` |  |
+| `rating` | `int4` |  Nullable |
+| `comment` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `file_storage`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `user_id` | `int4` |  Nullable |
+| `file_type` | `varchar` |  |
+| `file_name` | `text` |  |
+| `mime_type` | `text` |  |
+| `file_data` | `bytea` |  |
+| `created_at` | `timestamp` |  Nullable |
+| `updated_at` | `timestamp` |  Nullable |
+| `parent_file_id` | `int4` |  Nullable |
+
+## Table `user_sessions`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `sid` | `varchar` | Primary |
+| `sess` | `json` |  |
+| `expire` | `timestamp` |  |
+
+## Table `password_reset_tokens`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `user_id` | `int4` |  Nullable |
+| `token` | `text` |  Unique |
+| `expires_at` | `timestamp` |  |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `services`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `professional_id` | `int4` |  |
+| `service_title` | `text` |  |
+| `service_description` | `text` |  Nullable |
+| `price` | `float4` |  Nullable |
+| `currency` | `text` |  Nullable |
+| `delivery_time` | `text` |  Nullable |
+| `service_image_path` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `category` | `text` |  Nullable |
+
+## Table `job_application_notifications`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `job_id` | `int4` |  Nullable Unique |
+| `sent_at` | `timestamp` |  Nullable |
+| `sent_by_admin_id` | `int4` |  Nullable |
+
+## Table `gift_codes`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `code` | `text` |  Unique |
+| `gift_type` | `text` |  |
+| `credits_value` | `int4` |  Nullable |
+| `pro_duration_days` | `int4` |  Nullable |
+| `notes` | `text` |  Nullable |
+| `is_redeemed` | `bool` |  Nullable |
+| `redeemed_by_user_id` | `int4` |  Nullable |
+| `redeemed_at` | `timestamptz` |  Nullable |
+| `expires_at` | `timestamptz` |  Nullable |
+| `created_by_admin_id` | `int4` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `usage_limit` | `int4` |  Nullable |
+| `used_count` | `int4` |  Nullable |
+
+## Table `gift_code_redemptions`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `code_id` | `int4` |  |
+| `user_id` | `int4` |  |
+| `redeemed_at` | `timestamptz` |  Nullable |
+
+## Table `gift_code_items`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `code_id` | `int4` |  |
+| `item_type` | `text` |  |
+| `credits_value` | `int4` |  Nullable |
+| `pro_duration_days` | `int4` |  Nullable |
+
+## Table `application_ai_evaluations`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `application_id` | `int4` |  Nullable Unique |
+| `match_score` | `int4` |  Nullable |
+| `summary` | `text` |  Nullable |
+| `strengths` | `jsonb` |  Nullable |
+| `weaknesses` | `jsonb` |  Nullable |
+| `verdict` | `text` |  Nullable |
+| `analyzed_at` | `timestamp` |  Nullable |
+| `full_report` | `text` |  Nullable |
+| `parameters` | `jsonb` |  Nullable |
+
+## Table `deep_reports`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `application_id` | `int4` | Primary |
+| `detailed_summary` | `text` |  Nullable |
+| `detailed_strengths` | `jsonb` |  Nullable |
+| `detailed_weaknesses` | `jsonb` |  Nullable |
+| `interview_questions` | `jsonb` |  Nullable |
+| `detailed_report_html` | `text` |  Nullable |
+| `analyzed_at` | `timestamp` |  Nullable |
+
+## Table `interview_sessions`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `application_id` | `int4` |  Nullable |
+| `job_id` | `int4` |  Nullable |
+| `employer_id` | `int4` |  Nullable |
+| `professional_id` | `int4` |  Nullable |
+| `token` | `text` |  Unique |
+| `instructions` | `text` |  Nullable |
+| `language` | `text` |  Nullable |
+| `status` | `text` |  Nullable |
+| `expires_at` | `timestamp` |  Nullable |
+| `started_at` | `timestamp` |  Nullable |
+| `completed_at` | `timestamp` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `invitation_response` | `text` |  Nullable |
+| `duration_minutes` | `int4` |  Nullable |
+
+## Table `interview_messages`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `session_id` | `int4` |  Nullable |
+| `sender` | `text` |  |
+| `content` | `text` |  |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `interview_reports`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `session_id` | `int4` |  Nullable Unique |
+| `summary` | `text` |  Nullable |
+| `score` | `int4` |  Nullable |
+| `wage_expectation` | `text` |  Nullable |
+| `budget_alignment` | `text` |  Nullable |
+| `readiness` | `text` |  Nullable |
+| `concerns` | `jsonb` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `job_calibrations`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `job_id` | `int4` | Primary |
+| `analysis_json` | `jsonb` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `employer_reviews`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `employer_id` | `int4` |  |
+| `reviewer_id` | `int4` |  |
+| `rating` | `int4` |  Nullable |
+| `comment` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+
+## Table `email_logs`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `sender_email` | `text` |  |
+| `recipient_email` | `text` |  |
+| `subject` | `text` |  Nullable |
+| `sent_at` | `timestamp` |  Nullable |
+
+## Table `visitor_logs`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `visitor_id` | `text` |  |
+| `ip_address` | `text` |  Nullable |
+| `user_agent` | `text` |  Nullable |
+| `page_path` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `referrer` | `text` |  Nullable |
+| `device_type` | `text` |  Nullable |
+
+## Table `system_settings`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `key` | `text` | Primary |
+| `value` | `jsonb` |  |
+| `updated_at` | `timestamp` |  Nullable |
+
+## Table `job_sources`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `name` | `varchar` |  Unique |
+| `type` | `varchar` |  |
+| `country_code` | `varchar` |  Nullable |
+| `base_url` | `text` |  Nullable |
+| `config` | `jsonb` |  Nullable |
+| `active` | `bool` |  Nullable |
+| `priority` | `int4` |  Nullable |
+| `last_sync` | `timestamptz` |  Nullable |
+| `created_at` | `timestamptz` |  Nullable |
+| `updated_at` | `timestamptz` |  Nullable |
+| `is_sorted` | `bool` |  Nullable |
+| `scan_depth_limit` | `int4` |  Nullable |
+
+## Table `raw_jobs`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `source_id` | `uuid` |  Nullable |
+| `external_id` | `varchar` |  Nullable |
+| `external_url` | `text` |  Nullable |
+| `raw_payload` | `jsonb` |  |
+| `status` | `varchar` |  Nullable |
+| `fetch_timestamp` | `timestamptz` |  Nullable |
+| `created_at` | `timestamptz` |  Nullable |
+| `updated_at` | `timestamptz` |  Nullable |
+| `job_text` | `text` |  Nullable |
+
+## Table `job_review_queue`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `raw_job_id` | `uuid` |  Nullable |
+| `final_job_id` | `int4` |  Nullable |
+| `ai_extracted` | `jsonb` |  Nullable |
+| `ai_confidence_score` | `numeric` |  Nullable |
+| `duplicate_warnings` | `jsonb` |  Nullable |
+| `status` | `varchar` |  Nullable |
+| `reviewed_by` | `int4` |  Nullable |
+| `reviewed_at` | `timestamptz` |  Nullable |
+| `created_at` | `timestamptz` |  Nullable |
+| `updated_at` | `timestamptz` |  Nullable |
+
+## Table `education`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary |
+| `user_id` | `int4` |  |
+| `type` | `text` |  |
+| `institution_name` | `text` |  |
+| `institution_id` | `text` |  Nullable |
+| `title` | `text` |  |
+| `field_of_study` | `text` |  Nullable |
+| `start_date` | `date` |  Nullable |
+| `end_date` | `date` |  Nullable |
+| `is_current` | `bool` |  Nullable |
+| `grade_score` | `text` |  Nullable |
+| `credential_url` | `text` |  Nullable |
+| `description` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `updated_at` | `timestamp` |  Nullable |
+| `education_level` | `text` |  Nullable |
+
+## Custom Types / Enums
+
+### `visibility_type`
+
+`ALL` | `companies` | `none`
+
+## RLS Policies
+
+### `contracts`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Involved parties can manage their contracts` | ALL | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = contracts.professional_id) AND (u.auth_user_id = auth.uid())))) OR (EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = contracts.employer_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+
+### `reviews`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Anyone can view reviews` | SELECT | public | PERMISSIVE | `(true OR is_admin())` | — |
+| `Authenticated users can write their own reviews` | INSERT | public | PERMISSIVE | — | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = reviews.reviewer_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` |
+| `Reviewer can delete their own review` | DELETE | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = reviews.reviewer_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+| `Reviewer can update their own review` | UPDATE | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = reviews.reviewer_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+| `admin_select_all_reviews` | SELECT | authenticated | PERMISSIVE | `(current_setting('app.user_type'::text, true) = 'admin'::text)` | — |
+
+### `users`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Users can update their own profile` | UPDATE | public | PERMISSIVE | `((auth_user_id = auth.uid()) OR is_admin())` | — |
+| `admin_select_all_users` | SELECT | authenticated | PERMISSIVE | `(current_setting('app.user_type'::text, true) = 'admin'::text)` | — |
+
+### `professionals`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `admin_select_all_freelancers` | SELECT | authenticated | PERMISSIVE | `(current_setting('app.user_type'::text, true) = 'admin'::text)` | — |
+
+### `job_sources`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `admin_manage_sources` | ALL | public | PERMISSIVE | `(EXISTS ( SELECT 1    FROM users   WHERE ((users.auth_user_id = auth.uid()) AND (users.user_type = 'admin'::text))))` | — |
+
+### `email_preferences`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Owner can manage email preferences` | ALL | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = email_preferences.user_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+
+### `applications`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Employers can update status of applications for their jobs` | UPDATE | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM (jobs j      JOIN users u ON ((j.employer_id = u.id)))   WHERE ((j.id = applications.job_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+| `Employers can view applications for their jobs` | SELECT | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM (jobs j      JOIN users u ON ((j.employer_id = u.id)))   WHERE ((j.id = applications.job_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+| `Freelancers can manage their own applications` | ALL | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = applications.professional_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+| `admin_select_all_applications` | SELECT | authenticated | PERMISSIVE | `(current_setting('app.user_type'::text, true) = 'admin'::text)` | — |
+
+### `file_storage`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Users can manage their own files` | ALL | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = file_storage.user_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+
+### `job_review_queue`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `admin_manage_review_queue` | ALL | public | PERMISSIVE | `(EXISTS ( SELECT 1    FROM users   WHERE ((users.auth_user_id = auth.uid()) AND (users.user_type = 'admin'::text))))` | — |
+
+### `profile_views`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Employers can insert profile views` | INSERT | public | PERMISSIVE | — | `((EXISTS ( SELECT 1    FROM (employers e      JOIN users u ON ((e.user_id = u.id)))   WHERE ((e.id = profile_views.viewer_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` |
+| `Freelancer can view who viewed their profile` | SELECT | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = profile_views.professional_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+
+### `payments`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Involved parties can view payments` | SELECT | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM (contracts c      JOIN users u ON ((c.professional_id = u.id)))   WHERE ((c.id = payments.contract_id) AND ((u.auth_user_id = auth.uid()) OR (EXISTS ( SELECT 1            FROM users eu           WHERE ((eu.id = c.employer_id) AND (eu.auth_user_id = auth.uid())))))))) OR is_admin())` | — |
+
+### `raw_jobs`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `admin_manage_raw_jobs` | ALL | public | PERMISSIVE | `(EXISTS ( SELECT 1    FROM users   WHERE ((users.auth_user_id = auth.uid()) AND (users.user_type = 'admin'::text))))` | — |
+
+### `email_notifications`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Owner can view their email notifications` | SELECT | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = email_notifications.user_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+
+### `categories`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Anyone can view categories` | SELECT | public | PERMISSIVE | `true` | — |
+
+### `job_categories`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Anyone can view job categories` | SELECT | public | PERMISSIVE | `true` | — |
+
+### `password_reset_tokens`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `delete_own_tokens` | DELETE | public | PERMISSIVE | `(user_id = (current_setting('app.current_user_id'::text))::integer)` | — |
+| `select_own_tokens` | SELECT | public | PERMISSIVE | `(user_id = (current_setting('app.current_user_id'::text))::integer)` | — |
+
+### `email_verification_tokens`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Owner can manage their verification tokens` | ALL | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = email_verification_tokens.user_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+
+### `job_outreach_recipients`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Freelancer can view their job outreach records` | SELECT | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = job_outreach_recipients.professional_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+
+### `employers`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `admin_select_all_employers` | SELECT | authenticated | PERMISSIVE | `(current_setting('app.user_type'::text, true) = 'admin'::text)` | — |
+
+### `jobs`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Anyone can view jobs` | SELECT | public | PERMISSIVE | `(true OR is_admin())` | — |
+| `Employers can create jobs` | INSERT | public | PERMISSIVE | — | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = jobs.employer_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` |
+| `Employers can delete their own jobs` | DELETE | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = jobs.employer_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+| `Employers can update their own jobs` | UPDATE | public | PERMISSIVE | `((EXISTS ( SELECT 1    FROM users u   WHERE ((u.id = jobs.employer_id) AND (u.auth_user_id = auth.uid())))) OR is_admin())` | — |
+| `admin_select_all_jobs` | SELECT | authenticated | PERMISSIVE | `(current_setting('app.user_type'::text, true) = 'admin'::text)` | — |

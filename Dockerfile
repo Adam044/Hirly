@@ -1,5 +1,29 @@
-# Use the official Node.js 20-alpine image as a base
-FROM node:20-alpine
+# Use the official Node.js 20-slim image as a base (Debian-based for better Playwright support)
+FROM node:20-slim
+
+# Install system dependencies required for Playwright/Chromium
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    ca-certificates \
+    procps \
+    libgbm1 \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libxfixes3 \
+    libxshmfence1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
@@ -10,16 +34,11 @@ COPY package*.json ./
 # Install application dependencies
 RUN npm install --omit=dev
 
+# Install Playwright browsers (specifically chromium for the aggregator)
+RUN npx playwright install chromium
+
 # Copy the rest of your application code to the container
 COPY . .
-
-# --- START DEBUGGING ADDITIONS ---
-# List all files and directories in the working directory
-RUN ls -la /usr/src/app
-
-# List contents of the 'utils' directory, as emailService.js is critical
-RUN ls -la /usr/src/app/utils
-# --- END DEBUGGING ADDITIONS ---
 
 # Your server.js is configured to listen on process.env.PORT or 8080.
 EXPOSE 8080

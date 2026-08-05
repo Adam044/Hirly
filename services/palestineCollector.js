@@ -61,7 +61,7 @@ class PalestineCollector {
         this.shouldStop = false; // Reset stop signal at start
         
         const rawJobs = [];
-        let pagesToScan = options.maxPages || source.config?.pages || 1;
+        let pagesToScan = options.maxPages || options.scanDepthLimit || source.config?.pages || 1;
 
         // Optimization: In automation mode, we only need the first page for NEW jobs
         if (options.isAuto) {
@@ -81,6 +81,16 @@ class PalestineCollector {
                 if (pageJobs.length === 0) {
                     this.addLog(`[Jobs.ps Playwright] No jobs found on page ${page}. Ending scan.`);
                     break; 
+                }
+                
+                // Check if we should stop based on date (only if source is sorted)
+                if (options.lookbackDate && options.isSorted) {
+                    const hasStaleJobs = pageJobs.some(job => new Date(job.created_at) < options.lookbackDate);
+                    if (hasStaleJobs) {
+                        this.addLog(`[Jobs.ps Playwright] Smart Guard: Found jobs older than lookback date on a sorted source. Stopping scan.`);
+                        rawJobs.push(...pageJobs.filter(job => new Date(job.created_at) >= options.lookbackDate));
+                        break;
+                    }
                 }
                 
                 // Immediate yield/stage (Optimization #3)
@@ -203,7 +213,7 @@ class PalestineCollector {
             // Deep extraction: Visit job pages in parallel batches
             const BATCH_SIZE = 2; // Reduced from 5 to avoid triggering anti-bot
             let consecutiveDuplicates = 0;
-            const DUPLICATE_THRESHOLD = options.isAuto ? 2 : 5; // Stricter stop in automation mode
+            const DUPLICATE_THRESHOLD = options.isAuto ? 5 : 10; // Stricter stop in automation mode
 
             if (options.isAuto) {
                 this.addLog(`[Jobs.ps Playwright] Daily Mode: Fast Stop enabled (Threshold: ${DUPLICATE_THRESHOLD} duplicates)`);
@@ -275,6 +285,7 @@ class PalestineCollector {
                             ];
                             
                             let contentParts = [];
+                            let dateText = null;
                             
                             // 1. Try to get specific high-value sections
                             highValueSelectors.forEach(sel => {
@@ -282,6 +293,12 @@ class PalestineCollector {
                                 elements.forEach(el => {
                                     if (el && el.innerText && el.innerText.trim().length > 50) {
                                         contentParts.push(el.innerText.trim());
+                                        
+                                        // Try to find date in this section if not found yet
+                                        if (!dateText) {
+                                            const dateMatch = el.innerText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})|(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/);
+                                            if (dateMatch) dateText = dateMatch[0];
+                                        }
                                     }
                                 });
                             });
@@ -303,6 +320,15 @@ class PalestineCollector {
                                         }
                                     }
                                 });
+                            }
+
+                            // Try to find date in the whole body if not found
+                            if (!dateText) {
+                                const bodyText = document.body.innerText;
+                                const dateMatch = bodyText.match(/Posted on:?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i) || 
+                                                 bodyText.match(/Date:?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i) ||
+                                                 bodyText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/);
+                                if (dateMatch) dateText = dateMatch[1] || dateMatch[0];
                             }
 
                             // 3. Last resort fallback - but with AGGRESSIVE noise removal
@@ -327,13 +353,25 @@ class PalestineCollector {
                             return { 
                                 full_text: [...new Set(contentParts)].join('\n\n') || '', 
                                 page_logo: logo, 
-                                page_company: company 
+                                page_company: company,
+                                page_date: dateText
                             };
                         });
 
                         const linkId = job.link.split('/').pop() || 'unknown';
                         const shortHash = Buffer.from(job.link).toString('base64').slice(-15);
                         
+                        // Parse date if found
+                        let createdAt = new Date().toISOString();
+                        if (fullData.page_date) {
+                            try {
+                                const parsedDate = new Date(fullData.page_date);
+                                if (!isNaN(parsedDate.getTime())) {
+                                    createdAt = parsedDate.toISOString();
+                                }
+                            } catch (e) {}
+                        }
+
                         const result = {
                             status: 'new',
                             data: {
@@ -344,13 +382,14 @@ class PalestineCollector {
                                 external_source: 'Jobs.ps',
                                 location: job.location,
                                 job_text: fullData.full_text,
-                                created_at: new Date().toISOString(),
+                                created_at: createdAt,
                                 raw_payload: {
                                     source_name: source.name,
                                     fetch_date: new Date().toISOString(),
                                     extracted_company: fullData.page_company || job.company,
                                     extracted_location: job.location,
-                                    page_logo: fullData.page_logo
+                                    page_logo: fullData.page_logo,
+                                    extracted_date: fullData.page_date
                                 }
                             }
                         };

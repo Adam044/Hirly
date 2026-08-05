@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 class AuthService {
@@ -37,16 +36,16 @@ class AuthService {
         try {
             client = await this.pool.connect();
             const {
-                firstName, lastName, email, phone, city, password,
+                firstName, lastName, email, phone, country, city, password,
                 userType, employerType, interests, currentStatus, mainProfession, mainCategory,
                 studentType, universityYear, schoolGrade,
                 companyName, companyEmail, companyPhone, address, companyDescription, companyCategory,
                 gender, birthdate, website_link, degree, degree_field, university
             } = userData;
 
-            let emailToAuthWith = email;
+            let emailToAuthWith = (email || '').trim().toLowerCase();
             if (userType === 'employer' && employerType === 'company') {
-                emailToAuthWith = companyEmail;
+                emailToAuthWith = (companyEmail || '').trim().toLowerCase();
             }
 
             // Check App DB
@@ -80,7 +79,7 @@ class AuthService {
             const { data: authUserData, error: createUserError } = await this.supabaseAdmin.auth.admin.createUser({
                 email: emailToAuthWith,
                 password: password,
-                email_confirm: false,
+                email_confirm: true, // Set to true so login (password check) works immediately
                 user_metadata: {
                     user_type: userType,
                     employer_type: userType === 'employer' ? employerType : undefined
@@ -94,7 +93,6 @@ class AuthService {
             }
 
             authUserUuid = authUserData.user.id;
-            const passwordHash = await bcrypt.hash(password, 10);
 
             await client.query('BEGIN');
 
@@ -102,56 +100,71 @@ class AuthService {
             let userFirstName = firstName;
             let userLastName = lastName;
             let userPhone = phone;
+            let userCountry = country;
             let userCity = city;
 
             if (userType === 'employer' && employerType === 'company') {
                 userFirstName = companyName || 'Company';
                 userLastName = '';
                 userPhone = companyPhone;
-                userCity = address ? address.split(',')[0] : '';
+                // For companies, we might want to split address if it contains country
+                userCountry = address ? address.split(',').pop().trim() : '';
+                userCity = address ? address.split(',')[0].trim() : '';
             }
 
             let baseName = (userType === 'employer' && employerType === 'company') ? companyName : `${firstName} ${lastName}`;
             let finalSlug = await this.generateUniqueSlug(client, baseName);
 
-            // Insert User
+            // Insert User (Removed password_hash, website_link, and tier columns)
             const userInsertResult = await client.query(
-                'INSERT INTO users (first_name, last_name, email, phone, city, password_hash, user_type, is_email_verified, auth_user_id, gender, birthdate, website_link, slug) VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, $8, $9, $10, $11, $12) RETURNING id',
-                [userFirstName, userLastName, emailToAuthWith, userPhone, userCity, passwordHash, userType, authUserUuid, gender, birthdate, website_link, finalSlug]
+                'INSERT INTO users (first_name, last_name, email, phone, country, city, user_type, is_email_verified, auth_user_id, gender, birthdate, slug) VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, $8, $9, $10, $11) RETURNING id',
+                [userFirstName, userLastName, emailToAuthWith, userPhone, userCountry, userCity, userType, authUserUuid, gender, birthdate, finalSlug]
             );
             const userId = userInsertResult.rows[0].id;
 
             // Insert Role-Specific Records
-            if (userType === 'professional' || userType === 'freelancer') {
+            if (userType === 'professional') {
                 const rawInterests = interests ? (typeof interests === 'string' ? JSON.parse(interests) : interests) : null;
                 const parsedInterests = Array.isArray(rawInterests) ? rawInterests.slice(0, 5) : rawInterests;
 
                 await client.query(
-                    'INSERT INTO professionals (user_id, current_status, profession, interested_professions, student_type, study_status, school_grade, verification_status, degree, degree_field, university) VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10, $11)',
+                    'INSERT INTO professionals (user_id, current_status, profession, interested_professions, verification_status, website_link) VALUES ($1, $2, $3, $4::jsonb, $5, $6)',
                     [
                         userId, 
                         currentStatus, 
                         mainProfession || null, 
                         parsedInterests ? JSON.stringify(parsedInterests) : null, 
-                        studentType || null,
-                        universityYear || null, // Storing university year in study_status
-                        schoolGrade || null,
-                        'Verified', 
-                        degree || null, 
-                        degree_field || null, 
-                        university || null
+                        'Verified',
+                        website_link || null
                     ]
                 );
+
+                // Insert into education table if it's a student or has degree info
+                if (currentStatus === 'Student' && studentType) {
+                    const type = studentType.toLowerCase() === 'university' ? 'university' : 'school';
+                    const title = studentType.toLowerCase() === 'university' ? (universityYear ? `${universityYear} Year` : 'Student') : (schoolGrade ? `${schoolGrade} Grade` : 'Student');
+                    const institutionName = studentType.toLowerCase() === 'university' ? (university || 'University') : 'School';
+                    
+                    await client.query(
+                        'INSERT INTO education (user_id, type, institution_name, title, is_current) VALUES ($1, $2, $3, $4, TRUE)',
+                        [userId, type, institutionName, title]
+                    );
+                } else if (degree || university) {
+                     await client.query(
+                        'INSERT INTO education (user_id, type, institution_name, title, field_of_study) VALUES ($1, $2, $3, $4, $5)',
+                        [userId, 'university', university || 'University', degree || 'Graduate', degree_field || null]
+                    );
+                }
             } else if (userType === 'employer') {
                 if (employerType === 'individual') {
                     await client.query(
-                        'INSERT INTO employers (user_id, employer_type, company_email, company_phone, verification_status) VALUES ($1, $2, $3, $4, $5)',
-                        [userId, employerType, emailToAuthWith, phone, 'Verified']
+                        'INSERT INTO employers (user_id, employer_type, company_email, company_phone, verification_status, website_link) VALUES ($1, $2, $3, $4, $5, $6)',
+                        [userId, employerType, emailToAuthWith, phone, 'Verified', website_link || null]
                     );
                 } else if (employerType === 'company') {
                     await client.query(
-                        'INSERT INTO employers (user_id, company_name, company_description, address, employer_type, company_email, company_phone, company_category, verification_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-                        [userId, companyName, companyDescription, address, employerType, companyEmail, companyPhone, companyCategory, 'Verified']
+                        'INSERT INTO employers (user_id, company_name, company_description, address, employer_type, company_email, company_phone, company_category, verification_status, website_link) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+                        [userId, companyName, companyDescription, address, employerType, companyEmail, companyPhone, companyCategory, 'Verified', website_link || null]
                     );
                 }
             }
@@ -181,20 +194,37 @@ class AuthService {
         const normalizedEmail = (email || '').trim().toLowerCase();
 
         try {
-            client = await this.pool.connect();
-            const userResult = await client.query('SELECT id, password_hash, user_type, is_email_verified, auth_user_id, email AS db_email FROM users WHERE LOWER(email) = $1', [normalizedEmail]);
-            const user = userResult.rows[0];
+            // 1. Verify credentials with Supabase Auth
+            const { data: authData, error: authError } = await this.supabaseAdmin.auth.signInWithPassword({
+                email: normalizedEmail,
+                password: password
+            });
 
-            if (!user) {
-                const err = new Error('Invalid credentials: Email not found.');
+            if (authError) {
+                // Check if user exists in local DB but isn't in Supabase yet
+                client = await this.pool.connect();
+                const localUserCheck = await client.query('SELECT id, auth_user_id FROM users WHERE email = $1', [normalizedEmail]);
+                
+                if (localUserCheck.rows.length > 0 && !localUserCheck.rows[0].auth_user_id) {
+                    const err = new Error('Your account requires a one-time security activation.');
+                    err.statusCode = 401;
+                    err.needsActivation = true;
+                    throw err;
+                }
+
+                const err = new Error('Invalid credentials.');
                 err.statusCode = 401;
                 throw err;
             }
 
-            const isMatch = await bcrypt.compare(password, user.password_hash);
-            if (!isMatch) {
-                const err = new Error('Invalid credentials: Incorrect password.');
-                err.statusCode = 401;
+            // 2. Fetch local user data
+            client = await this.pool.connect();
+            const userResult = await client.query('SELECT id, user_type, is_email_verified, auth_user_id, email AS db_email FROM users WHERE auth_user_id = $1', [authData.user.id]);
+            const user = userResult.rows[0];
+
+            if (!user) {
+                const err = new Error('User record not found in local database.');
+                err.statusCode = 404;
                 throw err;
             }
 
@@ -224,6 +254,64 @@ class AuthService {
                 user.user_type = 'professional';
             }
             return user;
+        } finally {
+            if (client) client.release();
+        }
+    }
+
+    async resetPassword(userId, newPassword) {
+        let client;
+        try {
+            client = await this.pool.connect();
+            
+            // 1. Get user details from local DB
+            const userResult = await client.query('SELECT auth_user_id, email, user_type FROM users WHERE id = $1', [userId]);
+            const user = userResult.rows[0];
+            
+            if (!user) {
+                throw new Error('User not found.');
+            }
+
+            // 2. If user doesn't have an auth_user_id or is missing from Supabase, create/re-create them
+            let authId = user.auth_user_id;
+            let needsCreation = !authId;
+
+            if (authId) {
+                const { data: { user: authUser }, error: getError } = await this.supabaseAdmin.auth.admin.getUserById(authId);
+                if (getError || !authUser) {
+                    needsCreation = true;
+                }
+            }
+
+            if (needsCreation) {
+                // Create the user in Supabase Auth
+                const { data: createData, error: createError } = await this.supabaseAdmin.auth.admin.createUser({
+                    email: user.email,
+                    password: newPassword,
+                    email_confirm: true,
+                    user_metadata: { user_type: user.user_type }
+                });
+
+                if (createError) {
+                    throw new Error(`Migration failed: ${createError.message}`);
+                }
+
+                authId = createData.user.id;
+                // Update local DB with the new auth_user_id
+                await client.query('UPDATE users SET auth_user_id = $1 WHERE id = $2', [authId, userId]);
+            } else {
+                // User exists in Supabase, just update the password
+                const { error: updateError } = await this.supabaseAdmin.auth.admin.updateUserById(
+                    authId,
+                    { password: newPassword }
+                );
+
+                if (updateError) {
+                    throw new Error('Failed to update password with authentication provider.');
+                }
+            }
+
+            return { success: true };
         } finally {
             if (client) client.release();
         }

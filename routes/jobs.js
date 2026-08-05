@@ -36,10 +36,7 @@ module.exports = function registerJobsRoutes(app, pool, {
         UPDATE jobs 
         SET status = 'closed' 
         WHERE status = 'open'
-          AND CASE 
-                WHEN deadline ~ '^\\d{4}-\\d{2}-\\d{2}' THEN deadline::TIMESTAMP < NOW() 
-                ELSE FALSE 
-              END
+          AND deadline < CURRENT_DATE
       `);
     } catch (error) {
       logger.error('Error auto-closing expired jobs:', error);
@@ -67,7 +64,6 @@ module.exports = function registerJobsRoutes(app, pool, {
       body('budget').optional({ checkFalsy: true }).isFloat({ gt: 0 }),
       body('currency').if(body('budget').exists()).isString().notEmpty(),
       body('city').custom((val, { req }) => { const t = req.body.jobSiteType; if (t === 'On-site' || t === 'Hybrid') { if (!val || String(val).trim() === '') throw new Error('invalid'); } return true; }).optional({ checkFalsy: true }),
-      body('isUrgent').optional().isBoolean({ loose: true }),
       body('externalApplyUrl').optional({ checkFalsy: true }).isURL({ require_protocol: true }),
       body('genderRequirement').optional({ checkFalsy: true }).isIn(['male','female','any']),
       body('ageMin').optional({ checkFalsy: true }).isInt({ min: 16, max: 100 }),
@@ -78,23 +74,21 @@ module.exports = function registerJobsRoutes(app, pool, {
     let client;
     // Simplified: No tier or credit checks. Everyone is unlimited.
     const employerId = req.session.userId;
-    const { title, description, budget, currency, category, deadline, jobType, jobSiteType, city, requiredProfessions, isUrgent, externalApplyUrl, requirements, genderRequirement, ageMin, ageMax } = req.body;
-
+    const { title, description, budget, currency, category, deadline, jobType, jobSiteType, city, requiredProfessions, externalApplyUrl, requirements, genderRequirement, ageMin, ageMax } = req.body;
+ 
     let jobImagePath = null;
     let fileCleanupId = null;
-
+ 
     try {
         client = await pool.connect();
         await client.query('BEGIN');
-
+ 
         if (req.file) {
             const jobImageFileUrl = await storeFileInSupabase(employerId, 'job_image', req.file);
             jobImagePath = jobImageFileUrl;
             fileCleanupId = jobImageFileUrl.split('/').pop();
         }
-
-        const parsedIsUrgent = isUrgent === 'true' ? 1 : 0;
-
+ 
         let professionsArray;
         try {
             professionsArray = JSON.parse(requiredProfessions || '[]');
@@ -165,8 +159,8 @@ module.exports = function registerJobsRoutes(app, pool, {
         const requirementsJsonString = JSON.stringify(requirementsArray);
 
         const jobInsertResult = await client.query(
-          'INSERT INTO jobs (employer_id, title, description, budget, currency, category, deadline, job_type, job_site_type, city, profession_required, job_image_path, is_urgent, external_apply_url, requirements, gender_requirement, age_min, age_max) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, $15::jsonb, $16, $17, $18) RETURNING id',
-          [employerId, title, description, isBudgetProvided ? parseFloat(budget) : null, isBudgetProvided ? currency : null, category, deadline, jobType, jobSiteType, city, professionsJsonString, jobImagePath, parsedIsUrgent, normalizedExternalUrl, requirementsJsonString, genderRequirementValue, ageMinValue, ageMaxValue]
+          'INSERT INTO jobs (employer_id, title, description, budget, currency, category, deadline, job_type, job_site_type, city, profession_required, job_image_path, external_apply_url, requirements, gender_requirement, age_min, age_max) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, $15::jsonb, $16, $17) RETURNING id',
+          [employerId, title, description, isBudgetProvided ? parseFloat(budget) : null, isBudgetProvided ? currency : null, category, deadline, jobType, jobSiteType, city, professionsJsonString, jobImagePath, normalizedExternalUrl, requirementsJsonString, genderRequirementValue, ageMinValue, ageMaxValue]
         );
         const jobId = jobInsertResult.rows[0].id;
         
@@ -182,49 +176,6 @@ module.exports = function registerJobsRoutes(app, pool, {
         }
         logger.error('Error in job posting or database insert:', error);
         res.status(500).json({ success: false, error: error.message || 'Failed to post job due to server error.' });
-    } finally {
-        if (client) client.release();
-    }
-    }
-  );
-
-  router.post(
-    '/jobs/:jobId/mark-urgent',
-    isAuthenticated,
-    isEmployer,
-    isEmployerVerified,
-    isEmailVerified,
-    [
-      param('jobId').isInt({ min: 1 }),
-      body('markUrgent').isBoolean({ loose: true })
-    ],
-    handleValidationErrors,
-    async (req, res) => {
-    let client;
-    const jobId = req.params.jobId;
-    const { markUrgent } = req.body;
-    const employerId = req.session.userId;
-
-    const targetUrgentStatus = markUrgent ? 1 : 0;
-
-    try {
-        client = await pool.connect();
-        const jobResult = await client.query('SELECT employer_id, is_urgent, status FROM jobs WHERE id = $1 FOR UPDATE', [jobId]);
-        const job = jobResult.rows[0];
-
-        if (!job || job.employer_id !== employerId) {
-            return res.status(403).json({ success: false, error: 'Access denied. This job does not belong to you.' });
-        }
-
-        if (job.is_urgent === targetUrgentStatus) {
-            return res.json({ success: true, message: `Job is already ${markUrgent ? 'marked urgent' : 'unmarked urgent'}.` });
-        }
-
-        await client.query('UPDATE jobs SET is_urgent = $1 WHERE id = $2', [targetUrgentStatus, jobId]);
-        res.json({ success: true, message: markUrgent ? 'Job marked urgent.' : 'Job unmarked urgent.' });
-    } catch (error) {
-        logger.error('Error updating urgent status:', error);
-        res.status(500).json({ success: false, error: 'Failed to update urgent status.' });
     } finally {
         if (client) client.release();
     }
@@ -248,7 +199,6 @@ module.exports = function registerJobsRoutes(app, pool, {
             j.deadline,
             j.city,
             j.job_type,
-            j.is_urgent,
             j.views_count,
             (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS applications_count
         FROM jobs j
@@ -276,7 +226,7 @@ module.exports = function registerJobsRoutes(app, pool, {
       await autoCloseExpiredJobs();
       client = await pool.connect();
       const result = await client.query(`
-        SELECT j.id, j.title, j.city, j.country, j.category, j.job_site_type, j.created_at, j.job_image_path, j.is_urgent, j.job_type,
+        SELECT j.id, j.title, j.city, j.country, j.category, j.job_site_type, j.created_at, j.job_image_path, j.job_type,
                COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS company_name,
                COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS company_logo
         FROM jobs j
@@ -306,13 +256,12 @@ module.exports = function registerJobsRoutes(app, pool, {
       query('jobSiteType').optional().isIn(['Remote','On-site','Hybrid']),
       query('professionRequired').optional().isString(),
       query('sort').optional().isIn(['budget_desc','budget_asc','date_desc','date_asc','newest','oldest']),
-      query('isUrgent').optional().isBoolean({ loose: true }),
       query('jobType').optional()
     ],
     handleValidationErrors,
     async (req, res) => {
     let client;
-    const { search, category, budget, location, country, jobSiteType, professionRequired, sort, isUrgent, jobType } = req.query;
+    const { search, category, budget, location, country, jobSiteType, professionRequired, sort, jobType } = req.query;
 
     const parseParamArray = (param) => {
         if (!param) return null;
@@ -332,7 +281,7 @@ module.exports = function registerJobsRoutes(app, pool, {
     const jobTypes = parseParamArray(jobType);
 
     let query = `
-      SELECT j.id, j.title, j.description, j.budget, j.currency, j.deadline, j.created_at, j.status, j.job_type, j.job_site_type, j.city, j.country, j.profession_required, j.job_image_path, j.is_urgent, j.category, j.gender_requirement, j.age_min, j.age_max,
+      SELECT j.id, j.title, j.description, j.budget, j.currency, j.deadline, j.created_at, j.status, j.job_type, j.job_site_type, j.city, j.country, j.profession_required, j.job_image_path, j.category, j.gender_requirement, j.age_min, j.age_max,
              j.is_external, j.external_source, j.external_apply_url,
              COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS display_employer_name,
              COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS display_employer_logo,
@@ -391,12 +340,6 @@ module.exports = function registerJobsRoutes(app, pool, {
         params.push(professions);
         paramIndex++;
       }
-      if (isUrgent) {
-        const urgentFlag = isUrgent === 'true' ? 1 : 0;
-        query += ` AND j.is_urgent = $${paramIndex}`;
-        params.push(urgentFlag);
-        paramIndex++;
-      }
       if (jobTypes && jobTypes.length > 0) {
         query += ` AND j.job_type = ANY($${paramIndex}::text[])`;
         params.push(jobTypes);
@@ -405,8 +348,8 @@ module.exports = function registerJobsRoutes(app, pool, {
       // Primary Sort: Active jobs first, Expired jobs at the bottom
       const deadlineSort = `
         CASE 
-          WHEN j.deadline IS NULL OR j.deadline = '' THEN 0
-          WHEN (CASE WHEN j.deadline ~ '^\\d{4}-\\d{2}-\\d{2}' THEN j.deadline::DATE ELSE '9999-12-31'::DATE END) >= CURRENT_DATE THEN 0
+          WHEN j.deadline IS NULL THEN 0
+          WHEN j.deadline >= CURRENT_DATE THEN 0
           ELSE 1
         END ASC
       `;
@@ -467,7 +410,7 @@ module.exports = function registerJobsRoutes(app, pool, {
       const result = await client.query(`
         SELECT
             j.id, j.title, j.description, j.budget, j.currency, j.deadline, j.category, j.status, j.created_at,
-            j.job_type, j.job_site_type, j.profession_required, j.job_image_path, j.is_urgent,
+            j.job_type, j.job_site_type, j.profession_required, j.job_image_path,
             j.is_external, j.external_source, j.external_apply_url,
             j.requirements, j.external_apply_clicks,
             j.city AS job_city, j.country AS job_country,
@@ -577,7 +520,7 @@ module.exports = function registerJobsRoutes(app, pool, {
       await autoCloseExpiredJobs();
       client = await pool.connect();
       let query = `
-        SELECT j.id, j.title, j.description, j.budget, j.currency, j.category, j.job_site_type, j.city, j.created_at, j.job_image_path, j.is_urgent, j.job_type
+        SELECT j.id, j.title, j.description, j.budget, j.currency, j.category, j.job_site_type, j.city, j.created_at, j.job_image_path, j.job_type
         FROM jobs j
         WHERE j.employer_id = $1
       `;
@@ -931,29 +874,26 @@ module.exports = function registerJobsRoutes(app, pool, {
     try {
         client = await pool.connect();
         await client.query('BEGIN');
-        const jobResult = await client.query('SELECT employer_id, job_image_path FROM jobs WHERE id = $1 FOR UPDATE', [jobId]);
+        const jobResult = await client.query('SELECT employer_id FROM jobs WHERE id = $1 FOR UPDATE', [jobId]);
         const job = jobResult.rows[0];
         if (!job || job.employer_id !== employerId) {
             await client.query('ROLLBACK');
             return res.status(403).json({ success: false, error: 'Access denied. You do not own this job.' });
         }
-        await client.query('DELETE FROM applications WHERE job_id = $1', [jobId]);
-        await client.query('DELETE FROM contracts WHERE job_id = $1', [jobId]);
-        await client.query('DELETE FROM reviews WHERE job_id = $1', [jobId]);
-        if (job.job_image_path) {
-            const fileId = job.job_image_path.split('/').pop();
-            await deleteFileFromSupabase(fileId);
-        }
-        const deleteResult = await client.query('DELETE FROM jobs WHERE id = $1 RETURNING id', [jobId]);
-        if (deleteResult.rowCount === 0) {
+        
+        // Instead of deleting, we just mark it as closed
+        const updateResult = await client.query('UPDATE jobs SET status = \'closed\' WHERE id = $1 RETURNING id', [jobId]);
+        
+        if (updateResult.rowCount === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ success: false, error: 'Job not found or already deleted.' });
+            return res.status(404).json({ success: false, error: 'Job not found.' });
         }
         await client.query('COMMIT');
-        res.json({ success: true, message: 'Job deleted successfully.' });
+        res.json({ success: true, message: 'Job closed successfully.' });
     } catch (error) {
         if (client) await client.query('ROLLBACK');
-        res.status(500).json({ success: false, error: 'Server error during job deletion.' });
+        logger.error('Error closing job:', error);
+        res.status(500).json({ success: false, error: 'Server error during job closure.' });
     } finally {
         if (client) client.release();
     }

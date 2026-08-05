@@ -72,11 +72,12 @@
             --gray-060: #737373;
             --gray-070: #525252;
             --gray-080: #404040;
-            --gray-090: #262626;
-            --gray-100: #171717;
+            --gray-090: #0f172a;
+            --gray-100: #020617;
             
             --brand-500: #10b981;
             --brand-600: #059669;
+            --brand-400: #34d399;
             
             /* Spacing */
             --space-1: 0.25rem;
@@ -119,18 +120,25 @@
             font-size: 14px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            width: 100%;
         }
         
         body {
             background: var(--gray-005);
             color: var(--gray-090);
             min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+            position: relative;
         }
         
         /* === Layout === */
         .dashboard-layout {
             display: flex;
             min-height: 100vh;
+            overflow-x: hidden;
         }
         
         /* === Sidebar === */
@@ -145,7 +153,8 @@
             display: flex;
             flex-direction: column;
             z-index: 100;
-            transition: transform var(--duration-normal) var(--ease-out);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+            box-shadow: 20px 0 50px -12px rgba(0, 0, 0, 0.05);
         }
         
         [dir="ltr"] .sidebar {
@@ -153,12 +162,15 @@
             left: 0;
             border-left: none;
             border-right: 1px solid var(--gray-020);
+            box-shadow: -20px 0 50px -12px rgba(0, 0, 0, 0.05);
         }
         
         /* Mobile Sidebar */
         @media (max-width: 1023px) {
             .sidebar {
                 transform: translateX(100%);
+                width: 280px;
+                visibility: hidden;
             }
             
             [dir="ltr"] .sidebar {
@@ -167,52 +179,59 @@
             
             .sidebar.is-open {
                 transform: translateX(0);
+                visibility: visible;
             }
             
             .sidebar-overlay {
                 display: none;
                 position: fixed;
                 inset: 0;
-                background: rgba(0, 0, 0, 0.5);
+                background: rgba(23, 23, 23, 0.4);
+                backdrop-filter: blur(8px);
                 z-index: 99;
+                opacity: 0;
+                transition: opacity 0.4s var(--ease-out);
             }
             
             .sidebar-overlay.is-visible {
                 display: block;
+                opacity: 1;
             }
         }
         
         /* Sidebar Header */
         .sidebar-header {
-            padding: var(--space-6);
-            border-bottom: 1px solid var(--gray-020);
+            padding: var(--space-8) var(--space-6);
+            border-bottom: 1px solid var(--gray-010);
         }
         
         .user-profile {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
+            gap: var(--space-4);
         }
         
         .user-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 18px;
             object-fit: cover;
             border: 2px solid var(--gray-010);
+            box-shadow: var(--shadow-xs);
         }
         
         .user-avatar-placeholder {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 18px;
             background: var(--gray-090);
             color: var(--gray-000);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
+            box-shadow: var(--shadow-sm);
         }
         
         .user-info {
@@ -297,19 +316,20 @@
         .nav-item {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
-            padding: var(--space-2) var(--space-3);
-            border-radius: var(--radius-md);
-            color: var(--gray-060);
+            gap: var(--space-4);
+            padding: var(--space-3) var(--space-4);
+            border-radius: 16px;
+            color: var(--gray-500);
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             text-decoration: none;
-            transition: all var(--duration-fast) var(--ease-out);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             cursor: pointer;
-            border: none;
+            border: 1px solid transparent;
             background: transparent;
             width: 100%;
             text-align: right;
+            margin-bottom: var(--space-1);
         }
         
         [dir="ltr"] .nav-item {
@@ -318,12 +338,13 @@
         
         .nav-item:hover {
             background: var(--gray-010);
-            color: var(--gray-080);
+            color: var(--gray-090);
         }
         
         .nav-item.active {
             background: var(--gray-090);
             color: var(--gray-000);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         
         .nav-item.active .nav-icon {
@@ -369,15 +390,22 @@
         .user-menu {
             display: flex;
             align-items: center;
-            gap: var(--space-3);
-            padding: var(--space-2);
-            border-radius: var(--radius-md);
+            gap: var(--space-4);
+            padding: var(--space-3) var(--space-4);
+            border-radius: 20px;
             cursor: pointer;
-            transition: background var(--duration-fast) var(--ease-out);
+            transition: all 0.3s var(--ease-out);
+            border: 1px solid var(--gray-010);
+            background: var(--gray-000);
+            width: 100%;
+            box-shadow: var(--shadow-xs);
         }
         
         .user-menu:hover {
-            background: var(--gray-010);
+            background: var(--gray-005);
+            border-color: var(--gray-020);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
         }
         
         .user-menu-avatar {
@@ -414,7 +442,8 @@
             flex: 1;
             margin-right: var(--sidebar-width);
             min-height: 100vh;
-            padding: var(--space-8) var(--space-10);
+            padding: var(--space-10) var(--space-12);
+            transition: all 0.4s var(--ease-out);
         }
         
         [dir="ltr"] .main-content {
@@ -422,22 +451,45 @@
             margin-left: var(--sidebar-width);
         }
         
+        @media (max-width: 1279px) {
+            .main-content, [dir="ltr"] .main-content {
+                padding: var(--space-8) var(--space-8);
+            }
+        }
+
         @media (max-width: 1023px) {
-            .main-content {
-                margin-right: 0;
-                margin-left: 0;
-                padding: var(--space-5);
+            .main-content, [dir="ltr"] .main-content {
+                margin-right: 0 !important;
+                margin-left: 0 !important;
+                padding: var(--space-6) var(--space-4);
+                padding-top: calc(var(--header-height) + var(--space-6));
+                width: 100%;
+                max-width: 100%;
+                display: block;
+            }
+            
+            .dashboard-layout {
+                display: block;
+                overflow-x: hidden;
+                width: 100%;
             }
         }
         
         /* Mobile Header */
         .mobile-header {
             display: none;
-            padding: var(--space-4);
-            background: var(--gray-000);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            padding: 0 var(--space-5);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--gray-020);
             align-items: center;
             justify-content: space-between;
+            z-index: 90;
         }
         
         @media (max-width: 1023px) {
@@ -449,20 +501,21 @@
         .mobile-menu-btn {
             width: 40px;
             height: 40px;
-            border-radius: var(--radius-md);
-            border: none;
-            background: var(--gray-010);
-            color: var(--gray-060);
+            border-radius: 14px;
+            border: 1px solid var(--gray-020);
+            background: var(--gray-000);
+            color: var(--gray-090);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all var(--duration-fast) var(--ease-out);
+            box-shadow: var(--shadow-xs);
         }
         
         .mobile-menu-btn:hover {
-            background: var(--gray-020);
-            color: var(--gray-080);
+            border-color: var(--gray-030);
+            background: var(--gray-005);
         }
         
         /* Page Header */
@@ -471,29 +524,37 @@
         }
         
         .page-title {
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: 800;
             color: var(--gray-090);
-            letter-spacing: -0.02em;
+            letter-spacing: -0.03em;
             margin-bottom: var(--space-2);
         }
         
         .page-subtitle {
-            font-size: 14px;
-            color: var(--gray-050);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--gray-400);
         }
         
         /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-4);
-            margin-bottom: var(--space-8);
+            gap: var(--space-6);
+            margin-bottom: var(--space-10);
         }
         
+        @media (max-width: 1279px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 767px) {
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: var(--space-4);
             }
         }
         
@@ -737,17 +798,19 @@
         
         /* Application Cards */
         .application-card {
-            background: var(--gray-005);
+            background: var(--gray-000);
             border: 1px solid var(--gray-020);
-            border-radius: var(--radius-md);
-            padding: var(--space-4);
-            margin-bottom: var(--space-3);
-            transition: all var(--duration-fast) var(--ease-out);
+            border-radius: 24px;
+            padding: var(--space-6);
+            margin-bottom: var(--space-4);
+            transition: all 0.3s var(--ease-out);
+            box-shadow: var(--shadow-xs);
         }
         
         .application-card:hover {
-            border-color: var(--gray-030);
-            box-shadow: var(--shadow-sm);
+            border-color: var(--brand-200);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
         }
         
         .application-header {
@@ -837,14 +900,16 @@
         .service-card {
             background: var(--gray-000);
             border: 1px solid var(--gray-020);
-            border-radius: var(--radius-lg);
+            border-radius: 24px;
             overflow: hidden;
-            transition: all var(--duration-fast) var(--ease-out);
+            transition: all 0.3s var(--ease-out);
+            box-shadow: var(--shadow-xs);
         }
         
         .service-card:hover {
-            border-color: var(--gray-030);
-            box-shadow: var(--shadow-sm);
+            border-color: var(--brand-200);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
         }
         
         .service-image {
@@ -918,14 +983,23 @@
         
         .modal-container {
             background: var(--gray-000);
-            border-radius: var(--radius-xl);
+            border-radius: 32px;
             width: 100%;
             max-width: 560px;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            animation: modalSlideIn 0.3s var(--ease-out);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            animation: modalSlideIn 0.4s var(--ease-out);
+            border: 1px solid var(--gray-010);
+        }
+        
+        @media (max-width: 639px) {
+            .modal-container {
+                max-height: 100vh;
+                height: 100%;
+                border-radius: 0;
+            }
         }
         
         @keyframes modalSlideIn {
@@ -1209,6 +1283,18 @@
     <!-- Mobile Overlay -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
     
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <button id="mobileMenuBtn" class="mobile-menu-btn">
+            <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+        <div class="flex items-center gap-2">
+            <img src="/images/logo-icon.svg" alt="Hirly" class="w-6 h-6" onerror="this.style.display='none'">
+            <span class="text-sm font-black uppercase tracking-widest text-slate-900" data-lang-key="dashboard">Dashboard</span>
+        </div>
+        <div id="mobileUserAvatar" class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-lg">JD</div>
+    </div>
+    
     <div class="dashboard-layout">
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar">
@@ -1327,41 +1413,33 @@
         
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Mobile Header -->
-            <div class="mobile-header">
-                <button id="mobileMenuBtn" class="mobile-menu-btn">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <span class="text-lg font-semibold" data-lang-key="dashboard">Dashboard</span>
-                <div style="width: 40px;"></div>
-            </div>
             
             <!-- Overview Section -->
             <div id="overviewSection" class="section-content">
-                <header class="page-header">
-                    <h1 id="welcomeGreetingText" class="page-title" data-lang-key="welcome_back">Welcome back, John</h1>
-                    <p class="page-subtitle" data-lang-key="dashboard_subtitle">Here's what's happening with your professional work</p>
+                <header class="page-header px-2">
+                    <h1 id="welcomeGreetingText" class="text-3xl font-black text-slate-900 tracking-tight mb-2" data-lang-key="welcome_back">Welcome back, John</h1>
+                    <p class="text-sm text-slate-400 font-medium" data-lang-key="dashboard_subtitle">Here's what's happening with your professional work</p>
                 </header>
                 
                 <!-- Stats Grid -->
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-blue">
+                    <div class="stat-card p-6 rounded-[24px]">
+                        <div class="stat-icon stat-icon-blue w-12 h-12 rounded-2xl">
                             <i class="fa-solid fa-paper-plane"></i>
                         </div>
                         <div class="stat-info">
-                            <div id="allApplicationsCount" class="stat-value">0</div>
-                            <div class="stat-label" data-lang-key="applications">Applications</div>
+                            <div id="allApplicationsCount" class="stat-value text-2xl">0</div>
+                            <div class="stat-label font-bold uppercase tracking-widest text-[10px]" data-lang-key="applications">Applications</div>
                         </div>
                     </div>
                     
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-amber">
+                    <div class="stat-card p-6 rounded-[24px]">
+                        <div class="stat-icon stat-icon-amber w-12 h-12 rounded-2xl">
                             <i class="fa-solid fa-eye"></i>
                         </div>
                         <div class="stat-info">
-                            <div id="profileViewsCount" class="stat-value">0</div>
-                            <div class="stat-label" data-lang-key="profile_views">Profile Views</div>
+                            <div id="profileViewsCount" class="stat-value text-2xl">0</div>
+                            <div class="stat-label font-bold uppercase tracking-widest text-[10px]" data-lang-key="profile_views">Profile Views</div>
                         </div>
                     </div>
                 </div>
@@ -1422,7 +1500,7 @@
                         </button>
                     </div>
                     <div id="allServicesList" class="section-content">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             <!-- Service cards will be inserted here -->
                         </div>
                     </div>
@@ -1438,7 +1516,7 @@
                 
                 <div class="content-section">
                     <div class="section-content">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                             <!-- Profile Preview -->
                             <div>
                                 <h3 class="text-lg font-semibold mb-4" data-lang-key="preview">Preview</h3>
@@ -1585,7 +1663,7 @@
                 
                 <div class="space-y-8">
                     <!-- About Me & Skills -->
-                    <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                    <div class="p-6 sm:p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
                         <div class="flex items-center gap-4 mb-2">
                             <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500">
                                 <i class="fa-solid fa-user-tie text-lg"></i>
@@ -1631,7 +1709,7 @@
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Career Information -->
-                        <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                        <div class="p-6 sm:p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
                             <div class="flex items-center gap-4 mb-2">
                                 <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
                                     <i class="fa-solid fa-briefcase text-lg"></i>
@@ -1712,7 +1790,7 @@
                         </div>
                         
                         <!-- Interests & CV -->
-                        <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                        <div class="p-6 sm:p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
                             <div class="flex items-center gap-4 mb-2">
                                 <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-500">
                                     <i class="fa-solid fa-heart text-lg"></i>
@@ -1761,9 +1839,14 @@
                                                 </div>
                                                 <span class="text-sm font-bold text-slate-700 uppercase tracking-wider" data-lang-key="my_cv">My CV.pdf</span>
                                             </div>
-                                            <a id="viewCvFile" href="#" target="_blank" class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 hover:text-emerald-500 shadow-sm hover:scale-110 transition-all">
+                                            <a id="viewCvFile" href="#" target="_blank" class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 hover:text-rose-500 shadow-sm hover:scale-110 transition-all">
                                                 <i class="fa-solid fa-download"></i>
                                             </a>
+                                        </div>
+
+                                        <div id="viewCvEmptyState" class="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 flex items-center justify-center gap-3 text-slate-400 italic text-xs hidden">
+                                            <i class="fa-solid fa-file-circle-xmark opacity-50"></i>
+                                            <span data-lang-key="no_cv_uploaded">No CV uploaded yet</span>
                                         </div>
                                     </div>
                                     <div class="edit-mode-only hidden">
@@ -1819,7 +1902,7 @@
                 </header>
                 
                 <div class="space-y-8">
-                    <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                    <div class="p-6 sm:p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
                         <div class="flex items-center gap-4 mb-2">
                             <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
                                 <i class="fa-solid fa-graduation-cap text-lg"></i>
@@ -1849,7 +1932,7 @@
                 </header>
                 
                 <div class="space-y-6">
-                    <div class="p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
+                    <div class="p-6 sm:p-8 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-8">
                         <div>
                             <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6" data-lang-key="privacy_settings">Privacy Settings</h2>
                             
@@ -1917,7 +2000,7 @@
                                         </div>
                                     </div>
                                     <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="radio" name="privacyVisibility" id="hideContactInfoToggle" class="sr-only peer">
+                                        <input type="checkbox" id="hideContactInfoToggle" class="sr-only peer">
                                         <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                                     </label>
                                 </div>
@@ -1961,11 +2044,11 @@
                                     </div>
                                     <div class="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
                                         <button id="langSwitchAR" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2" data-lang="ar">
-                                            <img src="/images/flags/palestine-flag.svg" alt="AR" class="w-4 h-4 rounded-sm object-cover grayscale-[0.5] group-hover:grayscale-0">
+                                            <img src="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/flags/palestine-flag.svg" alt="AR" class="w-4 h-4 rounded-sm object-cover grayscale-[0.5] group-hover:grayscale-0">
                                             <span>العربية</span>
                                         </button>
                                         <button id="langSwitchEN" class="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2" data-lang="en">
-                                            <img src="/images/flags/united-kingdom-flag.svg" alt="EN" class="w-4 h-4 rounded-sm object-cover grayscale-[0.5] group-hover:grayscale-0">
+                                            <img src="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/flags/united-kingdom-flag.svg" alt="EN" class="w-4 h-4 rounded-sm object-cover grayscale-[0.5] group-hover:grayscale-0">
                                             <span>English</span>
                                         </button>
                                     </div>
@@ -2288,6 +2371,43 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal="logoutConfirmationModal" data-lang-key="cancel">Cancel</button>
                 <button type="button" id="confirmLogoutBtn" class="btn btn-danger" data-lang-key="logout">Logout</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Optimizer Drawer -->
+    <div id="optimizerDrawer" class="fixed inset-y-0 right-0 w-[400px] bg-white shadow-2xl z-[200] transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] border-l border-slate-100 hidden">
+        <div class="h-full flex flex-col">
+            <div class="p-8 border-bottom border-slate-50 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-black text-slate-900 tracking-tight" data-lang-key="profile_optimizer">Profile Optimizer</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1" data-lang-key="boost_visibility">Boost your visibility</p>
+                </div>
+                <button id="closeOptimizerBtn" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-8 pt-2 space-y-8">
+                <!-- Progress Card -->
+                <div class="p-6 bg-slate-900 rounded-[28px] text-white shadow-xl shadow-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-[10px] font-black uppercase tracking-widest opacity-60" data-lang-key="completion_score">Completion Score</span>
+                        <span id="optimizerScoreText" class="text-2xl font-black">75%</span>
+                    </div>
+                    <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div id="optimizerScoreBar" class="h-full bg-emerald-400 rounded-full transition-all duration-1000" style="width: 75%"></div>
+                    </div>
+                    <p class="text-[9px] font-medium mt-4 leading-relaxed opacity-60" data-lang-key="visibility_hint">Complete all tasks to appear higher in talent searches and attract more employers.</p>
+                </div>
+
+                <!-- Checklist -->
+                <div class="space-y-6">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1" data-lang-key="pending_tasks">Pending Tasks</h4>
+                    <div id="optimizerChecklist" class="space-y-3">
+                        <!-- Items will be injected here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>

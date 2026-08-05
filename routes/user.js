@@ -201,9 +201,7 @@ module.exports = function registerUserRoutes(app, pool, {
       body('gender').optional({ checkFalsy: true }).isString(),
       body('birthdate').optional({ checkFalsy: true }).isISO8601(),
       body('website_link').optional({ checkFalsy: true }).isString().trim(),
-      body('privacy_visible_to_all').optional().isBoolean({ loose: true }),
-      body('privacy_visible_companies_only').optional().isBoolean({ loose: true }),
-      body('privacy_hide_account').optional().isBoolean({ loose: true }),
+      body('privacy_visibility').optional().isIn(['ALL', 'companies', 'none']),
       body('privacy_hide_contact_info').optional().isBoolean({ loose: true }),
       body('removeProfilePic').optional().isBoolean({ loose: true }),
       body('removeCv').optional().isBoolean({ loose: true })
@@ -267,10 +265,10 @@ module.exports = function registerUserRoutes(app, pool, {
         // Fetch full updated profile data to return to frontend
         const updatedUserResult = await client.query(
           `SELECT 
-            u.id, u.first_name, u.last_name, u.email, u.phone, u.city, u.country, u.profile_picture_url, u.gender, u.birthdate, u.website_link, u.slug, u.user_type,
-            f.skills, f.bio, f.profession, f.current_status, f.interested_professions,
+            u.id, u.first_name, u.last_name, u.email, u.phone, u.city, u.country, u.profile_picture_url, u.gender, u.birthdate, u.slug, u.user_type,
+            f.skills, f.bio, f.profession, f.current_status, f.interested_professions, f.website_link,
             f.cv_path, f.profile_views_count as profile_views, f.employer_views_count, f.rating,
-            f.privacy_visible_to_all, f.privacy_visible_companies_only, f.privacy_hide_account, f.privacy_hide_contact_info,
+            f.privacy_visibility, f.privacy_hide_contact_info,
             f.verification_status,
             ep.notifications_enabled
           FROM users u
@@ -333,10 +331,10 @@ module.exports = function registerUserRoutes(app, pool, {
         client = await pool.connect();
         const result = await client.query(
           `SELECT 
-            u.id, u.first_name, u.last_name, u.email, u.phone, u.city, u.country, u.profile_picture_url, u.gender, u.birthdate, u.website_link, u.slug, u.user_type,
-            f.skills, f.bio, f.profession, f.current_status, f.interested_professions,
+            u.id, u.first_name, u.last_name, u.email, u.phone, u.city, u.country, u.profile_picture_url, u.gender, u.birthdate, u.slug, u.user_type,
+            f.skills, f.bio, f.profession, f.current_status, f.interested_professions, f.website_link,
             f.cv_path, f.profile_views_count as profile_views, f.employer_views_count, f.rating,
-            f.privacy_visible_to_all, f.privacy_visible_companies_only, f.privacy_hide_account, f.privacy_hide_contact_info,
+            f.privacy_visibility, f.privacy_hide_contact_info,
             f.verification_status,
             ep.notifications_enabled
           FROM users u
@@ -609,7 +607,7 @@ router.post(
                  u.created_at, u.profile_picture_url, u.slug,
                  f.skills, f.bio, f.profession, f.current_status, f.interested_professions, f.verification_status, f.profile_views_count,
                  f.cv_path, f.id AS professional_db_id, f.rating,
-                 f.privacy_visible_to_all, f.privacy_visible_companies_only, f.privacy_hide_account, f.privacy_hide_contact_info
+                 f.privacy_visibility, f.privacy_hide_contact_info
           FROM users u LEFT JOIN professionals f ON u.id = f.user_id
           WHERE u.slug = $1 AND u.user_type = 'professional'
         `, [slug]);
@@ -644,10 +642,10 @@ router.post(
         // Check Privacy Visibility
         const isOwner = viewerUserId && viewerUserId === professional.id;
         if (!isOwner) {
-          if (professional.privacy_hide_account) {
+          if (professional.privacy_visibility === 'none') {
             return res.status(403).json({ success: false, error: 'This profile is private' });
           }
-          if (professional.privacy_visible_companies_only && !viewerIsCompany) {
+          if (professional.privacy_visibility === 'companies' && !viewerIsCompany) {
             return res.status(403).json({ success: false, error: 'This profile is only visible to companies' });
           }
         }
@@ -729,7 +727,7 @@ router.post(
                  u.created_at, u.profile_picture_url, u.slug,
                  f.skills, f.bio, f.profession, f.current_status, f.interested_professions, f.verification_status, f.profile_views_count,
                  f.cv_path, f.id AS professional_db_id, f.rating,
-                 f.privacy_visible_to_all, f.privacy_visible_companies_only, f.privacy_hide_account, f.privacy_hide_contact_info
+                 f.privacy_visibility, f.privacy_hide_contact_info
           FROM users u JOIN professionals f ON u.id = f.user_id
           WHERE u.id = $1 AND u.user_type = 'professional'
         `, [professionalId]);
@@ -763,10 +761,10 @@ router.post(
         // Check Privacy Visibility
         const isOwner = viewerUserId && viewerUserId === professional.id;
         if (!isOwner) {
-          if (professional.privacy_hide_account) {
+          if (professional.privacy_visibility === 'none') {
             return res.status(403).json({ success: false, error: 'This profile is private' });
           }
-          if (professional.privacy_visible_companies_only && !viewerIsCompany) {
+          if (professional.privacy_visibility === 'companies' && !viewerIsCompany) {
             return res.status(403).json({ success: false, error: 'This profile is only visible to companies' });
           }
         }

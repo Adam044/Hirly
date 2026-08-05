@@ -98,6 +98,11 @@
             background: rgba(239, 68, 68, 0.1);
         }
 
+        .job-mini-card.to-close {
+            border-color: var(--warning);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
         .job-mini-card.to-fix {
             border-color: #8b5cf6;
             background: rgba(139, 92, 246, 0.1);
@@ -120,6 +125,7 @@
         }
 
         .tag-delete { background: var(--danger); color: white; }
+        .tag-close { background: var(--warning); color: white; }
         .tag-keep { background: var(--success); color: white; }
         .tag-fix { background: #8b5cf6; color: white; }
 
@@ -213,6 +219,11 @@
         <div>
             <span style="color:var(--text-muted)">To Remove:</span>
             <span id="removeCount" style="font-weight:800; color:var(--danger); margin-left:5px">0</span>
+        </div>
+        <div style="width:1px; height:20px; background:rgba(255,255,255,0.2)"></div>
+        <div>
+            <span style="color:var(--text-muted)">To Close:</span>
+            <span id="closeCount" style="font-weight:800; color:var(--warning); margin-left:5px">0</span>
         </div>
         <div style="width:1px; height:20px; background:rgba(255,255,255,0.2)"></div>
         <div>

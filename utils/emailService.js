@@ -25,6 +25,8 @@ const sendAdminVerificationEmailTemplate = require('./emailTemplates/adminVerifi
 const sendPasswordResetConfirmationEmailTemplate = require('./emailTemplates/passwordResetConfirmation');
 const sendUserToProfessionalEmailTemplate = require('./emailTemplates/userToProfessional');
 
+const sendAccountActivationEmailTemplate = require('./emailTemplates/accountActivation');
+
 // Initialize PostgreSQL pool
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -41,8 +43,9 @@ const senders = [
 
 /**
  * Gets the best transporter based on 24h sent count
+ * @param {string} preferredUser - Optional email address to force use
  */
-const getSmartTransporter = async () => {
+const getSmartTransporter = async (preferredUser = null) => {
     if (senders.length === 0) throw new Error('No email senders configured');
     
     // Default threshold (Gmail limit is 500/day, we stay safe at 490)
@@ -59,17 +62,31 @@ const getSmartTransporter = async () => {
             return { ...sender, count: parseInt(res.rows[0].count) };
         }));
         
-        // Find senders below threshold
-        const availableSenders = counts.filter(s => s.count < THRESHOLD);
-        
         let selected;
-        if (availableSenders.length > 0) {
-            // Select the one with lowest count
-            selected = availableSenders.sort((a, b) => a.count - b.count)[0];
-        } else {
-            // If all over threshold, use the one with lowest count anyway, but log warning
-            selected = counts.sort((a, b) => a.count - b.count)[0];
-            logger.warn(`ALL EMAIL SENDERS OVER THRESHOLD! Using ${selected.user} (count: ${selected.count})`);
+
+        // If a specific user is preferred, check if it's still below threshold
+        if (preferredUser) {
+            const requested = counts.find(s => s.user === preferredUser);
+            if (requested && requested.count < THRESHOLD) {
+                selected = requested;
+            } else if (requested) {
+                logger.warn(`Preferred sender ${preferredUser} is over threshold (${requested.count}). Falling back to balancer.`);
+            }
+        }
+
+        // If no preferred user or preferred user was over threshold, use balancer logic
+        if (!selected) {
+            // Find senders below threshold
+            const availableSenders = counts.filter(s => s.count < THRESHOLD);
+            
+            if (availableSenders.length > 0) {
+                // Select the one with lowest count
+                selected = availableSenders.sort((a, b) => a.count - b.count)[0];
+            } else {
+                // If all over threshold, use the one with lowest count anyway, but log warning
+                selected = counts.sort((a, b) => a.count - b.count)[0];
+                logger.warn(`ALL EMAIL SENDERS OVER THRESHOLD! Using ${selected.user} (count: ${selected.count})`);
+            }
         }
         
         return {
@@ -119,7 +136,7 @@ const logEmailSent = async (sender, recipient, subject) => {
 // Smart Transporter Wrapper
 const smartTransporter = {
     sendMail: async (mailOptions) => {
-        const { transporter, senderEmail } = await getSmartTransporter();
+        const { transporter, senderEmail } = await getSmartTransporter(mailOptions.preferredUser);
         
         // Ensure 'from' is correct if not explicitly set to something else
         if (!mailOptions.from || mailOptions.from.includes(process.env.EMAIL_USER) || mailOptions.from.includes(process.env.AUTO_EMAIL_USER)) {
@@ -655,6 +672,7 @@ async function sendVerificationEmail(recipientEmail, verificationCode) {
         const { subject, html } = sendVerificationEmailTemplate(verificationCode, appBaseUrl);
 
         const mailOptions = {
+            preferredUser: process.env.EMAIL_USER,
             from: process.env.EMAIL_USER,
             to: recipientEmail,
             subject: subject,
@@ -768,6 +786,7 @@ async function sendPasswordResetEmail(recipientEmail, resetCode) {
         const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:8080';
         const { subject, html } = sendPasswordResetEmailTemplate(resetCode);
         const mailOptions = {
+            preferredUser: process.env.EMAIL_USER,
             from: process.env.EMAIL_USER,
             to: recipientEmail,
             subject: subject,
@@ -1457,6 +1476,7 @@ async function sendPasswordResetConfirmationEmail(recipientEmail, recipientName)
         const { subject, html } = sendPasswordResetConfirmationEmailTemplate(recipientName);
 
         const mailOptions = {
+            preferredUser: process.env.EMAIL_USER,
             from: process.env.EMAIL_USER,
             to: recipientEmail,
             subject: subject,
@@ -1529,6 +1549,17 @@ async function sendUserToProfessionalEmail(senderDetails, recipientEmail, subjec
 }
 
 // --- Module Exports ---
+const sendAccountActivationEmail = async (toEmail, activationLink, firstName) => {
+    try {
+        const { subject, html } = sendAccountActivationEmailTemplate(activationLink, firstName);
+        await sendEmail(toEmail, subject, html, { preferredUser: process.env.EMAIL_USER });
+        logger.info(`Account activation email successfully sent to ${toEmail}`);
+    } catch (error) {
+        logger.error(`Error sending account activation email to ${toEmail}:`, error);
+        throw error;
+    }
+};
+
 module.exports = {
     sendEmail,
     sendAutoEmail,
@@ -1549,5 +1580,6 @@ module.exports = {
     sendPasswordResetConfirmationEmail,
     sendUserToProfessionalEmail,
     sendInterviewInviteEmail,
-    sendInterviewCompletedEmail
+    sendInterviewCompletedEmail,
+    sendAccountActivationEmail
 };

@@ -16,7 +16,7 @@ function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = proc
     baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     
     // Use a reliable absolute URL for the logo
-    const logoUrl = `${baseUrl}/images/logo.jpg`;
+    const logoUrl = `https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg`;
 
     return `
         <!DOCTYPE html>
@@ -144,7 +144,7 @@ function generateEmailHtmlWrapperLTR(subject, mainContentHtml, appBaseUrl = proc
     baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     
     // Use a reliable absolute URL for the logo
-    const logoUrl = `${baseUrl}/images/logo.jpg`;
+    const logoUrl = `https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg`;
 
     return `
         <!DOCTYPE html>

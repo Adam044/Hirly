@@ -46,7 +46,7 @@
                 <!-- Logo with Clean Frame -->
                 <div class="inline-flex items-center justify-center mb-10">
                     <div class="logo-frame-luxe">
-                        <img src="/images/logo.jpg" alt="Hirly" class="h-10 w-auto object-contain transition-transform group-hover:scale-105 duration-700">
+                        <img src="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg" alt="Hirly" class="h-10 w-auto object-contain transition-transform group-hover:scale-105 duration-700">
                     </div>
                 </div>
 
@@ -316,12 +316,22 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="form-group">
+                            <label data-lang-key="country_label">Country</label>
+                            <div class="auth-input-wrapper">
+                                <select id="country" class="auth-input appearance-none" required></select>
+                                <i class="fas fa-globe-africa"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label data-lang-key="city_label">City</label>
                             <div class="auth-input-wrapper">
                                 <select id="city" class="auth-input appearance-none" required></select>
                                 <i class="fas fa-map-marker-alt"></i>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="form-group">
                             <label data-lang-key="gender_label">Gender</label>
                             <div class="auth-input-wrapper">
@@ -333,13 +343,12 @@
                                 <i class="fas fa-venus-mars"></i>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label data-lang-key="birthdate_label">Birth Date</label>
-                        <div class="auth-input-wrapper">
-                            <input type="date" id="birthdate" class="auth-input" required>
-                            <i class="fas fa-calendar-alt"></i>
+                        <div class="form-group">
+                            <label data-lang-key="birthdate_label">Birth Date</label>
+                            <div class="auth-input-wrapper">
+                                <input type="date" id="birthdate" class="auth-input" required>
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
                         </div>
                     </div>
 

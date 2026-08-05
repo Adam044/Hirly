@@ -240,11 +240,25 @@ class JobAggregationService {
         this.status.totalTasks = 0;
         this.status.progress = 0;
 
+        // Smart Lookback Logic
+        let lookbackDate = null;
+        if (options.lookbackDays && parseInt(options.lookbackDays) > 0) {
+            lookbackDate = new Date();
+            lookbackDate.setDate(lookbackDate.getDate() - parseInt(options.lookbackDays));
+            this.addLog(`Smart Guard: Scanning for jobs since ${lookbackDate.toLocaleDateString()}`);
+        }
+
         // Handle Automation Mode (Daily Trigger)
         if (options.isAuto) {
-            this.addLog('Automation Mode: Optimized for NEW daily jobs (Page limit: 1, Fast Stop enabled)');
+            this.addLog('Automation Mode: Optimized for NEW daily jobs (24h Lookback, Page limit: 1, Fast Stop enabled)');
             options.deepScan = false; // Never deep scan in auto mode
             options.isAuto = true;
+            
+            // Default to 24 hours lookback for auto mode if not specified
+            if (!lookbackDate) {
+                lookbackDate = new Date();
+                lookbackDate.setDate(lookbackDate.getDate() - 1);
+            }
         }
 
         // API Credentials
@@ -339,7 +353,7 @@ class JobAggregationService {
             // 1. Intelligence Hub Sources
             if (hasIntelligence || options.deepScan) {
                 try {
-                    let query = "SELECT * FROM job_sources WHERE active = true";
+                    let query = "SELECT *, COALESCE(is_sorted, true) as is_sorted, COALESCE(scan_depth_limit, 5) as scan_depth_limit FROM job_sources WHERE active = true";
                     const queryParams = [];
                     
                     // If not a deep scan and countries are selected, filter by country
@@ -363,18 +377,24 @@ class JobAggregationService {
                             if (!options.intelligenceSources.includes(source.id.toString())) continue;
                         }
 
-                        tasks.push({ 
-                            source: 'custom', 
-                            data: source, 
-                            country: source.country_code || 'Global', 
-                            keyword: options.deepScan ? 'deep_scan' : 'intelligence' 
+                        tasks.push({
+                            source: 'intelligence',
+                            data: source,
+                            country: source.country_code || 'Global',
+                            keyword: 'intelligence',
+                            options: { 
+                                ...options,
+                                lookbackDate: lookbackDate,
+                                isSorted: source.is_sorted,
+                                scanDepthLimit: source.scan_depth_limit
+                            }
                         });
                     }
                     if (res.rows.length > 0) {
                         this.addLog(`Intelligence Hub: ${res.rows.length} sources added to queue.`);
                     }
                 } catch (error) {
-                    this.addLog(`Failed to load intelligence sources: ${error.message}`, 'error');
+                    this.addLog(`Intelligence: Failed to load sources: ${error.message}`, 'error');
                 }
             }
 
@@ -443,12 +463,12 @@ class JobAggregationService {
 
                 try {
                     if (task.source === 'adzuna') {
-                        await this.fetchFromAdzuna(task.country, task.keyword, ADZUNA_APP_ID, ADZUNA_APP_KEY);
+                        await this.fetchFromAdzuna(task.country, task.keyword, ADZUNA_APP_ID, ADZUNA_APP_KEY, { lookbackDate });
                     } else if (task.source === 'jooble') {
-                        await this.fetchFromJooble(task.country, task.keyword, JOOBLE_API_KEY);
-                    } else if (task.source === 'custom') {
+                        await this.fetchFromJooble(task.country, task.keyword, JOOBLE_API_KEY, { lookbackDate });
+                    } else if (task.source === 'intelligence') {
                         // Data is staged/processed page-by-page via onJobsFound callback
-                        await this.collector.collect(task.data, { isAuto: options.isAuto });
+                        await this.collector.collect(task.data, task.options);
                     }
                 } catch (error) {
                     this.addLog(`${task.source} error [${task.country}/${task.keyword}]: ${error.message}`, 'error');
@@ -594,8 +614,9 @@ class JobAggregationService {
         return processedCount;
     }
 
-    async fetchFromAdzuna(country, keyword, appId, appKey) {
+    async fetchFromAdzuna(country, keyword, appId, appKey, options = {}) {
         try {
+            const { lookbackDate } = options;
             // Map full country name to Adzuna code
             const countryCode = ADZUNA_COUNTRY_MAP[country] || 'ae'; // Default to UAE if unknown
             
@@ -605,7 +626,7 @@ class JobAggregationService {
                 params: {
                     app_id: appId,
                     app_key: appKey,
-                    results_per_page: 20,
+                    results_per_page: 50, // Increased for better coverage
                     what: keyword
                 },
                 headers: {
@@ -617,9 +638,9 @@ class JobAggregationService {
             const jobs = response.data?.results || [];
             
             if (jobs.length > 0) {
-                this.addLog(`Adzuna [${country}/${keyword}]: ${jobs.length} jobs found`);
+                this.addLog(`Adzuna [${country}/${keyword}]: ${jobs.length} raw jobs found`);
                 
-                const mappedJobs = jobs.map(job => ({
+                let mappedJobs = jobs.map(job => ({
                     external_id: `adzuna_${job.id}`,
                     title: this.cleanText(job.title),
                     description: this.cleanText(job.description),
@@ -634,8 +655,19 @@ class JobAggregationService {
                     created_at: job.created || new Date().toISOString()
                 }));
 
-                this.status.jobsFound += mappedJobs.length;
-                await this.saveJobs(mappedJobs);
+                // Smart Guard: Filter by date
+                if (lookbackDate) {
+                    const originalCount = mappedJobs.length;
+                    mappedJobs = mappedJobs.filter(job => new Date(job.created_at) >= lookbackDate);
+                    if (mappedJobs.length < originalCount) {
+                        this.addLog(`Smart Guard: Filtered out ${originalCount - mappedJobs.length} stale jobs from Adzuna.`);
+                    }
+                }
+
+                if (mappedJobs.length > 0) {
+                    this.status.jobsFound += mappedJobs.length;
+                    await this.saveJobs(mappedJobs);
+                }
             }
         } catch (error) {
             if (error.response?.status === 404) {
@@ -646,7 +678,7 @@ class JobAggregationService {
         }
     }
 
-    async fetchFromJooble(country, keyword, apiKey) {
+    async fetchFromJooble(country, keyword, apiKey, options = {}) {
         try {
             const url = `https://jooble.org/api/${apiKey}`;
 
@@ -661,7 +693,7 @@ class JobAggregationService {
                         keywords: keyword,
                         location: loc,
                         page: 1,
-                        resultonpage: 20
+                        resultonpage: 50
                     };
                     
                     try {
@@ -673,7 +705,7 @@ class JobAggregationService {
                         
                         const jobs = response.data?.jobs || [];
                         if (jobs.length > 0) {
-                            await this.processJoobleJobs(jobs, country, keyword);
+                            await this.processJoobleJobs(jobs, country, keyword, options);
                         }
                     } catch (e) {
                         this.addLog(`Jooble [Palestine/${loc}]: ${e.message}`, 'error');
@@ -692,7 +724,7 @@ class JobAggregationService {
                 keywords: keyword,
                 location: location,
                 page: 1,
-                resultonpage: 20
+                resultonpage: 50
             };
 
             let response = await axios.post(url, requestBody, {
@@ -717,7 +749,7 @@ class JobAggregationService {
 
             const jobs = response.data?.jobs || [];
             if (jobs.length > 0) {
-                await this.processJoobleJobs(jobs, country, keyword);
+                await this.processJoobleJobs(jobs, country, keyword, options);
             }
         } catch (error) {
             this.addLog(`Jooble [${country}/${keyword}]: ${error.message}`, 'error');
@@ -727,10 +759,11 @@ class JobAggregationService {
     /**
      * Helper to process raw Jooble jobs into the database
      */
-    async processJoobleJobs(jobs, country, keyword) {
+    async processJoobleJobs(jobs, country, keyword, options = {}) {
         this.addLog(`Jooble [${country}/${keyword}]: ${jobs.length} raw jobs found`);
+        const { lookbackDate } = options;
 
-        const mappedJobs = jobs.map(job => {
+        let mappedJobs = jobs.map(job => {
             const jobLocation = job.location || '';
             const jobTitle = job.title || '';
             const jobLink = job.link || '';
@@ -769,8 +802,17 @@ class JobAggregationService {
             };
         }).filter(j => j !== null);
 
+        // Smart Guard: Filter by date
+        if (lookbackDate) {
+            const originalCount = mappedJobs.length;
+            mappedJobs = mappedJobs.filter(job => new Date(job.created_at) >= lookbackDate);
+            if (mappedJobs.length < originalCount) {
+                this.addLog(`Smart Guard: Filtered out ${originalCount - mappedJobs.length} stale jobs from Jooble.`);
+            }
+        }
+
         if (mappedJobs.length === 0) {
-            this.addLog(`Jooble [${country}/${keyword}]: All jobs filtered out (likely US-based or irrelevant)`, 'debug');
+            this.addLog(`Jooble [${country}/${keyword}]: No relevant or fresh jobs found`, 'debug');
             return;
         }
 
@@ -1046,16 +1088,17 @@ class JobAggregationService {
 
     async pruneOldJobs() {
         try {
+            // Update external jobs to 'closed' instead of deleting them
             const jobsResult = await this.pool.query(
-                "DELETE FROM jobs WHERE is_external = true AND created_at < NOW() - INTERVAL '30 days'"
+                "UPDATE jobs SET status = 'closed' WHERE is_external = true AND status = 'open' AND created_at < NOW() - INTERVAL '30 days'"
             );
             
-            // Also prune old raw jobs that were processed or failed
+            // Also prune old raw jobs that were processed or failed (these are fine to delete as they are just intermediate data)
             const rawJobsResult = await this.pool.query(
                 "DELETE FROM raw_jobs WHERE (status = 'processed' OR status = 'duplicate' OR status = 'failed') AND created_at < NOW() - INTERVAL '15 days'"
             );
 
-            this.addLog(`Pruned ${jobsResult.rowCount} old jobs and ${rawJobsResult.rowCount} old raw jobs.`);
+            this.addLog(`Closed ${jobsResult.rowCount} old external jobs and pruned ${rawJobsResult.rowCount} old raw jobs.`);
             return jobsResult.rowCount;
         } catch (error) {
             this.addLog(`Error pruning jobs: ${error.message}`, 'error');

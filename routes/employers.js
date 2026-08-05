@@ -1,4 +1,5 @@
 const express = require('express');
+const userService = require('../services/userService');
 
 module.exports = function registerEmployersRoutes(app, pool, {
   isAuthenticated,
@@ -15,7 +16,7 @@ module.exports = function registerEmployersRoutes(app, pool, {
   router.post('/employer/profile', isAuthenticated, isEmployer, isEmailVerified, uploadProfileFiles, async (req, res) => {
     let client;
     const employerId = req.session.userId;
-    const { firstName, lastName, phone, city, companyName, companyDescription, address, employerType, companyEmail, companyPhone, companyCategory } = req.body;
+    const { firstName, lastName, phone, city, companyName, companyDescription, address, employerType, companyEmail, companyPhone, companyCategory, website_link } = req.body;
     const idFile = req.files && req.files['idFile'] ? req.files['idFile'][0] : null;
     try {
       if (autoCloseExpiredJobs) {
@@ -23,8 +24,13 @@ module.exports = function registerEmployersRoutes(app, pool, {
       }
       client = await pool.connect();
       await client.query('BEGIN');
-      await client.query('UPDATE users SET first_name = $1, last_name = $2, phone = $3, city = $4 WHERE id = $5', [firstName, lastName, phone, city, employerId]);
-      await client.query('UPDATE employers SET company_name = $1, company_description = $2, address = $3, employer_type = $4, company_email = $5, company_phone = $6, company_category = $7 WHERE user_id = $8', [companyName, companyDescription, address, employerType, companyEmail, companyPhone, companyCategory, employerId]);
+
+      // 1. Update Personal Info (Users table)
+      await userService.updatePersonalInfo(client, employerId, req.body);
+
+      // 2. Update Employer Info (Employers table)
+      await userService.updateEmployerData(client, employerId, req.body);
+
       if (idFile) {
         const oldIdResult = await client.query('SELECT id_verification_path FROM employers WHERE user_id = $1', [employerId]);
         const oldIdPath = oldIdResult.rows[0]?.id_verification_path;
@@ -100,7 +106,7 @@ module.exports = function registerEmployersRoutes(app, pool, {
       const { search, location, category, sort } = req.query;
       let query = `
         SELECT u.id, u.first_name, u.last_name, u.city,
-               e.company_name, e.company_description, e.company_logo_path, e.verification_status, e.company_category,
+               e.company_name, e.company_description, e.company_logo_path, e.verification_status, e.company_category, e.website_link,
                (SELECT COUNT(*) FROM jobs WHERE employer_id = u.id AND status = 'open') AS jobs_posted_count
         FROM users u JOIN employers e ON u.id = e.user_id
         WHERE u.user_type = 'employer'
@@ -162,7 +168,7 @@ module.exports = function registerEmployersRoutes(app, pool, {
       const result = await client.query(`
         SELECT u.id, u.first_name, u.last_name, u.city AS location, u.slug,
                e.company_name, e.company_description, e.address, e.employer_type, e.company_logo_path,
-               e.id_verification_path, e.verification_status, e.company_category, u.email, u.phone
+               e.id_verification_path, e.verification_status, e.company_category, e.website_link, u.email, u.phone
         FROM users u JOIN employers e ON u.id = e.user_id
         WHERE u.slug = $1 AND u.user_type = 'employer'
       `, [slug]);
@@ -187,7 +193,7 @@ module.exports = function registerEmployersRoutes(app, pool, {
       const result = await client.query(`
         SELECT u.id, u.first_name, u.last_name, u.city AS location, u.slug,
                e.company_name, e.company_description, e.address, e.employer_type, e.company_logo_path,
-               e.id_verification_path, e.verification_status, e.company_category, e.rating, u.email, u.phone
+               e.id_verification_path, e.verification_status, e.company_category, e.website_link, e.rating, u.email, u.phone
         FROM users u JOIN employers e ON u.id = e.user_id
         WHERE u.id = $1 AND u.user_type = 'employer'
       `, [employerId]);

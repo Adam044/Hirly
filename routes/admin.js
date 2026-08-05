@@ -292,6 +292,7 @@ module.exports = function registerAdminRoutes(app, pool, {
             ARRAY_AGG(id) as job_ids
           FROM jobs
           WHERE created_at > NOW() - $1::interval
+          AND status = 'open'
           GROUP BY norm_title, norm_company, city
           HAVING COUNT(*) > 1
         )
@@ -323,6 +324,7 @@ module.exports = function registerAdminRoutes(app, pool, {
         WHERE country = 'Palestine' 
         AND LOWER(external_source) IN ('jooble', 'adzuna')
         AND created_at > NOW() - $1::interval
+        AND status = 'open'
         ORDER BY created_at DESC
       `, [interval]);
 
@@ -335,6 +337,7 @@ module.exports = function registerAdminRoutes(app, pool, {
         WHERE (LOWER(city) = 'palestine' OR city IS NULL)
         AND country = 'Palestine'
         AND created_at > NOW() - $1::interval
+        AND status = 'open'
         ORDER BY created_at DESC
       `, [interval]);
 
@@ -345,14 +348,9 @@ module.exports = function registerAdminRoutes(app, pool, {
           id, title, external_company_name, city, created_at, external_source as source_name, external_id, deadline
         FROM jobs
         WHERE deadline IS NOT NULL 
-        AND deadline <> ''
-        AND (
-          CASE 
-            WHEN deadline ~ '^\\d{4}-\\d{2}-\\d{2}' THEN deadline::DATE 
-            ELSE NULL 
-          END
-        ) < CURRENT_DATE
+        AND deadline < CURRENT_DATE
         AND created_at > NOW() - $1::interval
+        AND status = 'open'
         ORDER BY deadline ASC
       `, [interval]);
 
@@ -364,6 +362,7 @@ module.exports = function registerAdminRoutes(app, pool, {
         FROM jobs
         WHERE LOWER(city) = LOWER(country)
         AND created_at > NOW() - $1::interval
+        AND status = 'open'
         ORDER BY created_at DESC
       `, [interval]);
 
@@ -438,15 +437,36 @@ module.exports = function registerAdminRoutes(app, pool, {
       client = await pool.connect();
       await client.query('BEGIN');
       
-      // Remove from applications first if needed
-      await client.query('DELETE FROM applications WHERE job_id = ANY($1)', [jobIds]);
-      const result = await client.query('DELETE FROM jobs WHERE id = ANY($1)', [jobIds]);
+      // Instead of deleting, we just mark them as closed
+      const result = await client.query("UPDATE jobs SET status = 'closed' WHERE id = ANY($1)", [jobIds]);
       
       await client.query('COMMIT');
       res.json({ success: true, count: result.rowCount });
     } catch (error) {
       if (client) await client.query('ROLLBACK');
       logger.error('Error removing jobs:', error);
+      res.status(500).json({ success: false, error: error.message });
+    } finally {
+      if (client) client.release();
+    }
+  });
+
+  router.post('/admin/bulk-close-jobs', isAuthenticated, isAdmin, async (req, res) => {
+    const { jobIds } = req.body;
+    if (!jobIds || !Array.isArray(jobIds)) {
+      return res.status(400).json({ success: false, error: 'Invalid job IDs provided.' });
+    }
+
+    let client;
+    try {
+      client = await pool.connect();
+      const result = await client.query(
+        "UPDATE jobs SET status = 'closed' WHERE id = ANY($1)",
+        [jobIds]
+      );
+      res.json({ success: true, count: result.rowCount });
+    } catch (error) {
+      logger.error('Error closing jobs:', error);
       res.status(500).json({ success: false, error: error.message });
     } finally {
       if (client) client.release();
@@ -574,7 +594,7 @@ module.exports = function registerAdminRoutes(app, pool, {
         return res.status(503).json({ success: false, error: 'Job Aggregator Service is still initializing. Please try again in a few seconds.' });
       }
 
-      const { countries, keywords, deepScan, sources, intelligenceSources, maxPages } = req.body;
+      const { countries, keywords, deepScan, sources, intelligenceSources, maxPages, lookbackDays } = req.body;
 
       // Run in background
       jobAggregator.runAggregation({ 
@@ -583,7 +603,8 @@ module.exports = function registerAdminRoutes(app, pool, {
         deepScan, 
         sources,
         intelligenceSources,
-        maxPages
+        maxPages,
+        lookbackDays
       }).catch(err => logger.error('Manual aggregation failed:', err));
 
       res.json({ success: true, message: 'Job aggregation triggered in background.' });
@@ -761,6 +782,31 @@ module.exports = function registerAdminRoutes(app, pool, {
       res.json({ success: true, jobs });
     } catch { res.status(500).json({ success: false, error: 'Failed to fetch jobs.' }); }
     finally { if (client) client.release(); }
+  });
+
+  router.get('/admin/reviews', isAuthenticated, isAdmin, async (req, res) => {
+    let client;
+    try {
+      client = await pool.connect();
+      const query = `
+        SELECT r.id, r.rating, r.comment, r.created_at,
+               j.title as job_title,
+               u_reviewer.first_name || ' ' || u_reviewer.last_name as reviewer_name,
+               u_reviewee.first_name || ' ' || u_reviewee.last_name as reviewee_name
+        FROM reviews r
+        JOIN jobs j ON r.job_id = j.id
+        JOIN users u_reviewer ON r.reviewer_id = u_reviewer.id
+        JOIN users u_reviewee ON r.professional_id = u_reviewee.id
+        ORDER BY r.created_at DESC
+      `;
+      const { rows: reviews } = await client.query(query);
+      res.json({ success: true, reviews });
+    } catch (error) {
+      logger.error('Error fetching reviews:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch reviews.' });
+    } finally {
+      if (client) client.release();
+    }
   });
 
   router.get('/admin/users', isAuthenticated, isAdmin, async (req, res) => {
@@ -1070,7 +1116,7 @@ module.exports = function registerAdminRoutes(app, pool, {
       await client.query('DELETE FROM professionals WHERE user_id = $1', [userId]);
       await client.query('DELETE FROM employers WHERE user_id = $1', [userId]);
       await client.query('DELETE FROM applications WHERE professional_id = $1', [userId]);
-      await client.query('DELETE FROM jobs WHERE employer_id = $1', [userId]);
+      await client.query("UPDATE jobs SET status = 'closed' WHERE employer_id = $1", [userId]);
       await client.query('DELETE FROM email_verification_tokens WHERE user_id = $1', [userId]);
       await client.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [userId]);
       

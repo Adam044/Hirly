@@ -164,15 +164,15 @@ module.exports = function registerTalentRoutes(app, pool, { isAuthenticated, isE
           f.rating,
           f.profile_views_count,
           f.cv_path,
+          f.website_link,
           f.id_verification_path,
           f.id AS professional_db_id
         FROM users u
         JOIN professionals f ON u.id = f.user_id
         WHERE u.user_type = 'professional'
-        AND f.privacy_hide_account = FALSE
         AND (
-          f.privacy_visible_to_all = TRUE OR
-          (f.privacy_visible_companies_only = TRUE AND ${viewerIsCompanyPlaceholder} = TRUE)
+          f.privacy_visibility = 'ALL' OR
+          (f.privacy_visibility = 'companies' AND ${viewerIsCompanyPlaceholder} = TRUE)
         )
       `;
 
@@ -347,12 +347,11 @@ module.exports = function registerTalentRoutes(app, pool, { isAuthenticated, isE
           FROM users u
           JOIN professionals f ON u.id = f.user_id
           WHERE u.user_type = 'professional'
-          AND f.privacy_hide_account = FALSE
         `;
           let countParams = [];
           let countParamIndex = 1;
           const viewerIsCompanyPlaceholderCount = `$${countParamIndex}`;
-          countQuery += ` AND ( f.privacy_visible_to_all = TRUE OR (f.privacy_visible_companies_only = TRUE AND ${viewerIsCompanyPlaceholderCount} = TRUE) )`;
+          countQuery += ` AND ( f.privacy_visibility = 'ALL' OR (f.privacy_visibility = 'companies' AND ${viewerIsCompanyPlaceholderCount} = TRUE) )`;
           countParams.push(viewerIsCompany);
           countParamIndex++;
           if (search) {
@@ -516,8 +515,7 @@ module.exports = function registerTalentRoutes(app, pool, { isAuthenticated, isE
         FROM users u
         JOIN professionals f ON u.id = f.user_id
         WHERE u.user_type = 'professional'
-        AND f.privacy_hide_account = FALSE
-        AND f.privacy_visible_to_all = TRUE
+        AND f.privacy_visibility = 'ALL'
         AND u.profile_picture_url IS NOT NULL 
         AND u.profile_picture_url != ''
         AND f.profession IS NOT NULL

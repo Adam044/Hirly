@@ -264,7 +264,25 @@
                 </div>
 
                 <div style="margin-top:20px">
-                    <label class="stat-label">Scan Depth</label>
+                    <label class="stat-label">Smart Guard: Lookback Period</label>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                        <select id="lookbackDays" class="btn btn-outline" style="padding: 5px; flex: 1;">
+                            <option value="1">Past 24 Hours</option>
+                            <option value="3">Past 3 Days</option>
+                            <option value="7" selected>Past 7 Days</option>
+                            <option value="14">Past 14 Days</option>
+                            <option value="30">Past 30 Days</option>
+                            <option value="60">Past 60 Days</option>
+                            <option value="0">No Limit (Scan Everything)</option>
+                        </select>
+                    </div>
+                    <p style="font-size:11px; color:var(--text-muted); margin-top:5px">
+                        Automatically stops scanning once jobs older than this date are reached (for sorted sources).
+                    </p>
+                </div>
+
+                <div style="margin-top:20px">
+                    <label class="stat-label">Scan Depth (Max Pages)</label>
                     <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
                         <select id="maxPages" class="btn btn-outline" style="padding: 5px; flex: 1;">
                             <option value="1">1 Page (Fastest)</option>
