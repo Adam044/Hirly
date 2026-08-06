@@ -213,7 +213,9 @@ class PalestineCollector {
             // Deep extraction: Visit job pages in parallel batches
             const BATCH_SIZE = 2; // Reduced from 5 to avoid triggering anti-bot
             let consecutiveDuplicates = 0;
+            let consecutiveStale = 0;
             const DUPLICATE_THRESHOLD = options.isAuto ? 5 : 10; // Stricter stop in automation mode
+            const STALE_THRESHOLD = 5; // Stop if we hit 5 consecutive jobs older than lookback
 
             if (options.isAuto) {
                 this.addLog(`[Jobs.ps Playwright] Daily Mode: Fast Stop enabled (Threshold: ${DUPLICATE_THRESHOLD} duplicates)`);
@@ -226,7 +228,10 @@ class PalestineCollector {
                 const batchResults = await Promise.all(batch.map(async (job) => {
                     if (this.shouldStop) return null;
 
-                    // 1. High-Confidence Duplicate Check (Before Deep Scan)
+                    // 1. Deep Date Check (Before deep scan if possible, otherwise after)
+                    // Note: Jobs.ps usually doesn't show dates on listing pages, only deep pages.
+                    
+                    // 2. High-Confidence Duplicate Check (Before Deep Scan)
                     try {
                         const linkId = job.link.split('/').pop() || 'unknown';
                         const shortHash = Buffer.from(job.link).toString('base64').slice(-15);
@@ -286,64 +291,57 @@ class PalestineCollector {
                             
                             let contentParts = [];
                             let dateText = null;
+                            let deadlineText = null;
                             
                             // 1. Try to get specific high-value sections
                             highValueSelectors.forEach(sel => {
                                 const elements = document.querySelectorAll(sel);
                                 elements.forEach(el => {
                                     if (el && el.innerText && el.innerText.trim().length > 50) {
-                                        contentParts.push(el.innerText.trim());
+                                        const text = el.innerText.trim();
+                                        contentParts.push(text);
                                         
-                                        // Try to find date in this section if not found yet
+                                        // Try to find Posted Date
                                         if (!dateText) {
-                                            const dateMatch = el.innerText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})|(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/);
-                                            if (dateMatch) dateText = dateMatch[0];
+                                            const postedMatch = text.match(/(?:Posted on|Published|تاريخ النشر|نشر في):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+                                            if (postedMatch) dateText = postedMatch[1];
+                                        }
+
+                                        // Try to find Deadline
+                                        if (!deadlineText) {
+                                            const deadlineMatch = text.match(/(?:Deadline|Expiry|Closing|آخر موعد|تاريخ الانتهاء):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+                                            if (deadlineMatch) deadlineText = deadlineMatch[1];
                                         }
                                     }
                                 });
                             });
 
-                            // 2. If no high-value sections, try broader but still relevant tags
-                            if (contentParts.length === 0) {
-                                const broadSelectors = ['article', 'main', '#content', '.content', '.vacancy-content'];
-                                broadSelectors.forEach(sel => {
-                                    const el = document.querySelector(sel);
-                                    if (el) {
-                                        // Clone to remove noise before getting text
-                                        const clone = el.cloneNode(true);
-                                        const noise = clone.querySelectorAll('nav, footer, header, script, style, .sidebar, .ads, .comments, .related-jobs, .social-share, .accessibility, .access-ability, .widget, .banner, .popup, .modal');
-                                        noise.forEach(n => n.remove());
-                                        
-                                        const text = clone.innerText.trim();
-                                        if (text.length > 100) {
-                                            contentParts.push(text);
-                                        }
+                            // 2. Specific check for Jobs.ps date containers (usually in a sidebar or info box)
+                            if (!dateText || !deadlineText) {
+                                const infoItems = document.querySelectorAll('.job-info-table li, .job-details li, .meta-item');
+                                infoItems.forEach(item => {
+                                    const text = item.innerText.trim();
+                                    if (text.includes('النشر') || text.includes('Posted')) {
+                                        const match = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/);
+                                        if (match) dateText = match[0];
+                                    }
+                                    if (text.includes('الانتهاء') || text.includes('Deadline') || text.includes('Expiry')) {
+                                        const match = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/);
+                                        if (match) deadlineText = match[0];
                                     }
                                 });
                             }
 
-                            // Try to find date in the whole body if not found
-                            if (!dateText) {
+                            // 3. Broad Regex fallback
+                            if (!dateText || !deadlineText) {
                                 const bodyText = document.body.innerText;
-                                const dateMatch = bodyText.match(/Posted on:?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i) || 
-                                                 bodyText.match(/Date:?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i) ||
-                                                 bodyText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/);
-                                if (dateMatch) dateText = dateMatch[1] || dateMatch[0];
-                            }
-
-                            // 3. Last resort fallback - but with AGGRESSIVE noise removal
-                            if (contentParts.length === 0) {
-                                const clone = document.body.cloneNode(true);
-                                // Very aggressive noise removal for the fallback
-                                const noise = clone.querySelectorAll('nav, footer, header, script, style, .sidebar, .ads, .comments, .navigation, .menu, .social-links, .accessibility, .access-ability, [class*="footer"], [class*="nav"], [class*="menu"], [class*="header"], [id*="footer"], [id*="header"]');
-                                noise.forEach(n => n.remove());
-                                
-                                // Specific check for the Jobs.ps accessibility text
-                                const text = clone.innerText.trim();
-                                if (text) {
-                                    // Remove the specific European Union/Humanity & Inclusion noise if it still exists
-                                    const cleanedText = text.replace(/The Accessibility features on this website was created and maintained throughout the support of[\s\S]*?European Union/gi, '');
-                                    contentParts.push(cleanedText.trim());
+                                if (!dateText) {
+                                    const match = bodyText.match(/(?:Posted on|Published|نشر في):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+                                    if (match) dateText = match[1];
+                                }
+                                if (!deadlineText) {
+                                    const match = bodyText.match(/(?:Deadline|Expiry|Closing|آخر موعد):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+                                    if (match) deadlineText = match[1];
                                 }
                             }
                             
@@ -354,7 +352,8 @@ class PalestineCollector {
                                 full_text: [...new Set(contentParts)].join('\n\n') || '', 
                                 page_logo: logo, 
                                 page_company: company,
-                                page_date: dateText
+                                page_date: dateText,
+                                page_deadline: deadlineText
                             };
                         });
 
@@ -363,6 +362,9 @@ class PalestineCollector {
                         
                         // Parse date if found
                         let createdAt = new Date().toISOString();
+                        let deadline = null;
+
+                        // 1. Try to parse Posted Date
                         if (fullData.page_date) {
                             try {
                                 const parsedDate = new Date(fullData.page_date);
@@ -370,6 +372,32 @@ class PalestineCollector {
                                     createdAt = parsedDate.toISOString();
                                 }
                             } catch (e) {}
+                        }
+
+                        // 2. Try to parse Deadline
+                        if (fullData.page_deadline) {
+                            try {
+                                const parsedDeadline = new Date(fullData.page_deadline);
+                                if (!isNaN(parsedDeadline.getTime())) {
+                                    deadline = parsedDeadline.toISOString();
+                                    
+                                    // Fallback: If no posted date, use deadline - 14 days as a rough estimate
+                                    if (!fullData.page_date) {
+                                        const estimatedPosted = new Date(parsedDeadline);
+                                        estimatedPosted.setDate(estimatedPosted.getDate() - 14);
+                                        createdAt = estimatedPosted.toISOString();
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+
+                        // 3. Last Resort: If the deadline itself is way in the past, force the createdAt to be old
+                        // This ensures the Stale check catches it even if parsing is slightly off
+                        if (deadline && new Date(deadline) < new Date()) {
+                            const deadlineDate = new Date(deadline);
+                            if (new Date(createdAt) > deadlineDate) {
+                                createdAt = deadlineDate.toISOString();
+                            }
                         }
 
                         const result = {
@@ -383,13 +411,15 @@ class PalestineCollector {
                                 location: job.location,
                                 job_text: fullData.full_text,
                                 created_at: createdAt,
+                                deadline: deadline,
                                 raw_payload: {
                                     source_name: source.name,
                                     fetch_date: new Date().toISOString(),
                                     extracted_company: fullData.page_company || job.company,
                                     extracted_location: job.location,
                                     page_logo: fullData.page_logo,
-                                    extracted_date: fullData.page_date
+                                    extracted_date: fullData.page_date,
+                                    extracted_deadline: fullData.page_deadline
                                 }
                             }
                         };
@@ -404,15 +434,38 @@ class PalestineCollector {
                 // Process results and handle smart stop
                 for (const res of batchResults) {
                     if (!res) continue;
+
+                    // Handle Stale Logic (Smart Guard Buffer)
+                    if (res.status === 'new' && options.lookbackDate) {
+                        const jobDate = new Date(res.data.created_at);
+                        if (jobDate < options.lookbackDate) {
+                            consecutiveStale++;
+                            this.addLog(`[Jobs.ps Playwright] Stale job found: "${res.title}" (${jobDate.toLocaleDateString()}). Buffer: ${consecutiveStale}/${STALE_THRESHOLD}`, 'debug');
+                        } else {
+                            consecutiveStale = 0; // Reset on fresh job
+                        }
+                    }
+
                     if (res.status === 'duplicate') {
                         consecutiveDuplicates++;
                         this.addLog(`[Jobs.ps Playwright] Skipping duplicate: "${res.title}" (${res.reason})`, 'debug');
                     } else if (res.status === 'new') {
                         consecutiveDuplicates = 0; // Reset counter
-                        pageJobs.push(res.data);
+                        
+                        // Only save if it's not stale (or we haven't hit threshold yet)
+                        const isStale = options.lookbackDate && new Date(res.data.created_at) < options.lookbackDate;
+                        if (!isStale) {
+                            pageJobs.push(res.data);
+                        }
                     } else if (res.status === 'failed') {
                         this.addLog(`[Jobs.ps Playwright] Deep scan failed for ${res.title}: ${res.error}`, 'warn');
                     }
+                }
+
+                if (consecutiveStale >= STALE_THRESHOLD) {
+                    this.addLog(`[Jobs.ps Playwright] Smart Guard: Hit consecutive stale threshold (${STALE_THRESHOLD}). Archive reached. Stopping scan.`);
+                    this.shouldStop = true;
+                    break;
                 }
 
                 if (consecutiveDuplicates >= DUPLICATE_THRESHOLD) {

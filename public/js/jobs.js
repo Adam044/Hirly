@@ -958,7 +958,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function applyFiltersAndSearch() {
-        const searchTerm = searchInput.value; // No need for .toLowerCase() here, server handles it
+        const searchTerm = searchInput ? searchInput.value.trim() : ''; 
 
         const isMobileView = window.innerWidth <= 992;
         const currentJobSiteTypeFilterElement = isMobileView ? jobSiteTypeFilterMobile : jobSiteTypeFilter;
@@ -1016,6 +1016,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Early return if translations are not loaded
         if (!t) return;
 
+        // Cancel any pending request
+        if (abortController) {
+            abortController.abort();
+        }
+        abortController = new AbortController();
+        const signal = abortController.signal;
+
+        isFetching = true;
+        
         const errorLoadingJobsText = t?.['error_loading_jobs']?.[lang] || 'Error loading jobs';
         const tryAgainLaterText = t?.['try_again_later']?.[lang] || 'Please try again later';
 
@@ -1047,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         while (retryCount < maxRetries) {
             try {
-                const response = await fetch(url);
+                const response = await fetch(url, { signal });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -1055,6 +1064,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Restore opacity
                 jobList.style.opacity = '1';
+                isFetching = false;
 
                 if (data.success && Array.isArray(data.jobs)) {
                     allJobsData = data.jobs;
@@ -1144,7 +1154,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- Initial Load Logic ---
+    let isInitialLoadDone = false;
+    let isFetching = false;
+    let abortController = null;
+
     async function initJobsPage() {
+        if (isInitialLoadDone) return;
+        isInitialLoadDone = true;
+
         try {
             // Initial fetch with no filters (or filters from URL params)
             const urlParams = new URLSearchParams(window.location.search);
@@ -1331,8 +1349,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initial Load: Wait for translations to be applied before initializing the page
-    // This is the single, reliable entry point.
-    window.addEventListener('translationsApplied', initJobsPage, { once: true });
+    // Check if translations are already applied to handle race conditions
+    if (window.translations && Object.keys(window.translations).length > 20) {
+        initJobsPage();
+    } else {
+        window.addEventListener('translationsApplied', initJobsPage, { once: true });
+    }
+
+    // Fallback: If translationsApplied doesn't fire for some reason, init anyway after a delay
+    setTimeout(() => {
+        if (!isInitialLoadDone) {
+            console.log("Fallback initialization triggered");
+            initJobsPage();
+        }
+    }, 2000);
 
 
     // Add click event listener to make job cards clickable
@@ -1504,6 +1534,15 @@ document.addEventListener('DOMContentLoaded', function() {
             searchTimeout = setTimeout(() => {
                 applyFiltersAndSearch();
             }, 300);
+        });
+
+        // Trigger search on Enter key
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                applyFiltersAndSearch();
+            }
         });
     }
 

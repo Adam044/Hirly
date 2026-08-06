@@ -1241,10 +1241,6 @@ registerStorageRoutes(app, pool, {
     cleanupCache
 });
 
-// --- Cron routes (External triggers) ---
-const registerCronRoutes = require('./routes/cron');
-registerCronRoutes(app, pool, { jobAggregator });
-
 // --- Pages routes (SPA) - Must be registered AFTER all API and Admin routes ---
 const registerPagesRoutes = require('./routes/pages');
 registerPagesRoutes(app, { isAuthenticated, isProfessional, isEmployer, isEmployerVerified, isAdmin, pool });

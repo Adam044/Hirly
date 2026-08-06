@@ -248,19 +248,6 @@ class JobAggregationService {
             this.addLog(`Smart Guard: Scanning for jobs since ${lookbackDate.toLocaleDateString()}`);
         }
 
-        // Handle Automation Mode (Daily Trigger)
-        if (options.isAuto) {
-            this.addLog('Automation Mode: Optimized for NEW daily jobs (24h Lookback, Page limit: 1, Fast Stop enabled)');
-            options.deepScan = false; // Never deep scan in auto mode
-            options.isAuto = true;
-            
-            // Default to 24 hours lookback for auto mode if not specified
-            if (!lookbackDate) {
-                lookbackDate = new Date();
-                lookbackDate.setDate(lookbackDate.getDate() - 1);
-            }
-        }
-
         // API Credentials
         const ADZUNA_APP_ID = process.env.ADZUNA_APP_ID?.trim();
         const ADZUNA_APP_KEY = process.env.ADZUNA_APP_KEY?.trim();
@@ -1002,7 +989,14 @@ class JobAggregationService {
                             cleanJob.created_at = aiData.posted_at || job.created_at || new Date().toISOString();
                             cleanJob.deadline = aiData.deadline || null;
 
-                            // 2b. Deadline Guard: Skip if deadline has passed
+                            // 2b. Future Date Guard: Ensure created_at is not in the future
+                            const createdAtDate = new Date(cleanJob.created_at);
+                            if (createdAtDate > new Date()) {
+                                this.addLog(`Future date detected for ${job.title}: ${createdAtDate.toISOString()}. Resetting to now.`, 'warn');
+                                cleanJob.created_at = new Date().toISOString();
+                            }
+
+                            // 2c. Deadline Guard: Skip if deadline has passed
                             if (cleanJob.deadline) {
                                 const deadlineDate = new Date(cleanJob.deadline);
                                 const now = new Date();

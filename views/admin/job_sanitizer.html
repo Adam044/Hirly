@@ -108,6 +108,11 @@
             background: rgba(139, 92, 246, 0.1);
         }
 
+        .job-mini-card.to-fix-date {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
         .job-mini-card.keep {
             border-color: var(--success);
             background: rgba(16, 185, 129, 0.1);
@@ -229,6 +234,11 @@
         <div>
             <span style="color:var(--text-muted)">To Fix:</span>
             <span id="fixCount" style="font-weight:800; color:#8b5cf6; margin-left:5px">0</span>
+        </div>
+        <div style="width:1px; height:20px; background:rgba(255,255,255,0.2)"></div>
+        <div>
+            <span style="color:var(--text-muted)">Fix Dates:</span>
+            <span id="fixDateCount" style="font-weight:800; color:var(--success); margin-left:5px">0</span>
         </div>
         <div style="width:1px; height:20px; background:rgba(255,255,255,0.2)"></div>
         <button id="confirmBtn" class="btn btn-primary">

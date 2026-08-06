@@ -7,6 +7,7 @@ let duplicateClusters = [];
 let jobsToDelete = new Set();
 let jobsToClose = new Set();
 let jobsToFix = new Set();
+let jobsToFixDate = new Set();
 
 document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyzeBtn');
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         jobsToDelete.clear();
         jobsToClose.clear();
         jobsToFix.clear();
+        jobsToFixDate.clear();
         renderClusters();
     });
 });
@@ -35,6 +37,7 @@ async function runAnalysis() {
     jobsToDelete.clear();
     jobsToClose.clear();
     jobsToFix.clear();
+    jobsToFixDate.clear();
     updateSummaryBar();
 
     try {
@@ -76,6 +79,11 @@ function autoSelectDuplicates() {
             cluster.jobs.forEach(job => {
                 jobsToFix.add(String(job.id));
             });
+        } else if (cluster.type === 'future_dated_cluster') {
+            // Flag ALL jobs in a future dated cluster for date fixing
+            cluster.jobs.forEach(job => {
+                jobsToFixDate.add(String(job.id));
+            });
         } else {
             // Standard duplicates: keep the newest one
             cluster.jobs.slice(1).forEach(job => {
@@ -98,7 +106,8 @@ function renderClusters() {
         const isBadSource = cluster.type === 'bad_source_cluster';
         const isExpired = cluster.type === 'expired_cluster';
         const isSameLoc = cluster.type === 'same_location_cluster';
-        const isSpecial = isBadSource || isExpired || isSameLoc;
+        const isFuture = cluster.type === 'future_dated_cluster';
+        const isSpecial = isBadSource || isExpired || isSameLoc || isFuture;
         
         let borderColor = 'var(--primary)';
         let badgeText = cluster.job_count + ' Variants';
@@ -112,6 +121,9 @@ function renderClusters() {
         } else if (isSameLoc) {
             borderColor = '#8b5cf6'; // Purple for Fixes
             badgeText = 'SAME CITY & COUNTRY';
+        } else if (isFuture) {
+            borderColor = 'var(--success)';
+            badgeText = 'FUTURE DATED';
         }
 
         html += `
@@ -129,12 +141,14 @@ function renderClusters() {
                         const isSelected = jobsToDelete.has(jobIdStr);
                         const isToClose = jobsToClose.has(jobIdStr);
                         const isToFix = jobsToFix.has(jobIdStr);
+                        const isToFixDate = jobsToFixDate.has(jobIdStr);
                         const isNewest = jobIndex === 0 && !isSpecial;
                         
                         let cardClass = 'job-mini-card';
                         if (isSelected) cardClass += ' to-delete';
                         else if (isToClose) cardClass += ' to-close';
                         else if (isToFix) cardClass += ' to-fix';
+                        else if (isToFixDate) cardClass += ' to-fix-date';
                         else cardClass += ' keep';
 
                         return `
@@ -143,9 +157,10 @@ function renderClusters() {
                                 ${isSelected ? `<span class="status-tag tag-delete">${isBadSource ? 'Remove' : 'Duplicate'}</span>` : ''}
                                 ${isToClose ? `<span class="status-tag tag-close">Close Listing</span>` : ''}
                                 ${isToFix ? `<span class="status-tag tag-fix">Fix Location</span>` : ''}
+                                ${isToFixDate ? `<span class="status-tag tag-keep">Fix Date</span>` : ''}
                                 <div class="job-title">${job.title}</div>
                                 <div class="job-meta">
-                                    <div><i class="far fa-clock"></i> ${new Date(job.created_at).toLocaleDateString()}</div>
+                                    <div style="${isFuture ? 'color:var(--danger); font-weight:bold' : ''}"><i class="far fa-clock"></i> ${new Date(job.created_at).toLocaleDateString()} ${isFuture ? '(FUTURE)' : ''}</div>
                                     <div><i class="fas fa-database"></i> Source: ${job.source_name || 'Manual'}</div>
                                     <div style="font-family: monospace; font-size: 10px; margin-top:5px">ID: ${job.external_id || 'N/A'}</div>
                                 </div>
@@ -164,11 +179,18 @@ function renderClusters() {
                                         <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; border-color:var(--danger); color:var(--danger); margin-top:5px" onclick="toggleJobSelection('${jobIdStr}')">
                                             ${isSelected ? 'Keep this' : 'Delete Instead'}
                                         </button>
+                                    ` : (isFuture ? `
+                                        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; border-color:var(--success); color:var(--success)" onclick="toggleJobDateFix('${jobIdStr}')">
+                                            ${isToFixDate ? 'Cancel Fix' : 'Reset Date to Now'}
+                                        </button>
+                                        <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; border-color:var(--danger); color:var(--danger); margin-top:5px" onclick="toggleJobSelection('${jobIdStr}')">
+                                            ${isSelected ? 'Keep this' : 'Delete Instead'}
+                                        </button>
                                     ` : `
                                         <button class="btn btn-outline" style="padding:4px 8px; font-size:11px" onclick="toggleJobSelection('${jobIdStr}')">
                                             ${isSelected ? 'Keep this' : (isSpecial ? 'Flag for Removal' : 'Mark as Duplicate')}
                                         </button>
-                                    `)}
+                                    `))}
                                 </div>
                             </div>
                         `;
@@ -220,26 +242,42 @@ function toggleJobFix(jobId) {
     updateSummaryBar();
 }
 
+function toggleJobDateFix(jobId) {
+    const id = String(jobId);
+    if (jobsToFixDate.has(id)) {
+        jobsToFixDate.delete(id);
+    } else {
+        jobsToFixDate.add(id);
+        jobsToDelete.delete(id);
+        jobsToClose.delete(id);
+        jobsToFix.delete(id);
+    }
+    renderClusters();
+    updateSummaryBar();
+}
+
 function updateSummaryBar() {
     const bar = document.getElementById('summaryBar');
     const count = document.getElementById('removeCount');
     const closeCount = document.getElementById('closeCount');
     const fixCount = document.getElementById('fixCount');
+    const fixDateCount = document.getElementById('fixDateCount');
     
-    if (jobsToDelete.size > 0 || jobsToClose.size > 0 || jobsToFix.size > 0) {
+    if (jobsToDelete.size > 0 || jobsToClose.size > 0 || jobsToFix.size > 0 || jobsToFixDate.size > 0) {
         bar.style.display = 'flex';
         if (count) count.textContent = jobsToDelete.size;
         if (closeCount) closeCount.textContent = jobsToClose.size;
         if (fixCount) fixCount.textContent = jobsToFix.size;
+        if (fixDateCount) fixDateCount.textContent = jobsToFixDate.size;
     } else {
         bar.style.display = 'none';
     }
 }
 
 async function confirmCleanup() {
-    if (jobsToDelete.size === 0 && jobsToClose.size === 0 && jobsToFix.size === 0) return;
+    if (jobsToDelete.size === 0 && jobsToClose.size === 0 && jobsToFix.size === 0 && jobsToFixDate.size === 0) return;
     
-    const message = `Are you sure you want to:\n- Delete ${jobsToDelete.size} jobs\n- Close ${jobsToClose.size} jobs\n- Fix ${jobsToFix.size} locations\n\nThis action cannot be undone.`;
+    const message = `Are you sure you want to:\n- Delete ${jobsToDelete.size} jobs\n- Close ${jobsToClose.size} jobs\n- Fix ${jobsToFix.size} locations\n- Reset ${jobsToFixDate.size} future dates\n\nThis action cannot be undone.`;
     if (!confirm(message)) return;
 
     const btn = document.getElementById('confirmBtn');
@@ -279,6 +317,17 @@ async function confirmCleanup() {
             });
             const fixData = await fixRes.json();
             if (!fixData.success) throw new Error('Fixing failed: ' + fixData.error);
+        }
+
+        // 4. Handle Date Fixes
+        if (jobsToFixDate.size > 0) {
+            const fixDateRes = await fetch('/admin/bulk-fix-future-dates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jobIds: Array.from(jobsToFixDate) })
+            });
+            const fixDateData = await fixDateRes.json();
+            if (!fixDateData.success) throw new Error('Date fixing failed: ' + fixDateData.error);
         }
 
         alert('Cleanup and fixes completed successfully.');

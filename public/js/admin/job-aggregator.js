@@ -561,11 +561,33 @@ function updateLogs(logs) {
     logContainer.setAttribute('data-logs', newLogsHash);
     
     // Build HTML for logs
-    const html = logs.slice(-50).map(log => {
-        const time = new Date(log.timestamp).toLocaleTimeString();
+    const html = logs.slice(-100).map(log => {
+        const time = new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        let message = log.message;
+        let sourceBadge = '';
+        
+        // Extract source from message if it exists (e.g., "[Jobs.ps Playwright] ...")
+        const sourceMatch = message.match(/^\[(.*?)\]/);
+        if (sourceMatch) {
+            sourceBadge = `<span class="log-source">${sourceMatch[1]}</span>`;
+            message = message.replace(/^\[(.*?)\]\s*/, '');
+        }
+
         const typeClass = log.type === 'error' ? 'log-error' : 
-                         log.type === 'warn' ? 'log-warn' : 'log-info';
-        return `<div class="log-line ${typeClass}">[${time}] ${escapeHtml(log.message)}</div>`;
+                         log.type === 'warn' ? 'log-warn' : 
+                         log.type === 'debug' ? 'log-debug' : 
+                         message.toLowerCase().includes('success') || message.toLowerCase().includes('completed') ? 'log-success' : 'log-info';
+
+        return `
+            <div class="log-line ${typeClass}">
+                <span class="log-timestamp">${time}</span>
+                <div class="log-message">
+                    ${sourceBadge}
+                    ${escapeHtml(message)}
+                </div>
+            </div>
+        `;
     }).join('');
     
     logContainer.innerHTML = html;

@@ -366,8 +366,30 @@ module.exports = function registerAdminRoutes(app, pool, {
         ORDER BY created_at DESC
       `, [interval]);
 
+      // 6. Find "Future Dated" Jobs
+      const futureDatedResult = await pool.query(`
+        SELECT 
+          'future_dated' as type,
+          id, title, external_company_name, city, created_at, external_source as source_name, external_id
+        FROM jobs
+        WHERE created_at > NOW()
+        AND status = 'open'
+        ORDER BY created_at DESC
+      `);
+
       // Combine results
       const clusters = [];
+
+      if (futureDatedResult.rows.length > 0) {
+        clusters.push({
+          type: 'future_dated_cluster',
+          norm_title: 'Future Dated Jobs',
+          norm_company: 'Jobs with "created_at" in the future',
+          city: 'Various',
+          job_count: futureDatedResult.rows.length,
+          jobs: futureDatedResult.rows
+        });
+      }
 
       if (badSourceResult.rows.length > 0) {
         clusters.push({
@@ -489,6 +511,28 @@ module.exports = function registerAdminRoutes(app, pool, {
       res.json({ success: true, count: result.rowCount });
     } catch (error) {
       logger.error('Error fixing job locations:', error);
+      res.status(500).json({ success: false, error: error.message });
+    } finally {
+      if (client) client.release();
+    }
+  });
+
+  router.post('/admin/bulk-fix-future-dates', isAuthenticated, isAdmin, async (req, res) => {
+    const { jobIds } = req.body;
+    if (!jobIds || !Array.isArray(jobIds)) {
+      return res.status(400).json({ success: false, error: 'Invalid job IDs provided.' });
+    }
+
+    let client;
+    try {
+      client = await pool.connect();
+      const result = await client.query(
+        "UPDATE jobs SET created_at = NOW() WHERE id = ANY($1)",
+        [jobIds]
+      );
+      res.json({ success: true, count: result.rowCount });
+    } catch (error) {
+      logger.error('Error fixing future dated jobs:', error);
       res.status(500).json({ success: false, error: error.message });
     } finally {
       if (client) client.release();
