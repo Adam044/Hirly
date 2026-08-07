@@ -139,7 +139,7 @@ function formatLocationDisplay(jobOrTalent, lang) {
 function createJobCard(job) {
     const lang = window.currentLanguage || 'ar';
     const card = document.createElement('a');
-    card.href = `/job-details.html?id=${job.id}`;
+    card.href = `/job_details.html?id=${job.id}`;
     card.className = 'home-job-card';
     
     // Avatar/Logo

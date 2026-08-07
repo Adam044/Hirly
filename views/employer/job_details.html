@@ -221,14 +221,16 @@
     <div id="freelancerLoginModal" class="modal-overlay">
         <div class="modal-content small-modal text-center">
             <button class="modal-close"><i class="fas fa-times"></i></button>
-            <div class="modal-header-icon-container">
+            <div class="modal-header">
                 <i class="fas fa-user-tag"></i>
             </div>
-            <h2 class="text-xl font-bold mb-2" data-lang-key="login_as_freelancer_title">Login as a Freelancer</h2>
-            <p class="text-sm text-gray-600 mb-4" data-lang-key="login_as_freelancer_message">You need to log in as a freelancer to view company profiles and apply to jobs.</p>
+            <h2 class="text-xl font-bold mb-2" data-lang-key="login_as_freelancer_title">Login to Hirly</h2>
+            <p class="text-sm text-gray-600 mb-4" data-lang-key="login_as_freelancer_message">You need to log in to view company profiles and apply to jobs.</p>
             <div class="modal-actions">
                 <button class="btn btn-outline-secondary modal-cancel-btn" data-lang-key="cancel">Cancel</button>
-                <a href="/technical/signup.html?type=freelancer" class="btn btn-primary" data-lang-key="signup">Sign Up</a>
+                <a href="/technical/login.html" class="btn btn-primary" data-lang-key="login">
+                    <i class="fas fa-right-to-bracket"></i>Login
+                </a>
             </div>
         </div>
     </div>
@@ -236,14 +238,13 @@
     <div id="employerCannotApplyModal" class="modal-overlay">
         <div class="modal-content small-modal text-center">
             <button class="modal-close"><i class="fas fa-times"></i></button>
-            <div class="modal-header-icon-container">
+            <div class="modal-header">
                 <i class="fas fa-user-tie"></i>
             </div>
             <h2 class="text-xl font-bold mb-2" data-lang-key="employer_cannot_apply_title">Employer Account</h2>
-            <p class="text-sm text-gray-600 mb-4" data-lang-key="employer_cannot_apply_desc">You are logged in as an employer. Only freelancers can apply for jobs.</p>
+            <p class="text-sm text-gray-600 mb-4" data-lang-key="employer_cannot_apply_desc">You are logged in as an employer. You cannot apply for jobs with an employer account.</p>
             <div class="modal-actions">
                 <button class="btn btn-outline-secondary modal-cancel-btn" data-lang-key="cancel">Cancel</button>
-                <!-- "Go to Dashboard" button removed as per request -->
             </div>
         </div>
     </div>
@@ -253,7 +254,7 @@
     <div id="lowCompletenessModal" class="modal-overlay">
         <div class="modal-content small-modal text-center">
             <button class="modal-close"><i class="fas fa-times"></i></button>
-            <div class="modal-header-icon-container">
+            <div class="modal-header">
                 <i class="fas fa-user"></i>
             </div>
             <h2 class="text-xl font-bold mb-2" data-lang-key="low_profile_modal_title">Profile Incomplete</h2>

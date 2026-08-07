@@ -63,7 +63,7 @@
 .modal-header i {
     font-size: 2rem;
     color: var(--primary);
-    background: var(--primary-lightest);
+    background: var(--primary-extra-light);
     width: 4rem;
     height: 4rem;
     display: flex;

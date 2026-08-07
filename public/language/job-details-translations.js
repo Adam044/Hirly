@@ -39,11 +39,12 @@ if (typeof window.addTranslations === 'function') {
         'timeline_placeholder': { 'ar': 'مثال: أسبوعين', 'en': 'e.g., 2 weeks' },
         'cancel': { 'ar': 'إلغاء', 'en': 'Cancel' },
         'submit_application': { 'ar': 'إرسال الطلب', 'en': 'Submit Application' },
+        'login': { 'ar': 'تسجيل الدخول', 'en': 'Login' },
         'login_as_employer_title': { 'ar': 'تسجيل الدخول كصاحب عمل', 'en': 'Login as an Employer' },
         'login_as_employer_message': { 'ar': 'يجب عليك تسجيل الدخول كصاحب عمل لعرض ملفات المهنيين.', 'en': 'You need to log in as an employer to view freelancer profiles.' },
         'signup': { 'ar': 'إنشاء حساب', 'en': 'Sign Up' },
-        'login_as_freelancer_title': { 'ar': 'تسجيل الدخول كباحث عن عمل أو مقدم خدمة', 'en': 'Login as a Freelancer' },
-        'login_as_freelancer_message': { 'ar': 'يجب عليك تسجيل الدخول كمهني لعرض ملفات الشركات والتقدم للوظائف.', 'en': 'You need to log in as a freelancer to view company profiles and apply to jobs.' },
+        'login_as_freelancer_title': { 'ar': 'تسجيل الدخول إلى هايرلي', 'en': 'Login to Hirly' },
+        'login_as_freelancer_message': { 'ar': 'يجب عليك تسجيل الدخول لعرض ملفات الشركات والتقدم للوظائف.', 'en': 'You need to log in to view company profiles and apply to jobs.' },
         'footer_text': { 'ar': 'ربط المهنيين بفرص أحلامهم، وتعزيز النمو الاقتصادي والتمكين.', 'en': 'Connecting professionals with their dream opportunities, fostering economic growth and empowerment.' },
         'company': { 'ar': 'الشركة', 'en': 'Company' },
         'about_us': { 'ar': 'حولنا', 'en': 'About Us' },
@@ -56,7 +57,7 @@ if (typeof window.addTranslations === 'function') {
         'loading_text': { 'ar': 'جارٍ التحميل...', 'en': 'Loading...' },
         'failed_check_app_status': { 'ar': 'فشل التحقق من حالة الطلب.', 'en': 'Failed to check application status.' },
         // Removed: 'failed_load_more_jobs'
-        'only_freelancers_apply': { 'ar': 'فقط المهنيون يمكنهم التقدم للوظائف.', 'en': 'Only freelancers can apply for jobs.' },
+        'only_freelancers_apply': { 'ar': 'فقط الأفراد يمكنهم التقدم للوظائف.', 'en': 'Only individuals can apply for jobs.' },
         'id_verification_required': { 'ar': 'يجب توثيق هويتك للتقدم للوظائف. يرجى توثيق هويتك في ملفك الشخصي.', 'en': 'Your ID must be verified to apply for jobs. Please verify your ID on your profile.' },
         'job_user_data_missing': { 'ar': 'خطأ: بيانات الوظيفة أو بيانات المستخدم مفقودة.', 'en': 'Error: Job data or user data missing.' },
         'submitting_application': { 'ar': 'جارٍ إرسال الطلب...', 'en': 'Submitting application...' },
@@ -64,7 +65,7 @@ if (typeof window.addTranslations === 'function') {
         'app_submitted_success': { 'ar': 'تم إرسال الطلب بنجاح!', 'en': 'Application submitted successfully!' },
         'error_prefix': { 'ar': 'خطأ: ', 'en': 'Error: ' },
         // Removed: 'loading_more_jobs'
-
+        
         'view_details': { 'ar': 'عرض التفاصيل', 'en': 'View Details' },
         'try_again_later': { 'ar': 'الرجاء المحاولة مرة أخرى لاحقًا.', 'en': 'Please try again later.' },
         // Job Types
@@ -91,7 +92,7 @@ if (typeof window.addTranslations === 'function') {
         'job_id_missing': { 'ar': 'معرف الوظيفة مفقود من الرابط.', 'en': 'Job ID is missing from the URL.' },
         // NEW MODAL TRANSLATIONS (Ensure these are present and correct)
         'employer_cannot_apply_title': { 'ar': 'حساب صاحب عمل', 'en': 'Employer Account' },
-        'employer_cannot_apply_desc': { 'ar': 'أنت مسجل الدخول كصاحب عمل. يمكن للمهنيين فقط التقدم للوظائف.', 'en': 'You are logged in as an employer. Only freelancers can apply for jobs.' },
+        'employer_cannot_apply_desc': { 'ar': 'أنت مسجل الدخول كصاحب عمل. لا يمكنك التقدم للوظائف كصاحب عمل.', 'en': 'You are logged in as an employer. You cannot apply for jobs with an employer account.' },
         'go_to_dashboard': { 'ar': 'اذهب إلى لوحة التحكم', 'en': 'Go to Dashboard' },
         'verification_required_modal_title': { 'ar': 'توثيق الهوية مطلوب', 'en': 'Verification Required' },
         'verification_required_modal_desc': { 'ar': 'يجب توثيق هويتك للتقدم للوظائف. يرجى توثيق هويتك في لوحة التحكم الخاصة بك للمتابعة.', 'en': 'Your profile must be verified to apply for jobs. Please verify your ID on your dashboard to continue.' },
@@ -126,7 +127,7 @@ if (typeof window.addTranslations === 'function') {
         'benefit_3': { 'ar': 'سيرة ذاتية احترافية مدعومة بالذكاء الاصطناعي', 'en': 'Professional AI-enhanced CV' },
         'continue_to_site': { 'ar': 'المتابعة إلى الموقع الخارجي', 'en': 'Continue to External Site' },
         'redirecting': { 'ar': 'جارٍ التوجيه...', 'en': 'Redirecting...' },
-        'apply_externally': { 'ar': 'تقدم خارجياً', 'en': 'Apply Externally' },
+        'apply_externally': { 'ar': 'تقدم الآن', 'en': 'Apply Now' },
         'hirly_benefit_title': { 'ar': 'تقدم بأولوية هايرلي', 'en': 'Apply with Hirly Priority' },
         'hirly_benefit_desc': { 'ar': 'أنت على وشك التقديم خارجياً. لضمان تميزك، تأكد من إكمال ملفك الشخصي على هايرلي. مشاركة رابطك الخاص أو رمز QR يمنحك الأولوية، ويظهرك بشكل أكثر احترافية، ويسهل العملية على أصحاب العمل.', 'en': 'You\'re about to apply externally. To stand out, ensure your Hirly profile is complete. Sharing your unique Hirly link or QR code gives you priority, looks more professional, and makes the process seamless for employers.' },
 
