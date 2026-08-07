@@ -167,7 +167,7 @@ const DashboardServices = {
                     </p>
                     <button class="add-service-trigger px-8 py-4 bg-slate-900 text-white font-black rounded-[20px] hover:bg-slate-800 transition-all shadow-xl shadow-slate-100 flex items-center gap-3 group">
                         <i class="fa-solid fa-plus text-xs group-hover:rotate-90 transition-transform duration-300"></i>
-                        <span class="uppercase tracking-widest text-[10px]" data-lang-key="add_first_service">Add Your First Service</span>
+                        <span class="uppercase tracking-widest text-[10px]" data-lang-key="add_first_service">${window.translations?.add_first_service?.[lang] || 'Add Your First Service'}</span>
                     </button>
                 </div>
             `;

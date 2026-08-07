@@ -363,21 +363,21 @@ const DashboardUI = {
         // --- HIGH PRIORITY ---
         // 1. CV
         if (!u.cv_path && !u.cvPath) {
-            tasks.push({ key: 'upload_cv', priority: 'high', section: 'professional', field: 'cvEmptyState', icon: 'fa-file-pdf' });
+            tasks.push({ key: 'upload_cv_task', priority: 'high', section: 'professional', field: 'cvEmptyState', icon: 'fa-file-pdf' });
         }
         // 2. Profile Pic
         if (!u.profile_picture_url) {
-            tasks.push({ key: 'add_profile_pic', priority: 'high', section: 'personal', field: 'changePhotoBtn', icon: 'fa-image' });
+            tasks.push({ key: 'add_profile_pic_task', priority: 'high', section: 'personal', field: 'changePhotoBtn', icon: 'fa-image' });
         }
         // 3. Skills
         const skills = u.skills;
         const hasSkills = Array.isArray(skills) ? skills.length > 0 : (skills && String(skills).trim().length > 0);
         if (!hasSkills) {
-            tasks.push({ key: 'add_skills', priority: 'high', section: 'professional', field: 'newSkillInput', icon: 'fa-bolt' });
+            tasks.push({ key: 'add_skills_task', priority: 'high', section: 'professional', field: 'newSkillInput', icon: 'fa-bolt' });
         }
         // 4. Bio
         if (!u.bio || String(u.bio).trim().length < 20) {
-            tasks.push({ key: 'write_bio', priority: 'high', section: 'professional', field: 'editBio', icon: 'fa-pen-nib' });
+            tasks.push({ key: 'write_bio_task', priority: 'high', section: 'professional', field: 'editBio', icon: 'fa-pen-nib' });
         }
 
         // --- MEDIUM PRIORITY ---
@@ -387,27 +387,27 @@ const DashboardUI = {
             try { history = JSON.parse(history); } catch (e) { history = []; }
         }
         if (!history || history.length === 0) {
-            tasks.push({ key: 'add_education', priority: 'medium', section: 'education', field: 'addEducationBtn', icon: 'fa-graduation-cap' });
+            tasks.push({ key: 'add_education_task', priority: 'medium', section: 'education', field: 'addEducationBtn', icon: 'fa-graduation-cap' });
         }
         // 6. City
         if (!u.city) {
-            tasks.push({ key: 'add_city', priority: 'medium', section: 'personal', field: 'editCity', icon: 'fa-location-dot' });
+            tasks.push({ key: 'add_city_task', priority: 'medium', section: 'personal', field: 'editCity', icon: 'fa-location-dot' });
         }
         // 7. Personal Details (Gender, Birthdate)
         if (!u.gender || !u.birthdate) {
-            tasks.push({ key: 'complete_personal', priority: 'medium', section: 'personal', field: 'editGender', icon: 'fa-user-check' });
+            tasks.push({ key: 'complete_personal_task', priority: 'medium', section: 'personal', field: 'editGender', icon: 'fa-user-check' });
         }
 
         // --- LOW PRIORITY ---
         // 8. Website
         if (!u.website_link && !u.websiteLink) {
-            tasks.push({ key: 'add_website', priority: 'low', section: 'professional', field: 'editWebsite', icon: 'fa-globe' });
+            tasks.push({ key: 'add_website_task', priority: 'low', section: 'professional', field: 'editWebsite', icon: 'fa-globe' });
         }
         // 9. Services (Suggest if Freelancing/Working)
         const status = u.current_status || u.currentStatus || '';
         const isFreelancer = status === 'Freelancing' || status === 'Working';
         if (isFreelancer && (!window.userServicesCount || window.userServicesCount === 0)) {
-            tasks.push({ key: 'add_services', priority: 'low', section: 'services', field: 'addServiceBtn', icon: 'fa-concierge-bell' });
+            tasks.push({ key: 'add_services_task', priority: 'low', section: 'services', field: 'addServiceBtn', icon: 'fa-concierge-bell' });
         }
 
         // Render tasks
@@ -459,10 +459,10 @@ const DashboardUI = {
                             <i class="fa-solid ${task.icon}"></i>
                         </div>
                         <div>
-                            <h5 class="text-xs font-black text-slate-700" data-lang-key="${task.key}">${this.formatTaskKey(task.key)}</h5>
+                            <h5 class="text-xs font-black text-slate-700" data-lang-key="${task.key}">${window.translations?.[task.key]?.[lang] || this.formatTaskKey(task.key)}</h5>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[8px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-full ${s.badge}">${task.priority}</span>
-                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">${task.section}</span>
+                                <span class="text-[8px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-full ${s.badge}" data-lang-key="${task.priority}">${window.translations?.[task.priority]?.[lang] || task.priority}</span>
+                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest" data-lang-key="${task.section}_section">${window.translations?.[task.section + '_section']?.[lang] || task.section}</span>
                             </div>
                         </div>
                     </div>

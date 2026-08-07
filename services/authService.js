@@ -57,14 +57,32 @@ class AuthService {
             }
 
             // Check Supabase Auth
-            const { data: existingAuthUsers, error: listAuthError } = await this.supabaseAdmin.auth.admin.listUsers({ email: emailToAuthWith });
-            if (listAuthError) {
-                const err = new Error('Failed to check user existence with authentication provider.');
-                err.statusCode = 500;
-                throw err;
+            let existingAuthUser = null;
+            let page = 1;
+            const perPage = 1000;
+            
+            while (true) {
+                const { data: { users }, error: listAuthError } = await this.supabaseAdmin.auth.admin.listUsers({
+                    page: page,
+                    perPage: perPage
+                });
+                
+                if (listAuthError) {
+                    const err = new Error('Failed to check user existence with authentication provider.');
+                    err.statusCode = 500;
+                    throw err;
+                }
+                
+                if (!users || users.length === 0) break;
+                
+                existingAuthUser = users.find(u => u.email && u.email.toLowerCase() === emailToAuthWith);
+                if (existingAuthUser) break;
+                
+                if (users.length < perPage) break;
+                page++;
             }
-            if (existingAuthUsers.users.length > 0) {
-                const existingAuthUser = existingAuthUsers.users[0];
+            
+            if (existingAuthUser) {
                 if (existingAuthUser.email_confirmed_at) {
                     const err = new Error('Email already registered and verified.');
                     err.statusCode = 409;

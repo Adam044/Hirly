@@ -8,7 +8,7 @@ if (typeof window.addTranslations === 'function') {
     window.addTranslations({
         'browse_jobs_title': { 'ar': 'تصفح الوظائف - هايرلي', 'en': 'Browse Jobs - Hirly' },
         'find_your_next_opportunity': { 'ar': 'ابحث عن فرصتك القادمة', 'en': 'Find Your Next Opportunity' },
-        'explore_wide_range_jobs': { 'ar': 'استكشف مجموعة واسعة من الوظائف المستقلة والدوام الكامل في فلسطين.', 'en': 'Explore a wide range of freelance and full-time jobs in Palestine.' },
+        'explore_wide_range_jobs': { 'ar': 'اكتشف محطتك المهنية القادمة من بين مجموعة مختارة من الفرص الوظيفية المتميزة.', 'en': 'Discover your next professional milestone among our curated career opportunities.' },
         'search_job_title_keyword': { 'ar': 'ابحث حسب المسمى الوظيفي أو الكلمة المفتاحية...', 'en': 'Search by job title or keyword...' },
         'search': { 'ar': 'بحث', 'en': 'Search' },
         'filters': { 'ar': 'الفلاتر', 'en': 'Filters' },

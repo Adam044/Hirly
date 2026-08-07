@@ -2055,18 +2055,37 @@ selectCity(value, label) {
         const u = { ...user, ...(user.profile || {}) };
         const lang = window.currentLanguage || 'en';
         
-        const fullName = `${u.first_name || u.firstName || ''} ${u.last_name || u.lastName || ''}`.trim() || u.username || 'Professional';
-        const profession = u.profession || (window.translations?.professional?.[lang] || 'Professional');
-        const bio = u.bio || (window.translations?.no_bio_yet?.[lang] || 'No bio added yet.');
+        const fullName = `${u.first_name || u.firstName || ''} ${u.last_name || u.lastName || ''}`.trim() || u.username || (window.translations?.professional?.[lang] || 'Professional');
+        let profession = u.profession || (window.translations?.professional?.[lang] || 'Professional');
+        if (u.profession && window.globalCategoriesAndProfessions) {
+            window.globalCategoriesAndProfessions.some(cat => {
+                const prof = cat.professions.find(p => {
+                    const enName = (typeof p === 'object' ? (p.en || p) : p).toLowerCase().trim();
+                    return enName === u.profession.toLowerCase().trim();
+                });
+                if (prof) {
+                    profession = typeof prof === 'object' ? (prof[lang] || prof.en) : prof;
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        const bio = u.bio || (window.translations?.no_bio_added?.[lang] || 'No bio added yet.');
+        const views = u.profile_views || 0;
         
         // Update basic info
         const nameEl = document.getElementById('viewProfileCardName');
         const profEl = document.getElementById('viewProfileCardProfession');
         const bioEl = document.getElementById('viewProfileCardBio');
+        const viewsEl = document.getElementById('viewProfileCardViewsCount');
         
         if (nameEl) nameEl.textContent = fullName;
         if (profEl) profEl.textContent = profession;
         if (bioEl) bioEl.textContent = bio;
+        if (viewsEl) {
+            viewsEl.textContent = `${views} ${window.translations?.views?.[lang] || 'Views'}`;
+        }
         
         // Update Avatar
         const avatarPlaceholder = document.getElementById('viewProfileCardAvatar');
@@ -2260,7 +2279,7 @@ selectCity(value, label) {
         // Bio
         const bioEl = document.getElementById('viewBio');
         if (bioEl) {
-            bioEl.textContent = u.bio || (window.translations?.no_bio_yet?.[lang] || 'No bio added yet.');
+            bioEl.textContent = u.bio || (window.translations?.no_bio_added?.[lang] || 'No bio added yet.');
             bioEl.className = u.bio ? "text-sm text-slate-600 leading-relaxed font-medium" : "text-sm text-slate-400 italic font-medium";
         }
 
