@@ -119,8 +119,49 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     res.sendFile(componentPath);
   });
 
-  router.get('/job_details/:id', (req, res) => {
-    sendSmart(res, [path.join('employer', 'job_details.html'), path.join('hirly', 'job_details.html'), 'job_details.html']);
+  router.get('/job_details/:id', async (req, res) => {
+    const jobId = req.params.id;
+    const candidates = [path.join('employer', 'job_details.html'), path.join('hirly', 'job_details.html'), 'job_details.html'];
+    const fullPath = resolveViewCandidates(candidates);
+
+    if (!fullPath) return res.status(404).send('Page not found');
+
+    try {
+      // Fetch job details for SEO
+      const jobResult = await pool.query(`
+        SELECT 
+          j.title, 
+          COALESCE(j.external_company_name, e.company_name, 'Private Company') as company_name,
+          COALESCE(j.company_logo, e.company_logo_path, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg') as company_logo
+        FROM jobs j
+        LEFT JOIN employers e ON j.employer_id = e.user_id
+        WHERE j.id = $1 OR j.external_id = $1
+        LIMIT 1
+      `, [jobId]);
+
+      let html = fs.readFileSync(fullPath, 'utf8');
+
+      if (jobResult.rows.length > 0) {
+        const job = jobResult.rows[0];
+        html = html
+          .replace(/{{JOB_TITLE}}/g, job.title)
+          .replace(/{{COMPANY_NAME}}/g, job.company_name)
+          .replace(/{{COMPANY_LOGO}}/g, job.company_logo)
+          .replace(/{{JOB_ID}}/g, jobId);
+      } else {
+        // Fallback for missing job
+        html = html
+          .replace(/{{JOB_TITLE}}/g, 'Professional Milestone')
+          .replace(/{{COMPANY_NAME}}/g, 'Hirly Network')
+          .replace(/{{COMPANY_LOGO}}/g, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg')
+          .replace(/{{JOB_ID}}/g, jobId);
+      }
+
+      res.send(html);
+    } catch (error) {
+      logger.error('SEO Injection Error:', error);
+      res.sendFile(fullPath); // Fallback to normal file if DB fails
+    }
   });
 
   router.get('/', (req, res) => {
