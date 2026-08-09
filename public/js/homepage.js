@@ -40,6 +40,60 @@ window.loadHomepageContent = async function () {
 };
 
 /**
+ * Setup horizontal scroll with progress tracking and button states
+ */
+function setupHorizontalScroll(containerId, prevId, nextId, progressBarId) {
+    const container = document.getElementById(containerId);
+    const prevBtn = document.getElementById(prevId);
+    const nextBtn = document.getElementById(nextId);
+    const progressBar = document.getElementById(progressBarId);
+    
+    if (!container || !prevBtn || !nextBtn) return;
+
+    const isRTL = document.documentElement.dir === 'rtl';
+    const scrollAmount = 374; // Standardized card width + gap
+
+    const updateUI = () => {
+        const scrollLeft = Math.abs(container.scrollLeft);
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        
+        // Update Buttons
+        if (isRTL) {
+            // In RTL, scrollLeft is 0 at the right (start) and negative as we go left
+            const atStart = scrollLeft < 10;
+            const atEnd = scrollLeft >= maxScroll - 10;
+            prevBtn.disabled = atStart;
+            nextBtn.disabled = atEnd;
+        } else {
+            const atStart = scrollLeft < 10;
+            const atEnd = scrollLeft >= maxScroll - 10;
+            prevBtn.disabled = atStart;
+            nextBtn.disabled = atEnd;
+        }
+
+        // Update Progress Bar
+        if (progressBar) {
+            const progress = (scrollLeft / maxScroll) * 100;
+            progressBar.style.width = `${Math.min(100, progress)}%`;
+        }
+    };
+
+    prevBtn.addEventListener('click', () => {
+        container.scrollBy({ left: isRTL ? scrollAmount : -scrollAmount, behavior: 'smooth' });
+    });
+
+    nextBtn.addEventListener('click', () => {
+        container.scrollBy({ left: isRTL ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    });
+
+    container.addEventListener('scroll', updateUI);
+    window.addEventListener('resize', updateUI);
+    
+    // Initial check
+    setTimeout(updateUI, 500);
+}
+
+/**
  * Fetches and displays fresh job opportunities
  */
 async function fetchFreshJobs() {
@@ -48,17 +102,10 @@ async function fetchFreshJobs() {
     
     if (!container) return;
 
-    // Add scroll logic
-    const prevBtn = document.getElementById('jobsPrev');
-    const nextBtn = document.getElementById('jobsNext');
-    if (prevBtn && nextBtn && !prevBtn.dataset.listenerAdded) {
-        prevBtn.addEventListener('click', () => {
-            container.scrollBy({ left: -374, behavior: 'smooth' });
-        });
-        nextBtn.addEventListener('click', () => {
-            container.scrollBy({ left: 374, behavior: 'smooth' });
-        });
-        prevBtn.dataset.listenerAdded = 'true';
+    // Setup scroll logic once
+    if (!container.dataset.scrollInitialized) {
+        setupHorizontalScroll('freshJobsContainer', 'jobsPrev', 'jobsNext', 'jobsProgressBar');
+        container.dataset.scrollInitialized = 'true';
     }
     
     try {
@@ -225,17 +272,10 @@ async function fetchDiscoverTalent() {
     
     if (!container) return;
     
-    // Add scroll logic
-    const prevBtn = document.getElementById('talentPrev');
-    const nextBtn = document.getElementById('talentNext');
-    if (prevBtn && nextBtn && !prevBtn.dataset.listenerAdded) {
-        prevBtn.addEventListener('click', () => {
-            container.scrollBy({ left: -294, behavior: 'smooth' });
-        });
-        nextBtn.addEventListener('click', () => {
-            container.scrollBy({ left: 294, behavior: 'smooth' });
-        });
-        prevBtn.dataset.listenerAdded = 'true';
+    // Setup scroll logic once
+    if (!container.dataset.scrollInitialized) {
+        setupHorizontalScroll('talentContainer', 'talentPrev', 'talentNext', 'talentProgressBar');
+        container.dataset.scrollInitialized = 'true';
     }
     
     try {

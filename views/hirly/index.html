@@ -271,9 +271,21 @@
         ============================================================ -->
         <section class="section fresh-jobs-section" id="freshOpportunities">
             <div class="container">
-                <div class="section-header-centered">
-                    <span class="section-eyebrow" data-lang-key="fresh_jobs_eyebrow">فرص جديدة</span>
-                    <h2 class="section-title" data-lang-key="fresh_jobs_title">وظائف تم نشرها حديثاً</h2>
+                <div class="section-header-luxe">
+                    <div class="header-content">
+                        <span class="section-eyebrow" data-lang-key="fresh_jobs_eyebrow">فرص جديدة</span>
+                        <h2 class="section-title" data-lang-key="fresh_jobs_title">وظائف تم نشرها حديثاً</h2>
+                    </div>
+                    <div class="header-actions">
+                        <a href="/jobs.html" class="btn-text-luxe" data-lang-key="view_all_jobs">
+                            <span>عرض الكل</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <div class="luxe-nav-group">
+                            <button class="luxe-nav-btn prev" id="jobsPrev" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+                            <button class="luxe-nav-btn next" id="jobsNext" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="horizontal-scroll-wrapper">
@@ -283,13 +295,9 @@
                         <div class="home-skeleton-job-card"></div>
                         <div class="home-skeleton-job-card"></div>
                     </div>
-                    
-                    <button class="scroll-arrow prev-arrow" id="jobsPrev"><i class="fas fa-chevron-left"></i></button>
-                    <button class="scroll-arrow next-arrow" id="jobsNext"><i class="fas fa-chevron-right"></i></button>
-                </div>
-
-                <div class="section-footer-action">
-                    <a href="/jobs.html" class="btn-luxe-primary" data-lang-key="view_all_jobs">عرض جميع الوظائف <i class="fas fa-arrow-right"></i></a>
+                    <div class="scroll-progress-container">
+                        <div class="scroll-progress-bar" id="jobsProgressBar"></div>
+                    </div>
                 </div>
 
                 <!-- Empty State (Hidden) -->
@@ -307,10 +315,21 @@
         <section class="section discover-talent-section" id="discoverTalent">
             <div class="section-bg-accent"></div>
             <div class="container">
-                <div class="section-header-centered">
-                    <span class="section-eyebrow" data-lang-key="discover_talent_eyebrow">اكتشف المواهب</span>
-                    <h2 class="section-title" data-lang-key="discover_talent_title">محترفون متميزون</h2>
-                    <p class="section-desc" data-lang-key="discover_talent_desc">مواهب مختارة بعناية — بروفايلات كاملة بتقييمات ومهارات حقيقية</p>
+                <div class="section-header-luxe">
+                    <div class="header-content">
+                        <span class="section-eyebrow" data-lang-key="discover_talent_eyebrow">اكتشف المحترفين</span>
+                        <h2 class="section-title" data-lang-key="discover_talent_title">محترفون متميزون</h2>
+                    </div>
+                    <div class="header-actions">
+                        <a href="/talent.html" class="btn-text-luxe" data-lang-key="explore_all_talent">
+                            <span>عرض الكل</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <div class="luxe-nav-group">
+                            <button class="luxe-nav-btn prev" id="talentPrev" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+                            <button class="luxe-nav-btn next" id="talentNext" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="horizontal-scroll-wrapper">
@@ -320,13 +339,9 @@
                         <div class="home-skeleton-talent-card"></div>
                         <div class="home-skeleton-talent-card"></div>
                     </div>
-
-                    <button class="scroll-arrow prev-arrow" id="talentPrev"><i class="fas fa-chevron-left"></i></button>
-                    <button class="scroll-arrow next-arrow" id="talentNext"><i class="fas fa-chevron-right"></i></button>
-                </div>
-
-                <div class="section-footer-action">
-                    <a href="/talent.html" class="btn-luxe-outline" data-lang-key="explore_all_talent">استكشف جميع المحترفين <i class="fas fa-arrow-right"></i></a>
+                    <div class="scroll-progress-container">
+                        <div class="scroll-progress-bar" id="talentProgressBar"></div>
+                    </div>
                 </div>
 
                 <!-- Empty State (Hidden) -->
