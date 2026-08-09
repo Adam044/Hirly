@@ -191,7 +191,7 @@ class PalestineCollector {
                     const locationEl = item.querySelector(sel.location);
                     
                     const title = titleEl ? titleEl.textContent.trim() : '';
-                    const company = companyEl ? companyEl.textContent.trim() : 'Jobs.ps Source';
+                    const company = companyEl ? companyEl.textContent.trim() : ''; // Removed 'Jobs.ps Source' fallback
                     const location = locationEl ? locationEl.textContent.trim() : 'Palestine';
                     const link = item.href || item.getAttribute('href') || '';
                     
@@ -346,7 +346,7 @@ class PalestineCollector {
                             }
                             
                             const logo = document.querySelector('.employer-logo img, .company-logo img, img.logo, .employer-brand img')?.src;
-                            const company = document.querySelector('.employer-name, .company-name, .job-company, h1.company')?.innerText;
+                            const company = document.querySelector('.employer-name, .company-name, .job-company, h1.company, h2.company, .post-content h2, .job-details h2')?.innerText;
                             
                             return { 
                                 full_text: [...new Set(contentParts)].join('\n\n') || '', 
@@ -360,6 +360,22 @@ class PalestineCollector {
                         const linkId = job.link.split('/').pop() || 'unknown';
                         const shortHash = Buffer.from(job.link).toString('base64').slice(-15);
                         
+                        // --- COMPANY VALIDATION & CLEANUP ---
+                        let finalCompany = (fullData.page_company || job.company || '').trim();
+                        
+                        // Blacklist check: Never allow "Jobs.ps Source" or generic site names
+                        const blacklistedNames = ['jobs.ps source', 'jobs.ps', 'job.ps', 'jobs ps', 'aggregator'];
+                        if (blacklistedNames.includes(finalCompany.toLowerCase())) {
+                            finalCompany = '';
+                        }
+                        
+                        // If still empty after deep scan, skip this job (Guard against bad data)
+                        if (!finalCompany || finalCompany.length < 2) {
+                            this.addLog(`[Jobs.ps Playwright] Skipping job "${job.title}" - Invalid company name detected.`, 'warn');
+                            await jobPage.close();
+                            return null;
+                        }
+
                         // Parse date if found
                         let createdAt = new Date().toISOString();
                         let deadline = null;
@@ -405,7 +421,7 @@ class PalestineCollector {
                             data: {
                                 external_id: `jobsps_${linkId}_${shortHash}`,
                                 title: job.title,
-                                company_name: fullData.page_company || job.company,
+                                company_name: finalCompany,
                                 external_url: job.link,
                                 external_source: 'Jobs.ps',
                                 location: job.location,
@@ -415,7 +431,7 @@ class PalestineCollector {
                                 raw_payload: {
                                     source_name: source.name,
                                     fetch_date: new Date().toISOString(),
-                                    extracted_company: fullData.page_company || job.company,
+                                    extracted_company: finalCompany,
                                     extracted_location: job.location,
                                     page_logo: fullData.page_logo,
                                     extracted_date: fullData.page_date,

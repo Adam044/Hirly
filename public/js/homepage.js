@@ -147,8 +147,7 @@ function createJobCard(job) {
     if (job.company_logo) {
         avatarHtml = `<div class="home-job-card-avatar-container"><img src="${job.company_logo}" alt="${job.company_name}"></div>`;
     } else {
-        const initial = (job.company_name || 'C').charAt(0).toUpperCase();
-        avatarHtml = `<div class="home-job-card-avatar-container"><div class="home-job-card-avatar-placeholder">${initial}</div></div>`;
+        avatarHtml = `<div class="home-job-card-avatar-container"><div class="home-job-card-avatar-placeholder"><i class="fa-solid fa-building"></i></div></div>`;
     }
     
     // Location Formatting
@@ -579,7 +578,7 @@ function createCompanyLogoItem(company) {
     if (company.company_logo_path) {
         logoContent = `<div class="marquee-logo-box"><img src="${company.company_logo_path}" alt="${company.company_name}" loading="lazy"></div>`;
     } else {
-        logoContent = `<div class="marquee-logo-placeholder"><span>${company.company_name.charAt(0)}</span></div>`;
+        logoContent = `<div class="marquee-logo-placeholder"><i class="fa-solid fa-building"></i></div>`;
     }
 
     item.innerHTML = `

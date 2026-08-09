@@ -185,8 +185,8 @@ if (typeof window.addTranslations === 'function') {
         'pill_project_manager': { 'ar': 'مدير مشاريع', 'en': 'Project Manager' },
         // Stats
         'stat_users': { 'ar': 'مستخدم مسجل', 'en': 'Registered Users' },
-        'stat_companies': { 'ar': 'شركة مسجلة', 'en': 'Companies' },
-        'stat_employers': { 'ar': 'صاحب عمل', 'en': 'Employers' },
+        'stat_companies': { 'ar': 'شركة مسجلة', 'en': 'Registered Companies' },
+        'stat_active_jobs': { 'ar': 'وظيفة نشطة', 'en': 'Active Jobs' },
         'stat_professions': { 'ar': 'تخصص مهني', 'en': 'Professions' },
         // Trusted by
         'trusted_label': { 'ar': 'موثوق من قِبَل الشركات والمؤسسات', 'en': 'TRUSTED BY COMPANIES & ORGANIZATIONS' },
