@@ -176,6 +176,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 ar: translations[key].ar,
                 en: translations[key].en
             })).sort((a, b) => {
+                // Palestine always on top
+                if (a.key === 'country_palestine') return -1;
+                if (b.key === 'country_palestine') return 1;
+                
                 const nameA = a[window.currentLanguage] || a.en;
                 const nameB = b[window.currentLanguage] || b.en;
                 return nameA.localeCompare(nameB);
@@ -193,12 +197,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Extract all cities (we'll filter them later based on selection)
             palestinianCities = Object.keys(translations)
                 .filter(key => key.startsWith('city_'))
-                .map(key => ({
-                    key: key,
-                    ar: translations[key].ar,
-                    en: translations[key].en,
-                    country: translations[key].country
-                }));
+                .map(key => {
+                    const countryKey = translations[key].country;
+                    const countryEnName = translations[countryKey] ? translations[countryKey].en : countryKey;
+                    return {
+                        key: key,
+                        ar: translations[key].ar,
+                        en: translations[key].en,
+                        country: countryEnName // Store English name for matching with select value
+                    };
+                });
         }
     }
 
@@ -1030,13 +1038,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (id === 'city' || id === 'country') {
                 // Handle country/city objects: { key, ar, en, ... }
-                const val = option.key || option.en || (typeof option === 'string' ? option : '');
+                // Use English name as the value to be saved in DB, fallback to key if en is missing
+                const val = option.en || option.key || (typeof option === 'string' ? option : '');
                 const text = option[currentLang] || option.en || (typeof option === 'string' ? option : 'Unknown');
                 
                 optionElement.value = val;
                 optionElement.textContent = text;
                 
-                if (val === selectedValue) optionElement.selected = true;
+                if (val === selectedValue || option.key === selectedValue) optionElement.selected = true;
             } else if (id === 'countryCode' || id === 'companyCountryCode') {
                 // Handle country code objects: { name, code }
                 const val = option.code || (typeof option === 'string' ? option : '');
@@ -1569,7 +1578,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Re-initialize location arrays with current language translations
         updateLocationData();
         
-        populateDropdown(countrySelect, menaCountries, countrySelect.value);
+        const currentCountry = countrySelect.value || 'Palestine';
+        populateDropdown(countrySelect, menaCountries, currentCountry);
         
         // If a country is already selected, filter and re-populate cities
         if (countrySelect && countrySelect.value) {
@@ -1597,8 +1607,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial population on DOMContentLoaded
     updateLocationData();
-    populateDropdown(countrySelect, menaCountries);
-    populateDropdown(citySelect, []); // Start with empty cities until country is chosen
+    populateDropdown(countrySelect, menaCountries, 'Palestine');
+    
+    // Trigger city population for default country (Palestine)
+    if (countrySelect && countrySelect.value === 'Palestine') {
+        const filteredCities = palestinianCities.filter(c => c.country === 'Palestine')
+            .sort((a, b) => {
+                const nameA = a[window.currentLanguage] || a.en;
+                const nameB = b[window.currentLanguage] || b.en;
+                return nameA.localeCompare(nameB);
+            });
+        populateDropdown(citySelect, filteredCities);
+    } else {
+        populateDropdown(citySelect, []); // Start with empty cities until country is chosen
+    }
 
     // Handle Country Change to filter Cities
     if (countrySelect) {

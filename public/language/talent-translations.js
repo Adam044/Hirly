@@ -41,6 +41,8 @@ if (typeof window.addTranslations === 'function') {
         'categories_selected': { 'ar': 'فئات مختارة', 'en': 'Categories Selected' },
         'all_categories': { 'ar': 'جميع الفئات', 'en': 'All Categories' },
         'all_cities': { 'ar': 'جميع المدن', 'en': 'All Cities' }, // Added for city dropdown
+        'all_countries': { 'ar': 'جميع الدول', 'en': 'All Countries' },
+        'countries_selected': { 'ar': 'دول مختارة', 'en': 'Countries Selected' },
         'cities_selected': { 'ar': 'مدن مختارة', 'en': 'Cities Selected' }, // Added for city multi-select
         'no_matching_professions': { 'ar': 'لم يتم العثور على مهن مطابقة.', 'en': 'No matching professions found.' },
         'remote_only': { 'ar': 'عن بعد فقط', 'en': 'Remote Only' },

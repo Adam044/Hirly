@@ -417,13 +417,8 @@ async function initializeHeaderScripts() {
         const { isAuthenticated, currentUser } = window;
 
         if (isAuthenticated && currentUser) {
-            // This needs to be called after the auth check is complete
-            updateUserAvatar(
-                document.getElementById('userAvatarContainerDesktop'),
-                document.getElementById('userAvatarImgDesktop'),
-                document.getElementById('userAvatarTextDesktop'),
-                currentUser
-            );
+            // Mobile avatar is handled inside initializeMobileMenu when hamburger is clicked.
+            // Desktop avatar elements have been removed for a simpler header.
         }
     }
 

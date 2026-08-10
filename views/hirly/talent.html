@@ -52,7 +52,9 @@
     <!-- NEW: Centralized Access Denied Modal (kept for general access control) -->
     <div class="modal-overlay" id="accessDeniedModal" style="display: none;">
         <div class="modal-content medium-modal text-center">
-            <button class="modal-close" id="closeModalBtn" aria-label="Close"></button>
+            <button class="modal-close" id="closeModalBtn" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
             <div class="modal-icon">
                 <i class="fas fa-lock fa-4x text-primary mb-3"></i>
             </div>
@@ -130,6 +132,16 @@
                                     <i class="fas fa-chevron-down dropdown-arrow"></i>
                                 </button>
                                 <div class="custom-dropdown-menu checkbox-list" id="professionsCheckboxes"></div>
+                            </div>
+                        </div>
+                        <!-- Country Dropdown -->
+                        <div class="filter-col">
+                            <div class="custom-dropdown" id="countryDropdown">
+                                <button type="button" class="custom-dropdown-trigger form-control" id="countryDropdownToggle" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-globe filter-icon"></i> <span id="selectedCountriesDisplay" data-lang-key="all_countries">All Countries</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <div class="custom-dropdown-menu checkbox-list" id="countryCheckboxes"></div>
                             </div>
                         </div>
                         <!-- City Dropdown -->

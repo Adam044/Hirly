@@ -1057,19 +1057,7 @@ html[dir="rtl"] .secondary-actions {
 }
 
 
-.modal-close-btn {
-    position: absolute;
-    top: var(--spacing-md);
-    inset-inline-end: var(--spacing-md); /* Use logical property */
-    font-size: var(--font-size-xl);
-    color: var(--text-light);
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-
-.modal-close-btn:hover {
-    color: var(--text-dark);
-}
+/* Modal styles removed - now handled in modals.css */
 
 .modal-content h2 {
     font-size: var(--font-size-xxl);

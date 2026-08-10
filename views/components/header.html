@@ -2,7 +2,6 @@
     <div class="container header-container">
         <!-- Left side: Logo only -->
         <div class="header-left">
-            <!-- Removed aria-label and data-lang-key from here -->
             <a href="/" class="logo" id="headerLogoLink">
                 <!-- Image logo for English -->
                 <img src="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg" alt="Logo" class="logo-img" id="headerImageLogo">
@@ -11,19 +10,7 @@
             </a>
         </div>
 
-        <!-- Middle: Navigation Links (Desktop) -->
-        <nav class="main-nav" id="mainNav">
-            <ul id="navLinks">
-                <li><a href="/jobs.html" data-lang-key="jobs">وظائف</a></li>
-                <li><a href="/services.html" data-lang-key="services">خدمات</a></li>
-                <li><a href="/talent.html" data-lang-key="professionals">المهنيين</a></li>
-                <li><a href="/about.html" data-lang-key="about_us">حولنا</a></li>
-                <li><a href="/contact.html" data-lang-key="contact_us">اتصل بنا</a></li>
-                <li><a href="/employers.html" data-lang-key="for_employers_nav">For Employers</a></li>
-            </ul>
-        </nav>
-
-        <!-- Right side: Language Switcher and Auth Buttons/User Menu -->
+        <!-- Right side: Language Switcher and Hamburger Menu -->
         <div class="header-right">
             <!-- Language Switcher Button (Desktop) -->
             <button class="lang-switcher-btn" id="langDropdownToggle" style="display: flex; align-items: center; gap: 0.5rem; background: none; border: 1px solid var(--border); padding: 0.5rem 0.8rem; border-radius: 50px; cursor: pointer; transition: all 0.2s;">
@@ -32,24 +19,7 @@
                 <i class="fas fa-chevron-down" style="font-size: 0.7rem; opacity: 0.5;"></i>
             </button>
 
-            <!-- Auth Buttons (shown when logged out) - Initially hidden to prevent flash -->
-            <div class="auth-buttons" id="authButtons" style="display: none;">
-                <a href="/login.html" class="btn btn-outline-primary" data-lang-key="login">تسجيل الدخول</a>
-                <a href="/signup.html" class="btn btn-primary" data-lang-key="sign_up">التسجيل</a>
-            </div>
-
-            <!-- User Menu (shown when logged in) -->
-            <div class="user-menu" id="userMenu" style="display: none;">
-                <a href="#" class="user-avatar-link" id="userAvatarHeader">
-                    <!-- The user-avatar div is where the magic happens -->
-                    <div class="user-avatar-container" id="userAvatarContainerDesktop">
-                        <img id="userAvatarImgDesktop" src="" alt="User Profile Picture" style="display: none;">
-                        <span id="userAvatarTextDesktop"></span>
-                    </div>
-                </a>
-            </div>
-
-            <!-- Hamburger Menu Icon for Mobile -->
+            <!-- Hamburger Menu Icon -->
             <button class="hamburger-menu" id="hamburgerMenu">
                 <i class="fas fa-bars"></i>
             </button>
@@ -100,7 +70,9 @@
 <!-- FIX: Set z-index to a high value so the modal appears above the mobile menu overlay -->
 <div id="logoutConfirmModal" class="modal-overlay" style="display: none; z-index: 2000;">
     <div class="modal-content small-modal">
-        <span class="modal-close-btn" id="closeLogoutModalBtn">&times;</span>
+        <button class="modal-close-btn" id="closeLogoutModalBtn">
+            <i class="fas fa-times"></i>
+        </button>
         <h2 data-lang-key="confirm_action_modal">تأكيد الإجراء</h2>
         <p data-lang-key="are_you_sure_proceed_modal">هل أنت متأكد أنك تريد المتابعة؟</p>
         <div class="modal-actions">
@@ -119,8 +91,8 @@
                 <div style="width: 50px; background: var(--primary); height: 4px; border-radius: 10px; margin: 0 auto 1.5rem;"></div>
                 <h3 class="modal-title" data-lang-key="select_your_language" style="font-size: 1.5rem; font-weight: 800; color: var(--dark);">Select Language</h3>
                 <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.95rem;" data-lang-key="choose_preferred_language">Please choose your preferred language:</p>
-                <button id="closeLanguageModalBtn" class="modal-close-btn" style="top: 1.5rem; right: 1.5rem; background: var(--gray-100); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
-                    <i class="fas fa-times" style="font-size: 0.9rem; color: var(--text);"></i>
+                <button id="closeLanguageModalBtn" class="modal-close-btn">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body" style="padding: 0; margin: 0;">

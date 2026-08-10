@@ -35,12 +35,6 @@
 }
 
 .header-left .logo {
-    font-size: var(--font-size-xl);
-    font-weight: 700;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -49,10 +43,6 @@
 }
 
 .header-left .logo:hover {
-    background: var(--primary-gradient-hover);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     transform: scale(1.05);
 }
 
@@ -60,6 +50,18 @@
     height: 60px;
     width: auto;
     object-fit: contain;
+}
+
+.header-left .logo .logo-text {
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+    line-height: 1.2;
+    padding-bottom: 4.4px;
 }
 
 .header-left .logo i {
@@ -154,14 +156,8 @@ html[dir="rtl"] .header-left .logo .logo-text {
 .header-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
     flex-direction: row; /* Default to LTR order for items within header-right */
-}
-
-.header .main-nav,
-.header-right .auth-buttons,
-.header-right .user-menu {
-    display: none !important;
 }
 
 /* Language Switcher Dropdown Styling - Default to LTR behavior */
@@ -319,7 +315,7 @@ html[dir="rtl"] .header-left .logo .logo-text {
     font-size: var(--font-size-xl);
 }
 
-/* Hamburger Menu (Mobile Only) */
+/* Hamburger Menu */
 .hamburger-menu {
     display: block;
     background: none;
@@ -328,6 +324,12 @@ html[dir="rtl"] .header-left .logo .logo-text {
     color: var(--text-dark);
     cursor: pointer;
     padding: 0.5rem;
+    transition: all var(--transition);
+}
+
+.hamburger-menu:hover {
+    color: var(--primary);
+    transform: scale(1.1);
 }
 
 /* Responsive Adjustments for Header Layout */
@@ -340,21 +342,9 @@ html[dir="rtl"] .header-left .logo .logo-text {
         padding: 0 1rem;
     }
 
-    /* IMPORTANT: Ensure these are explicitly hidden on the main header when mobile */
-    .main-nav,
-    .header-right .auth-buttons,
-    .header-right .user-menu,
-    .header-right .lang-dropdown-container {
-        display: none !important;
-    }
-
     .header-right {
         gap: 0.5rem;
         display: flex;
-    }
-
-    .hamburger-menu {
-        display: block;
     }
 }
 

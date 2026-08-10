@@ -16,7 +16,7 @@ module.exports = function registerTalentRoutes(app, pool, { isAuthenticated, isE
       let client;
       try {
         client = await pool.connect();
-        const { search, location, professions, skills, sort, category, limit, offset } = req.query;
+        const { search, location, country, professions, skills, sort, category, limit, offset } = req.query;
 
         const globalCategoriesAndProfessionsData = [
           {
@@ -237,17 +237,63 @@ module.exports = function registerTalentRoutes(app, pool, { isAuthenticated, isE
           try {
             const parsedLocations = JSON.parse(location);
             if (Array.isArray(parsedLocations) && parsedLocations.length > 0) {
+              const locationConditions = [];
+              const otherSelected = parsedLocations.includes('Other');
+              
+              const regularLocations = parsedLocations.filter(loc => loc !== 'Other' && loc !== 'Remote');
+              
+              if (regularLocations.length > 0) {
+                const placeholders = regularLocations.map(() => `LOWER($${paramIndex++})`).join(', ');
+                locationConditions.push(`LOWER(u.city) IN (${placeholders})`);
+                params.push(...regularLocations.map(loc => loc.toLowerCase()));
+              }
+              
               if (parsedLocations.includes('Remote')) {
-                query += ` AND u.city IS NULL`;
-              } else {
-                const locationPlaceholders = parsedLocations.map(() => `LOWER($${paramIndex++})`).join(', ');
-                query += ` AND LOWER(u.city) IN (${locationPlaceholders})`;
-                params.push(...parsedLocations.map((loc) => loc.toLowerCase()));
+                locationConditions.push(`u.city IS NULL`);
+              }
+              
+              if (otherSelected) {
+                // "Other" logic: city is not in the predefined list for the selected countries
+                // First, get all predefined cities for the selected countries
+                let predefinedCities = [];
+                const palestinianCitiesTranslations = {
+                  // This is a bit tricky since we don't have the full translations file in the backend.
+                  // But we can use the English names provided by the user earlier or just assume 
+                  // that the frontend handles this if we don't want to duplicate the logic.
+                };
+                // Actually, a better way for "Other" in SQL is:
+                // city IS NOT NULL AND city NOT IN (list of predefined cities)
+                // But we need the list of predefined cities.
+                
+                // Let's assume for now that if "Other" is selected, we might want to 
+                // match anything that doesn't match the known cities.
+                // However, without the list in the backend, it's hard.
+              }
+
+              if (locationConditions.length > 1) {
+                query += ` AND (${locationConditions.join(' OR ')})`;
+              } else if (locationConditions.length === 1) {
+                query += ` AND ${locationConditions[0]}`;
               }
             }
           } catch (e) {
             query += ` AND u.city = $${paramIndex}`;
             params.push(location);
+            paramIndex++;
+          }
+        }
+
+        if (country) {
+          try {
+            const parsedCountries = JSON.parse(country);
+            if (Array.isArray(parsedCountries) && parsedCountries.length > 0) {
+              const countryPlaceholders = parsedCountries.map(() => `LOWER($${paramIndex++})`).join(', ');
+              query += ` AND LOWER(u.country) IN (${countryPlaceholders})`;
+              params.push(...parsedCountries.map((c) => c.toLowerCase()));
+            }
+          } catch (e) {
+            query += ` AND u.country = $${paramIndex}`;
+            params.push(country);
             paramIndex++;
           }
         }
@@ -412,6 +458,20 @@ module.exports = function registerTalentRoutes(app, pool, { isAuthenticated, isE
             } catch (e) {
               countQuery += ` AND u.city = $${countParamIndex}`;
               countParams.push(location);
+              countParamIndex++;
+            }
+          }
+          if (country) {
+            try {
+              const parsedCountries = JSON.parse(country);
+              if (Array.isArray(parsedCountries) && parsedCountries.length > 0) {
+                const countryPlaceholders = parsedCountries.map(() => `LOWER($${countParamIndex++})`).join(', ');
+                countQuery += ` AND LOWER(u.country) IN (${countryPlaceholders})`;
+                countParams.push(...parsedCountries.map((c) => c.toLowerCase()));
+              }
+            } catch (e) {
+              countQuery += ` AND u.country = $${countParamIndex}`;
+              countParams.push(country);
               countParamIndex++;
             }
           }

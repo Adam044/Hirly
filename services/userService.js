@@ -10,7 +10,15 @@ const userService = {
      */
     async updatePersonalInfo(client, userId, data) {
         logger.info('Updating personal info', { userId, data });
-        const { firstName, lastName, phone, city, gender, birthdate } = data;
+        let { firstName, lastName, phone, city, gender, birthdate } = data;
+        
+        // Safety guard for city translation keys
+        if (city && typeof city === 'string' && city.startsWith('city_')) {
+            city = city.replace(/^city_/, '')
+                       .split('_')
+                       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                       .join(' ');
+        }
         
         const updateFields = [];
         const updateValues = [];

@@ -234,8 +234,3 @@ html[dir="rtl"] .language-row-btn i.fa-chevron-right {
     transform: scaleX(-1) !important;
     opacity: 0.2;
 }
-
-html[dir="rtl"] .modal-header .modal-close-btn {
-    right: auto !important;
-    left: 1.5rem !important;
-}

@@ -1014,14 +1014,3 @@ html[dir="rtl"] .mobile-modal-close-btn { right: auto; left: 20px; }
 
 /* Global Utilities */
 body.no-scroll { overflow: hidden; }
-
-/* RTL General Centering */
-html[dir="rtl"] .job-card,
-html[dir="rtl"] .job-card-header-new,
-html[dir="rtl"] .job-card-main-info,
-html[dir="rtl"] .job-card-tags-container,
-html[dir="rtl"] .job-tags-row {
-    text-align: center !important;
-    align-items: center !important;
-    justify-content: center !important;
-}

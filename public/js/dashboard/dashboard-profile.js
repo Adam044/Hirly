@@ -1379,7 +1379,10 @@ const DashboardProfile = {
             .sort((a, b) => a.name.localeCompare(b.name, lang));
 
         countries.forEach(country => {
-            const isSelected = country.key === currentCountry;
+            const countryData = window.palestinianCitiesTranslations[country.key];
+            const countryEnName = countryData?.en || country.key;
+
+            const isSelected = country.key === currentCountry || countryEnName === currentCountry;
             
             if (isSelected && display) {
                 display.textContent = country.name;
@@ -1403,7 +1406,7 @@ const DashboardProfile = {
             `;
 
             item.addEventListener('click', () => {
-                this.selectCountry(country.key, country.name);
+                this.selectCountry(countryEnName, country.name);
             });
 
             menu.appendChild(item);
@@ -1488,14 +1491,17 @@ const DashboardProfile = {
         }
 
         cities.forEach(city => {
+            const cityData = window.palestinianCitiesTranslations[city.key];
+            const cityEnName = cityData?.en || city.key;
+
             // Robust matching: check key, or English name, or Arabic name
             const isSelected = city.key === currentCity || 
-                             window.palestinianCitiesTranslations[city.key].en === currentCity ||
-                             window.palestinianCitiesTranslations[city.key].ar === currentCity;
+                             cityEnName === currentCity ||
+                             cityData?.ar === currentCity;
             
             if (isSelected && display) {
             display.textContent = city.name;
-            display.dataset.value = city.key; // Store the key
+            display.dataset.value = cityEnName; // Store the English name
             display.classList.remove('text-slate-400');
             display.removeAttribute('data-lang-key');
         }
@@ -1516,7 +1522,7 @@ const DashboardProfile = {
         `;
 
         item.addEventListener('click', () => {
-            this.selectCity(city.key, city.name);
+            this.selectCity(cityEnName, city.name);
         });
 
         menu.appendChild(item);

@@ -16,6 +16,27 @@ class AuthService {
             .replace(/-+$/, '');
     }
 
+    /**
+     * Strips 'city_' and 'country_' prefixes from location strings
+     */
+    cleanLocation(text) {
+        if (!text) return '';
+        // If it looks like a translation key (city_xxx or country_xxx), we should try to clean it
+        // However, the best cleanup is actually done in the SQL cleanup script and frontend fix.
+        // This is a safety guard.
+        if (typeof text !== 'string') return text;
+        
+        // If it starts with city_ or country_, it's definitely a translation key
+        if (text.startsWith('city_') || text.startsWith('country_')) {
+            // Strip prefix and replace underscores with spaces, then capitalize
+            return text.replace(/^(city_|country_)/, '')
+                       .split('_')
+                       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                       .join(' ');
+        }
+        return text;
+    }
+
     async generateUniqueSlug(client, baseName) {
         let baseSlug = this.slugify(baseName) || 'user';
         let finalSlug = baseSlug;
@@ -118,8 +139,8 @@ class AuthService {
             let userFirstName = firstName;
             let userLastName = lastName;
             let userPhone = phone;
-            let userCountry = country;
-            let userCity = city;
+            let userCountry = this.cleanLocation(country);
+            let userCity = this.cleanLocation(city);
 
             if (userType === 'employer' && employerType === 'company') {
                 userFirstName = companyName || 'Company';

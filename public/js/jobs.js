@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-    // Populate country dropdown dynamically based on available jobs
+    // Populate country dropdown dynamically from cities-translations.js
     function populateCountryDropdown(selectElement, jobs, selectedValue = null) {
         if (!selectElement) return;
 
@@ -176,44 +176,50 @@ document.addEventListener('DOMContentLoaded', function() {
         const t = window.translations;
         const cityTranslations = window.palestinianCitiesTranslations || {};
 
-        // Extract unique countries and their counts and sort by count (highest first)
-        const countryCounts = {};
-        jobs.forEach(job => {
-            if (job.country) {
-                countryCounts[job.country] = (countryCounts[job.country] || 0) + 1;
-            }
-        });
-        const countries = Object.keys(countryCounts).sort((a, b) => countryCounts[b] - countryCounts[a]);
+        // Get unique countries from translation file
+        const countries = Object.keys(cityTranslations)
+            .filter(key => key.startsWith('country_'))
+            .sort((a, b) => {
+                if (a === 'country_palestine') return -1;
+                if (b === 'country_palestine') return 1;
+                if (a === 'country_other') return 1;
+                if (b === 'country_other') return -1;
+                const nameA = cityTranslations[a][lang] || cityTranslations[a].en;
+                const nameB = cityTranslations[b][lang] || cityTranslations[b].en;
+                return nameA.localeCompare(nameB);
+            });
 
-        // Optimization: Use DocumentFragment for faster DOM updates
         const fragment = document.createDocumentFragment();
         
         const defaultOption = document.createElement('option');
         defaultOption.value = "";
-        // Simplified label as requested
-        defaultOption.textContent = t?.['all_countries']?.[lang] || 'Country';
+        defaultOption.textContent = t?.['all_countries']?.[lang] || 'All Countries';
         fragment.appendChild(defaultOption);
 
-        countries.forEach(country => {
-            const option = document.createElement('option');
-            option.value = country;
+        countries.forEach(countryKey => {
+            const countryEn = cityTranslations[countryKey].en;
+            const translatedName = cityTranslations[countryKey][lang] || countryEn;
             
-            // Try to translate the country name
-            const countryKey = getTranslationKey('country', country);
-            const translatedName = cityTranslations[countryKey]?.[lang] || country;
-            option.textContent = `${translatedName} (${countryCounts[country]})`;
+            // Calculate count from current jobs
+            const countryCount = jobs.filter(j => j.country === countryEn).length;
             
-            if (country === selectedValue) {
-                option.selected = true;
+            if (countryCount > 0 || countryEn === 'Other') {
+                const option = document.createElement('option');
+                option.value = countryEn; // Use English name for DB compatibility
+                option.textContent = `${translatedName} (${countryCount})`;
+                
+                if (countryEn === selectedValue) {
+                    option.selected = true;
+                }
+                fragment.appendChild(option);
             }
-            fragment.appendChild(option);
         });
 
         selectElement.innerHTML = '';
         selectElement.appendChild(fragment);
     }
 
-    // Update city dropdown based on selected country
+    // Update city dropdown based on selected country from cities-translations.js
     function updateCityDropdown(selectElement, jobs, selectedCountry = '', selectedValue = null) {
         if (!selectElement) return;
 
@@ -221,52 +227,74 @@ document.addEventListener('DOMContentLoaded', function() {
         const t = window.translations;
         const cityTranslations = window.palestinianCitiesTranslations || {};
 
-        // Filter jobs by selected country, then extract unique cities and their counts
-        let filteredJobs = jobs;
-        if (selectedCountry) {
-            filteredJobs = jobs.filter(job => job.country === selectedCountry);
-        }
-        
-        const cityCounts = {};
-        filteredJobs.forEach(job => {
-            if (job.city) {
-                cityCounts[job.city] = (cityCounts[job.city] || 0) + 1;
-            }
-        });
-
-        // Separate "Other" from other cities and sort them by count (highest first)
-        const allCities = Object.keys(cityCounts);
-        const otherCities = allCities
-            .filter(c => c.toLowerCase() !== 'other')
-            .sort((a, b) => cityCounts[b] - cityCounts[a]);
-        const hasOther = allCities.some(c => c.toLowerCase() === 'other');
-        
-        const sortedCities = [...otherCities];
-        if (hasOther) {
-            // Find the actual case of "Other"
-            const otherValue = allCities.find(c => c.toLowerCase() === 'other');
-            sortedCities.push(otherValue);
-        }
-
-        // Optimization: Use DocumentFragment for faster DOM updates
         const fragment = document.createDocumentFragment();
 
         const defaultOption = document.createElement('option');
         defaultOption.value = "";
-        // Simplified label as requested
-        defaultOption.textContent = t?.['all_cities']?.[lang] || 'City';
+        defaultOption.textContent = t?.['all_cities']?.[lang] || 'All Cities';
         fragment.appendChild(defaultOption);
 
-        sortedCities.forEach(city => {
+        // Find the country key corresponding to the English name
+        const countryKey = selectedCountry ? Object.keys(cityTranslations).find(key => 
+            key.startsWith('country_') && cityTranslations[key].en === selectedCountry
+        ) : null;
+
+        // Get all predefined cities for this country (excluding 'city_other')
+        let predefinedCities = Object.keys(cityTranslations).filter(key => 
+            key.startsWith('city_') && key !== 'city_other'
+        );
+
+        if (countryKey) {
+            predefinedCities = predefinedCities.filter(key => cityTranslations[key].country === countryKey);
+        }
+
+        const predefinedCityEnNames = predefinedCities.map(key => cityTranslations[key].en);
+
+        // Calculate counts and filter cities with jobs
+        const jobsForCountry = selectedCountry ? jobs.filter(j => j.country === selectedCountry) : jobs;
+        
+        let cityOptions = [];
+
+        // 1. Regular cities
+        predefinedCities.forEach(cityKey => {
+            const cityEn = cityTranslations[cityKey].en;
+            const count = jobsForCountry.filter(j => j.city === cityEn).length;
+            if (count > 0) {
+                cityOptions.push({
+                    key: cityKey,
+                    en: cityEn,
+                    translatedName: cityTranslations[cityKey][lang] || cityEn,
+                    count: count,
+                    isOther: false
+                });
+            }
+        });
+
+        // 2. Sort regular cities by count descending
+        cityOptions.sort((a, b) => b.count - a.count);
+
+        // 3. "Other" city logic
+        // Count jobs that have this country but a city NOT in our predefined list for this country
+        const otherCount = jobsForCountry.filter(j => !predefinedCityEnNames.includes(j.city)).length;
+        
+        if (otherCount > 0) {
+            const otherKey = 'city_other';
+            cityOptions.push({
+                key: otherKey,
+                en: 'Other',
+                translatedName: cityTranslations[otherKey]?.[lang] || 'Other',
+                count: otherCount,
+                isOther: true
+            });
+        }
+
+        // Populate the dropdown
+        cityOptions.forEach(opt => {
             const option = document.createElement('option');
-            option.value = city;
+            option.value = opt.en;
+            option.textContent = `${opt.translatedName} (${opt.count})`;
             
-            // Try to translate the city name
-            const cityKey = getTranslationKey('city', city);
-            const translatedName = cityTranslations[cityKey]?.[lang] || city;
-            option.textContent = `${translatedName} (${cityCounts[city]})`;
-            
-            if (city === selectedValue) {
+            if (opt.en === selectedValue) {
                 option.selected = true;
             }
             fragment.appendChild(option);
@@ -928,7 +956,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const allFilters = [
             { select: jobSiteTypeFilter, mobileSelect: jobSiteTypeFilterMobile, defaultValue: '' },
-            { select: countrySelect, mobileSelect: countrySelectMobile, defaultValue: '' },
+            { select: countrySelect, mobileSelect: countrySelectMobile, defaultValue: 'Palestine' },
             { select: locationSelect, mobileSelect: locationSelectMobile, defaultValue: '' },
             { select: budgetSelect, mobileSelect: budgetSelectMobile, defaultValue: '' },
         ];
@@ -937,6 +965,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if(filter.select) filter.select.value = filter.defaultValue;
             if(filter.mobileSelect) filter.mobileSelect.value = filter.defaultValue;
         });
+
+        if (locationSelect) updateCityDropdown(locationSelect, allJobsData, 'Palestine');
+        if (locationSelectMobile) updateCityDropdown(locationSelectMobile, allJobsData, 'Palestine');
 
         const dropdownMenus = [jobTypeDropdownMenu, jobTypeDropdownMenuMobile, categoryDropdownMenu, categoryDropdownMenuMobile, professionDropdownMenu, professionDropdownMenuMobile];
         dropdownMenus.forEach(menu => {
@@ -1001,8 +1032,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedJobTypesForFilter.length > 0) {
             params.append('jobType', JSON.stringify(selectedJobTypesForFilter));
         }
+        if (currentCountryFilter) {
+            params.append('country', currentCountryFilter);
+        }
+        // Removed location from API params to handle it client-side for dynamic counts and "Other" logic
+        // if (currentLocationFilter) {
+        //     params.append('location', currentLocationFilter);
+        // }
 
-        // country and location are handled client-side for dynamic counts
+        // country is handled server-side to limit data, location is handled client-side for dynamic counts
         const apiUrl = `/api/jobs?${params.toString()}`;
         fetchAllJobs(apiUrl);
     }
@@ -1115,9 +1153,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (locationSelectMobile) updateCityDropdown(locationSelectMobile, allJobsData, countryFilter, cityFilter);
 
                     // Now filter the jobs for display based on country/city selection
+                    const cityTranslations = window.palestinianCitiesTranslations || {};
                     currentlyDisplayedJobs = allJobsData.filter(job => {
                         if (countryFilter && job.country !== countryFilter) return false;
-                        if (cityFilter && job.city !== cityFilter) return false;
+                        
+                        if (cityFilter) {
+                            if (cityFilter === 'Other') {
+                                // Find all predefined cities for the selected country
+                                const countryKey = Object.keys(cityTranslations).find(key => 
+                                    key.startsWith('country_') && cityTranslations[key].en === countryFilter
+                                );
+                                
+                                const predefinedCityEnNames = Object.keys(cityTranslations)
+                                    .filter(key => key.startsWith('city_') && key !== 'city_other' && (!countryKey || cityTranslations[key].country === countryKey))
+                                    .map(key => cityTranslations[key].en);
+                                
+                                // "Other" matches jobs where the city is NOT in the predefined list for this country
+                                return !predefinedCityEnNames.includes(job.city);
+                            } else {
+                                // Regular city match
+                                return job.city === cityFilter;
+                            }
+                        }
                         return true;
                     });
 
@@ -1172,13 +1229,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             processJobData(); // Process the fetched data
 
+            const initialCountry = urlParams.get('country') || 'Palestine';
+            const initialLocation = urlParams.get('location');
+
             // Populate country and city dropdowns dynamically
-            if (countrySelect) populateCountryDropdown(countrySelect, allJobsData);
-            if (countrySelectMobile) populateCountryDropdown(countrySelectMobile, allJobsData);
+            if (countrySelect) populateCountryDropdown(countrySelect, allJobsData, initialCountry);
+            if (countrySelectMobile) populateCountryDropdown(countrySelectMobile, allJobsData, initialCountry);
             
             // Initial city population
-            if (locationSelect) updateCityDropdown(locationSelect, allJobsData);
-            if (locationSelectMobile) updateCityDropdown(locationSelectMobile, allJobsData);
+            if (locationSelect) updateCityDropdown(locationSelect, allJobsData, initialCountry, initialLocation);
+            if (locationSelectMobile) updateCityDropdown(locationSelectMobile, allJobsData, initialCountry, initialLocation);
 
             // Handle initial category and profession from URL params
             const initialCategory = urlParams.get('category');

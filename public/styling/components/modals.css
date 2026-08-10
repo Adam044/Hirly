@@ -60,7 +60,7 @@
     gap: 0.75rem;
 }
 
-.modal-header i {
+.modal-header > i:not(.modal-close-btn):not(.modal-close) {
     font-size: 2rem;
     color: var(--primary);
     background: var(--primary-extra-light);
@@ -113,17 +113,17 @@
     flex-shrink: 0; /* Keep buttons visible */
 }
 
-/* REVISED: Elegant close button with visible icon */
+/* REVISED: Minimalist close button - Luxe Aesthetic */
 .modal-close-btn,
 .modal-close {
     position: absolute;
-    top: 0.75rem;
-    inset-inline-end: 0.75rem;
-    background: var(--background-light);
+    top: 1.25rem;
+    inset-inline-end: 1.25rem;
+    background: transparent;
     border: none;
     color: var(--text-light);
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0;
     border-radius: 50%;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
@@ -131,33 +131,25 @@
     justify-content: center;
     width: 32px;
     height: 32px;
-    line-height: 1;
-    z-index: 10;
-    opacity: 0.8;
+    z-index: 100;
 }
 
 .modal-close-btn i,
 .modal-close i {
-    font-size: 1.25rem;
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1.1rem;
+    line-height: 1;
 }
 
 .modal-close-btn:hover,
 .modal-close:hover {
-    background-color: var(--background-hover);
+    background-color: rgba(0, 0, 0, 0.05);
     color: var(--text-dark);
-    opacity: 1;
     transform: scale(1.1);
-}
-
-.modal-close-btn:hover i,
-.modal-close:hover i {
-    transform: rotate(90deg);
 }
 
 .modal-close-btn:active,
 .modal-close:active {
-    transform: scale(0.95);
+    transform: scale(0.9);
 }
 
 
@@ -173,57 +165,6 @@
     border: none;
     position: relative;
     overflow: visible;
-}
-
-#accessDeniedModal .modal-close {
-    position: absolute !important;
-    top: 1rem !important;
-    right: 1rem !important;
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 50% !important;
-    background: rgba(0, 0, 0, 0.05) !important;
-    border: none !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.2s ease-in-out !important;
-    padding: 0 !important;
-    outline: none !important;
-}
-
-#accessDeniedModal .modal-close:hover {
-    background: rgba(0, 0, 0, 0.1) !important;
-    transform: rotate(90deg) !important;
-}
-
-#accessDeniedModal .modal-close:active {
-    transform: rotate(90deg) scale(0.95) !important;
-}
-
-#accessDeniedModal .modal-close::before,
-#accessDeniedModal .modal-close::after {
-    content: '' !important;
-    position: absolute !important;
-    width: 16px !important;
-    height: 2px !important;
-    background-color: #666 !important;
-    border-radius: 1px !important;
-    transition: background-color 0.2s ease-in-out !important;
-}
-
-#accessDeniedModal .modal-close:hover::before,
-#accessDeniedModal .modal-close:hover::after {
-    background-color: #333 !important;
-}
-
-#accessDeniedModal .modal-close::before {
-    transform: rotate(45deg) !important;
-}
-
-#accessDeniedModal .modal-close::after {
-    transform: rotate(-45deg) !important;
 }
 
 #accessDeniedModal .modal-icon {

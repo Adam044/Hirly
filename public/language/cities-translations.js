@@ -268,6 +268,7 @@ if (typeof window.palestinianCitiesTranslations === 'undefined') {
         'country_morocco': { 'ar': 'المغرب', 'en': 'Morocco' },
         'country_sudan': { 'ar': 'السودان', 'en': 'Sudan' },
         'country_other': { 'ar': 'أخرى', 'en': 'Other' },
+        'city_other': { 'ar': 'أخرى', 'en': 'Other', 'country': 'all' },
     };
 } else {
     console.warn("window.palestinianCitiesTranslations is already defined. Ensure cities-translations.js is loaded once.");

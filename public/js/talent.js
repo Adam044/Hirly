@@ -31,6 +31,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const professionsDropdownToggle = document.getElementById('professionsDropdownToggle');
     const professionsCheckboxesContainer = document.getElementById('professionsCheckboxes'); // This is the menu div
 
+    const countryDropdown = document.getElementById('countryDropdown');
+    const countryDropdownToggle = document.getElementById('countryDropdownToggle');
+    const countryCheckboxes = document.getElementById('countryCheckboxes');
+    const selectedCountriesDisplay = document.getElementById('selectedCountriesDisplay');
+
     const cityDropdown = document.getElementById('cityDropdown');
     const cityDropdownToggle = document.getElementById('cityDropdownToggle');
     const cityCheckboxes = document.getElementById('cityCheckboxes'); // This is the menu div
@@ -53,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Use these as the single source of truth for filtering state
     let selectedAdvancedFilterCategories = [];
     let selectedAdvancedFilterProfessions = [];
+    let selectedCountries = ['Palestine'];
     let selectedCities = [];
 
     let currentSkill = '';
@@ -62,6 +68,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let allTalentDataUnfiltered = [];
     let allTalentCountsByCategory = {};
     let allTalentCountsByProfession = {};
+    let allTalentCountsByCity = {};
+    let allTalentCountsByCountry = {};
 
     // Pagination variables
     let currentOffset = 0;
@@ -133,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         selectedAdvancedFilterCategories = [];
         selectedAdvancedFilterProfessions = [];
+        selectedCountries = ['Palestine'];
         selectedCities = [];
 
         currentSkill = '';
@@ -173,6 +182,13 @@ document.addEventListener('DOMContentLoaded', function () {
             updateProfessionsDropdownTriggerText(selectedAdvancedFilterProfessions, professionsDropdownToggle, selectedProfessionsDisplay);
             if (professionsDropdown.classList.contains('active')) {
                 populateProfessionsDropdown(professionsCheckboxesContainer, selectedAdvancedFilterProfessions, professionsDropdownToggle, selectedProfessionsDisplay);
+            }
+        }
+
+        if (countryDropdown) {
+            updateCountryDropdownTriggerText(selectedCountries, countryDropdownToggle, selectedCountriesDisplay);
+            if (countryDropdown.classList.contains('active')) {
+                populateCountryDropdown(countryCheckboxes, selectedCountries, countryDropdownToggle, selectedCountriesDisplay);
             }
         }
 
@@ -475,31 +491,90 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
         fragment.appendChild(allCitiesDiv);
 
-        // Populate cities from translations object
-        palestinianCitiesEnglishNames.forEach(cityEn => {
-            const cityKey = Object.keys(palestinianCitiesData).find(key => palestinianCitiesData[key].en === cityEn);
-            const translatedCityName = cityKey ? (palestinianCitiesData[cityKey][currentLanguage] || cityEn) : cityEn;
-            const isChecked = selectedCityArray.includes(cityEn);
-            const checkboxId = `${container.id}-city-${cityEn.replace(/\s/g, '-')}`;
+        // Find keys for selected countries
+        const selectedCountryKeys = selectedCountries.length > 0 ? Object.keys(palestinianCitiesData).filter(key => 
+            key.startsWith('country_') && selectedCountries.includes(palestinianCitiesData[key].en)
+        ) : [];
+
+        // Filter cities based on selected countries
+        let citiesToDisplay = Object.keys(palestinianCitiesData).filter(key => key.startsWith('city_') && key !== 'city_other');
+        
+        if (selectedCountries.length > 0) {
+            citiesToDisplay = citiesToDisplay.filter(key => {
+                const cityData = palestinianCitiesData[key];
+                return selectedCountryKeys.includes(cityData.country);
+            });
+        }
+
+        const predefinedCityEnNames = citiesToDisplay.map(key => palestinianCitiesData[key].en);
+
+        let cityOptions = [];
+
+        // 1. Regular cities
+        citiesToDisplay.forEach(cityKey => {
+            const cityEn = palestinianCitiesData[cityKey].en;
+            const count = allTalentCountsByCity[cityEn] || 0;
+            if (count > 0) {
+                cityOptions.push({
+                    key: cityKey,
+                    en: cityEn,
+                    translatedName: palestinianCitiesData[cityKey][currentLanguage] || cityEn,
+                    count: count,
+                    isOther: false
+                });
+            }
+        });
+
+        // 2. Sort regular cities by count descending
+        cityOptions.sort((a, b) => b.count - a.count);
+
+        // 3. "Other" city logic
+        // Count talent that have these countries but a city NOT in our predefined list for these countries
+        let otherCount = 0;
+        allTalentDataUnfiltered.forEach(talent => {
+            if (selectedCountries.length > 0 && !selectedCountries.includes(talent.country)) return;
+            if (talent.city && !predefinedCityEnNames.includes(talent.city)) {
+                otherCount++;
+            }
+        });
+
+        if (otherCount > 0) {
+            const otherKey = 'city_other';
+            cityOptions.push({
+                key: otherKey,
+                en: 'Other',
+                translatedName: palestinianCitiesData[otherKey]?.[currentLanguage] || 'Other',
+                count: otherCount,
+                isOther: true
+            });
+        }
+
+        // Populate cities
+        cityOptions.forEach(opt => {
+            const isChecked = selectedCityArray.includes(opt.en);
+            const checkboxId = `${container.id}-city-${opt.en.replace(/\s/g, '-')}`;
 
             const div = document.createElement('div');
             div.className = 'checkbox-item';
             div.innerHTML = `
-                <input type="checkbox" id="${checkboxId}" value="${cityEn}" ${isChecked ? 'checked' : ''}>
-                <label for="${checkboxId}">${translatedCityName}</label>
+                <input type="checkbox" id="${checkboxId}" value="${opt.en}" ${isChecked ? 'checked' : ''}>
+                <label for="${checkboxId}">${opt.translatedName} (${opt.count})</label>
             `;
             fragment.appendChild(div);
         });
 
         // Add "Remote Only" option
-        const remoteOnlyDiv = document.createElement('div');
-        remoteOnlyDiv.className = 'checkbox-item';
-        const isRemoteOnlyChecked = selectedCityArray.includes('remote');
-        remoteOnlyDiv.innerHTML = `
-            <input type="checkbox" id="${container.id}-remote-only" value="remote" ${isRemoteOnlyChecked ? 'checked' : ''}>
-            <label for="${container.id}-remote-only">${t['remote_only']?.[currentLanguage] || 'Remote Only'}</label>
-        `;
-        fragment.appendChild(remoteOnlyDiv);
+        const remoteCount = allTalentCountsByCity['remote'] || 0;
+        if (remoteCount > 0) {
+            const remoteOnlyDiv = document.createElement('div');
+            remoteOnlyDiv.className = 'checkbox-item';
+            const isRemoteOnlyChecked = selectedCityArray.includes('remote');
+            remoteOnlyDiv.innerHTML = `
+                <input type="checkbox" id="${container.id}-remote-only" value="remote" ${isRemoteOnlyChecked ? 'checked' : ''}>
+                <label for="${container.id}-remote-only">${t['remote_only']?.[currentLanguage] || 'Remote Only'} (${remoteCount})</label>
+            `;
+            fragment.appendChild(remoteOnlyDiv);
+        }
 
         container.appendChild(fragment);
 
@@ -510,6 +585,141 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         updateCityDropdownTriggerText(selectedCityArray, dropdownToggle, selectedDisplay);
+    }
+
+    function populateCountryDropdown(container, selectedCountryArray, dropdownToggle, selectedDisplay) {
+        if (!container) return;
+        container.innerHTML = '';
+        currentLanguage = window.currentLanguage || 'en';
+        translations = window.translations || {};
+        const t = translations;
+
+        const fragment = document.createDocumentFragment();
+
+        // Add "All Countries" option
+        const allCountriesDiv = document.createElement('div');
+        allCountriesDiv.className = 'checkbox-item';
+        const isAllCountriesChecked = selectedCountryArray.length === 0;
+        allCountriesDiv.innerHTML = `
+            <input type="checkbox" id="${container.id}-all-countries" value="all" ${isAllCountriesChecked ? 'checked' : ''}>
+            <label for="${container.id}-all-countries">${t['all_countries']?.[currentLanguage] || 'All Countries'}</label>
+        `;
+        fragment.appendChild(allCountriesDiv);
+
+        // Get unique countries from data
+        const countries = Object.keys(palestinianCitiesData)
+            .filter(key => key.startsWith('country_'))
+            .sort((a, b) => {
+                if (a === 'country_palestine') return -1;
+                if (b === 'country_palestine') return 1;
+                if (a === 'country_other') return 1;
+                if (b === 'country_other') return -1;
+                const nameA = palestinianCitiesData[a][currentLanguage] || palestinianCitiesData[a].en;
+                const nameB = palestinianCitiesData[b][currentLanguage] || palestinianCitiesData[b].en;
+                return nameA.localeCompare(nameB);
+            });
+
+        countries.forEach(countryKey => {
+            const countryEn = palestinianCitiesData[countryKey].en;
+            const translatedCountryName = palestinianCitiesData[countryKey][currentLanguage] || countryEn;
+            const isChecked = selectedCountryArray.includes(countryEn);
+            const checkboxId = `${container.id}-country-${countryKey}`;
+            const count = allTalentCountsByCountry[countryEn] || 0;
+
+            if (count > 0 || countryEn === 'Other') {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="${checkboxId}" value="${countryEn}" ${isChecked ? 'checked' : ''}>
+                    <label for="${checkboxId}">${translatedCountryName} (${count})</label>
+                `;
+                fragment.appendChild(div);
+            }
+        });
+
+        container.appendChild(fragment);
+
+        // Attach event listeners for country checkboxes
+        container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.removeEventListener('change', handleCountryCheckboxChange);
+            checkbox.addEventListener('change', handleCountryCheckboxChange);
+        });
+
+        updateCountryDropdownTriggerText(selectedCountryArray, dropdownToggle, selectedDisplay);
+    }
+
+    function handleCountryCheckboxChange(event) {
+        const countryValue = event.target.value;
+        const container = event.target.closest('.checkbox-list');
+
+        if (countryValue === 'all') {
+            if (event.target.checked) {
+                selectedCountries = [];
+                container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    if (cb.value !== 'all') cb.checked = false;
+                    cb.closest('.checkbox-item').classList.toggle('active', cb.checked);
+                });
+            } else {
+                if (selectedCountries.length === 0) {
+                    const allCountriesCheckbox = container.querySelector('input[value="all"]');
+                    if (allCountriesCheckbox) allCountriesCheckbox.checked = true;
+                    allCountriesCheckbox.closest('.checkbox-item').classList.add('active');
+                }
+            }
+        } else {
+            if (event.target.checked) {
+                if (!selectedCountries.includes(countryValue)) {
+                    selectedCountries.push(countryValue);
+                }
+            } else {
+                selectedCountries = selectedCountries.filter(c => c !== countryValue);
+            }
+            
+            const allCountriesCheckbox = container.querySelector('input[value="all"]');
+            if (allCountriesCheckbox) {
+                allCountriesCheckbox.checked = false;
+                allCountriesCheckbox.closest('.checkbox-item').classList.remove('active');
+            }
+
+            if (selectedCountries.length === 0) {
+                if (allCountriesCheckbox) {
+                    allCountriesCheckbox.checked = true;
+                    allCountriesCheckbox.closest('.checkbox-item').classList.add('active');
+                }
+            }
+        }
+        
+        event.target.closest('.checkbox-item').classList.toggle('active', event.target.checked);
+
+        // When country changes, reset and repopulate city dropdown
+        selectedCities = [];
+        populateCitiesDropdown(cityCheckboxes, selectedCities, cityDropdownToggle, selectedCitiesDisplay);
+        
+        updateAllFilterUIs();
+        loadTalent();
+    }
+
+    function updateCountryDropdownTriggerText(selectedCountryArray, dropdownToggle, selectedDisplay) {
+        if (!selectedDisplay) return;
+        currentLanguage = window.currentLanguage || 'en';
+        translations = window.translations || {};
+        const t = translations;
+
+        if (selectedCountryArray.length === 0) {
+            selectedDisplay.textContent = t['all_countries']?.[currentLanguage] || 'All Countries';
+            if (dropdownToggle) dropdownToggle.classList.remove('has-selection');
+        } else {
+            if (dropdownToggle) dropdownToggle.classList.add('has-selection');
+            if (selectedCountryArray.length === 1) {
+                const countryEn = selectedCountryArray[0];
+                const countryKey = Object.keys(palestinianCitiesData).find(key => 
+                    key.startsWith('country_') && palestinianCitiesData[key].en === countryEn
+                );
+                selectedDisplay.textContent = countryKey ? (palestinianCitiesData[countryKey][currentLanguage] || countryEn) : countryEn;
+            } else {
+                selectedDisplay.textContent = `${selectedCountryArray.length} ${t['countries_selected']?.[currentLanguage] || 'Countries Selected'}`;
+            }
+        }
     }
 
     function handleCityCheckboxChange(event) {
@@ -791,6 +1001,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const dropdowns = [
             { toggle: professionsDropdownToggle, container: professionsDropdown, checkboxes: professionsCheckboxesContainer, selectedArray: selectedAdvancedFilterProfessions, selectedDisplay: selectedProfessionsDisplay, populateFn: populateProfessionsDropdown },
             { toggle: categoryDropdownToggle, container: categoryDropdown, checkboxes: categoryCheckboxes, selectedArray: selectedAdvancedFilterCategories, selectedDisplay: selectedCategoriesDisplay, populateFn: populateCategoryDropdown },
+            { toggle: countryDropdownToggle, container: countryDropdown, checkboxes: countryCheckboxes, selectedArray: selectedCountries, selectedDisplay: selectedCountriesDisplay, populateFn: populateCountryDropdown },
             { toggle: cityDropdownToggle, container: cityDropdown, checkboxes: cityCheckboxes, selectedArray: selectedCities, selectedDisplay: selectedCitiesDisplay, populateFn: populateCitiesDropdown }
         ];
 
@@ -805,10 +1016,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     container: dropdown,
                     checkboxes: menu.classList.contains('checkbox-list') ? menu : null, // Pass checkboxes if it's a checkbox list
                     selectedArray: dropdown.id.includes('category') ? selectedAdvancedFilterCategories :
-                        (dropdown.id.includes('professions') ? selectedAdvancedFilterProfessions : selectedCities),
+                        (dropdown.id.includes('professions') ? selectedAdvancedFilterProfessions : 
+                        (dropdown.id.includes('country') ? selectedCountries : selectedCities)),
                     selectedDisplay: dropdown.querySelector('span[id^="selected"]'),
                     populateFn: dropdown.id.includes('category') ? populateCategoryDropdown :
-                        (dropdown.id.includes('professions') ? populateProfessionsDropdown : populateCitiesDropdown)
+                        (dropdown.id.includes('professions') ? populateProfessionsDropdown : 
+                        (dropdown.id.includes('country') ? populateCountryDropdown : populateCitiesDropdown))
                 }));
             }
         });
@@ -844,6 +1057,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (categoryDropdown) populateCategoryDropdown(categoryCheckboxes, selectedAdvancedFilterCategories, categoryDropdownToggle, selectedCategoriesDisplay);
 
     if (professionsDropdown) populateProfessionsDropdown(professionsCheckboxesContainer, selectedAdvancedFilterProfessions, professionsDropdownToggle, selectedProfessionsDisplay);
+    
+    if (countryDropdown) populateCountryDropdown(countryCheckboxes, selectedCountries, countryDropdownToggle, selectedCountriesDisplay);
 
     if (cityDropdown) populateCitiesDropdown(cityCheckboxes, selectedCities, cityDropdownToggle, selectedCitiesDisplay);
 }
@@ -1128,6 +1343,12 @@ document.addEventListener('DOMContentLoaded', function () {
             params.delete('category');
         }
 
+        if (selectedCountries.length > 0) {
+            params.set('country', JSON.stringify(selectedCountries));
+        } else {
+            params.delete('country');
+        }
+
         if (selectedCities.length > 0) {
             params.set('location', JSON.stringify(selectedCities));
         } else {
@@ -1150,6 +1371,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (selectedAdvancedFilterCategories.length > 0) {
                 urlParams.set('category', JSON.stringify(selectedAdvancedFilterCategories));
+            }
+            if (selectedCountries.length > 0) {
+                urlParams.set('country', JSON.stringify(selectedCountries));
             }
             if (selectedCities.length > 0) {
                 urlParams.set('location', JSON.stringify(selectedCities));
@@ -1287,8 +1511,23 @@ document.addEventListener('DOMContentLoaded', function () {
     function calculateInitialCounts(talentData) {
         allTalentCountsByCategory = {};
         allTalentCountsByProfession = {};
+        allTalentCountsByCity = {};
+        allTalentCountsByCountry = {};
 
         talentData.forEach(talent => {
+            // Count Country
+            if (talent.country) {
+                allTalentCountsByCountry[talent.country] = (allTalentCountsByCountry[talent.country] || 0) + 1;
+            }
+
+            // Count City
+            if (talent.city) {
+                allTalentCountsByCity[talent.city] = (allTalentCountsByCity[talent.city] || 0) + 1;
+            } else {
+                // Remote talent (no city)
+                allTalentCountsByCity['remote'] = (allTalentCountsByCity['remote'] || 0) + 1;
+            }
+
             let talentProfessions = new Set();
 
             // Add primary profession if it exists
@@ -1366,6 +1605,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 populateProfessionsDropdown(professionsCheckboxesContainer, selectedAdvancedFilterProfessions, professionsDropdownToggle, selectedProfessionsDisplay);
             }
 
+            // Countries (multi-select)
+            if (countryCheckboxes && countryDropdownToggle && selectedCountriesDisplay) {
+                populateCountryDropdown(countryCheckboxes, selectedCountries, countryDropdownToggle, selectedCountriesDisplay);
+            }
+
             // Cities (multi-select)
             if (cityCheckboxes && cityDropdownToggle && selectedCitiesDisplay) {
                 populateCitiesDropdown(cityCheckboxes, selectedCities, cityDropdownToggle, selectedCitiesDisplay);
@@ -1404,6 +1648,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 } catch (e) {
                     console.error("Error parsing categories from URL:", e);
                     selectedAdvancedFilterCategories = [];
+                }
+            }
+
+
+            const countryFromUrl = urlParams.get('country');
+            if (countryFromUrl) {
+                try {
+                    const parsedCountries = JSON.parse(countryFromUrl);
+                    if (Array.isArray(parsedCountries)) {
+                        selectedCountries = parsedCountries;
+                    }
+                } catch (e) {
+                    console.error("Error parsing countries from URL:", e);
+                    selectedCountries = [];
                 }
             }
 
