@@ -34,6 +34,10 @@ import {
     bulkDeleteJobs,
     loadAggregatedJobs,
     fetchLogoFromUrl,
+    magicFetchAggregatedJobLogo,
+    bulkMagicFetchLogos,
+    stopBulkMagicFetchLogos,
+    getBulkLogoProgress,
     updateAggregatedJobLogo,
     loadJobSources,
     saveJobSource,
@@ -592,29 +596,162 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelAggregatedLogoBtn = document.getElementById('cancelAggregatedLogoBtn');
     const closeAggregatedJobLogoModalBtn = document.getElementById('closeAggregatedJobLogoModalBtn');
 
+    // Bulk Fetch Missing Logos
+    const bulkFetchLogosBtn = document.getElementById('bulkFetchLogosBtn');
+    const bulkLogoProgressModal = document.getElementById('bulkLogoProgressModal');
+    const closeBulkLogoProgressBtn = document.getElementById('closeBulkLogoProgressBtn');
+    const stopBulkLogoBtn = document.getElementById('stopBulkLogoBtn');
+    const finishBulkLogoBtn = document.getElementById('finishBulkLogoBtn');
+    let bulkLogoPollingInterval = null;
+
+    if (bulkFetchLogosBtn) {
+        bulkFetchLogosBtn.addEventListener('click', async () => {
+            const confirm = await showConfirmationModal(
+                'Magic Logo Discovery',
+                'This will use AI to discover logos and sanitize anonymous jobs (Private Company, etc.) from the platform. This process may take a few minutes.',
+                'Start Discovery'
+            );
+
+            if (!confirm) return;
+
+            try {
+                const data = await bulkMagicFetchLogos();
+                if (data.success) {
+                    if (data.count > 0) {
+                        showModal(bulkLogoProgressModal);
+                        startBulkLogoPolling();
+                    } else {
+                        showToast('All jobs already have logos!', 'info');
+                    }
+                } else {
+                    showToast(data.error || 'Bulk fetch failed', 'error');
+                }
+            } catch (err) {
+                showToast('Bulk fetch failed', 'error');
+            }
+        });
+    }
+
+    const startBulkLogoPolling = () => {
+        if (bulkLogoPollingInterval) clearInterval(bulkLogoPollingInterval);
+        
+        const totalEl = document.getElementById('bulkLogoTotal');
+        const successEl = document.getElementById('bulkLogoSuccess');
+        const failedEl = document.getElementById('bulkLogoFailed');
+        const sanitizedEl = document.getElementById('bulkLogoSanitized');
+        const progressLabel = document.getElementById('bulkLogoProgressLabel');
+        const progressPercent = document.getElementById('bulkLogoProgressPercent');
+        const progressBar = document.getElementById('bulkLogoProgressBar');
+        const logsContainer = document.getElementById('bulkLogoLogs');
+        const finishBtn = document.getElementById('finishBulkLogoBtn');
+        const stopBtn = document.getElementById('stopBulkLogoBtn');
+
+        bulkLogoPollingInterval = setInterval(async () => {
+            try {
+                const data = await getBulkLogoProgress();
+                if (!data.success) return;
+
+                const s = data.status;
+                totalEl.textContent = s.total;
+                successEl.textContent = s.success;
+                failedEl.textContent = s.failed;
+                if (sanitizedEl) sanitizedEl.textContent = s.sanitized || 0;
+                
+                const progress = s.total > 0 ? Math.round((s.current / s.total) * 100) : 0;
+                progressPercent.textContent = `${progress}%`;
+                progressBar.style.width = `${progress}%`;
+                
+                if (s.isWorking) {
+                    progressLabel.textContent = `Processing ${s.current} of ${s.total}...`;
+                    finishBtn.disabled = true;
+                    if (stopBtn) stopBtn.classList.remove('hidden');
+                } else {
+                    progressLabel.textContent = s.stopRequested ? 'Discovery Stopped' : 'Discovery Completed';
+                    progressLabel.className = s.stopRequested ? 'text-warning font-bold uppercase tracking-widest' : 'text-success font-bold uppercase tracking-widest';
+                    finishBtn.disabled = false;
+                    if (stopBtn) stopBtn.classList.add('hidden');
+                    clearInterval(bulkLogoPollingInterval);
+                }
+
+                // Update Logs
+                if (s.logs && s.logs.length > 0) {
+                    logsContainer.innerHTML = s.logs.map(log => {
+                        const time = new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        const colorClass = log.type === 'success' ? 'text-success' : (log.type === 'error' ? 'text-danger' : (log.type === 'warning' ? 'text-warning' : 'text-gray-400'));
+                        return `<div class="flex gap-2"><span class="text-gray-600 shrink-0">${time}</span><span class="${colorClass}">${log.message}</span></div>`;
+                    }).join('');
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }
+
+            } catch (err) {
+                console.error('Polling error:', err);
+            }
+        }, 1500);
+    };
+
+    if (stopBulkLogoBtn) {
+        stopBulkLogoBtn.addEventListener('click', async () => {
+            try {
+                const data = await stopBulkMagicFetchLogos();
+                if (data.success) {
+                    showToast('Stop request sent', 'info');
+                    stopBulkLogoBtn.disabled = true;
+                    stopBulkLogoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Stopping...';
+                }
+            } catch (err) {
+                showToast('Failed to stop discovery', 'error');
+            }
+        });
+    }
+
+    if (finishBulkLogoBtn) {
+        finishBulkLogoBtn.addEventListener('click', () => {
+            hideModal('bulkLogoProgressModal');
+            loadAggregatedJobs(state.filters.aggregatedJobs.search, state.filters.aggregatedJobs.logoStatus);
+            showToast('Aggregated jobs updated!', 'success');
+        });
+    }
+
+    if (closeBulkLogoProgressBtn) {
+        closeBulkLogoProgressBtn.addEventListener('click', () => {
+            if (bulkLogoPollingInterval) clearInterval(bulkLogoPollingInterval);
+            hideModal('bulkLogoProgressModal');
+        });
+    }
+
     if (fetchLogoFromUrlBtn) {
         fetchLogoFromUrlBtn.addEventListener('click', async () => {
             const url = companyWebsiteUrl.value;
             const companyName = state.currentAggregatedJob?.company;
-            if (!url) {
-                showToast('Please enter a website URL', 'error');
-                return;
-            }
+            const applyUrl = state.currentAggregatedJob?.applyUrl;
+
+            // If URL is empty, we perform "Magic Discovery" using company name and job URL
+            const targetUrl = url || applyUrl;
 
             fetchLogoFromUrlBtn.disabled = true;
             fetchLogoFromUrlBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
 
             try {
-                const data = await fetchLogoFromUrl(url, companyName);
+                // If we have a URL (manual or job URL), use it. 
+                // If not, fetchLogoFromUrl will still try to guess based on company name
+                const data = await fetchLogoFromUrl(targetUrl, companyName);
+                
                 if (data.success && data.logoUrl) {
                     aggregatedLogoPreviewImage.src = data.logoUrl;
                     aggregatedLogoPreviewContainer.classList.remove('hidden');
                     saveAggregatedLogoBtn.disabled = false;
                     state.currentAggregatedJob.newLogoUrl = data.logoUrl;
                     state.currentAggregatedJob.newLogoFile = null;
-                    showToast('Logo fetched successfully', 'success');
+                    
+                    // If we found a domain/url, show it in the input
+                    if (!url && targetUrl) {
+                        companyWebsiteUrl.value = targetUrl;
+                    }
+                    
+                    showToast('Logo found!', 'success');
                 } else {
-                    showToast('Could not find logo on that website', 'warning');
+                    showToast('Could not find logo automatically. Please enter a website URL.', 'warning');
+                    companyWebsiteUrl.focus();
                 }
             } catch (err) {
                 showToast('Error fetching logo', 'error');
@@ -1015,17 +1152,48 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Edit Aggregated Logo
+        // Auto-Fetch Logo (One-Click)
+        const autoFetchBtn = target.closest('.auto-fetch-logo-btn');
+        if (autoFetchBtn) {
+            const jobId = autoFetchBtn.dataset.id;
+            const companyName = autoFetchBtn.dataset.company;
+            
+            autoFetchBtn.disabled = true;
+            const originalHtml = autoFetchBtn.innerHTML;
+            autoFetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const data = await magicFetchAggregatedJobLogo(jobId);
+                if (data.success) {
+                    showToast(`Successfully updated logo for ${companyName}!`, 'success');
+                    loadAggregatedJobs(state.filters.aggregatedJobs.search, state.filters.aggregatedJobs.logoStatus);
+                } else {
+                    showToast(data.error || 'Could not find logo automatically', 'warning');
+                    // Open manual modal as fallback
+                    const editBtn = autoFetchBtn.parentElement.querySelector('.edit-aggregated-logo-btn');
+                    if (editBtn) editBtn.click();
+                }
+            } catch (err) {
+                showToast('Logo discovery failed', 'error');
+            } finally {
+                autoFetchBtn.disabled = false;
+                autoFetchBtn.innerHTML = originalHtml;
+            }
+            return;
+        }
+
+        // Edit Aggregated Logo (Manual)
         const editAggregatedLogoBtn = target.closest('.edit-aggregated-logo-btn');
         if (editAggregatedLogoBtn) {
             const jobId = editAggregatedLogoBtn.dataset.id;
             const companyName = editAggregatedLogoBtn.dataset.company;
             const currentLogo = editAggregatedLogoBtn.dataset.logo;
+            const applyUrl = editAggregatedLogoBtn.dataset.applyUrl;
 
-            state.currentAggregatedJob = { id: jobId, company: companyName, logo: currentLogo };
+            state.currentAggregatedJob = { id: jobId, company: companyName, logo: currentLogo, applyUrl: applyUrl };
             
             document.getElementById('aggregatedLogoModalCompanyName').textContent = companyName;
-            document.getElementById('companyWebsiteUrl').value = '';
+            document.getElementById('companyWebsiteUrl').value = ''; // Keep empty as requested
             document.getElementById('aggregatedLogoFileInput').value = '';
             
             if (currentLogo) {

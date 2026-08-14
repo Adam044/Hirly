@@ -1307,10 +1307,231 @@ module.exports = function registerAdminRoutes(app, pool, {
     } finally { if (client) client.release(); }
   });
 
+  // Global state for bulk logo fetch progress
+  const bulkLogoStatus = {
+    isWorking: false,
+    total: 0,
+    current: 0,
+    success: 0,
+    failed: 0,
+    sanitized: 0,
+    logs: [],
+    startTime: null,
+    stopRequested: false
+  };
+
+  router.get('/admin/bulk-logo-progress', isAuthenticated, isAdmin, (req, res) => {
+    res.json({ success: true, status: bulkLogoStatus });
+  });
+
+  router.post('/admin/stop-bulk-logo-fetch', isAuthenticated, isAdmin, (req, res) => {
+    if (bulkLogoStatus.isWorking) {
+      bulkLogoStatus.stopRequested = true;
+      bulkLogoStatus.logs.push({ 
+        timestamp: new Date().toISOString(), 
+        message: 'Stop requested by admin. Finishing current task...', 
+        type: 'warning' 
+      });
+      res.json({ success: true, message: 'Stop request sent.' });
+    } else {
+      res.status(400).json({ success: false, error: 'No bulk fetch is currently running.' });
+    }
+  });
+
+  router.post('/admin/bulk-magic-fetch-logos', isAuthenticated, isAdmin, async (req, res) => {
+    let client;
+    try {
+      if (bulkLogoStatus.isWorking) {
+        return res.status(400).json({ success: false, error: 'A bulk fetch is already in progress.' });
+      }
+
+      client = await pool.connect();
+      
+      const jobsRes = await client.query(`
+        SELECT id, external_company_name, external_apply_url 
+        FROM jobs 
+        WHERE is_external = true 
+        AND (external_company_logo IS NULL OR external_company_logo = '')
+        AND status = 'open'
+        ORDER BY created_at DESC
+      `);
+
+      if (jobsRes.rows.length === 0) {
+        return res.json({ success: true, count: 0, message: 'No jobs found missing logos.' });
+      }
+
+      // Initialize status
+      bulkLogoStatus.isWorking = true;
+      bulkLogoStatus.total = jobsRes.rows.length;
+      bulkLogoStatus.current = 0;
+      bulkLogoStatus.success = 0;
+      bulkLogoStatus.failed = 0;
+      bulkLogoStatus.sanitized = 0;
+      bulkLogoStatus.stopRequested = false;
+      bulkLogoStatus.logs = [{ timestamp: new Date().toISOString(), message: `Starting discovery for ${jobsRes.rows.length} jobs.`, type: 'info' }];
+      bulkLogoStatus.startTime = new Date();
+      
+      processBulkLogos(jobsRes.rows, pool, bulkLogoStatus).catch(err => {
+        logger.error('Bulk logo processing failed:', err);
+        bulkLogoStatus.isWorking = false;
+        bulkLogoStatus.logs.push({ timestamp: new Date().toISOString(), message: `Critical Error: ${err.message}`, type: 'error' });
+      });
+
+      res.json({ 
+        success: true, 
+        count: jobsRes.rows.length, 
+        message: `Started AI discovery for ${jobsRes.rows.length} jobs.` 
+      });
+    } catch (error) {
+      logger.error('Error initiating bulk logo fetch:', error);
+      res.status(500).json({ success: false, error: 'Failed to initiate bulk discovery.' });
+    } finally {
+      if (client) client.release();
+    }
+  });
+
+  // Helper function for background processing
+  async function processBulkLogos(jobs, pool, status) {
+    // Patterns for generic/anonymous employers that should be sanitized
+    const sanitizationPatterns = [
+      /private company/i,
+      /anonymous/i,
+      /employer identity hidden/i,
+      /هوية صاحب العمل مخفية/i,
+      /confidential/i,
+      /hidden/i,
+      /unknown/i,
+      /شركة خاصة/i,
+      /unspecified/i,
+      /N\/A/i,
+      /Not Provided/i,
+      /Hirly Professional/i,
+      /Professional User/i
+    ];
+
+    for (const job of jobs) {
+      if (status.stopRequested) {
+        status.isWorking = false;
+        status.logs.push({ 
+          timestamp: new Date().toISOString(), 
+          message: 'Process stopped by user.', 
+          type: 'info' 
+        });
+        return;
+      }
+      
+      status.current++;
+      const companyName = job.external_company_name || '';
+
+      // Sanitization Step: Check for generic/anonymous names
+      const isGeneric = sanitizationPatterns.some(pattern => pattern.test(companyName));
+      
+      if (isGeneric) {
+        try {
+          await pool.query("DELETE FROM jobs WHERE id = $1", [job.id]);
+          status.sanitized++;
+          status.logs.push({ 
+            timestamp: new Date().toISOString(), 
+            message: `Sanitized: Deleted job with generic employer "${companyName}"`, 
+            type: 'warning' 
+          });
+        } catch (err) {
+          logger.error(`Failed to sanitize job ${job.id}:`, err);
+        }
+        continue; // Skip logo fetching for sanitized jobs
+      }
+
+      try {
+        const logoUrl = await logoFetcher.getLogoUrl(companyName, job.external_apply_url);
+        
+        if (logoUrl) {
+          await pool.query(
+            "UPDATE jobs SET external_company_logo = $1 WHERE id = $2",
+            [logoUrl, job.id]
+          );
+          status.success++;
+          status.logs.push({ 
+            timestamp: new Date().toISOString(), 
+            message: `Found logo for ${companyName}`, 
+            type: 'success' 
+          });
+        } else {
+          status.failed++;
+          status.logs.push({ 
+            timestamp: new Date().toISOString(), 
+            message: `No logo found for ${companyName}`, 
+            type: 'warning' 
+          });
+        }
+        
+        // Small delay to be polite
+        await new Promise(resolve => setTimeout(resolve, 800));
+      } catch (err) {
+        status.failed++;
+        status.logs.push({ 
+          timestamp: new Date().toISOString(), 
+          message: `Error fetching ${companyName}: ${err.message}`, 
+          type: 'error' 
+        });
+      }
+      
+      // Keep only last 50 logs to avoid memory bloat
+      if (status.logs.length > 50) status.logs.shift();
+    }
+    
+    status.isWorking = false;
+    status.logs.push({ 
+      timestamp: new Date().toISOString(), 
+      message: `Bulk fetch completed. Success: ${status.success}, Failed: ${status.failed}, Sanitized: ${status.sanitized}`, 
+      type: 'info' 
+    });
+  }
+
+  router.post('/admin/magic-fetch-aggregated-logo', isAuthenticated, isAdmin, async (req, res) => {
+    let client;
+    try {
+      const { jobId } = req.body;
+      if (!jobId) return res.status(400).json({ success: false, error: 'Job ID is required.' });
+      
+      client = await pool.connect();
+      
+      // Get job details to fetch logo
+      const jobRes = await client.query(
+        'SELECT external_company_name, external_apply_url FROM jobs WHERE id = $1 AND is_external = TRUE',
+        [jobId]
+      );
+      
+      if (jobRes.rowCount === 0) {
+        return res.status(404).json({ success: false, error: 'Job not found or is not an aggregated job.' });
+      }
+      
+      const { external_company_name, external_apply_url } = jobRes.rows[0];
+      
+      // Magic Fetch
+      const logoUrl = await logoFetcher.getLogoUrl(external_company_name, external_apply_url);
+      
+      if (!logoUrl) {
+        return res.json({ success: false, error: 'Could not find a suitable logo automatically.' });
+      }
+      
+      // Update the job with the found logo
+      await client.query(
+        'UPDATE jobs SET external_company_logo = $1 WHERE id = $2',
+        [logoUrl, jobId]
+      );
+      
+      res.json({ success: true, logoUrl, message: 'Logo fetched and updated successfully!' });
+    } catch (error) {
+      logger.error('Error in magic logo fetch:', error);
+      res.status(500).json({ success: false, error: 'Failed to perform magic logo fetch.' });
+    } finally {
+      if (client) client.release();
+    }
+  });
+
   router.post('/admin/fetch-logo-from-url', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { url, companyName } = req.body;
-      if (!url) return res.status(400).json({ success: false, error: 'URL is required.' });
       
       // Pass the URL as the third parameter (providedWebsite) to prioritize it
       const logoUrl = await logoFetcher.getLogoUrl(companyName, null, url);

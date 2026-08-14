@@ -20,6 +20,70 @@ class DeepSeekAI {
     }
 
     /**
+     * Guess a company's official website URL based on its name
+     * @param {string} companyName 
+     * @returns {Promise<string|null>}
+     */
+    async discoverCompanyWebsite(companyName) {
+        if (!this.apiKey || !companyName) return null;
+
+        try {
+            const response = await axios.post(
+                `${this.baseUrl}/chat/completions`,
+                {
+                    model: this.model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `You are a corporate intelligence agent specializing in the MENA region and international markets. 
+Your task is to provide the most likely official website domain for a given company name. 
+
+Rules:
+1. Return ONLY the domain (e.g., google.com).
+2. For Palestinian companies, prioritize .ps, .com.ps, and .org.ps extensions if applicable.
+3. For NGOs and international organizations, prioritize .org or .int.
+4. Return "null" if you are not at least 80% sure.
+5. NO extra text, no "http://", no "www.".
+
+Examples:
+- "Paltel" -> "paltel.ps"
+- "Bank of Palestine" -> "bankofpalestine.com"
+- "UNRWA" -> "unrwa.org"
+- "Aura Design Studio" -> "auradesign.com"
+- "Results Physiotherapy" -> "resultspt.com"`
+                        },
+                        {
+                            role: 'user',
+                            content: `Company Name: ${companyName}`
+                        }
+                    ],
+                    temperature: 0.1,
+                    max_tokens: 20
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 10000
+                }
+            );
+
+            const content = response.data.choices[0]?.message?.content?.trim()?.toLowerCase();
+            if (!content || content === 'null') return null;
+            
+            // Basic domain validation
+            if (content.includes('.') && content.length > 3 && !content.includes(' ')) {
+                return content;
+            }
+            return null;
+        } catch (error) {
+            logger.error(`DeepSeekAI discoverCompanyWebsite error: ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
      * Extract structured job data from raw job payload
      * @param {Object} rawPayload - Raw job data from source
      * @param {Array} hirlyHierarchy - Hierarchy of Categories and Professions

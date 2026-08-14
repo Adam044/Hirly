@@ -213,11 +213,18 @@ export const renderAggregatedJobs = (jobs, append = false) => {
             </td>
             <td class="py-4 px-4 text-right">
                 <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="btn-icon btn-primary edit-aggregated-logo-btn" 
+                    <button class="btn-icon bg-primary/10 text-primary hover:bg-primary hover:text-white auto-fetch-logo-btn" 
+                        data-id="${j.id}" 
+                        data-company="${j.external_company_name}"
+                        title="Auto-Fetch Logo">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn-icon btn-secondary edit-aggregated-logo-btn" 
                         data-id="${j.id}" 
                         data-company="${j.external_company_name}"
                         data-logo="${j.external_company_logo || ''}"
-                        title="Edit Logo">
+                        data-apply-url="${j.external_apply_url || ''}"
+                        title="Update Logo">
                         <i class="fas fa-image"></i>
                     </button>
                     <button class="btn-icon btn-secondary" title="View Original" onclick="window.open('${j.external_apply_url}', '_blank')">
@@ -787,52 +794,69 @@ export const hideModal = (modalElement) => {
     }
 };
 
-export const showConfirmationModal = (title, message, onConfirm) => {
-    const modal = document.getElementById('confirmationModal');
-    if (!modal) return;
+export const showConfirmationModal = (title, message, onConfirmOrText) => {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmationModal');
+        if (!modal) return resolve(false);
 
-    document.getElementById('confirmationModalTitle').textContent = title;
-    document.getElementById('confirmationModalMessage').innerHTML = message;
+        document.getElementById('confirmationModalTitle').textContent = title;
+        document.getElementById('confirmationModalMessage').innerHTML = message;
 
-    const confirmBtn = document.getElementById('confirmationModalConfirmBtn');
-    const cancelBtn = document.getElementById('confirmationModalCancelBtn');
-    const closeBtn = document.getElementById('closeConfirmationModalBtn');
+        const confirmBtn = document.getElementById('confirmationModalConfirmBtn');
+        const cancelBtn = document.getElementById('confirmationModalCancelBtn');
+        const closeBtn = document.getElementById('closeConfirmationModalBtn');
 
-    // Remove existing listeners to prevent multiple firings
-    const newConfirmBtn = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-
-    const newCancelBtn = cancelBtn.cloneNode(true);
-    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-    const newCloseBtn = closeBtn.cloneNode(true);
-    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-
-    // Add new listeners
-    newConfirmBtn.addEventListener('click', async () => {
-        newConfirmBtn.disabled = true;
-        const originalText = newConfirmBtn.textContent;
-        newConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        
-        try {
-            await onConfirm();
-            hideModal(modal);
-        } catch (error) {
-            // Only log in development
-            if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-                console.error('Action failed:', error);
-            }
-            showToast(error.message || 'Action failed', 'error');
-        } finally {
-            newConfirmBtn.disabled = false;
-            newConfirmBtn.textContent = originalText;
+        // Set confirm button text if provided as a string
+        const originalConfirmText = 'Confirm';
+        if (typeof onConfirmOrText === 'string') {
+            confirmBtn.textContent = onConfirmOrText;
+        } else {
+            confirmBtn.textContent = originalConfirmText;
         }
+
+        // Remove existing listeners
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+
+        const handleClose = (result) => {
+            hideModal(modal);
+            resolve(result);
+        };
+
+        newConfirmBtn.addEventListener('click', async () => {
+            if (typeof onConfirmOrText === 'function') {
+                newConfirmBtn.disabled = true;
+                const btnText = newConfirmBtn.textContent;
+                newConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                
+                try {
+                    await onConfirmOrText();
+                    handleClose(true);
+                } catch (error) {
+                    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                        console.error('Action failed:', error);
+                    }
+                    showToast(error.message || 'Action failed', 'error');
+                } finally {
+                    newConfirmBtn.disabled = false;
+                    newConfirmBtn.textContent = btnText;
+                }
+            } else {
+                handleClose(true);
+            }
+        });
+
+        newCancelBtn.addEventListener('click', () => handleClose(false));
+        newCloseBtn.addEventListener('click', () => handleClose(false));
+
+        showModal(modal);
     });
-
-    newCancelBtn.addEventListener('click', () => hideModal(modal));
-    newCloseBtn.addEventListener('click', () => hideModal(modal));
-
-    showModal(modal);
 };
 
 // --- Section Navigation ---

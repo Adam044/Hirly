@@ -469,6 +469,36 @@ export const fetchLogoFromUrl = async (url, companyName) => {
     return await handleFetchResponse(response);
 };
 
+export const magicFetchAggregatedJobLogo = async (jobId) => {
+    const response = await fetch('/admin/magic-fetch-aggregated-logo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId })
+    });
+    return await handleFetchResponse(response);
+};
+
+export const bulkMagicFetchLogos = async () => {
+    const response = await fetch('/admin/bulk-magic-fetch-logos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    });
+    return await handleFetchResponse(response);
+};
+
+export const stopBulkMagicFetchLogos = async () => {
+    const response = await fetch('/admin/stop-bulk-logo-fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    });
+    return await handleFetchResponse(response);
+};
+
+export const getBulkLogoProgress = async () => {
+    const response = await fetch(`/admin/bulk-logo-progress?t=${Date.now()}`);
+    return await handleFetchResponse(response);
+};
+
 export const updateAggregatedJobLogo = async (jobId, logoUrl, logoFile) => {
     const formData = new FormData();
     formData.append('jobId', jobId);

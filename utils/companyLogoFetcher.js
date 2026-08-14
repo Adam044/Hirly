@@ -11,12 +11,14 @@
 
 const axios = require('axios');
 const logger = require('./logger');
+const { DeepSeekAI } = require('./ai/deepSeekAI');
 
 class CompanyLogoFetcher {
     constructor() {
         // Cache for logo URLs to avoid repeated requests
         this.cache = new Map();
         this.cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
+        this.ai = new DeepSeekAI();
     }
 
     /**
@@ -89,11 +91,12 @@ class CompanyLogoFetcher {
      * @param {string} externalUrl - External job URL (optional)
      * @param {string} providedWebsite - Explicitly provided website URL (optional)
      * @param {string} pageLogo - Logo URL found on the job page (optional)
+     * @param {boolean} useAI - Whether to use AI for domain discovery (optional)
      * @returns {Promise<string>} - Logo URL or null
      */
-    async getLogoUrl(companyName, externalUrl = null, providedWebsite = null, pageLogo = null) {
+    async getLogoUrl(companyName, externalUrl = null, providedWebsite = null, pageLogo = null, useAI = true) {
         // Create cache key
-        const cacheKey = `${companyName}_${externalUrl}_${providedWebsite}_${pageLogo}`;
+        const cacheKey = `${companyName}_${externalUrl}_${providedWebsite}_${pageLogo}_${useAI}`;
         
         // Check cache
         const cached = this.cache.get(cacheKey);
@@ -123,7 +126,20 @@ class CompanyLogoFetcher {
             if (domain) domains.add(domain);
         }
 
-        // 3. Guess domain from company name
+        // 3. AI Powered Domain Discovery (High quality)
+        if (useAI && companyName) {
+            try {
+                const aiDomain = await this.ai.discoverCompanyWebsite(companyName);
+                if (aiDomain) {
+                    domains.add(aiDomain);
+                    logger.info(`[MagicLogo] AI discovered domain for ${companyName}: ${aiDomain}`);
+                }
+            } catch (err) {
+                logger.error(`AI Domain discovery failed: ${err.message}`);
+            }
+        }
+
+        // 4. Guess domain from company name (Rule-based fallback)
         if (companyName) {
             const guessed = this.guessDomain(companyName);
             if (guessed) domains.add(guessed);
@@ -135,17 +151,29 @@ class CompanyLogoFetcher {
 
         // Try each domain found
         for (const domain of domains) {
-            // Try Clearbit Logo API (Premium feel)
-            logoUrl = `https://logo.clearbit.com/${domain}`;
-            if (await this.checkImageExists(logoUrl)) break;
-            
-            // Try Google Favicon (Very reliable fallback)
-            logoUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+            // Priority 1: Brandfetch (High quality)
+            logoUrl = `https://asset.brandfetch.io/${domain}`;
             if (await this.checkImageExists(logoUrl)) break;
 
-            // Try DuckDuckGo
+            // Priority 2: Clearbit Logo API (Premium feel) - Requested at 256px
+            logoUrl = `https://logo.clearbit.com/${domain}?size=256`;
+            if (await this.checkImageExists(logoUrl)) break;
+            
+            // Priority 3: Google Favicon (Very reliable fallback) - Requested at 256px
+            logoUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
+            if (await this.checkImageExists(logoUrl)) break;
+
+            // Priority 4: DuckDuckGo
             logoUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
             if (await this.checkImageExists(logoUrl)) break;
+
+            // Priority 5: Direct Website Extraction (Slow but very accurate)
+            try {
+                logoUrl = await this.extractLogoFromWebsite(domain);
+                if (logoUrl) break;
+            } catch (err) {
+                logger.debug(`Direct extraction failed for ${domain}: ${err.message}`);
+            }
 
             logoUrl = null;
         }
@@ -160,6 +188,55 @@ class CompanyLogoFetcher {
     }
 
     /**
+     * Attempt to extract a logo directly from a website's HTML metadata
+     * @param {string} domain 
+     */
+    async extractLogoFromWebsite(domain) {
+        try {
+            const url = domain.startsWith('http') ? domain : `https://${domain}`;
+            const response = await axios.get(url, {
+                timeout: 5000,
+                maxRedirects: 3,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+                }
+            });
+
+            const html = response.data;
+            if (typeof html !== 'string') return null;
+
+            // Simple regex based extraction for common metadata
+            const patterns = [
+                /<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i,
+                /<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i,
+                /<link\s+rel=["']apple-touch-icon["']\s+href=["']([^"']+)["']/i,
+                /<link\s+rel=["']icon["']\s+sizes=["'](?:192x192|180x180|256x256)["']\s+href=["']([^"']+)["']/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = html.match(pattern);
+                if (match && match[1]) {
+                    let logoUrl = match[1];
+                    // Handle relative URLs
+                    if (logoUrl.startsWith('/')) {
+                        const base = new URL(url);
+                        logoUrl = `${base.origin}${logoUrl}`;
+                    } else if (!logoUrl.startsWith('http')) {
+                        logoUrl = `${url}/${logoUrl}`;
+                    }
+
+                    if (await this.checkImageExists(logoUrl)) {
+                        return logoUrl;
+                    }
+                }
+            }
+        } catch (err) {
+            return null;
+        }
+        return null;
+    }
+
+    /**
      * Guess variations of the domain (abbreviations, etc)
      */
     guessDomainVariations(companyName) {
@@ -170,14 +247,24 @@ class CompanyLogoFetcher {
             .trim()
             .split(/\s+/);
 
+        const cleanName = words.join('');
+        if (cleanName.length > 2) {
+            // Palestinian extensions
+            variations.push(`${cleanName}.ps`);
+            variations.push(`${cleanName}.com.ps`);
+            variations.push(`${cleanName}.org.ps`);
+            variations.push(`${cleanName}.net`);
+            variations.push(`${cleanName}.org`);
+        }
+
         if (words.length > 2) {
             // Try initials (e.g., "River Lodge Assisted Living" -> "rlal.com")
             const initials = words.map(w => w[0]).join('');
-            if (initials.length > 1) variations.push(`${initials}.com`);
-
-            // Try first word + initials of others
-            const firstWithInitials = words[0] + words.slice(1).map(w => w[0]).join('');
-            variations.push(`${firstWithInitials}.com`);
+            if (initials.length > 1) {
+                variations.push(`${initials}.com`);
+                variations.push(`${initials}.ps`);
+                variations.push(`${initials}.org.ps`);
+            }
         }
 
         return variations;

@@ -678,9 +678,14 @@
                         <h2 class="text-2xl font-bold text-white">Aggregated Jobs Management</h2>
                         <p class="text-gray-400 text-sm">Manage logos for external jobs</p>
                     </div>
-                    <button id="clearAggregatedJobFilters" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-primary transition-colors flex items-center gap-2">
-                        <i class="fas fa-undo-alt"></i> Reset Filters
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <button id="bulkFetchLogosBtn" class="bg-primary hover:bg-secondary text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
+                            <i class="fas fa-magic"></i> Magic Fetch All Missing
+                        </button>
+                        <button id="clearAggregatedJobFilters" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-primary transition-colors flex items-center gap-2">
+                            <i class="fas fa-undo-alt"></i> Reset Filters
+                        </button>
+                    </div>
                 </div>
 
                 <div class="bg-card-bg p-6 rounded-2xl border border-slate-700/50 shadow-xl mb-8 space-y-6">
@@ -689,7 +694,7 @@
                             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
                             <input type="text" id="aggregatedJobSearchInput" class="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-500 transition-all outline-none" placeholder="Search by title or company...">
                         </div>
-                        <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex flex-wrap items-center gap-4">
                             <div class="space-y-1 flex-grow">
                                 <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Logo Status</label>
                                 <div class="flex gap-2">
@@ -1062,54 +1067,139 @@
         </div>
     </div>
 
+    <!-- Bulk Logo Discovery Progress Modal -->
+    <div id="bulkLogoProgressModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-xl max-h-[80vh] flex flex-col p-0 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-magic text-primary"></i>
+                    <span>Magic Logo Discovery</span>
+                </h3>
+                <button class="text-gray-500 hover:text-white transition-colors" id="closeBulkLogoProgressBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6 flex-grow overflow-hidden flex flex-col">
+                <!-- Progress Stats -->
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-center">
+                        <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Total</p>
+                        <p class="text-xl font-bold text-white" id="bulkLogoTotal">0</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-center">
+                        <p class="text-[10px] text-success uppercase font-bold tracking-widest mb-1">Success</p>
+                        <p class="text-xl font-bold text-success" id="bulkLogoSuccess">0</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-center">
+                        <p class="text-[10px] text-warning uppercase font-bold tracking-widest mb-1">Failed</p>
+                        <p class="text-xl font-bold text-warning" id="bulkLogoFailed">0</p>
+                    </div>
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 text-center">
+                        <p class="text-[10px] text-danger uppercase font-bold tracking-widest mb-1">Sanitized</p>
+                        <p class="text-xl font-bold text-danger" id="bulkLogoSanitized">0</p>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                        <span id="bulkLogoProgressLabel">Processing...</span>
+                        <span id="bulkLogoProgressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
+                        <div id="bulkLogoProgressBar" class="bg-primary h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Logs Container -->
+                <div class="flex-grow flex flex-col space-y-2 overflow-hidden">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Activity Log</label>
+                    <div id="bulkLogoLogs" class="flex-grow bg-slate-900/80 rounded-xl border border-slate-700 p-4 font-mono text-[10px] overflow-y-auto custom-scrollbar space-y-1">
+                        <div class="text-gray-500">Initializing AI discovery...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-slate-700/50 flex justify-end gap-3 bg-slate-800/50">
+                <button id="stopBulkLogoBtn" class="bg-slate-700 hover:bg-danger text-white px-8 py-2.5 rounded-xl text-xs font-bold transition-all border border-slate-600">
+                    Stop Discovery
+                </button>
+                <button id="finishBulkLogoBtn" class="bg-primary hover:bg-secondary text-white px-8 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50" disabled>
+                    Finish & Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="aggregatedJobLogoModal" class="modal-overlay hidden">
-        <div class="modal-content max-w-lg">
-            <button class="modal-close-btn" id="closeAggregatedJobLogoModalBtn">
-                <i class="fas fa-times"></i>
-            </button>
-            <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-primary">
-                <i class="fas fa-edit"></i>
-                <span>Update Job Logo</span>
-            </h3>
-            <p class="text-sm text-gray-400 mb-6">Updating logo for: <strong id="aggregatedLogoModalCompanyName" class="text-white"></strong></p>
+        <div class="modal-content max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-image text-primary"></i>
+                        <span>Update Job Logo</span>
+                    </h3>
+                    <p class="text-[10px] text-gray-500 mt-1">Company: <span id="aggregatedLogoModalCompanyName" class="text-gray-300 font-bold"></span></p>
+                </div>
+                <button class="text-gray-500 hover:text-white transition-colors" id="closeAggregatedJobLogoModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             
-            <div class="space-y-6">
+            <!-- Body (Scrollable) -->
+            <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar flex-grow">
                 <!-- Method 1: Website URL -->
-                <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Option 1: Fetch from Website</label>
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Website / Logo URL</label>
                     <div class="flex gap-2">
-                        <input type="url" id="companyWebsiteUrl" class="flex-grow p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-gray-100 focus:ring-1 focus:ring-primary focus:border-transparent outline-none" placeholder="https://example.com">
-                        <button id="fetchLogoFromUrlBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2">
+                        <input type="url" id="companyWebsiteUrl" class="flex-grow p-3 bg-slate-900/50 border border-slate-700 rounded-xl text-sm text-gray-100 focus:ring-1 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="https://example.com">
+                        <button id="fetchLogoFromUrlBtn" class="bg-primary hover:bg-secondary text-white px-6 py-3 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
                             <i class="fas fa-sync-alt"></i> Fetch
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-500 mt-2">Our AI will attempt to find the best logo from the website.</p>
+                    <p class="text-[10px] text-gray-500">We'll automatically extract the best logo from this URL.</p>
+                </div>
+
+                <div class="relative py-2 flex items-center justify-center">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-700/50"></div></div>
+                    <span class="relative px-4 bg-card-bg text-[10px] font-bold text-gray-600 uppercase tracking-widest">OR</span>
                 </div>
 
                 <!-- Method 2: Manual Upload -->
-                <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Option 2: Manual Upload</label>
-                    <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-lg p-6 hover:border-primary transition-colors bg-slate-900/30 cursor-pointer group" onclick="document.getElementById('aggregatedLogoFileInput').click()">
-                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-600 mb-2 group-hover:text-primary transition-colors"></i>
-                        <span class="text-xs text-gray-500">Click to browse image</span>
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Manual Upload</label>
+                    <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-700 rounded-2xl p-8 hover:border-primary transition-all bg-slate-900/30 cursor-pointer group" onclick="document.getElementById('aggregatedLogoFileInput').click()">
+                        <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <i class="fas fa-cloud-upload-alt text-2xl text-gray-600 group-hover:text-primary transition-colors"></i>
+                        </div>
+                        <span class="text-xs font-bold text-gray-400 group-hover:text-gray-200 transition-colors">Choose an image file</span>
+                        <p class="text-[10px] text-gray-600 mt-1">PNG, JPG, WebP (Max 2MB)</p>
                         <input type="file" id="aggregatedLogoFileInput" class="hidden" accept="image/*">
                     </div>
                 </div>
 
                 <!-- Preview -->
-                <div id="aggregatedLogoPreviewContainer" class="hidden p-4 bg-slate-800 rounded-xl border border-slate-700">
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Logo Preview</label>
-                    <div class="flex justify-center">
-                        <img id="aggregatedLogoPreviewImage" src="" alt="Preview" class="w-24 h-24 object-contain rounded-lg bg-white/5 p-2">
+                <div id="aggregatedLogoPreviewContainer" class="hidden animate-slide-up">
+                    <div class="p-6 bg-slate-900/50 rounded-2xl border border-slate-700 flex flex-col items-center gap-4">
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest w-full">Logo Preview</label>
+                        <div class="w-32 h-32 rounded-2xl bg-white/5 p-4 flex items-center justify-center border border-white/10 shadow-inner">
+                            <img id="aggregatedLogoPreviewImage" src="" alt="Preview" class="max-w-full max-h-full object-contain">
+                        </div>
+                        <p class="text-[10px] text-success font-bold flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i> Ready to update
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-700/50">
-                <button id="cancelAggregatedLogoBtn" class="px-5 py-2 text-gray-400 hover:text-white transition-colors font-medium">Cancel</button>
-                <button id="saveAggregatedLogoBtn" class="px-8 py-2 bg-primary hover:bg-secondary text-white rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20" disabled>
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-slate-700/50 flex justify-end gap-3 bg-slate-800/50">
+                <button id="cancelAggregatedLogoBtn" class="px-6 py-2.5 text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">Cancel</button>
+                <button id="saveAggregatedLogoBtn" class="px-8 py-2.5 bg-primary hover:bg-secondary text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 flex items-center gap-2" disabled>
                     Save Changes
-                    <span class="loading-spinner ml-2" id="saveAggregatedLogoSpinner" style="display: none;"></span>
+                    <span class="loading-spinner" id="saveAggregatedLogoSpinner" style="display: none;"></span>
                 </button>
             </div>
         </div>
