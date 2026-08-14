@@ -195,12 +195,30 @@ class PalestineCollector {
                     const location = locationEl ? locationEl.textContent.trim() : 'Palestine';
                     const link = item.href || item.getAttribute('href') || '';
                     
+                    // Email discovery in item (mailto or text)
+                    let foundEmail = null;
+                    const mailtoEl = item.querySelector('a[href^="mailto:"]');
+                    if (mailtoEl) {
+                        foundEmail = mailtoEl.getAttribute('href').replace('mailto:', '').split('?')[0].trim();
+                    } else {
+                        const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+                        const textMatch = item.textContent.match(emailRegex);
+                        if (textMatch) foundEmail = textMatch[0];
+                    }
+                    
                     if (title && link) {
+                        const finalLink = link.startsWith('http') ? link : `https://www.jobs.ps${link}`;
                         jobs.push({
                             title,
                             company,
                             location,
-                            link: link.startsWith('http') ? link : `https://www.jobs.ps${link}`
+                            link: finalLink,
+                            email: foundEmail,
+                            raw_payload: {
+                                company_name: company,
+                                location: location,
+                                page_logo: item.querySelector('img') ? item.querySelector('img').src : null
+                            }
                         });
                     }
                 });

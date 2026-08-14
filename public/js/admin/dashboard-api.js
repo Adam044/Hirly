@@ -5,6 +5,7 @@ import {
     renderEmployers,
     renderAggregatedJobs,
     renderJobSources,
+    renderOutreachLeads,
     renderJobs,
     renderReviews,
     renderJobsWithApplications,
@@ -524,5 +525,38 @@ export const deleteJobSource = async (id) => {
 
 export const triggerSourceScan = async (id) => {
     const response = await fetch(`/admin/trigger-source-scan/${id}`, { method: 'POST' });
+    return await handleFetchResponse(response);
+};
+
+// --- Outreach Leads ---
+export const loadOutreachLeads = async () => {
+    const tableBody = document.getElementById('outreachLeadsTableBody');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-12">${createLoadingSpinner('Loading leads...')}</td></tr>`;
+
+    try {
+        const response = await fetch(`/admin/outreach-leads?t=${Date.now()}`);
+        const data = await handleFetchResponse(response);
+
+        if (data.success) {
+            state.allOutreachLeads = data.leads || [];
+            renderOutreachLeads(state.allOutreachLeads);
+        }
+    } catch (error) {
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            console.error('Error loading outreach leads:', error);
+        }
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading data.</td></tr>';
+        showToast('Failed to load outreach leads', 'error');
+    }
+};
+
+export const sendOutreach = async (jobId, testEmail = null, language = 'en') => {
+    const response = await fetch('/admin/send-outreach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId, testEmail, language })
+    });
     return await handleFetchResponse(response);
 };

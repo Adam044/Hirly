@@ -23,14 +23,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const employerJobsGrid = document.getElementById('employerJobsGrid');
     const noEmployerJobs = document.getElementById('noEmployerJobs');
 
-    // Contact Section & Modal Elements
-    const contactEmployerBtn = document.getElementById('contactEmployerBtn');
-    const contactModal = document.getElementById('contactModal');
-    const closeContactModalBtn = document.getElementById('closeContactModalBtn');
-    const modalCallBtn = document.getElementById('modalCallBtn');
-    const modalPhoneNumber = document.getElementById('modalPhoneNumber');
-    const modalEmailBtn = document.getElementById('modalEmailBtn');
-    const modalEmailAddress = document.getElementById('modalEmailAddress');
+    // Contact Section Elements
+    const contactEmailLink = document.getElementById('contactEmailLink');
+    const contactPhoneLink = document.getElementById('contactPhoneLink');
+    const contactAddressText = document.getElementById('contactAddressText');
 
     // Reviews Section Elements
     const reviewsSection = document.getElementById('reviewsSection');
@@ -41,15 +37,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Review modal elements
     const reviewModal = document.getElementById('reviewModal');
+    const cancelReviewBtn = document.getElementById('cancelReviewBtn');
     const closeReviewModalBtn = document.getElementById('closeReviewModalBtn');
     const reviewModalTitle = document.getElementById('reviewModalTitle');
     const reviewForm = document.getElementById('reviewForm');
-    const reviewJobSelect = document.getElementById('reviewJobSelect');
     const starRating = document.getElementById('starRating');
     const ratingInput = document.getElementById('ratingInput');
     const reviewCommentInput = document.getElementById('reviewComment');
     const reviewMessageStatus = document.getElementById('reviewMessageStatus');
     const submitReviewBtn = document.querySelector('#reviewForm button[type="submit"]');
+
+    // Restriction Modal Elements
+    const restrictionModal = document.getElementById('restrictionModal');
+    const restrictionMessage = document.getElementById('restrictionMessage');
+    const restrictionActionBtn = document.getElementById('restrictionActionBtn');
+    const closeRestrictionModalBtn = document.getElementById('closeRestrictionModalBtn');
 
     // Global Data
     const globalTalentCategories = window.globalCategoriesAndProfessions || [];
@@ -89,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
         card.addEventListener('click', (e) => {
             // Prevent if clicking a button inside (if any)
             if (!e.target.closest('button, a')) {
-                window.location.href = `/job_details.html?id=${job.id}`;
+                window.open(`/job_details.html?id=${job.id}`, '_blank');
             }
         });
 
@@ -266,6 +268,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (employer) {
                 if (!profileEmployerId) profileEmployerId = employer.id;
                 
+                // Show reviews section early
+                if (reviewsSection) reviewsSection.classList.remove('hidden');
+
                 renderProfile(employer);
                 await setupUIForViewer(employer.id);
                 await fetchReviewsForEmployer(employer.id);
@@ -351,15 +356,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (employerAverageRating) employerAverageRating.textContent = averageRating;
-        if (employerRatingContainer) employerRatingContainer.classList.remove('hidden');
+        if (employerRatingContainer && employer.rating > 0) {
+            employerRatingContainer.classList.remove('hidden');
+        }
 
         if (companyDescription) companyDescription.innerHTML = aboutDescription.replace(/\n/g, '<br>');
 
-        // Update modal info
-        if (modalPhoneNumber) modalPhoneNumber.textContent = contactPhone;
-        if (modalEmailAddress) modalEmailAddress.textContent = contactEmail;
-        if (modalCallBtn) modalCallBtn.href = `tel:${contactPhone !== naText ? contactPhone : '#'}`;
-        if (modalEmailBtn) modalEmailBtn.href = `mailto:${contactEmail !== naText ? contactEmail : '#'}`;
+        // Update Contact Information
+        if (contactEmailLink) {
+            contactEmailLink.textContent = contactEmail;
+            contactEmailLink.href = contactEmail !== naText ? `mailto:${contactEmail}` : '#';
+        }
+        if (contactPhoneLink) {
+            contactPhoneLink.textContent = contactPhone;
+            contactPhoneLink.href = contactPhone !== naText ? `tel:${contactPhone}` : '#';
+        }
+        if (contactAddressText) {
+            contactAddressText.textContent = contactAddress;
+        }
     }
 
     // --- Viewer UI setup ---
@@ -370,12 +384,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 await new Promise(resolve => setTimeout(resolve, 500)); // Simple wait
             }
             currentLoggedInUser = window.currentUser;
-
-            // Show Reviews Section
-            if (reviewsSection) reviewsSection.classList.remove('hidden');
-
-            // Contact Button Logic
-            if (contactEmployerBtn) contactEmployerBtn.style.display = 'inline-flex';
         } catch (error) {
             console.error('Error setting up UI:', error);
         }
@@ -430,8 +438,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const reviews = data.reviews || [];
 
+            const lang = window.currentLanguage || 'en';
+            const reviewsText = lang === 'ar' ? 'تقييمات' : 'Reviews';
+
             reviewsCountSpan.textContent = reviews.length;
-            if (employerReviewsCount) employerReviewsCount.textContent = `(${reviews.length} Reviews)`;
+            if (employerReviewsCount) {
+                employerReviewsCount.textContent = `(${reviews.length} ${reviewsText})`;
+                if (reviews.length > 0 && employerRatingContainer) {
+                    employerRatingContainer.classList.remove('hidden');
+                }
+            }
 
             reviewsContainer.innerHTML = '';
 
@@ -462,30 +478,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function createReviewCard(review, employerId) {
         const card = document.createElement('div');
-        card.className = 'bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all space-y-4';
+        card.className = 'bg-white p-6 md:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all space-y-6 relative overflow-hidden group';
 
-        const reviewerInitials = (review.reviewer_first_name?.[0] || '') + (review.reviewer_last_name?.[0] || '');
+        const reviewerInitials = ((review.reviewer_first_name?.[0] || '') + (review.reviewer_last_name?.[0] || '')).toUpperCase();
         const reviewDate = formatDate(review.created_at);
         
         let starsHtml = '';
         for (let i = 1; i <= 5; i++) {
-            starsHtml += `<i class="${i <= review.rating ? 'fas text-amber-400' : 'far text-slate-200'} fa-star"></i>`;
+            starsHtml += `<i class="${i <= review.rating ? 'fas text-amber-400' : 'far text-slate-200'} fa-star text-xs"></i>`;
         }
 
+        const avatarContent = review.profile_picture_url 
+            ? `<img src="${review.profile_picture_url}" class="w-full h-full object-cover">`
+            : `<span class="text-hirly-600 font-bold">${reviewerInitials || 'U'}</span>`;
+
         card.innerHTML = `
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-hirly-50 rounded-full flex items-center justify-center text-hirly-600 font-bold text-lg border border-hirly-100">
-                    ${reviewerInitials.toUpperCase()}
+            <div class="absolute top-0 right-0 w-32 h-32 bg-hirly-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-hirly-500/10 transition-colors"></div>
+            
+            <div class="flex items-start justify-between relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-hirly-50 rounded-2xl flex items-center justify-center text-xl border border-hirly-100 overflow-hidden shadow-sm">
+                        ${avatarContent}
+                    </div>
+                    <div>
+                        <a href="${review.reviewer_slug ? `/${review.reviewer_slug}` : `/profile.html?id=${review.reviewer_id}`}" class="font-black text-slate-900 hover:text-hirly-600 transition-colors block leading-tight">
+                            ${review.reviewer_first_name} ${review.reviewer_last_name}
+                        </a>
+                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">${reviewDate}</div>
+                    </div>
                 </div>
-                <div>
-                    <a href="/profile.html?id=${review.reviewer_id}" class="font-bold text-slate-900 hover:text-hirly-600 transition-colors">
-                        ${review.reviewer_first_name} ${review.reviewer_last_name}
-                    </a>
-                    <div class="text-xs text-slate-400 font-medium">${reviewDate}</div>
+                <div class="flex gap-0.5 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                    ${starsHtml}
                 </div>
             </div>
-            <div class="flex gap-1 text-sm">${starsHtml}</div>
-            <p class="text-slate-600 leading-relaxed">${review.comment || 'No comment provided.'}</p>
+            
+            <div class="relative z-10">
+                <p class="text-slate-600 leading-relaxed font-medium italic">"${review.comment || 'No comment provided.'}"</p>
+            </div>
+
+            <div class="pt-2 flex items-center gap-2 relative z-10">
+                <div class="h-px flex-1 bg-slate-100"></div>
+                <i class="fas fa-quote-right text-slate-200 text-sm"></i>
+            </div>
         `;
 
         return card;
@@ -493,63 +527,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Event listeners ---
 
+    // Initial Star Rating Interaction Setup
+    if (starRating) {
+        const stars = starRating.querySelectorAll('i');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                if (ratingInput) ratingInput.value = rating;
+                updateStarRatingDisplay(rating);
+            });
+        });
+    }
+
     // Contact modal
-    if (contactEmployerBtn) {
-        contactEmployerBtn.addEventListener('click', () => {
-            if (contactModal) {
-                contactModal.style.display = 'flex';
-                setTimeout(() => contactModal.classList.add('show'), 10);
-                document.body.classList.add('modal-open');
-            }
-        });
-    }
-
-    function closeContactModal() {
-        if (contactModal) {
-            contactModal.classList.remove('show');
-            setTimeout(() => {
-                contactModal.style.display = 'none';
-                document.body.classList.remove('modal-open');
-            }, 300);
-        }
-    }
-
-    if (closeContactModalBtn) closeContactModalBtn.addEventListener('click', closeContactModal);
-    if (contactModal) {
-        contactModal.addEventListener('click', (e) => {
-            if (e.target === contactModal) closeContactModal();
-        });
-    }
-
+    // ... removed ...
+    
     // Review modal
     if (leaveReviewBtn) {
         leaveReviewBtn.addEventListener('click', () => {
-            if (!currentLoggedInUser) {
-                showToast((window.translations && window.translations['please_login_to_review'] && window.translations['please_login_to_review'][window.currentLanguage]) || 'Please log in to leave a review.', 'error');
+            // 1. Not logged in
+            if (!window.isAuthenticated || !window.currentUser) {
+                showRestrictionModal('login_required_review', 'login');
                 return;
             }
 
-            if (currentLoggedInUser.id === parseInt(profileEmployerId)) {
-                showToast((window.translations && window.translations['cannot_review_self'] && window.translations['cannot_review_self'][window.currentLanguage]) || 'You cannot review yourself.', 'error');
+            const currentUserId = window.currentUser.id;
+            const currentUserType = window.currentUserType || window.currentUser.userType || window.currentUser.user_type;
+
+            // 2. Same employer reviewing self
+            if (parseInt(currentUserId) === parseInt(profileEmployerId)) {
+                showRestrictionModal('self_review_restriction');
                 return;
             }
 
+            // 3. Different employer trying to review
+            if (currentUserType === 'employer') {
+                showRestrictionModal('employer_restriction_review');
+                return;
+            }
+
+            // 4. All good (Professional user)
             if (reviewModal) {
                 reviewModal.style.display = 'flex';
                 setTimeout(() => reviewModal.classList.add('show'), 10);
                 document.body.classList.add('modal-open');
-                
-                // Initialize Star Rating Interaction
-                if (starRating) {
-                    const stars = starRating.querySelectorAll('i');
-                    stars.forEach(star => {
-                        star.addEventListener('click', function() {
-                            const rating = this.getAttribute('data-rating');
-                            ratingInput.value = rating;
-                            updateStarRatingDisplay(rating);
-                        });
-                    });
-                }
             }
         });
     }
@@ -579,7 +600,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function showRestrictionModal(messageKey, actionType = 'close') {
+        const lang = window.currentLanguage || 'en';
+        const message = (window.translations && window.translations[messageKey] && window.translations[messageKey][lang]) || messageKey;
+        
+        if (restrictionMessage) restrictionMessage.textContent = message;
+        
+        if (restrictionActionBtn) {
+            if (actionType === 'login') {
+                restrictionActionBtn.textContent = (window.translations && window.translations['login_now'] && window.translations['login_now'][lang]) || 'Login Now';
+                restrictionActionBtn.onclick = () => window.location.href = '/login.html';
+            } else {
+                restrictionActionBtn.textContent = (window.translations && window.translations['got_it'] && window.translations['got_it'][lang]) || 'Got it';
+                restrictionActionBtn.onclick = closeRestrictionModal;
+            }
+        }
+
+        if (restrictionModal) {
+            restrictionModal.style.display = 'flex';
+            setTimeout(() => restrictionModal.classList.add('show'), 10);
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    function closeRestrictionModal() {
+        if (restrictionModal) {
+            restrictionModal.classList.remove('show');
+            setTimeout(() => {
+                restrictionModal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }, 300);
+        }
+    }
+
+    if (closeRestrictionModalBtn) closeRestrictionModalBtn.addEventListener('click', closeRestrictionModal);
+    if (restrictionModal) {
+        restrictionModal.addEventListener('click', (e) => {
+            if (e.target === restrictionModal) closeRestrictionModal();
+        });
+    }
+
     if (closeReviewModalBtn) closeReviewModalBtn.addEventListener('click', closeReviewModal);
+    if (cancelReviewBtn) cancelReviewBtn.addEventListener('click', closeReviewModal);
 
     // Review Submission
     if (reviewForm) {

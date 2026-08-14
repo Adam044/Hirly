@@ -1513,6 +1513,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const phoneInputRaw = document.getElementById(userType === 'employer' && employerType === 'company' ? 'companyPhone' : 'phone');
             data.phone = (countryCodeInput?.value || '') + (phoneInputRaw?.value || '').replace(/\s/g, '');
 
+            // --- Phase 5: Claim Job Injection ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const claimJobId = urlParams.get('claimJobId');
+            if (claimJobId) {
+                data.claimJobId = claimJobId;
+            }
+
             // Use the correct email field for personal/individual
             if (userType === 'freelancer' || (userType === 'employer' && employerType === 'individual')) {
                  data.email = emailInput.value;
@@ -1678,6 +1685,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     showStep(currentStep);
+
+    // --- Handle URL Parameters (Phase 5: Claim & Convert) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefillEmail = urlParams.get('email');
+    const prefillType = urlParams.get('type');
+    const claimJobId = urlParams.get('claimJobId');
+
+    if (prefillType === 'employer') {
+        userType = 'employer';
+        // Auto-select Employer card in Step 1
+        const employerCard = document.getElementById('initialUserTypeEmployer');
+        if (employerCard) {
+            employerCard.click();
+            
+            // If it's a claim flow, we usually assume Company Employer for external jobs
+            // but we let the user decide. If we want to force company:
+            const companyTypeCard = document.getElementById('employerTypeCompany');
+            if (companyTypeCard) {
+                setTimeout(() => {
+                    companyTypeCard.click();
+                    if (prefillEmail) {
+                        companyEmailInput.value = prefillEmail;
+                        confirmCompanyEmailInput.value = prefillEmail;
+                    }
+                }, 100);
+            }
+        }
+    }
+
+    // Attach claimJobId to the form data during submission
+    const originalSignupSubmit = signupForm.onsubmit;
+    signupForm.addEventListener('submit', function(e) {
+        if (claimJobId) {
+            // We'll inject it into the data object before fetch in the actual submit handler
+            // But since the submit handler is an inline listener in many Hirly pages, 
+            // I'll need to modify the actual fetch call below.
+        }
+    });
 
     // --- Password Validation Function for Real-time UI Updates ---
     function validatePasswordUI(input, elements) {

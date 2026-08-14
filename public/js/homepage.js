@@ -187,6 +187,7 @@ function createJobCard(job) {
     const lang = window.currentLanguage || 'ar';
     const card = document.createElement('a');
     card.href = `/job_details.html?id=${job.id}`;
+    card.target = '_blank';
     card.className = 'home-job-card';
     
     // Avatar/Logo
@@ -311,7 +312,8 @@ async function fetchDiscoverTalent() {
 function createDiscoverTalentCard(talent) {
     const lang = window.currentLanguage || 'ar';
     const card = document.createElement('a');
-    card.href = `/profile.html?id=${talent.id}`;
+    card.href = talent.slug ? `/${talent.slug}` : `/profile.html?id=${talent.id}`;
+    card.target = '_blank';
     card.className = 'talent-card';
     
     // Avatar
@@ -419,7 +421,7 @@ function createDiscoverTalentCard(talent) {
 
             <div class="talent-card-footer">
                 ${skillsContainerHtml}
-                <a href="/profile.html?id=${talent.id}" class="view-profile-cta">
+                <a href="${talent.slug ? `/${talent.slug}` : `/profile.html?id=${talent.id}`}" class="view-profile-cta">
                     <span>${viewProfileTranslation}</span>
                     <i class="fas fa-arrow-right"></i>
                 </a>
@@ -496,7 +498,8 @@ function createTalentCard(talent) {
     const t = window.translations;
 
     const card = document.createElement('a');
-    card.href = `/profile.html?id=${talent.id}`;
+    card.href = talent.slug ? `/${talent.slug}` : `/profile.html?id=${talent.id}`;
+    card.target = '_blank';
     card.className = 'talent-card';
 
     const firstName = talent.first_name || '';
@@ -519,7 +522,7 @@ function createTalentCard(talent) {
     }
 
     // Main profession for header (first one)
-    let mainProfession = (t && t['freelancer'] && t['freelancer'][lang]) || 'Freelancer';
+    let mainProfession = (t && t['freelancer'] && t['freelancer'][lang]) || 'Professional';
     
     // All professions translated for the body
     let translatedProfessions = [];
@@ -611,7 +614,9 @@ function createTalentCard(talent) {
  */
 function createCompanyLogoItem(company) {
     const item = document.createElement('a');
-    item.href = `/employer_profile.html?id=${company.user_id}`;
+    const slug = company.slug;
+    item.href = slug ? `/${slug}` : `/employer_profile.html?id=${company.user_id}`;
+    item.target = '_blank';
     item.className = 'marquee-logo-item';
     
     let logoContent = '';

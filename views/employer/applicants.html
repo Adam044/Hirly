@@ -778,16 +778,8 @@
             // --- Initialization (Preserved) ---
             async function init() {
                 const urlParams = new URLSearchParams(window.location.search);
-                currentJobId = urlParams.get('jobId');
+                currentJobId = urlParams.get('job_id') || urlParams.get('jobId');
                 
-                // AI Button - Prevent default link assignment (Handled by modal script)
-                /*
-                const aiBtn = document.getElementById('aiAssistantBtn');
-                if (aiBtn && currentJobId) {
-                    aiBtn.setAttribute('href', `/employer/ai.html?jobId=${encodeURIComponent(currentJobId)}`);
-                }
-                */
-
                 if (!currentJobId) {
                     if (pageErrorMessage) {
                         pageErrorMessage.innerHTML = '<i class="fas fa-exclamation-circle text-4xl mb-2"></i> <p>Job ID is missing.</p>';

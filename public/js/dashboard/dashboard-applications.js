@@ -23,6 +23,17 @@ const DashboardApplications = {
                 this.render();
             });
         });
+
+        // Setup "View All" button to navigate to the full applications section
+        const viewAllBtn = document.getElementById('viewAllApplicationsBtn');
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener('click', () => {
+                const navItem = document.querySelector('.nav-item[data-section="applications"]');
+                if (navItem) {
+                    navItem.click();
+                }
+            });
+        }
     },
 
     /**
@@ -149,7 +160,7 @@ const DashboardApplications = {
                         <span class="text-sm font-extrabold text-slate-900">${new Date(app.created_at).toLocaleDateString()}</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <a href="/hirly/job_details.html?id=${app.job_id}" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:bg-slate-900 hover:text-white shadow-sm transition-all duration-300 border border-slate-100" title="View Job">
+                        <a href="/job_details/${app.job_id}" target="_blank" rel="noopener noreferrer" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:bg-slate-900 hover:text-white shadow-sm transition-all duration-300 border border-slate-100" title="View Job">
                             <i class="fas fa-external-link-alt text-sm"></i>
                         </a>
                         <button class="view-details-btn w-11 h-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:bg-slate-900 hover:text-white shadow-sm transition-all duration-300 border border-slate-100" data-id="${app.id}" title="View Details">
@@ -303,7 +314,7 @@ const DashboardApplications = {
         const viewJobBtn = document.getElementById('viewJobPostBtn');
         if (viewJobBtn) {
             viewJobBtn.onclick = () => {
-                window.location.href = `/hirly/job_details.html?id=${app.job_id}`;
+                window.open(`/job_details/${app.job_id}`, '_blank');
             };
         }
 

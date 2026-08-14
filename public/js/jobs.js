@@ -1433,7 +1433,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const interactiveElement = event.target.closest('a, button');
             if (jobCard && !interactiveElement) {
                 const jobId = jobCard.dataset.jobId;
-                window.location.href = `/job_details.html?id=${jobId}`;
+                window.open(`/job_details.html?id=${jobId}`, '_blank');
             }
         });
     }
@@ -1498,7 +1498,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Get employer display info
             const { avatarHtml, avatarContainerClass, employerDisplayName } = getEmployerAvatarHtml(job);
-            const employerNameHtml = employerDisplayName ? `<p class="employer-name-display">${employerDisplayName}</p>` : '';
+            const employerSlug = job.employer_slug;
+            const profileUrl = employerSlug ? `/${employerSlug}` : `/employer_profile.html?id=${job.employer_user_id}`;
+            const employerNameHtml = employerDisplayName ? `
+                <a href="${profileUrl}" target="_blank" class="employer-name-display hover:text-primary transition-colors">
+                    ${employerDisplayName}
+                </a>` : '';
 
             // Get category display name and icon
             let displayCategory = t?.['not_available']?.[lang] || 'N/A';

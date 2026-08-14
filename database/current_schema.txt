@@ -41,7 +41,7 @@
 | `company_logo_path` | `text` |  Nullable |
 | `company_category` | `text` |  Nullable |
 | `job_post_credits` | `int4` |  Nullable |
-| `profile_view_credits` | `int4` |  Nullable |
+| `profile_views` | `int4` |  Nullable |
 | `has_claimed_free_credit` | `bool` |  Nullable |
 | `rating` | `float4` |  Nullable |
 | `website_link` | `text` |  Nullable |

@@ -2138,22 +2138,22 @@ selectCity(value, label) {
         // Update Visit Link
         const visitBtn = document.getElementById('visitMyProfileBtn');
         if (visitBtn) {
-            const profileUrl = `${window.location.origin}/profile.html?id=${u.id}`;
+            const profileUrl = u.slug ? `${window.location.origin}/${u.slug}` : `${window.location.origin}/profile.html?id=${u.id}`;
             visitBtn.href = profileUrl;
         }
         
         // Generate QR Code
-        this.generateQRCode(u.id);
+        this.generateQRCode(u.id, u.slug);
     },
 
     /**
      * Generates a QR code for the user profile
      */
-    generateQRCode(userId) {
+    generateQRCode(userId, slug = null) {
         const container = document.getElementById('qrCodeContainer');
         if (!container || !userId) return;
         
-        const profileUrl = `${window.location.origin}/profile.html?id=${userId}`;
+        const profileUrl = slug ? `${window.location.origin}/${slug}` : `${window.location.origin}/profile.html?id=${userId}`;
         container.innerHTML = '';
         
         try {
@@ -2181,7 +2181,7 @@ selectCity(value, label) {
         const user = window.currentUser;
         if (!user) return;
         
-        const profileUrl = `${window.location.origin}/profile.html?id=${user.id}`;
+        const profileUrl = user.slug ? `${window.location.origin}/${user.slug}` : `${window.location.origin}/profile.html?id=${user.id}`;
         
         if (navigator.share) {
             navigator.share({

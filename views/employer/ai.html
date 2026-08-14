@@ -1380,7 +1380,7 @@
         }
 
         // --- STATE MANAGEMENT ---
-        let currentJobId = new URLSearchParams(window.location.search).get('jobId');
+        let currentJobId = new URLSearchParams(window.location.search).get('job_id') || new URLSearchParams(window.location.search).get('jobId');
         let candidates = [];
         let selectedCandidateId = null;
         let radarChart = null;

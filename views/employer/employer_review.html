@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlTag">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Candidates - Hirly</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { DEFAULT: '#6366f1', dark: '#4f46e5', light: '#818cf8', bg: '#f5f7ff' },
+                        secondary: { DEFAULT: '#10b981', dark: '#059669', light: '#34d399' },
+                        dark: '#0f172a',
+                        'gray-bg': '#f8fafc'
+                    },
+                    fontFamily: { sans: ['Cairo', 'Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body { font-family: 'Inter', 'Cairo', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        [dir="rtl"] body { font-family: 'Cairo', 'Inter', sans-serif; }
+
+        .otp-input-char { width: 3rem; height: 3.5rem; font-size: 1.5rem; font-weight: 700; text-align: center; border: 2px solid #e2e8f0; border-radius: 0.75rem; background: white; transition: all 0.2s; }
+        .otp-input-char:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); outline: none; }
+        .candidate-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .candidate-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1); }
+        .match-badge { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
+        .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+        [v-cloak] { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Crazy Effects */
+        .scanning-beam {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, transparent, #6366f1, transparent);
+            box-shadow: 0 0 15px #6366f1;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+        }
+        .scanning .scanning-beam {
+            animation: scanDown 2s ease-in-out infinite;
+            opacity: 1;
+        }
+        @keyframes scanDown {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        .matrix-digit {
+            display: inline-block;
+            min-width: 1ch;
+        }
+
+        .thought-log-line {
+            font-family: 'Courier New', Courier, monospace;
+            border-left: 2px solid #6366f1;
+            padding-left: 8px;
+            margin-bottom: 4px;
+            animation: slideInLeft 0.3s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .radar-poly {
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
+        }
+
+        /* Filter Styles */
+        .filter-container {
+            background-color: white;
+            border-radius: 32px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2rem;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .filter-label {
+            text-transform: uppercase;
+            font-size: 10px;
+            font-weight: 900;
+            color: #94a3b8;
+            letter-spacing: 0.1em;
+            padding: 0 0.25rem;
+        }
+        .verdict-chip {
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid #f1f5f9;
+            background-color: #f8fafc;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .verdict-chip:hover {
+            background-color: #f1f5f9;
+        }
+        .verdict-chip.active {
+            background-color: #6366f1;
+            color: white;
+            border-color: #6366f1;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Workspace Morph Styles */
+        #workspaceMorphOverlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: white;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #workspaceMorphOverlay.flex {
+            display: flex;
+        }
+        
+        /* Neural Synchronization Effect */
+        .neural-sync {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .neural-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+            height: 1px;
+            width: 100%;
+            animation: neuralFlow 3s linear infinite;
+        }
+        @keyframes neuralFlow {
+            0% { transform: translateY(-100%) translateX(-10%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(200%) translateX(10%); opacity: 0; }
+        }
+
+        .premium-dropdown {
+            position: relative;
+            width: 100%;
+        }
+        .premium-select {
+            width: 100%;
+            background-color: #f8fafc;
+            border: 2px solid #f1f5f9;
+            border-radius: 24px;
+            padding: 1rem 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .premium-select:focus {
+            border-color: #6366f1;
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.05);
+        }
+        .select-icon {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #cbd5e1;
+            transition: all 0.3s;
+        }
+        .premium-select:focus + .select-icon {
+            transform: translateY(-50%) rotate(180deg);
+            color: #6366f1;
+        }
+
+        .morph-content {
+            @apply flex flex-col;
+        }
+        .morph-scroll-area {
+            @apply flex flex-col h-full;
+        }
+
+        .morph-sidebar {
+            width: 40%;
+            flex-shrink: 0;
+            background-color: #f8fafc;
+            padding: 4rem 3rem;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #f1f5f9;
+            overflow-y: auto;
+            position: relative;
+            scrollbar-width: none;
+        }
+        .morph-sidebar::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Edge */
+        }
+
+        .morph-content {
+            flex: 1;
+            background: white;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .morph-header {
+            padding: 3rem 4rem;
+            background: white;
+            border-bottom: 1px solid #f8fafc;
+            z-index: 10;
+        }
+
+        .morph-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .wizard-form-container {
+            width: 100%;
+            max-width: 34rem;
+        }
+
+        .setup-step {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .setup-step.active {
+            display: block;
+        }
+
+        .wizard-input-group {
+            margin-bottom: 3rem;
+        }
+
+        .wizard-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.25rem;
+        }
+
+        .wizard-input {
+            width: 100%;
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid #f1f5f9;
+            padding: 0.75rem 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .wizard-input:focus {
+            border-bottom-color: #6366f1;
+            transform: translateY(-2px);
+        }
+
+        .wizard-input::placeholder {
+            color: #e2e8f0;
+        }
+
+        .wizard-textarea {
+            width: 100%;
+            font-size: 1.25rem;
+            font-weight: 600;
+            background: #f8fafc;
+            border: 2px solid #f1f5f9;
+            border-radius: 2rem;
+            padding: 2rem;
+            transition: all 0.3s;
+            outline: none;
+            min-height: 180px;
+            resize: none;
+            color: #0f172a;
+        }
+
+        .wizard-textarea:focus {
+            border-color: #6366f1;
+            background: white;
+            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.1);
+        }
+
+        .step-indicator {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .step-dot {
+            height: 6px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-dot:nth-child(1), .step-dot:nth-child(2), .step-dot:nth-child(3) { width: 40px; }
+
+        .step-dot.active {
+            background: #6366f1;
+            width: 80px;
+        }
+
+        .step-dot.completed {
+            background: #10b981;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            margin-top: 0.5rem;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 200;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+        .dropdown-item {
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dropdown-item:hover {
+            background: #f8fafc;
+            color: #6366f1;
+        }
+
+        .requirement-item {
+            font-size: 10px;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #f1f5f9;
+            border-radius: 0.75rem;
+            display: flex;
+            items-center: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+        .requirement-item.valid {
+            border-color: #a7f3d0;
+            background-color: rgba(236, 253, 245, 0.5);
+            color: #059669;
+        }
+        .requirement-item.valid i {
+            color: #10b981;
+        }
+
+        /* Feature Grid Styles */
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 1rem;
+            background-color: rgba(248, 250, 252, 0.5);
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s;
+        }
+        .feature-item:hover {
+            background-color: white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            border-color: #e0e7ff;
+        }
+        .feature-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            background-color: white;
+            border: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6366f1;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+        }
+        .feature-text h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.125rem;
+        }
+        .feature-text p {
+            font-size: 0.75rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Trust Banner Marquee */
+        .trust-marquee {
+            @apply mt-auto pt-8 border-t border-slate-100;
+        }
+        .trust-header {
+            @apply flex items-center justify-between mb-4;
+        }
+        .trust-header span {
+            @apply text-[10px] font-bold uppercase tracking-wider text-slate-400;
+        }
+        .trust-logos {
+            @apply flex items-center gap-6 opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500 overflow-hidden;
+        }
+        .trust-logos img {
+            @apply h-6 w-auto object-contain;
+        }
+
+        .dashboard-preview-card {
+            background: white;
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+            opacity: 0.5;
+            transform: scale(0.9);
+            transform-origin: top left;
+        }
+        
+        [dir="rtl"] .rtl-flip {
+            transform: scaleX(-1);
+        }
+
+        @media (max-width: 1024px) {
+            .morph-sidebar { width: 350px; }
+        }
+
+        @media (max-width: 768px) {
+            #workspaceMorphOverlay { flex-direction: column; overflow-y: auto; }
+            .morph-sidebar { 
+                width: 100%; 
+                padding: 3rem 2rem; 
+                border-right: none; 
+                border-bottom: 1px solid #f1f5f9;
+                overflow-y: visible;
+                height: auto;
+            }
+            .morph-content { overflow: visible; }
+            .morph-header { padding: 2rem; }
+            .morph-scroll-area { padding: 2rem; overflow: visible; }
+            .wizard-input { font-size: 1.75rem; }
+            .dashboard-preview-card { display: none; }
+        }
+
+        /* Side Strip */
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            outline: none;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #6366f1;
+            border: 3px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s;
+        }
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        /* Trusted Marquee */
+        .trusted-marquee-section {
+            width: 100%;
+            overflow: hidden;
+            padding: 4rem 0;
+            background: transparent;
+            position: relative;
+        }
+        .marquee-wrapper {
+            position: relative;
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        }
+        .marquee-content {
+            display: flex;
+            align-items: center;
+            gap: 8rem;
+            animation: marquee-scroll 60s linear infinite;
+            width: max-content;
+        }
+        @keyframes marquee-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .marquee-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s;
+        }
+        .marquee-logo {
+            height: 64px;
+            width: auto;
+            opacity: 1;
+            filter: grayscale(0);
+            transition: all 0.3s;
+        }
+        .marquee-name {
+            font-size: 10px;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.3s;
+        }
+        .marquee-card:hover .marquee-logo {
+            opacity: 1;
+            filter: grayscale(0);
+            transform: scale(1.1);
+        }
+        .marquee-card:hover .marquee-name {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Split Hero Layout */
+        .split-hero {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            gap: 4rem;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .hero-visual {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+        }
+        .hero-auth-card {
+            flex: 1;
+            min-width: 400px;
+        }
+        
+        @media (max-width: 1024px) {
+            .split-hero {
+                flex-direction: column;
+                gap: 3rem;
+                text-align: center;
+            }
+            .hero-auth-card {
+                min-width: 100%;
+            }
+        }
+
+        /* Pipeline Diagram */
+        .pipeline-container {
+            width: 100%;
+            margin: 2rem 0;
+        }
+        .pipeline-bar {
+            display: flex;
+            height: 12px;
+            width: 100%;
+            background: #f1f5f9;
+            border-radius: 100px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .pipeline-segment {
+            height: 100%;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .pipeline-legend {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        @media (min-width: 640px) {
+            .pipeline-legend { grid-template-columns: repeat(4, 1fr); }
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid #f1f5f9;
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            shrink: 0;
+        }
+        .legend-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .legend-count {
+            font-size: 14px;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1;
+        }
+        .legend-label {
+            font-size: 9px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 2px;
+        }
+        .legend-item:hover {
+            border-color: #e2e8f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        /* Pilot Badge */
+        .pilot-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+            margin-bottom: 1.5rem;
+        }
+        .pilot-badge i { font-size: 12px; }
+
+        /* Intelligence Report Card */
+        .intel-report-card {
+            background: white;
+            border-radius: 32px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f1f5f9;
+            margin-top: 1rem;
+        }
+        .intel-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .intel-stat-item {
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 20px;
+            border: 1px solid #f1f5f9;
+        }
+        .intel-stat-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        .intel-stat-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .readiness-feature {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 16px;
+            background: white;
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s;
+        }
+        .readiness-feature i {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f7ff;
+            color: #6366f1;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+        .readiness-feature span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #475569;
+        }
+        .readiness-feature:hover {
+            border-color: #6366f1;
+            transform: translateY(-2px);
+        }
+
+        .value-pillar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid #f1f5f9;
+        }
+        .value-pillar-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #f5f7ff;
+            color: #6366f1;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Side Strip */
+        .side-strip {
+            position: fixed;
+            top: 72px;
+            bottom: 0;
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 0;
+            gap: 1.5rem;
+            pointer-events: none;
+        }
+        .side-strip.left { left: 0; }
+        .side-strip.right { right: 0; }
+        
+        .company-pill {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.35;
+            transition: all 0.25s;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+        .company-pill:hover { opacity: 0.75; transform: scale(1.08); }
+        .company-pill img { width: 20px; height: 20px; object-fit: contain; filter: grayscale(1); }
+        .company-pill:hover img { filter: grayscale(0); }
+
+        @media (max-width: 1100px) {
+            .side-strip { display: none; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="glass-nav border-b border-slate-200/60 h-[72px] px-6 md:px-12 flex justify-between items-center sticky top-0 z-50">
+        <a href="https://hirly.net" class="flex items-center gap-2">
+            <img src="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg" alt="Hirly" class="h-12">
+        </a>
+        <div class="flex items-center gap-4">
+            <a href="mailto:support@hirly.net" class="text-sm font-bold text-slate-500 hover:text-primary transition-all px-4 py-2 rounded-xl hover:bg-slate-50 flex items-center gap-2 border border-transparent hover:border-slate-100" data-t="contact_us">
+                <i class="fas fa-headset text-xs"></i>
+                <span>Contact Us</span>
+            </a>
+            <div class="w-[1px] h-6 bg-slate-200"></div>
+            <button id="langToggle" class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100">العربية</button>
+        </div>
+    </nav>
+
+    <!-- Side Strips -->
+    <aside class="side-strip left" id="leftStrip"></aside>
+    <aside class="side-strip right" id="rightStrip"></aside>
+
+    <main class="flex-1 flex flex-col items-center px-6 pt-6 pb-12 md:px-12 md:pt-10 md:pb-20 w-full max-w-7xl mx-auto">
+        
+        <div id="authSection" class="w-full mt-6 md:mt-12 fade-in">
+            <div id="emailState">
+                <div class="split-hero">
+                    <!-- Left: Hero Visual -->
+                    <div class="hero-visual">
+                        <div class="text-left mb-6">
+                            <div class="pilot-badge">
+                                <i class="fas fa-briefcase"></i>
+                                <span data-t="pilot_title">Hirly Pilot</span>
+                            </div>
+                            <h1 class="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight leading-[1.1]" data-t="auth_title">Your candidates are ready</h1>
+                            <div id="jobPreview" class="flex flex-col items-start mb-6">
+                                <span id="previewJobTitle" class="text-2xl md:text-3xl font-black text-primary mb-2">...</span>
+                                <span id="previewAppCount" class="text-lg text-slate-500 font-bold">...</span>
+                            </div>
+                        </div>
+
+                        <!-- Pipeline Distribution -->
+                        <div class="mb-12">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]" data-t="pipeline_status">Candidate Stream</h4>
+                                    <div class="px-2 py-0.5 bg-slate-100 rounded text-[9px] font-black text-slate-500" id="analyzedBadge">0/0 analyzed</div>
+                                </div>
+                                <button class="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5 hover:opacity-70 transition-all">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span>Refresh</span>
+                                </button>
+                            </div>
+                            <div class="pipeline-container">
+                                <div class="pipeline-bar !h-1.5 !bg-slate-100 mb-6">
+                                    <div class="pipeline-segment !bg-indigo-500" id="segStrong" style="width: 0%"></div>
+                                    <div class="pipeline-segment !bg-indigo-400" id="segInterview" style="width: 0%"></div>
+                                    <div class="pipeline-segment !bg-amber-500" id="segBackup" style="width: 0%"></div>
+                                    <div class="pipeline-segment !bg-rose-500" id="segRejected" style="width: 0%"></div>
+                                </div>
+                                <div class="flex justify-between items-center px-1">
+                                    <div class="flex flex-col items-start gap-1">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest" data-t="verdict_strong">Strong</span>
+                                        <span class="text-xs font-black text-slate-900" id="countStrong">0</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-1">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest" data-t="verdict_interview">Interview</span>
+                                        <span class="text-xs font-black text-slate-900" id="countInterview">0</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-1">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest" data-t="verdict_backup">Backup</span>
+                                        <span class="text-xs font-black text-slate-900" id="countBackup">0</span>
+                                    </div>
+                                    <div class="flex flex-col items-end gap-1">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest" data-t="verdict_reject">Reject</span>
+                                        <span class="text-xs font-black text-slate-900" id="countRejected">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Intelligence Report Card -->
+                        <div class="intel-report-card">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-xl">
+                                    <i class="fas fa-microchip"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-black text-slate-900" data-t="intel_title">Intelligence Report</h4>
+                                    <p class="text-xs text-slate-500 font-bold" data-t="intel_subtitle">Hirly AI has evaluated your entire talent pool</p>
+                                </div>
+                            </div>
+
+                            <div class="intel-stat-grid">
+                                <div class="intel-stat-item">
+                                    <div class="intel-stat-value" id="intelTotalApps">--</div>
+                                    <div class="intel-stat-label" data-t="stat_total">Evaluated Profiles</div>
+                                </div>
+                                <div class="intel-stat-item">
+                                    <div class="intel-stat-value text-primary" id="intelTopMatches">--</div>
+                                    <div class="intel-stat-label" data-t="stat_top">Strong Matches</div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="readiness-feature">
+                                    <i class="fas fa-dna"></i>
+                                    <span data-t="feature_dna">Technical DNA Matrices Ready</span>
+                                </div>
+                                <div class="readiness-feature">
+                                    <i class="fas fa-brain"></i>
+                                    <span data-t="feature_verdict">AI Behavioral Verdicts Generated</span>
+                                </div>
+                                <div class="readiness-feature">
+                                    <i class="fas fa-list-ol"></i>
+                                    <span data-t="feature_ranking">Instant Candidate Ranking Complete</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Auth Card -->
+                    <div class="hero-auth-card">
+                        <div class="bg-white rounded-[48px] shadow-2xl shadow-slate-200/50 border border-slate-100 p-8 md:p-12">
+                            <div id="manualEmailView">
+                                <div class="flex items-center justify-between mb-8">
+                                    <h3 class="text-2xl font-black text-slate-900" data-t="secure_access">Talent Intelligence Ready</h3>
+                                    <div class="security-badge">
+                                        <i class="fas fa-shield-check text-secondary"></i>
+                                        <span data-t="verified_access">Verified Portal</span>
+                                    </div>
+                                </div>
+                                <p class="text-slate-500 mb-8 font-medium leading-relaxed" data-t="secure_access_desc">Your custom evaluations and candidate rankings are prepared. Access your full report now.</p>
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3" data-t="email_label">Company Email</label>
+                                        <input type="email" id="companyEmail" placeholder="hr@company.com" dir="ltr" class="w-full px-8 py-6 bg-slate-50 border-2 border-slate-100 rounded-[28px] focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all font-bold text-xl placeholder:text-slate-200">
+                                    </div>
+                                    <button id="sendOtpBtn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-6 rounded-[28px] transition-all flex items-center justify-center gap-3 group text-xl shadow-2xl shadow-slate-900/10">
+                                        <span data-t="continue">Access Report</span>
+                                        <i class="fas fa-arrow-right text-sm transition-transform group-hover:translate-x-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="autoEmailView" class="hidden text-center">
+                                <div class="w-24 h-24 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-8 text-4xl">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <h3 class="text-2xl font-black text-slate-900 mb-3" data-t="intel_ready">Everything is Ready</h3>
+                                <p class="text-slate-500 mb-8 font-medium">
+                                    <span data-t="ready_for">Full intelligence report prepared for</span><br>
+                                    <strong id="autoDetectedEmail" class="text-slate-900 text-xl font-black block mt-2">...</strong>
+                                </p>
+                                <button id="reviewCandidatesBtn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-6 rounded-[28px] transition-all shadow-2xl shadow-slate-900/20 mb-8 text-xl">
+                                    <span data-t="review_btn">Review Candidates</span>
+                                </button>
+                            </div>
+                            <p class="mt-8 text-center text-[9px] text-slate-300 font-bold uppercase tracking-[0.1em] opacity-50" data-t="otp_notice_subtle">Secure one-time access • No password required</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trust Marquee Section -->
+                <div class="trusted-marquee-section mt-20">
+                    <div class="text-center mb-8">
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]" data-t="trust_marquee_label">Trusted by Palestinian Industry Leaders</span>
+                    </div>
+                    <div class="marquee-wrapper">
+                        <div id="authMarqueeGrid" class="marquee-content">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="otpState" class="hidden">
+                <div class="text-center mb-12">
+                    <h1 class="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight" data-t="check_email">Check your email</h1>
+                    <p class="text-slate-600 text-sm md:text-base">
+                        <span data-t="sent_to">We sent a verification code to</span><br>
+                        <strong id="displayEmail" class="text-slate-900 font-black">...</strong>
+                    </p>
+                </div>
+                <div class="bg-white rounded-[40px] shadow-sm border border-slate-200 p-8 md:p-12">
+                    <div class="flex justify-center gap-3 mb-10" id="otpInputs" dir="ltr">
+                        <input type="text" maxlength="1" class="otp-input-char !w-14 !h-16 md:!w-16 md:!h-20 !text-2xl md:!text-3xl !rounded-2xl">
+                        <input type="text" maxlength="1" class="otp-input-char !w-14 !h-16 md:!w-16 md:!h-20 !text-2xl md:!text-3xl !rounded-2xl">
+                        <input type="text" maxlength="1" class="otp-input-char !w-14 !h-16 md:!w-16 md:!h-20 !text-2xl md:!text-3xl !rounded-2xl">
+                        <input type="text" maxlength="1" class="otp-input-char !w-14 !h-16 md:!w-16 md:!h-20 !text-2xl md:!text-3xl !rounded-2xl">
+                        <input type="text" maxlength="1" class="otp-input-char !w-14 !h-16 md:!w-16 md:!h-20 !text-2xl md:!text-3xl !rounded-2xl">
+                        <input type="text" maxlength="1" class="otp-input-char !w-14 !h-16 md:!w-16 md:!h-20 !text-2xl md:!text-3xl !rounded-2xl">
+                    </div>
+                    <button id="verifyOtpBtn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-5 rounded-[24px] transition-all flex items-center justify-center gap-3 text-lg shadow-xl shadow-slate-900/10">
+                        <span data-t="verify">Verify</span>
+                    </button>
+                    <div class="mt-10 text-center space-y-4">
+                        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                            <span data-t="no_code">Didn't receive it?</span> 
+                            <button id="resendOtpBtn" class="text-primary hover:underline font-black" data-t="resend">Resend code</button>
+                        </p>
+                        <button id="backToEmailBtn" class="text-xs text-slate-400 hover:text-slate-600 font-black uppercase tracking-widest transition-colors" data-t="change_email">Change email</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 3: Aha Moment (Review Dashboard) -->
+        <div id="reviewSection" class="hidden w-full fade-in">
+            <div class="mb-16 text-center md:text-left">
+                <h1 id="reviewJobTitle" class="text-4xl md:text-5xl font-black text-slate-900 mb-3 tracking-tight">...</h1>
+                <p id="reviewCompanyName" class="text-slate-500 font-bold text-xl mb-12">...</p>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-3xl font-black text-slate-900 mb-1" id="statTotal">0</div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-t="stat_applicants">Applicants</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-b-4 border-b-secondary">
+                        <div class="text-3xl font-black text-secondary mb-1" id="statHigh">0</div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-t="stat_high">High Matches</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-3xl font-black text-slate-700 mb-1" id="statStrong">0</div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-t="stat_strong">Strong Matches</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-3xl font-black text-slate-400 mb-1" id="statOther">0</div>
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-t="stat_other">Other Matches</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 flex items-start gap-4 mb-10">
+                <div class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shrink-0">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-indigo-900 mb-1" data-t="pilot_title">Hirly Pilot</h3>
+                    <p class="text-sm text-indigo-700 leading-relaxed" data-t="pilot_desc">Candidates have been evaluated against the requirements of this opportunity using Hirly's advanced AI evaluation pipeline.</p>
+                </div>
+            </div>
+
+            <div class="filter-container fade-in">
+                <div class="filter-group flex-1 min-w-[250px]">
+                    <label class="filter-label" data-t="filter_verdict">Verdict</label>
+                    <div class="flex flex-wrap gap-2" id="verdictFilters">
+                        <div class="verdict-chip active" data-verdict="all" data-t="all">All</div>
+                        <div class="verdict-chip" data-verdict="Strong Hire" data-t="verdict_strong">Strong Hire</div>
+                        <div class="verdict-chip" data-verdict="Interview" data-t="verdict_interview">Interview</div>
+                        <div class="verdict-chip" data-verdict="Backup" data-t="verdict_backup">Backup</div>
+                    </div>
+                </div>
+
+                <div class="filter-group w-full md:w-48">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="filter-label" data-t="filter_score">Min Match</label>
+                        <span id="scoreValue" class="text-xs font-black text-primary">0%</span>
+                    </div>
+                    <input type="range" id="scoreFilter" min="0" max="95" step="5" value="0" class="range-slider">
+                </div>
+
+                <div class="filter-group w-full md:w-48">
+                    <label class="filter-label" data-t="filter_city">City</label>
+                    <select id="cityFilter" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20">
+                        <option value="all" data-t="all_cities">All Cities</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="candidatesList" class="space-y-4 mb-20"></div>
+
+            <div id="conversionSection" class="pt-20 border-t border-slate-200 mb-20">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900 mb-4" data-t="conv_title">Everything you need to hire better</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all">
+                        <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 text-xl"><i class="fas fa-brain"></i></div>
+                        <h4 class="font-bold text-slate-900 mb-3" data-t="card1_title">AI Candidate Matching</h4>
+                        <p class="text-sm text-slate-500 leading-relaxed" data-t="card1_desc">Find the strongest candidates faster with our automated evaluation engine.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all">
+                        <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 text-xl"><i class="fas fa-user-tie"></i></div>
+                        <h4 class="font-bold text-slate-900 mb-3" data-t="card2_title">Professional Profiles</h4>
+                        <p class="text-sm text-slate-500 leading-relaxed" data-t="card2_desc">Everything you need to evaluate a candidate in one place — CVs, skills, and experience.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all">
+                        <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 text-xl"><i class="fas fa-tasks"></i></div>
+                        <h4 class="font-bold text-slate-900 mb-3" data-t="card3_title">Applicant Management</h4>
+                        <p class="text-sm text-slate-500 leading-relaxed" data-t="card3_desc">Shortlist, manage, and communicate with your candidates directly on Hirly.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all">
+                        <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 text-xl"><i class="fas fa-search"></i></div>
+                        <h4 class="font-bold text-slate-900 mb-3" data-t="card4_title">Talent Discovery</h4>
+                        <p class="text-sm text-slate-500 leading-relaxed" data-t="card4_desc">Search for additional professionals beyond your current applicants in our talent pool.</p>
+                    </div>
+                </div>
+                <div class="max-w-4xl mx-auto text-center bg-slate-900 text-white rounded-[40px] p-12 shadow-2xl shadow-slate-900/20">
+                    <h3 class="text-2xl font-extrabold mb-4" data-t="claim_title">Want to keep managing your candidates?</h3>
+                    <p class="text-slate-400 mb-10 leading-relaxed" data-t="claim_desc">Claim your free Hirly employer workspace and continue managing these candidates directly on Hirly.</p>
+                    <button id="claimWorkspaceBtn" class="bg-white text-slate-900 hover:bg-slate-50 font-black py-5 px-10 rounded-2xl transition-all shadow-xl shadow-white/5 transform hover:scale-105" data-t="claim_btn">Claim My Hiring Workspace</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Candidate Detail Modal -->
+    <div id="candidateModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
+        <div id="modalOverlay" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        <div class="relative bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[40px] shadow-2xl fade-in overflow-hidden" id="modalContainer">
+            <div class="scanning-beam"></div>
+            <button id="closeModalBtn" class="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition-all z-20">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modalContent">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Workspace Morph Experience -->
+    <div id="workspaceMorphOverlay" style="display: none;">
+        <!-- Morph Navigation (Global for the morph experience) -->
+        <nav class="bg-white border-b border-slate-200/60 h-[72px] px-6 md:px-12 flex justify-between items-center shrink-0 w-full z-[210]">
+            <div class="flex items-center">
+                <img src="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg" alt="Hirly" class="h-10">
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="/contact.html" target="_blank" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-colors px-4 py-2 rounded-xl hover:bg-slate-50">
+                    <i class="fas fa-headset"></i>
+                    <span data-t="contact_us">Contact Us</span>
+                </a>
+                <button id="morphLangToggle" class="text-sm font-semibold text-slate-500 hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100">العربية</button>
+            </div>
+        </nav>
+
+        <div class="flex flex-1 overflow-hidden w-full">
+            <aside class="morph-sidebar">
+                <div class="neural-sync">
+                    <div class="neural-line" style="top: 20%; animation-delay: 0s;"></div>
+                    <div class="neural-line" style="top: 50%; animation-delay: 1.5s;"></div>
+                    <div class="neural-line" style="top: 80%; animation-delay: 0.8s;"></div>
+                </div>
+
+                <div class="relative z-10 flex flex-col h-full">
+                    <div class="mb-12">
+                        <h2 class="text-4xl font-black text-slate-900 leading-tight mb-4 whitespace-pre-line" data-t="wizard_welcome_title">Setting up your\nworkspace</h2>
+                        <p class="text-slate-500 font-medium leading-relaxed" id="morphWelcomeDesc" data-t="wizard_welcome_desc">Your candidate evaluations are being moved to your professional dashboard.</p>
+                    </div>
+
+                    <!-- Stats Preview Card -->
+                    <div class="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 mb-12">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-xl">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-900" data-t="pilot_title">Hirly Pilot</h4>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Evaluation</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-slate-50/50 rounded-2xl text-center border border-slate-100/50">
+                                <div class="text-2xl font-black text-slate-900 mb-1" id="morphPreviewAppCount">0</div>
+                                <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest" data-t="stat_applicants">Applicants</div>
+                            </div>
+                            <div class="p-4 bg-slate-50/50 rounded-2xl text-center border border-slate-100/50">
+                                <div class="text-2xl font-black text-primary mb-1" id="morphPreviewMatchCount">0</div>
+                                <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest" data-t="stat_high">Matches</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Grid -->
+                    <div class="space-y-6 mb-12">
+                        <div class="feature-item border-l-4 border-l-primary">
+                            <div class="feature-icon"><i class="fas fa-magic"></i></div>
+                            <div class="feature-text">
+                                <h4 class="text-primary" data-t="feature_outreach_title">Automated Workflows</h4>
+                                <p data-t="feature_outreach_desc">From screening to scheduling, we handle the repetitive tasks so you can focus on people.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                            <div class="feature-text">
+                                <h4 data-t="feature_dna_title">AI-Powered Insights</h4>
+                                <p data-t="feature_dna_desc">Deep evaluation of technical skills and cultural fit using our proprietary neural models.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-users-viewfinder"></i></div>
+                            <div class="feature-text">
+                                <h4 data-t="feature_scheduling_title">Centralized Hiring</h4>
+                                <p data-t="feature_scheduling_desc">One place for your entire team to collaborate, review, and hire the best talent.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto">
+                        <button id="cancelMorphBtn" class="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors font-bold text-sm">
+                            <i class="fas fa-arrow-left text-xs rtl-flip"></i> <span data-t="back_to_review">Back to review</span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="morph-content flex-1 flex flex-col overflow-hidden bg-white">
+                <!-- Right Side Small Header -->
+                <div class="flex items-center justify-between px-12 py-6 border-b border-slate-50">
+                    <div class="flex items-center gap-4">
+                        <span class="text-xl font-black text-slate-900 tracking-tighter">Hirly</span>
+                        <div class="h-4 w-[1px] bg-slate-200 mx-2"></div>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]" id="morphHeaderSectionTitle" data-t="step1_title">The Basics</span>
+                    </div>
+                    <div class="step-indicator !mb-0">
+                        <div class="step-dot active" data-step="1"></div>
+                        <div class="step-dot" data-step="2"></div>
+                        <div class="step-dot" data-step="3"></div>
+                    </div>
+                </div>
+
+                <div class="morph-scroll-area flex-1 overflow-y-auto">
+                    <div class="wizard-form-container pt-8 pb-24 mx-auto">
+                        <form id="wizardForm">
+                            <!-- Step 1: The Basics -->
+                            <div class="setup-step active" id="step1">
+                                <div class="wizard-input-group">
+                                    <label class="wizard-label" data-t="company_name_placeholder">Company Name</label>
+                                    <input type="text" id="wizardCompanyName" class="wizard-input" placeholder="Company Name">
+                                </div>
+                                <div class="wizard-input-group">
+                                    <label class="wizard-label" data-t="work_email_placeholder">Company Email</label>
+                                    <input type="email" id="wizardEmail" class="wizard-input" placeholder="Company Email">
+                                </div>
+                                <div class="pt-8">
+                                    <button type="button" class="next-step-btn bg-slate-900 text-white px-10 py-5 rounded-3xl font-black flex items-center gap-3 hover:bg-primary transition-all shadow-xl shadow-slate-900/10">
+                                        <span data-t="next_step">Next Step</span> <i class="fas fa-arrow-right rtl-flip"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Details -->
+                            <div class="setup-step" id="step2">
+                                <div class="wizard-input-group relative">
+                                    <label class="wizard-label" data-t="industry_label">Industry</label>
+                                    <button type="button" id="wizardCategoryBtn" class="wizard-input text-left flex justify-between items-center">
+                                        <span id="wizardCategoryDisplay" data-t="select_category">Select Category</span>
+                                        <i class="fas fa-chevron-down text-slate-300 text-sm"></i>
+                                    </button>
+                                    <div id="wizardCategoryMenu" class="dropdown-menu"></div>
+                                </div>
+
+                                <div class="wizard-input-group">
+                                    <label class="wizard-label" data-t="country_label">Country</label>
+                                    <div class="premium-dropdown">
+                                        <select id="wizardCountry" class="premium-select"></select>
+                                        <i class="fas fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+
+                                <div class="wizard-input-group">
+                                    <label class="wizard-label" data-t="address_placeholder">Office Address</label>
+                                    <input type="text" id="wizardAddress" class="wizard-input" placeholder="Address">
+                                </div>
+
+                                <div class="wizard-input-group">
+                                    <label class="wizard-label" data-t="company_bio_label">Company Bio</label>
+                                    <textarea id="wizardBio" class="wizard-textarea" placeholder="Briefly describe your company..."></textarea>
+                                </div>
+                                <div class="pt-8 flex items-center gap-4">
+                                    <button type="button" class="prev-step-btn text-slate-400 font-bold px-6" data-t="back">Back</button>
+                                    <button type="button" class="next-step-btn bg-slate-900 text-white px-10 py-5 rounded-3xl font-black flex items-center gap-3 hover:bg-primary transition-all shadow-xl shadow-slate-900/10">
+                                        <span data-t="almost_there">Almost there</span> <i class="fas fa-arrow-right rtl-flip"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Access & Security -->
+                            <div class="setup-step" id="step3">
+                                <div class="wizard-input-group">
+                                    <label class="wizard-label" data-t="contact_number_label">Contact Number</label>
+                                    <div class="flex gap-4">
+                                        <div class="premium-dropdown w-32">
+                                            <select id="wizardCountryCode" class="premium-select text-lg py-4 px-4" dir="ltr"></select>
+                                            <i class="fas fa-chevron-down select-icon right-4"></i>
+                                        </div>
+                                        <input type="tel" id="wizardPhone" class="wizard-input flex-1" placeholder="Phone Number" dir="ltr">
+                                    </div>
+                                </div>
+                                <div class="wizard-input-group">
+                                    <label class="wizard-label" data-t="password_label">Password</label>
+                                    <input type="password" id="wizardPassword" class="wizard-input" placeholder="Password">
+                                    
+                                    <!-- Password Requirements -->
+                                    <div class="grid grid-cols-2 gap-2 mt-4">
+                                        <div id="req-length" class="requirement-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span data-t="password_req_length">8+ chars</span>
+                                        </div>
+                                        <div id="req-lowercase" class="requirement-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span data-t="password_req_lowercase">abc</span>
+                                        </div>
+                                        <div id="req-uppercase" class="requirement-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span data-t="password_req_uppercase">ABC</span>
+                                        </div>
+                                        <div id="req-number" class="requirement-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span data-t="password_req_number">123</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="wizard-input-group">
+                                    <label class="wizard-label" data-t="confirm_password_label">Confirm Password</label>
+                                    <input type="password" id="wizardConfirmPassword" class="wizard-input" placeholder="Confirm Password">
+                                </div>
+                                <div class="pt-8 flex items-center gap-4">
+                                    <button type="button" class="prev-step-btn text-slate-400 font-bold px-6" data-t="back">Back</button>
+                                    <button type="submit" id="wizardSubmitBtn" class="flex-1 bg-slate-900 text-white py-5 rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-primary transition-all shadow-xl shadow-slate-900/20">
+                                        <span data-t="create_workspace_btn">Create My Workspace</span> <i class="fas fa-check-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Minimal Footer -->
+    <footer class="py-10 border-t border-slate-100 bg-white/50">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <img src="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg" alt="Hirly" class="h-10 opacity-40 grayscale">
+                <span class="text-xs text-slate-400 font-bold tracking-tight">© 2026 Hirly</span>
+            </div>
+            <div class="flex items-center gap-6 text-xs text-slate-400 font-bold">
+                <a href="https://hirly.net" class="hover:text-primary transition-colors">hirly.net</a>
+                <span class="text-slate-200">|</span>
+                <span class="flex items-center gap-2">Proudly Palestinian 🇵🇸</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/language/cities-translations.js"></script>
+    <script src="/language/categories-professions-translations.js"></script>
+    <script src="/js/employer_review.js"></script>
+</body>
+</html>

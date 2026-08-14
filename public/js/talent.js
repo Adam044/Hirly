@@ -13,8 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalActions = document.getElementById('modalActions');
     const loadingOverlay = document.getElementById('loadingOverlay');
     const pageLoadingOverlay = document.getElementById('pageLoadingOverlay');
-    const noResults = document.getElementById('noResults');
-
     const mainContentWrapper = document.getElementById('mainContentWrapper');
     const browseTalentSection = document.querySelector('.talent-list-content'); // Target for auto-scroll
 
@@ -58,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Use these as the single source of truth for filtering state
     let selectedAdvancedFilterCategories = [];
     let selectedAdvancedFilterProfessions = [];
-    let selectedCountries = ['Palestine'];
+    let selectedCountries = []; // Default to all countries for broader search
     let selectedCities = [];
 
     let currentSkill = '';
@@ -84,6 +82,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let allProfessionsFlattened = [];
     // NEW: Use window.popularProfessions from the unified translations file
     let popularProfessions = [];
+
+    // Track active fetch requests to avoid race conditions
+    let currentFetchController = null;
 
     // Ensure globalCategoriesAndProfessions is loaded
     if (window.globalCategoriesAndProfessions) {
@@ -141,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         selectedAdvancedFilterCategories = [];
         selectedAdvancedFilterProfessions = [];
-        selectedCountries = ['Palestine'];
+        selectedCountries = []; // FIX: Default to all countries for broader search
         selectedCities = [];
 
         currentSkill = '';
@@ -201,26 +202,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Helper function to clone and replace an element safely
-    function cloneAndReplace(oldElement) {
-        if (!oldElement || !oldElement.parentNode) {
-            return null;
-        }
-        const newElement = oldElement.cloneNode(false);
-        oldElement.parentNode.replaceChild(newElement, oldElement);
-        return newElement;
-    }
-
     function populateQuickFilters() {
         currentLanguage = window.currentLanguage || 'en';
         translations = window.translations || {};
         const t = translations;
 
-        // Clone and replace to remove all event listeners and old elements for safety
-        const newQuickServicesGrid = cloneAndReplace(quickServicesGrid);
-        const newQuickCategoriesGridMobile = cloneAndReplace(quickCategoriesGridMobile);
-
-        if (newQuickCategoriesGridMobile) { // Only populate categories for mobile quick filters
-            newQuickCategoriesGridMobile.innerHTML = '';
+        // Use existing grid elements instead of cloning/replacing to avoid stale references
+        if (quickCategoriesGridMobile) { // Only populate categories for mobile quick filters
+            quickCategoriesGridMobile.innerHTML = '';
             // FIX: Use the global, unfiltered counts to populate the cards
             const sortedTalentCategories = [...talentCategories].sort((a, b) => {
                 const countA = allTalentCountsByCategory[a.name.en] || 0;
@@ -244,14 +233,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span>${translatedCategoryName}</span>
                     <span class="category-count">${talentCount}</span>
                 `;
-                newQuickCategoriesGridMobile.appendChild(button); // Append directly, event listener is on parent
+                quickCategoriesGridMobile.appendChild(button);
             });
-            newQuickCategoriesGridMobile.removeEventListener('click', handleQuickFilterClick); // Ensure no duplicates
-            newQuickCategoriesGridMobile.addEventListener('click', handleQuickFilterClick);
+            // Re-attach listener only once
+            quickCategoriesGridMobile.removeEventListener('click', handleQuickFilterClick);
+            quickCategoriesGridMobile.addEventListener('click', handleQuickFilterClick);
         }
 
-        if (newQuickServicesGrid) { // Populate quick services for both desktop and mobile
-            newQuickServicesGrid.innerHTML = '';
+        if (quickServicesGrid) { // Populate quick services for both desktop and mobile
+            quickServicesGrid.innerHTML = '';
             // FIX: Use the global, unfiltered counts to populate the cards
             const sortedPopularProfessions = popularProfessions.sort((a, b) => {
                 const countA = allTalentCountsByProfession[a] || 0;
@@ -294,10 +284,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span>${translatedProfName}</span>
                     <span class="category-count">${professionCount}</span>
                 `;
-                newQuickServicesGrid.appendChild(button); // Append directly, event listener is on parent
+                quickServicesGrid.appendChild(button);
             });
-            newQuickServicesGrid.removeEventListener('click', handleQuickFilterClick); // Ensure no duplicates
-            newQuickServicesGrid.addEventListener('click', handleQuickFilterClick);
+            // Re-attach listener only once
+            quickServicesGrid.removeEventListener('click', handleQuickFilterClick);
+            quickServicesGrid.addEventListener('click', handleQuickFilterClick);
         }
         updateAllFilterUIs(); // Set active states after populating
     }
@@ -1108,7 +1099,7 @@ document.addEventListener('DOMContentLoaded', function () {
             modalActions.appendChild(loginAsEmployerBtn);
 
         } else if (type === 'freelancer_privacy') {
-            accessDeniedTitle.textContent = t['freelancer_privacy_title']?.[currentLanguage] || 'Freelancer Privacy';
+            accessDeniedTitle.textContent = t['freelancer_privacy_title']?.[currentLanguage] || 'Professional Privacy';
             accessDeniedMessage.textContent = t['freelancer_privacy_message']?.[currentLanguage] || 'To protect privacy, freelancers cannot view other freelancer profiles.';
 
             const dashboardBtn = document.createElement('a');
@@ -1287,7 +1278,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="talent-card-footer">
                     ${skillsContainerHtml}
-                    <a href="${talent.slug ? `/${talent.slug}` : `/profile.html?id=${talent.id}`}" class="view-profile-cta" data-freelancer-id="${talent.id}">
+                    <a href="${talent.slug ? `/${talent.slug}` : `/profile.html?id=${talent.id}`}" target="_blank" class="view-profile-cta" data-freelancer-id="${talent.id}">
                         <span data-lang-key="view_profile">${viewProfileTranslation}</span>
                         <i class="fas fa-arrow-right"></i>
                     </a>
@@ -1311,6 +1302,13 @@ document.addEventListener('DOMContentLoaded', function () {
         currentLanguage = window.currentLanguage || 'en';
         translations = window.translations || {};
 
+        // Cancel any pending fetch request
+        if (currentFetchController) {
+            currentFetchController.abort();
+        }
+        currentFetchController = new AbortController();
+        const { signal } = currentFetchController;
+
         if (loadingOverlay) loadingOverlay.classList.add('show');
 
         // Reset pagination state if this is a new search/filter (not load more)
@@ -1318,13 +1316,16 @@ document.addEventListener('DOMContentLoaded', function () {
             currentOffset = 0;
             loadedTalentData = [];
             hasMoreTalent = true;
-            isLoadingMore = false; // Reset loading state for new searches
+            isLoadingMore = false;
             if (talentGrid) {
-                talentGrid.innerHTML = '';
+                talentGrid.innerHTML = `
+                    <div class="col-span-full py-20 flex flex-col items-center justify-center text-slate-400">
+                        <div class="w-12 h-12 border-4 border-slate-200 border-t-hirly-500 rounded-full animate-spin mb-4"></div>
+                        <p class="font-medium animate-pulse">${translations['searching']?.[currentLanguage] || 'Searching talent...'}</p>
+                    </div>
+                `;
             }
         }
-
-        if (noResults) noResults.style.display = 'none';
 
         const params = new URLSearchParams();
 
@@ -1386,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            const response = await fetch(`/api/talent?${params.toString()}`);
+            const response = await fetch(`/api/talent?${params.toString()}`, { signal });
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
@@ -1430,6 +1431,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 hasMoreTalent = data.talent.length === ITEMS_PER_PAGE;
 
                 if (newTalentData.length > 0) {
+                    // Clear the "Searching..." indicator if this is a fresh search
+                    if (!isLoadMore && talentGrid) {
+                        talentGrid.innerHTML = '';
+                    }
+                    
                     // Append new talent cards to the grid
                     newTalentData.forEach((talent, index) => {
                         const talentCard = createTalentCard(talent);
@@ -1442,19 +1448,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // Show/hide load more button
                     updateLoadMoreButton();
-
-                    if (noResults) noResults.style.display = 'none';
                 } else if (!isLoadMore && loadedTalentData.length === 0) {
                     // Only show no results if this is initial load and no data at all
-                    if (noResults) {
-                        noResults.style.display = 'block';
+                    if (talentGrid) {
                         const t = translations;
-                        noResults.innerHTML = `
-                            <div class="no-results-content">
-                                <i class="fas fa-user-slash"></i>
-                                <h3>${t['no_results_found']?.[currentLanguage] || 'No Results Found'}</h3>
-                                <p>${t['no_talent_matching_criteria']?.[currentLanguage] || 'We couldn\'t find any professionals matching your criteria.'}</p>
-                                <button id="clearFiltersFromNoResults" class="btn btn-outline" data-lang-key="clear_filters">${t['clear_filters']?.[currentLanguage] || 'Clear Filters'}</button>
+                        talentGrid.innerHTML = `
+                            <div class="col-span-full luxe-card no-hover p-16 flex flex-col items-center justify-center text-center bg-white/40 border-dashed border-2 border-slate-200 shadow-none my-8">
+                                <div class="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 text-3xl mb-6 border border-slate-100">
+                                    <i class="fas fa-user-slash"></i>
+                                </div>
+                                <h3 class="text-xl font-black text-slate-900 mb-2">${t['no_results_found']?.[currentLanguage] || 'No Results Found'}</h3>
+                                <p class="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed mb-8">${t['no_talent_matching_criteria']?.[currentLanguage] || 'We couldn\'t find any professionals matching your criteria.'}</p>
+                                <button id="clearFiltersFromNoResults" class="luxe-btn-secondary px-8 py-3 text-sm">
+                                    <i class="fas fa-undo mr-2"></i>
+                                    <span>${t['clear_filters']?.[currentLanguage] || 'Clear Filters'}</span>
+                                </button>
                             </div>
                         `;
                         const newClearFiltersBtn = document.getElementById('clearFiltersFromNoResults');
@@ -1462,11 +1470,15 @@ document.addEventListener('DOMContentLoaded', function () {
                             newClearFiltersBtn.addEventListener('click', resetFilters);
                         }
                     }
+                    
+                    // Ensure load more button is hidden
+                    updateLoadMoreButton();
                 }
             } else {
                 throw new Error('Invalid data format received from server');
             }
         } catch (error) {
+            if (error.name === 'AbortError') return; // Ignore aborted requests
             console.error('Error loading talent:', error);
             if (talentGrid) {
                 const t = translations;
@@ -1701,7 +1713,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // Main search bar and button
-    if (searchTalentButtonHero) searchTalentButtonHero.addEventListener('click', loadTalent);
+    if (searchTalentButtonHero) {
+        searchTalentButtonHero.addEventListener('click', () => {
+            currentSearchQuery = searchQueryHero.value.trim();
+            loadTalent(false);
+        });
+    }
     if (searchQueryHero) searchQueryHero.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             currentSearchQuery = searchQueryHero.value.trim();

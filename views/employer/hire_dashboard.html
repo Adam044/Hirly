@@ -14,7 +14,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-lang-key="employer_dashboard_title">Employer Dashboard - Hirly</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Core Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -64,225 +64,615 @@
     <script src="/language/cities-translations.js"></script> <!-- NEW: Load cities data -->
 </head>
 <body>
-    <!-- Header will be loaded by components.js -->
-    <div id="headerPlaceholder"></div>
     <div id="pageLoadingOverlay" class="loading-overlay">
         <div class="loading-spinner"></div>
     </div>
 
+    <!-- Mobile Top Bar -->
+    <div class="mobile-top-bar lg:hidden flex items-center justify-between p-4 bg-slate-900 text-white sticky top-0 z-[101]">
+        <div class="flex items-center gap-3">
+            <img src="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg" alt="Hirly" class="w-8 h-8 rounded-lg">
+            <span class="font-black text-lg tracking-tight">Hirly</span>
+        </div>
+        <button id="mobileSidebarToggle" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-white">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
     <div class="dashboard-wrapper">
-        <aside class="dashboard-sidebar">
+        <!-- New Sidebar -->
+        <aside class="dashboard-sidebar" id="dashboardSidebar">
             <div class="sidebar-header">
-                <div class="user-avatar-large" id="sidebarUserAvatar">
-                    <img id="sidebarUserAvatarImg" src="" alt="User Avatar" style="display: none;">
-                    <span id="sidebarUserAvatarText">EM</span>
+                <div class="user-avatar-wrapper mx-auto">
+                    <div class="user-avatar-large" id="sidebarUserAvatar">
+                        <img id="sidebarUserAvatarImg" src="" alt="User Avatar" style="display: none;">
+                        <span id="sidebarUserAvatarText">EM</span>
+                    </div>
+                    <div class="verification-badge" id="sidebarVerificationBadge">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
                 </div>
-                <span id="userNameSidebar" class="user-name-sidebar">Employer Name</span>
+                <div class="user-info-sidebar text-center">
+                    <span id="userNameSidebar" class="user-name-sidebar">Employer Name</span>
+                </div>
             </div>
+            
             <nav class="sidebar-nav">
                 <ul id="sidebarNavLinks">
                     <li>
-                        <a href="#top" id="dashboardLink" class="scroll-link active" data-lang-key="dashboard_link">
-                            <i class="fas fa-chart-line"></i> Dashboard
-                        </a>
-                    </li>
-                    <li id="personalDetailsLinkSidebar">
-                        <a href="#employerProfileSection" id="profileLink" class="scroll-link" data-lang-key="your_personal_profile">
-                            <i class="fas fa-id-card"></i> Profile
-                        </a>
-                    </li>
-                    <li id="companyDetailsLinkSidebar" style="display: none;">
-                        <a href="#companyDetailsSection" id="companyLink" class="scroll-link" data-lang-key="company_details">
-                            <i class="fas fa-building-user"></i> Company Details
+                        <a href="#overview" id="overviewLink" class="sidebar-link active" data-section="overview">
+                            <div class="link-icon"><i class="fas fa-chart-pie"></i></div>
+                            <span data-lang-key="overview_link">Overview</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#postedJobsSection" id="postedJobsLink" class="scroll-link" data-lang-key="your_posted_jobs">
-                            <i class="fas fa-list-check"></i> Posted Jobs
+                        <a href="#posted-jobs" id="postedJobsLink" class="sidebar-link" data-section="posted-jobs">
+                            <div class="link-icon"><i class="fas fa-briefcase"></i></div>
+                            <span data-lang-key="posted_jobs_link">Posted Jobs</span>
                         </a>
                     </li>
-
+                    <li id="companyProfileLinkSidebar">
+                        <a href="#company-profile" id="companyProfileLink" class="sidebar-link" data-section="company-profile">
+                            <div class="link-icon"><i class="fas fa-building"></i></div>
+                            <span data-lang-key="company_profile_link">Company Profile</span>
+                        </a>
+                    </li>
                     <li>
-                        <a href="#" id="logoutLinkSidebar" data-lang-key="logout">
-                            <i class="fas fa-right-from-bracket"></i> Logout
+                        <a href="#company-details" id="companyDetailsLink" class="sidebar-link" data-section="company-details">
+                            <div class="link-icon"><i class="fas fa-id-card"></i></div>
+                            <span data-lang-key="company_details_link">Company Details</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#settings" id="settingsLink" class="sidebar-link" data-section="settings">
+                            <div class="link-icon"><i class="fas fa-cog"></i></div>
+                            <span data-lang-key="account_settings_link">Settings</span>
                         </a>
                     </li>
                 </ul>
             </nav>
+
+            <div class="sidebar-footer">
+                <a href="/" class="sidebar-link mb-2 group" target="_blank">
+                    <div class="link-icon bg-slate-800 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <span data-lang-key="back_to_site">Back to Site</span>
+                </a>
+                <a href="#" id="logoutLinkSidebar" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span data-lang-key="logout">Logout</span>
+                </a>
+            </div>
         </aside>
 
         <main class="dashboard-content" id="mainDashboardContent">
-            <h1 class="main-dashboard-title" data-lang-key="dashboard_welcome_simple">Welcome!</h1>
-
-            <section class="dashboard-section dashboard-stats-grid">
-                <div class="stat-card">
-                    <div class="icon"><i class="fas fa-briefcase"></i></div>
-                    <p class="number" id="totalPostedJobs">0</p>
-                    <p class="label" data-lang-key="jobs_posted">Jobs Posted</p>
-                </div>
-                <div class="stat-card">
-                    <div class="icon"><i class="fas fa-tasks"></i></div>
-                    <p class="number" id="activeJobs">0</p>
-                    <p class="label" data-lang-key="active_jobs">Active Jobs</p>
-                </div>
-                <div class="stat-card">
-                    <div class="icon"><i class="fas fa-users"></i></div>
-                    <p class="number" id="totalApplications">0</p>
-                    <p class="label" data-lang-key="total_applications">Total Applications</p>
-                </div>
-                <div class="stat-card">
-                    <div class="icon"><i class="fas fa-handshake"></i></div>
-                    <p class="number" id="hiredFreelancers">0</p>
-                    <p class="label" data-lang-key="hired_professionals">Hired Professionals</p>
-                </div>
-            </section>
-
-            <!-- Let's Get Started Section -->
-            <section class="dashboard-section text-center">
-                <h2 data-lang-key="lets_get_started">Let's Get Started</h2>
-                <div class="action-buttons-group">
-                    <!-- Changed to button element, JS will handle redirection -->
-                    <button id="postJobBtn" class="btn btn-primary btn-lg" data-lang-key="post_new_job_btn">
-                        <i class="fas fa-briefcase"></i> Post a New Job
+            <!-- Overview Section -->
+            <div id="overviewSection" class="section-content">
+                <div class="section-header-premium mb-10">
+                    <div>
+                        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2" data-lang-key="overview_link">Overview</h1>
+                        <p class="text-slate-500 font-medium" data-lang-key="dashboard_welcome_desc">Welcome back! Here's what's happening with your hiring.</p>
+                    </div>
+                    <button id="postJobBtn" class="btn-premium-primary">
+                        <i class="fas fa-plus-circle"></i>
+                        <span data-lang-key="post_new_job_btn">Post a New Job</span>
                     </button>
-                    <!-- Ensure this is a standard anchor tag -->
-                    <a href="/talent.html" id="browseProfessionsBtn" class="btn btn-outline-primary btn-lg" data-lang-key="browse_professions_btn">
-                        <i class="fas fa-search"></i> Browse Professions
+                </div>
+
+                <!-- Stats Grid Premium -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    <div class="stat-card-premium">
+                        <div class="stat-icon-bg bg-indigo-50 text-indigo-600">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label" data-lang-key="jobs_posted">Jobs Posted</span>
+                            <h3 class="stat-value" id="totalPostedJobs">0</h3>
+                        </div>
+                        <div class="stat-chart-mini">
+                            <div class="mini-bar" style="height: 40%"></div>
+                            <div class="mini-bar" style="height: 60%"></div>
+                            <div class="mini-bar" style="height: 50%"></div>
+                            <div class="mini-bar" style="height: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card-premium">
+                        <div class="stat-icon-bg bg-emerald-50 text-emerald-600">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label" data-lang-key="active_jobs">Active Jobs</span>
+                            <h3 class="stat-value" id="activeJobs">0</h3>
+                        </div>
+                        <div class="stat-chart-mini">
+                            <div class="mini-bar" style="height: 30%"></div>
+                            <div class="mini-bar" style="height: 40%"></div>
+                            <div class="mini-bar" style="height: 70%"></div>
+                            <div class="mini-bar" style="height: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card-premium">
+                        <div class="stat-icon-bg bg-blue-50 text-blue-600">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label" data-lang-key="total_applications">Total Applications</span>
+                            <h3 class="stat-value" id="totalApplications">0</h3>
+                        </div>
+                        <div class="stat-chart-mini">
+                            <div class="mini-bar" style="height: 20%"></div>
+                            <div class="mini-bar" style="height: 50%"></div>
+                            <div class="mini-bar" style="height: 60%"></div>
+                            <div class="mini-bar" style="height: 40%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card-premium">
+                        <div class="stat-icon-bg bg-rose-50 text-rose-600">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label" data-lang-key="profile_views">Profile Views</span>
+                            <h3 class="stat-value" id="profileViewsOverview">0</h3>
+                        </div>
+                        <div class="stat-chart-mini">
+                            <div class="mini-bar" style="height: 50%"></div>
+                            <div class="mini-bar" style="height: 30%"></div>
+                            <div class="mini-bar" style="height: 40%"></div>
+                            <div class="mini-bar" style="height: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <!-- Left Column: Readiness -->
+                    <div class="lg:col-span-3 space-y-8">
+                        <!-- Company Readiness Premium -->
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden h-full">
+                            <div class="flex items-center justify-between mb-8 relative z-10">
+                                <div>
+                                    <h3 class="text-2xl font-black text-slate-900 mb-2" data-lang-key="account_completeness">Company Readiness</h3>
+                                    <p class="text-slate-500 font-medium" data-lang-key="completeness_desc">Complete your company profile to look professional to talent.</p>
+                                </div>
+                                <div class="relative w-28 h-28 md:w-32 md:h-32 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="10" fill="transparent" class="text-slate-100"/>
+                                        <circle id="completenessCircle" cx="50" cy="50" r="40" stroke="currentColor" stroke-width="10" fill="transparent" stroke-dasharray="251.32" stroke-dashoffset="251.32" stroke-linecap="round" class="text-indigo-600 transition-all duration-1000 ease-out"/>
+                                    </svg>
+                                    <span class="absolute text-2xl md:text-3xl font-black text-slate-900" id="completenessScore">0%</span>
+                                </div>
+                            </div>
+                            
+                            <div id="missingFieldsContainer" class="flex flex-col gap-3 relative z-10">
+                                <!-- Dynamic missing fields with action buttons -->
+                            </div>
+
+                            <!-- Decorative background -->
+                            <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-indigo-50/50 rounded-full blur-3xl"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Quick Actions -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 h-full">
+                            <h3 class="text-xl font-black text-slate-900 mb-6" data-lang-key="quick_actions">Quick Actions</h3>
+                            <div class="flex flex-col gap-3">
+                                <button onclick="window.open('/employer/post_job.html', '_blank')" class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-indigo-600 hover:text-white transition-all group">
+                                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <div class="text-left rtl:text-right">
+                                        <span class="block font-black text-sm" data-lang-key="post_new_job_btn">Post Job</span>
+                                        <span class="block text-[10px] opacity-60 font-bold uppercase tracking-wider" data-lang-key="start_hiring_now">Start hiring now</span>
+                                    </div>
+                                </button>
+                                
+                                <button onclick="window.open('/talent.html', '_blank')" class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-blue-600 hover:text-white transition-all group">
+                                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                        <i class="fas fa-search"></i>
+                                    </div>
+                                    <div class="text-left rtl:text-right">
+                                        <span class="block font-black text-sm" data-lang-key="browse_professions_btn">Browse Talent</span>
+                                        <span class="block text-[10px] opacity-60 font-bold uppercase tracking-wider" data-lang-key="find_perfect_match">Find the perfect match</span>
+                                    </div>
+                                </button>
+
+                                <button id="overviewViewProfileBtn" class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-emerald-600 hover:text-white transition-all group">
+                                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </div>
+                                    <div class="text-left rtl:text-right">
+                                        <span class="block font-black text-sm" data-lang-key="view_public_profile_btn">Public Profile</span>
+                                        <span class="block text-[10px] opacity-60 font-bold uppercase tracking-wider" data-lang-key="how_others_see_you">How others see you</span>
+                                    </div>
+                                </button>
+
+                                <button id="overviewSettingsBtn" class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-slate-900 hover:text-white transition-all group">
+                                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-600 group-hover:bg-slate-800 group-hover:text-white transition-colors">
+                                        <i class="fas fa-cog"></i>
+                                    </div>
+                                    <div class="text-left rtl:text-right">
+                                        <span class="block font-black text-sm" data-lang-key="account_settings_link">Settings</span>
+                                        <span class="block text-[10px] opacity-60 font-bold uppercase tracking-wider" data-lang-key="manage_preferences">Manage preferences</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posted Jobs Section -->
+            <div id="posted-jobsSection" class="section-content hidden">
+                <div class="section-header-premium mb-10">
+                    <div>
+                        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2" data-lang-key="posted_jobs_link">Posted Jobs</h1>
+                        <p class="text-slate-500 font-medium" data-lang-key="manage_jobs_desc">Manage and monitor your active job opportunities.</p>
+                    </div>
+                    <button id="postJobBtn2" class="btn-premium-primary">
+                        <i class="fas fa-plus-circle"></i>
+                        <span data-lang-key="post_new_job_btn">Post Job</span>
+                    </button>
+                </div>
+                
+                <div id="postedJobsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                    <!-- Dynamic jobs list -->
+                </div>
+                
+                <div id="noJobsMessage" class="hidden">
+                    <div class="flex flex-col items-center justify-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
+                        <div class="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center text-4xl text-slate-300 mb-6">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-900 mb-3" data-lang-key="no_jobs_posted_yet">No Jobs Posted Yet</h3>
+                        <p class="text-slate-500 font-medium mb-10 max-w-sm text-center">Your future team members are waiting. Start by posting your first job opportunity.</p>
+                        <button onclick="window.open('/employer/post_job.html', '_blank')" class="btn-premium-primary">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span data-lang-key="post_job_now_intro">Post Your First Job</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Profile Section (Public Presence) -->
+            <div id="company-profileSection" class="section-content hidden">
+                <div class="section-header-premium mb-10">
+                    <div>
+                        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2" data-lang-key="company_profile_link">Company Profile</h1>
+                        <p class="text-slate-500 font-medium" data-lang-key="company_profile_desc">Control how candidates see your company.</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <!-- Left: Profile Identity Card (Preview) -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-8 sm:p-12 rounded-[40px] shadow-2xl shadow-slate-200/40 border border-slate-100 text-center relative overflow-hidden h-full flex flex-col items-center justify-center min-h-[500px]">
+                            <!-- Background Decoration -->
+                            <div class="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50/50 rounded-full blur-3xl"></div>
+                            <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-50/50 rounded-full blur-3xl"></div>
+
+                            <div class="relative mb-10">
+                                <div class="w-48 h-48 rounded-[3rem] bg-slate-50 mx-auto overflow-hidden border-8 border-white shadow-2xl relative z-10 group">
+                                    <img id="profilePreviewLogo" src="" alt="Logo" class="w-full h-full object-cover hidden">
+                                    <div id="profilePreviewPlaceholder" class="w-full h-full flex items-center justify-center text-6xl text-slate-200">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20 cursor-pointer" onclick="window.switchSection('company-details')">
+                                        <i class="fas fa-camera text-white text-2xl"></i>
+                                    </div>
+                                </div>
+                                <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-emerald-500 text-white rounded-2xl border-4 border-white flex items-center justify-center shadow-lg z-30">
+                                    <i class="fas fa-check text-sm"></i>
+                                </div>
+                            </div>
+
+                            <div class="relative z-10 space-y-4">
+                                <h2 id="profilePreviewName" class="text-4xl font-black text-slate-900 tracking-tight">Company Name</h2>
+                                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em]" id="profilePreviewCategory">
+                                    Industry/Category
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mt-12 relative z-10">
+                                <button id="viewPublicProfileFullBtn" class="py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-200" target="_blank">
+                                    <i class="fas fa-external-link-alt text-xs"></i>
+                                    <span data-lang-key="view_public_profile_btn">Visit Profile</span>
+                                </button>
+                                <button id="shareProfileBtn" class="py-4 bg-white text-slate-900 border-2 border-slate-100 rounded-2xl font-black hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
+                                    <i class="fas fa-share-alt text-xs"></i>
+                                    <span data-lang-key="share_profile">Share Profile</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Reach & Tools -->
+                    <div class="lg:col-span-1 flex flex-col gap-8">
+                        <!-- Reach Card -->
+                        <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm group hover:border-indigo-200 transition-all flex-grow flex flex-col justify-center">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]" data-lang-key="total_reach">Total Reach</h3>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <p class="text-6xl font-black text-slate-900 tracking-tighter" id="profileViewsCount">0</p>
+                                <span class="text-slate-400 font-bold text-sm uppercase tracking-widest" data-lang-key="views_count">Views</span>
+                            </div>
+                        </div>
+
+                        <!-- QR Code Card -->
+                        <div class="bg-indigo-600 p-8 rounded-[32px] text-white shadow-xl shadow-indigo-100 flex items-center gap-8 group flex-grow">
+                            <div id="companyQrContainer" class="bg-white p-2.5 rounded-2xl shadow-inner flex-shrink-0 group-hover:scale-105 transition-transform"></div>
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="text-lg font-black leading-tight" data-lang-key="corporate_access">Instant Corporate Access</h3>
+                                    <p class="text-indigo-100/70 text-[10px] font-medium mt-1 uppercase tracking-widest" data-lang-key="scan_qr_desc">Scan to view full profile</p>
+                                </div>
+                                <button id="downloadQrBtn" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest">
+                                    <i class="fas fa-download"></i>
+                                    <span data-lang-key="download_qr_code">Download QR</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Details Section -->
+            <div id="company-detailsSection" class="section-content hidden">
+                <div class="section-header-premium mb-10">
+                    <div>
+                        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2" data-lang-key="company_details_link">Company Details</h1>
+                        <p class="text-slate-500 font-medium" data-lang-key="update_info_desc">Update your professional and organizational information.</p>
+                    </div>
+                </div>
+                <div id="formsContainer" class="space-y-12"></div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settingsSection" class="section-content hidden">
+                <div class="section-header-premium mb-10">
+                    <div>
+                        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2" data-lang-key="account_settings_link">Settings</h1>
+                        <p class="text-slate-500 font-medium" data-lang-key="manage_workspace_desc">Manage your workspace preferences.</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+                    <div class="p-10 border-b border-slate-50">
+                        <div class="flex items-center gap-6">
+                            <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl text-slate-600">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-black text-slate-900 mb-1" data-lang-key="language">Display Language</h3>
+                                <p class="text-slate-500 font-medium" data-lang-key="experience_hirly_desc">Choose how you want to experience Hirly.</p>
+                            </div>
+                        </div>
+                        <div class="flex mt-8 p-1.5 bg-slate-50 rounded-[1.25rem] w-fit">
+                            <button onclick="window.setLanguage('en')" class="px-8 py-3 rounded-2xl text-sm font-black transition-all" id="langEnBtn">English</button>
+                            <button onclick="window.setLanguage('ar')" class="px-8 py-3 rounded-2xl text-sm font-black transition-all" id="langArBtn">العربية</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    </div>
+
+    <!-- Share Profile Modal -->
+    <div id="shareProfileModal" class="modal-overlay dashboard-modal hidden">
+        <div class="modal-content-premium max-w-lg p-10">
+            <button class="modal-close-btn" onclick="const m=document.getElementById('shareProfileModal'); m.classList.remove('show'); setTimeout(()=>m.classList.add('hidden'), 400)">
+                <i class="fas fa-xmark"></i>
+            </button>
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center text-3xl mx-auto mb-6">
+                    <i class="fas fa-share-nodes"></i>
+                </div>
+                <h3 class="text-3xl font-black text-slate-900 mb-2" data-lang-key="share_profile">Share Profile</h3>
+                <p class="text-slate-500 font-medium">Connect your company with the world's best talent.</p>
+            </div>
+
+            <div class="space-y-8">
+                <!-- Link Copy -->
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Company URL</p>
+                    <div class="flex items-center justify-between gap-4">
+                        <p id="shareModalLinkDisplay" class="text-base font-bold text-slate-700 truncate">https://hirly.net/company/aura</p>
+                        <button id="shareModalCopyBtn" class="flex-shrink-0 w-12 h-12 bg-white text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-slate-100">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Social Options -->
+                <div class="grid grid-cols-4 gap-4">
+                    <a id="shareLinkedIn" href="#" target="_blank" class="flex flex-col items-center gap-2 group social-share-link">
+                        <div class="w-14 h-14 rounded-2xl bg-[#0077b5]/10 text-[#0077b5] flex items-center justify-center text-xl group-hover:bg-[#0077b5] group-hover:text-white transition-all">
+                            <i class="fab fa-linkedin-in"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">LinkedIn</span>
                     </a>
-                    <!-- NEW: Button to view public employer profile -->
-                    <a href="/employer/employer_profile.html" id="viewPublicProfileBtn" class="btn btn-outline-secondary btn-lg" data-lang-key="view_public_profile_btn">
-                        <i class="fas fa-user"></i> View My Public Profile
+                    <a id="shareFacebook" href="#" target="_blank" class="flex flex-col items-center gap-2 group social-share-link">
+                        <div class="w-14 h-14 rounded-2xl bg-[#1877f2]/10 text-[#1877f2] flex items-center justify-center text-xl group-hover:bg-[#1877f2] group-hover:text-white transition-all">
+                            <i class="fab fa-facebook-f"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Facebook</span>
+                    </a>
+                    <a id="shareX" href="#" target="_blank" class="flex flex-col items-center gap-2 group social-share-link">
+                        <div class="w-14 h-14 rounded-2xl bg-black/10 text-black flex items-center justify-center text-xl group-hover:bg-black group-hover:text-white transition-all">
+                            <i class="fab fa-x-twitter"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">X (Twitter)</span>
+                    </a>
+                    <a id="shareInstagram" href="#" target="_blank" class="flex flex-col items-center gap-2 group social-share-link">
+                        <div class="w-14 h-14 rounded-2xl bg-[#e4405f]/10 text-[#e4405f] flex items-center justify-center text-xl group-hover:bg-[#e4405f] group-hover:text-white transition-all">
+                            <i class="fab fa-instagram"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Instagram</span>
                     </a>
                 </div>
-            </section>
+            </div>
+        </div>
+    </div>
 
-            <section class="dashboard-section" id="employerProfileSection">
-                <h2 data-lang-key="your_personal_profile">Your Personal Profile</h2>
-                <form id="employerProfileForm" class="profile-form">
+    <!-- Unsaved Changes Confirmation Modal -->
+    <div id="unsavedChangesModal" class="modal-overlay dashboard-modal hidden">
+        <div class="modal-content-premium max-w-md p-10 text-center">
+            <button class="modal-close-btn" onclick="const m=document.getElementById('unsavedChangesModal'); m.classList.remove('show'); setTimeout(()=>m.classList.add('hidden'), 400)">
+                <i class="fas fa-xmark"></i>
+            </button>
+            <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-[2rem] flex items-center justify-center text-3xl mx-auto mb-6">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 mb-2">Unsaved Changes</h3>
+            <p class="text-slate-500 font-medium mb-10">You have pending updates in your company details. If you leave now, these changes will be lost.</p>
+            
+            <div class="flex flex-col gap-3">
+                <button id="stayAndSaveBtn" class="py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all">
+                    Stay and Save
+                </button>
+                <button id="discardAndLeaveBtn" class="py-4 bg-white text-slate-400 rounded-2xl font-black hover:text-rose-500 transition-all text-sm">
+                    Discard Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Forms for Details Section -->
+    <div style="display: none;">
+        <div id="employerProfileFormTemplate">
+            <section class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                <h2 class="text-xl font-bold text-slate-900 mb-6 pb-4 border-b border-slate-100" data-lang-key="your_personal_profile">Your Personal Profile</h2>
+                <form id="employerProfileForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="form-group">
-                        <label for="firstName" data-lang-key="first_name_label">First Name</label>
-                        <input type="text" id="firstName" name="firstName" class="form-control" readonly>
+                        <label for="firstName" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="first_name_label">First Name</label>
+                        <input type="text" id="firstName" name="firstName" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="lastName" data-lang-key="last_name_label">Last Name</label>
-                        <input type="text" id="lastName" name="lastName" class="form-control" readonly>
+                        <label for="lastName" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="last_name_label">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="email" data-lang-key="email_address_label">Email Address</label>
-                        <input type="email" id="email" name="email" class="form-control" readonly>
+                        <label for="email" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="email_address_label">Email Address</label>
+                        <input type="email" id="email" name="email" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="phone" data-lang-key="phone_number_label">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" class="form-control">
+                        <label for="phone" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="phone_number_label">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                     </div>
                     <div class="form-group">
-                        <label for="city" data-lang-key="city_label">City</label>
-                        <select id="city" name="city" class="form-control"></select>
+                        <label for="city" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="city_label">City</label>
+                        <select id="city" name="city" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"></select>
                     </div>
 
-
-                    <div class="form-actions full-width">
-                        <button type="button" id="editProfileBtn" class="btn btn-secondary btn-sm" data-lang-key="edit_profile_btn"><i class="fas fa-edit"></i> Edit Profile</button>
-                        <button type="submit" id="saveProfileBtn" class="btn btn-primary btn-sm" style="display: none;" data-lang-key="save_changes_btn"><i class="fas fa-save"></i> Save Changes</button>
-                        <button type="button" id="cancelEditBtn" class="btn btn-outline-secondary btn-sm" style="display: none;" data-lang-key="cancel_btn">Cancel</button>
+                    <div class="md:col-span-2 flex justify-end gap-3 mt-4">
+                        <button type="button" id="editProfileBtn" class="px-6 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all flex items-center gap-2">
+                            <i class="fas fa-edit"></i>
+                            <span data-lang-key="edit_profile_btn">Edit Profile</span>
+                        </button>
+                        <button type="submit" id="saveProfileBtn" class="hidden px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+                            <i class="fas fa-save"></i>
+                            <span data-lang-key="save_changes_btn">Save Changes</span>
+                        </button>
+                        <button type="button" id="cancelEditBtn" class="hidden px-6 py-2 bg-white text-slate-500 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
+                            <span data-lang-key="cancel_btn">Cancel</span>
+                        </button>
                     </div>
                 </form>
             </section>
+        </div>
 
-            <!-- NEW: Company Details Section - Initially hidden by JS -->
-            <section class="dashboard-section" id="companyDetailsSection" style="display: none;">
-                <h2 data-lang-key="company_details">Company Details</h2>
-                <form id="companyProfileForm" class="profile-form">
+        <div id="companyProfileFormTemplate">
+            <section class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                <h2 class="text-xl font-bold text-slate-900 mb-6 pb-4 border-b border-slate-100" data-lang-key="company_details">Company Details</h2>
+                <form id="companyProfileForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label for="companyName" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="company_name_label">Company Name</label>
+                            <input type="text" id="companyName" name="companyName" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        </div>
+                        <div class="form-group">
+                            <label for="companyEmail" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="company_email_label">Company Email</label>
+                            <input type="email" id="companyEmail" name="companyEmail" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        </div>
+                        <div class="form-group">
+                            <label for="companyPhone" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="company_phone_label">Company Phone Number</label>
+                            <input type="tel" id="companyPhone" name="companyPhone" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        </div>
+                        <div class="form-group">
+                            <label for="address" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="address_label">Address</label>
+                            <input type="text" id="address" name="address" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label for="companyName" data-lang-key="company_name_label">Company Name</label>
-                        <input type="text" id="companyName" name="companyName" class="form-control">
+                        <label for="companyDescription" class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="company_description_label">Company Description</label>
+                        <textarea id="companyDescription" name="companyDescription" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" rows="4"></textarea>
                     </div>
-                    <!-- NEW: Company Email -->
+
                     <div class="form-group">
-                        <label for="companyEmail" data-lang-key="company_email_label">Company Email</label>
-                        <input type="email" id="companyEmail" name="companyEmail" class="form-control">
-                    </div>
-                    <!-- NEW: Company Phone Number -->
-                    <div class="form-group">
-                        <label for="companyPhone" data-lang-key="company_phone_label">Company Phone Number</label>
-                        <input type="tel" id="companyPhone" name="companyPhone" class="form-control">
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="address" data-lang-key="address_label">Address</label>
-                        <input type="text" id="address" name="address" class="form-control">
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="companyDescription" data-lang-key="company_description_label">Company Description</label>
-                        <textarea id="companyDescription" name="companyDescription" class="form-control" rows="4" data-lang-key="company_description_placeholder_full" placeholder="Share your company's mission, values, and what makes it unique."></textarea>
-                    </div>
-                    <!-- NEW: Company Category Dropdown (Custom Implementation) -->
-                    <div class="form-group full-width">
-                        <label for="companyCategorySelect" data-lang-key="company_category_label">Company Industry/Category</label>
-                        <div class="custom-dropdown" id="companyCategoryDropdown">
-                            <button type="button" class="dropdown-toggle form-control" id="companyCategoryToggleButton" aria-haspopup="true" aria-expanded="false">
+                        <label class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="company_category_label">Company Industry/Category</label>
+                        <div class="relative" id="companyCategoryDropdown">
+                            <button type="button" class="w-full p-3 border border-slate-200 rounded-xl bg-white text-left flex items-center justify-between" id="companyCategoryToggleButton">
                                 <span id="companySelectedCategoryDisplay" data-lang-key="select_industry_category_display">Select Industry/Category</span>
-                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                <i class="fas fa-chevron-down text-slate-400"></i>
                             </button>
-                            <div class="dropdown-menu" id="companyCategoryList">
-                                <div class="dropdown-menu-checkboxes" id="companyCategoryCheckboxes">
-                                    <!-- Categories will be dynamically loaded here by JS -->
-                                </div>
-                                <div class="other-category-input-group" style="display:none;">
-                                    <input type="text" id="otherCompanyCategoryInput" class="form-control mt-2" placeholder="Enter custom category">
+                            <div class="hidden absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl p-4 max-h-80 overflow-y-auto" id="companyCategoryList">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="companyCategoryCheckboxes"></div>
+                                <div class="mt-4 pt-4 border-t border-slate-100 hidden other-category-input-group">
+                                    <input type="text" id="otherCompanyCategoryInput" class="w-full p-3 border border-slate-200 rounded-xl" placeholder="Enter custom category">
                                 </div>
                             </div>
                         </div>
-                        <!-- Hidden input to store the selected value for form submission -->
                         <input type="hidden" id="companyCategoryHidden" name="companyCategory">
                     </div>
 
-
-                    <!-- NEW: Company Logo Upload -->
-                    <div class="form-group full-width file-upload-group">
-                        <label data-lang-key="company_logo">Company Logo</label>
-                        <div class="company-logo-preview-container">
-                            <img id="companyLogoPreview" src="" alt="Company Logo Preview" style="display: none;">
-                            <div id="companyLogoPlaceholder" class="company-logo-placeholder" data-lang-key="no_logo">
-                                <i class="fas fa-image"></i>
-                                <span>No Logo</span>
+                    <div class="form-group">
+                        <label class="block text-sm font-bold text-slate-700 mb-2" data-lang-key="company_logo">Company Logo</label>
+                        <div class="flex items-center gap-6 p-6 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+                            <div class="w-24 h-24 rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden flex items-center justify-center flex-shrink-0">
+                                <img id="companyLogoPreview" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                                <div id="companyLogoPlaceholder" class="text-slate-300 text-3xl">
+                                    <i class="fas fa-image"></i>
+                                </div>
                             </div>
-                        </div>
-                        <div id="logoMessage" class="mt-2 form-message"></div>
-                        <div class="file-upload-container mt-2">
-                            <input type="file" id="companyLogoFile" class="file-input" accept=".jpg, .jpeg, .png, .gif, .svg">
-                            <label for="companyLogoFile" class="file-upload-label" style="display: none;" data-lang-key="choose_logo_btn">
-                                <i class="fas fa-upload"></i> Choose Logo
-                            </label>
-                            <span id="companyLogoFileNameDisplay" class="file-name-display" style="display: none;" data-lang-key="no_file_chosen">No file chosen</span>
-                            <button type="button" id="uploadCompanyLogoBtn" class="btn btn-primary btn-sm mt-2" style="display: none;" data-lang-key="upload_logo_btn"><i class="fas fa-cloud-upload-alt"></i> Upload Logo</button>
-                            <button type="button" id="removeCompanyLogoBtn" class="btn btn-danger btn-sm mt-2" style="display: none;" data-lang-key="remove_logo_btn"><i class="fas fa-trash-alt"></i> Remove Logo</button>
+                            <div class="flex-grow">
+                                <div id="logoMessage" class="text-sm mb-3"></div>
+                                <div class="flex gap-3">
+                                    <input type="file" id="companyLogoFile" class="hidden" accept="image/*">
+                                    <label for="companyLogoFile" class="px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold text-sm cursor-pointer hover:bg-slate-50 transition-all flex items-center gap-2">
+                                        <i class="fas fa-upload"></i>
+                                        <span data-lang-key="choose_logo_btn">Choose Logo</span>
+                                    </label>
+                                    <button type="button" id="removeCompanyLogoBtn" class="hidden px-4 py-2 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition-all flex items-center gap-2">
+                                        <i class="fas fa-trash"></i>
+                                        <span data-lang-key="remove_logo_btn">Remove</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-actions full-width">
-                        <button type="button" id="editCompanyBtn" class="btn btn-secondary btn-sm" data-lang-key="edit_company_btn"><i class="fas fa-edit"></i> Edit Company</button>
-                        <button type="submit" id="saveCompanyBtn" class="btn btn-primary btn-sm" data-lang-key="save_company_changes_btn"><i class="fas fa-save"></i> Save Changes</button>
-                        <button type="button" id="cancelCompanyEditBtn" class="btn btn-outline-secondary btn-sm" style="display: none;" data-lang-key="cancel_company_edit_btn">Cancel</button>
+                    <div class="flex justify-end gap-3 mt-8">
+                        <button type="button" id="editCompanyBtn" class="px-6 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all flex items-center gap-2">
+                            <i class="fas fa-edit"></i>
+                            <span data-lang-key="edit_company_btn">Edit Company</span>
+                        </button>
+                        <button type="submit" id="saveCompanyBtn" class="hidden px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+                            <i class="fas fa-save"></i>
+                            <span data-lang-key="save_company_changes_btn">Save Changes</span>
+                        </button>
+                        <button type="button" id="cancelCompanyEditBtn" class="hidden px-6 py-2 bg-white text-slate-500 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
+                            <span data-lang-key="cancel_company_edit_btn">Cancel</span>
+                        </button>
                     </div>
                 </form>
             </section>
-
-            <section class="dashboard-section" id="postedJobsSection">
-                <h2 data-lang-key="your_posted_jobs">Your Posted Jobs</h2>
-                <div id="postedJobsList" class="posted-jobs-grid">
-                    <!-- Job cards will be dynamically loaded here by JavaScript -->
-                    <div class="loading-spinner">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </div>
-                </div>
-                <div id="noJobsMessage" class="empty-state" style="display: none;">
-                    <i class="fas fa-clipboard-list fa-3x"></i>
-                    <h3 data-lang-key="no_jobs_posted_yet">No Jobs Posted Yet</h3>
-                    <button id="postJobBtn2" class="btn btn-secondary mt-3" data-lang-key="post_job_now">Post a Job Now</button>
-                </div>
-            </section>
-
-        </main>
+        </div>
+    </div>
     </div>
 
 
@@ -387,31 +777,36 @@
             </div>
         </div>
     </div>
-        </div>
-    </div>
 
     <!-- Reopen Job Modal with Deadline -->
-    <div id="reopenJobModal" class="modal-overlay">
-        <div class="modal-content small-modal">
-            <button class="modal-close-btn" id="closeReopenJobModalBtn" aria-label="Close">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="modal-header-icon-container">
-                <i class="fas fa-folder-open"></i>
-            </div>
-            <h2 id="reopenJobModalTitle" data-lang-key="reopen_job_title">Reopen Job</h2>
-            <p id="reopenJobModalMessage" data-lang-key="reopen_job_message">Are you sure you want to reopen this job? It will become visible for new applications.</p>
-            
-            <!-- Deadline input section (shown only when deadline has passed) -->
-            <div id="deadlineInputSection" class="form-group mt-3" style="display: none;">
-                <label for="newJobDeadline" class="form-label" data-lang-key="new_deadline_label">New Deadline</label>
-                <input type="date" id="newJobDeadline" class="form-control" data-lang-key="select_new_deadline" placeholder="Select a new deadline">
-                <div id="deadlineError" class="error-message" style="display: none;"></div>
-            </div>
-            
-            <div class="modal-actions mt-4">
-                <button type="button" id="cancelReopenJobBtn" class="btn btn-outline-secondary" data-lang-key="cancel_btn">Cancel</button>
-                <button type="button" id="confirmReopenJobBtn" class="btn btn-primary" data-lang-key="yes_reopen">Yes, Reopen</button>
+    <div id="reopenJobModal" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-content max-w-md animate-scale-in">
+            <div class="p-8">
+                <button class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors" id="closeReopenJobModalBtn">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto mb-6">
+                    <i class="fas fa-folder-open text-3xl"></i>
+                </div>
+                
+                <h2 class="text-2xl font-black text-slate-900 text-center mb-2" data-lang-key="reopen_job_title">Reopen Job</h2>
+                <p class="text-slate-500 text-center mb-8" data-lang-key="reopen_job_message">Set a new deadline to reactivate this job posting.</p>
+                
+                <div id="deadlineInputSection" class="space-y-2 mb-8 text-left rtl:text-right">
+                    <label for="newJobDeadline" class="text-sm font-black text-slate-700 uppercase tracking-widest" data-lang-key="new_deadline_label">New Deadline</label>
+                    <input type="date" id="newJobDeadline" class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-slate-900">
+                    <p id="deadlineError" class="text-xs text-rose-500 font-bold hidden"></p>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button id="cancelReopenJobBtn" class="flex-1 px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all" data-lang-key="cancel_btn">
+                        Cancel
+                    </button>
+                    <button id="confirmReopenJobBtn" class="flex-1 px-6 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all" data-lang-key="yes_reopen">
+                        Reactivate
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -458,6 +853,9 @@
     <div id="logoutConfirmModal" class="modal-overlay hidden" style="z-index: 2000;">
         <div class="modal-content max-w-md animate-scale-in">
             <div class="p-8">
+                <button class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors" id="closeLogoutModalBtn">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
                 <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mx-auto mb-6">
                     <i class="fas fa-sign-out-alt text-3xl"></i>
                 </div>
@@ -476,9 +874,32 @@
         </div>
     </div>
 
+    <!-- Language Selection Refresh Prompt Modal -->
+    <div id="languageSelectionModal" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-content max-w-md animate-scale-in">
+            <div class="p-8">
+                <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500 mx-auto mb-6">
+                    <i class="fas fa-rotate text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-slate-900 text-center mb-2" data-lang-key="refresh_recommended_title">Language Updated!</h2>
+                <p class="text-slate-500 text-center mb-8" data-lang-key="refresh_recommended_desc">We highly recommend refreshing the page to apply all changes perfectly.</p>
+                
+                <div class="flex flex-col gap-3">
+                    <button onclick="location.reload()" class="w-full px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all" data-lang-key="refresh_now">
+                        Refresh Now
+                    </button>
+                    <button onclick="window.hideModal('languageSelectionModal')" class="w-full px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all" data-lang-key="maybe_later">
+                        Maybe Later
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/auth.js?v=2" defer></script> <!-- Auth.js must load before components.js -->
+    <script src="/language/cities-translations.js?v=2" defer></script>
     <script src="/components.js?v=2" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="/js/hire_dashboard.js?v=2" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 </body>
 </html>

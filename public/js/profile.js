@@ -9,7 +9,7 @@ let freelancerId;
 let freelancerSlug;
 
 // UI Elements
-let pageLoadingOverlay, profileAvatar, profileName, profileLocation, profileBio, fullBioContent, skillsContainer, cvCtaContainer, reviewsCountSpan, leaveReviewBtn, reviewsContainer, averageRatingValue, reviewsCountParenthesis, profileEducation, educationContent, profileProfession, profileDegreeContainer, profileDegree, profileInstitutionContainer, profileInstitution, contactModal, closeContactModalBtn, modalPhoneNumber, modalEmailAddress, modalCallBtn, modalEmailBtn, offerModal, closeOfferModalBtn, offerForm, offerJobSelect, offerMessageInput, offerMessageStatus, cancelOfferBtn, submitOfferBtn, reviewModal, closeReviewModalBtn, reviewForm, reviewJobSelect, starRating, ratingInput, reviewCommentInput, reviewMessageStatus, cancelReviewBtn, submitReviewBtn, confirmationModal, employerLoginModal, closeEmployerLoginModalBtn, confirmationModalMessage, confirmActionBtn, cancelActionBtn, servicesGrid, serviceDetailsModal, closeServiceDetailsModalBtn, serviceDetailsModalContent, callModal, closeCallModalBtn, emailModal, closeEmailModalBtn, shareProfileModal, closeShareModalBtn, profileLinkInput, copyLinkBtn, copySuccessMsg, qrCodeContainer, shareWhatsAppBtn, shareFacebookBtn, shareMessengerBtn;
+let pageLoadingOverlay, profileAvatar, profileName, profileLocation, profileBio, fullBioContent, skillsContainer, cvCtaContainer, reviewsCountSpan, leaveReviewBtn, reviewsContainer, averageRatingValue, reviewsCountParenthesis, profileEducation, educationContent, profileProfession, profileDegreeContainer, profileDegree, profileInstitutionContainer, profileInstitution, contactModal, closeContactModalBtn, modalPhoneNumber, modalEmailAddress, modalCallBtn, modalEmailBtn, offerModal, closeOfferModalBtn, offerForm, offerJobSelect, offerMessageInput, offerMessageStatus, cancelOfferBtn, submitOfferBtn, reviewModal, closeReviewModalBtn, reviewForm, reviewJobSelect, starRating, ratingInput, reviewCommentInput, reviewMessageStatus, cancelReviewBtn, submitReviewBtn, confirmationModal, restrictionModal, restrictionTitle, restrictionMessage, restrictionIcon, restrictionActionBtn, closeRestrictionModalBtn, employerLoginModal, closeEmployerLoginModalBtn, confirmationModalMessage, confirmActionBtn, cancelActionBtn, servicesGrid, serviceDetailsModal, closeServiceDetailsModalBtn, serviceDetailsModalContent, callModal, closeCallModalBtn, emailModal, closeEmailModalBtn, shareProfileModal, closeShareModalBtn, profileLinkInput, copyLinkBtn, copySuccessMsg, qrCodeContainer, shareWhatsAppBtn, shareFacebookBtn, shareMessengerBtn;
 
 // Action Buttons
 let sidebarContactBtn, sidebarOfferBtn, sidebarShareBtn, sidebarCopyLinkBtn;
@@ -251,13 +251,97 @@ document.addEventListener('DOMContentLoaded', function() {
     offerModal = document.getElementById('offerModal');
     closeOfferModalBtn = document.getElementById('closeOfferModalBtn');
 
+    // Restriction Modal
+    restrictionModal = document.getElementById('restrictionModal');
+    restrictionTitle = document.getElementById('restrictionTitle');
+    restrictionMessage = document.getElementById('restrictionMessage');
+    restrictionIcon = document.getElementById('restrictionIcon');
+    restrictionActionBtn = document.getElementById('restrictionActionBtn');
+    closeRestrictionModalBtn = document.getElementById('closeRestrictionModalBtn');
+
+    if (restrictionActionBtn) restrictionActionBtn.onclick = () => hideModal(restrictionModal);
+    if (closeRestrictionModalBtn) closeRestrictionModalBtn.onclick = () => hideModal(restrictionModal);
+
     // Review Modal
     reviewModal = document.getElementById('reviewModal');
     closeReviewModalBtn = document.getElementById('closeReviewModalBtn');
+    reviewForm = document.getElementById('reviewForm');
+    reviewJobSelect = document.getElementById('reviewJobSelect');
+    starRating = document.getElementById('starRating');
+    ratingInput = document.getElementById('ratingInput');
+    reviewCommentInput = document.getElementById('reviewCommentInput');
+    cancelReviewBtn = document.getElementById('cancelReviewBtn');
+    submitReviewBtn = document.getElementById('submitReviewBtn');
+
+    if (closeReviewModalBtn) closeReviewModalBtn.onclick = () => hideModal(reviewModal);
+    if (cancelReviewBtn) cancelReviewBtn.onclick = () => hideModal(reviewModal);
+
+    if (reviewForm) {
+        reviewForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const rating = ratingInput.value;
+            const comment = reviewCommentInput.value;
+            const jobId = reviewJobSelect.value;
+
+            if (!rating || rating === '0') {
+                showToast(translate('please_select_rating', 'Please select a rating.'), 'error');
+                return;
+            }
+
+            if (!comment || comment.trim().length < 10) {
+                showToast(translate('comment_too_short', 'Comment must be at least 10 characters.'), 'error');
+                return;
+            }
+
+            try {
+                submitReviewBtn.disabled = true;
+                submitReviewBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ${translate('submitting', 'Submitting...')}`;
+
+                const response = await fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jobId,
+                        professionalId: freelancerId,
+                        rating: parseInt(rating),
+                        comment
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast(translate('review_submitted_success', 'Review submitted successfully!'), 'success');
+                    hideModal(reviewModal);
+                    reviewForm.reset();
+                    // Reset stars
+                    if (starRating) {
+                        const stars = starRating.querySelectorAll('i');
+                        stars.forEach(s => {
+                            s.classList.remove('fas', 'text-amber-400');
+                            s.classList.add('far', 'text-slate-300');
+                        });
+                    }
+                    await fetchReviewsForFreelancer(freelancerId);
+                } else {
+                    showToast(data.error || translate('failed_to_submit_review', 'Failed to submit review.'), 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting review:', error);
+                showToast(translate('error_submitting_review', 'An error occurred while submitting your review.'), 'error');
+            } finally {
+                submitReviewBtn.disabled = false;
+                submitReviewBtn.innerHTML = translate('submit_review', 'Submit Review');
+            }
+        };
+    }
 
     // Confirmation Modal
     confirmationModal = document.getElementById('confirmationModal');
-    // Note: Confirmation modal close button uses inline onclick in HTML
+    confirmationModalMessage = document.getElementById('confirmationModalMessage');
+    confirmActionBtn = document.getElementById('confirmActionBtn');
+    cancelActionBtn = document.getElementById('cancelActionBtn');
+
+    if (cancelActionBtn) cancelActionBtn.onclick = () => hideModal(confirmationModal);
 
     // Call Modal Elements
     callModal = document.getElementById('callModal');
@@ -1385,11 +1469,34 @@ function renderErrorState(message) {
         // Leave Review Button
         if (leaveReviewBtn) {
             leaveReviewBtn.onclick = async () => {
+                if (!currentLoggedInUser) {
+                    showEmployerLoginModal();
+                    return;
+                }
+
+                if (currentLoggedInUser.user_type === 'professional' || currentLoggedInUser.user_type === 'freelancer') {
+                    // Show restriction modal: professionals cannot review professionals
+                    if (restrictionModal) {
+                        restrictionTitle.textContent = translate('access_restricted', 'Access Restricted');
+                        restrictionMessage.textContent = translate('professional_restriction_review', 'As a professional, you cannot leave reviews for other professionals. This feature is for employers.');
+                        restrictionIcon.innerHTML = '<i class="fas fa-user-lock text-3xl"></i>';
+                        restrictionActionBtn.style.display = 'none';
+                        showModal(restrictionModal);
+                    }
+                    return;
+                }
+
                 if (isEmployerOrAdmin()) {
                     const viewerId = currentLoggedInUser && currentLoggedInUser.id;
                     await fetchEligibleJobsForReview(viewerId);
                     if (!eligibleJobsForReview || eligibleJobsForReview.length === 0) {
-                        showToast(translate('you_have_no_eligible_jobs_to_review', 'You have no eligible jobs to review.'), 'info');
+                        if (restrictionModal) {
+                            restrictionTitle.textContent = translate('review_restriction_title', 'No Eligible Jobs');
+                            restrictionMessage.textContent = translate('review_restriction_message', 'You can only review professionals you have officially hired. Make sure to accept their application first to leave a review.');
+                            restrictionIcon.innerHTML = '<i class="fas fa-briefcase text-3xl text-amber-500"></i>';
+                            restrictionActionBtn.style.display = 'none';
+                            showModal(restrictionModal);
+                        }
                         return;
                     }
                     if (reviewModal) {
@@ -1495,7 +1602,7 @@ function renderErrorState(message) {
         const lang = window.currentLanguage || 'en';
         const t = window.translations;
         try {
-            const response = await fetch(`/api/employer/reviewable-jobs?freelancerId=${freelancerId}`);
+            const response = await fetch(`/api/employer/reviewable-jobs?professionalId=${freelancerId}`);
             const data = await response.json();
             if (!response.ok) {
                 throw new Error(data.error || translate('failed_to_fetch_eligible_jobs', 'Failed to fetch eligible jobs.'));
@@ -1533,7 +1640,17 @@ function renderErrorState(message) {
             const reviewsCountText = (t['reviews_count_parenthesis'] && t['reviews_count_parenthesis'][lang]) ? t['reviews_count_parenthesis'][lang].replace('{count}', reviewsCount) : `(${reviewsCount} ${translate('reviews_section_title', 'Reviews')})`;
 
             if (reviewsCount === 0) {
-                if(reviewsContainer) reviewsContainer.innerHTML = `<p class="text-center text-slate-500 p-8">${translate('no_reviews_yet_empty_state', 'No reviews yet. Be the first to leave one!')}</p>`;
+                if(reviewsContainer) {
+                    reviewsContainer.innerHTML = `
+                        <div class="col-span-full luxe-card no-hover p-16 flex flex-col items-center justify-center text-center bg-white/40 border-dashed border-2 border-slate-200 shadow-none">
+                            <div class="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 text-3xl mb-6 border border-slate-100">
+                                <i class="far fa-star"></i>
+                            </div>
+                            <h3 class="text-xl font-black text-slate-900 mb-2">${translate('no_reviews_yet_title', 'No Reviews Yet')}</h3>
+                            <p class="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">${translate('no_reviews_yet_empty_state', 'Be the first to leave a review for this professional!')}</p>
+                        </div>
+                    `;
+                }
                 if(averageRatingValue) averageRatingValue.textContent = '-';
                 if(reviewsCountParenthesis) reviewsCountParenthesis.textContent = reviewsCountText;
             } else {
@@ -1597,7 +1714,15 @@ function renderErrorState(message) {
                     </div>
                     <div class="min-w-0">
                         <h4 class="font-black text-slate-900 text-base md:text-lg tracking-tight truncate group-hover:text-hirly-700 transition-colors">${reviewerName}</h4>
-                        <div class="text-[9px] md:text-[10px] text-slate-400 font-black uppercase tracking-widest">${formatDate(review.created_at)}</div>
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <div class="text-[9px] md:text-[10px] text-slate-400 font-black uppercase tracking-widest">${formatDate(review.created_at)}</div>
+                            ${review.job_title ? `
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-1 h-1 rounded-full bg-slate-200"></span>
+                                    <span class="text-[9px] md:text-[10px] text-hirly-600 font-bold bg-hirly-50/50 px-2 py-0.5 rounded-md border border-hirly-100/50 truncate max-w-[150px]">${review.job_title}</span>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-1 px-3 py-1.5 md:px-4 md:py-2 bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm group-hover:shadow-md transition-all self-start md:self-center shrink-0">
@@ -1610,13 +1735,17 @@ function renderErrorState(message) {
             </div>
         `;
 
-        if (currentLoggedInUser && currentLoggedInUser.user_type === 'employer' && currentLoggedInUser.id === review.reviewer_id) {
+        if (currentLoggedInUser && (currentLoggedInUser.user_type === 'admin' || (currentLoggedInUser.user_type === 'employer' && currentLoggedInUser.id === review.reviewer_id))) {
             const deleteButton = document.createElement('button');
             deleteButton.className = 'mt-8 px-6 py-3 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-300 rounded-xl text-xs font-black uppercase tracking-widest border border-rose-100 shadow-sm hover:shadow-rose-500/30 flex items-center gap-2 relative z-20';
             deleteButton.innerHTML = `<i class="fas fa-trash-alt text-[10px]"></i> <span>${translate('delete_review', 'Delete Feedback')}</span>`;
             deleteButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                confirmAndDeleteReview(review.review_id);
+                if (currentLoggedInUser.user_type === 'admin') {
+                    confirmAndDeleteReviewAdmin(review.review_id);
+                } else {
+                    confirmAndDeleteReview(review.review_id);
+                }
             });
             card.appendChild(deleteButton);
         }
@@ -1648,6 +1777,26 @@ function renderErrorState(message) {
         showConfirmationModal(translate('are_you_sure_delete_review', 'Are you sure you want to delete this review? This action cannot be undone.'), async () => {
             try {
                 const response = await fetch(`/api/reviews/${reviewId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || translate('failed_to_delete_review', 'Failed to delete review.'));
+                showToast(data.message || translate('review_deleted_successfully', 'Review deleted successfully!'), 'success');
+                fetchReviewsForFreelancer(freelancerId);
+            } catch (error) {
+                console.error('Error deleting review:', error);
+                showToast(`${translate('error_deleting_review', 'Error deleting review:')} ${error.message}`, 'error');
+            }
+        });
+    }
+
+    async function confirmAndDeleteReviewAdmin(reviewId) {
+        const lang = window.currentLanguage || 'en';
+        const t = window.translations;
+        showConfirmationModal(translate('are_you_sure_delete_review', 'Are you sure you want to delete this review? This action cannot be undone.'), async () => {
+            try {
+                const response = await fetch(`/api/admin/reviews/${reviewId}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                 });
@@ -1748,7 +1897,7 @@ function renderErrorState(message) {
                 const response = await fetch('/api/reviews', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ freelancerId, jobId, rating, comment })
+                    body: JSON.stringify({ professionalId: freelancerId, jobId, rating, comment })
                 });
                 
                 const data = await response.json();

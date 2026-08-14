@@ -5,18 +5,9 @@
  * @param {string} [appBaseUrl] - The base URL of the application (optional).
  * @returns {string} The full HTML content for the email.
  */
-function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = process.env.APP_BASE_URL || 'https://www.hirly.net') {
-    // Ensure appBaseUrl is a valid URL and doesn't look like a template placeholder
-    let baseUrl = appBaseUrl;
-    if (!baseUrl || typeof baseUrl !== 'string' || baseUrl.includes('{{') || !baseUrl.startsWith('http')) {
-        baseUrl = process.env.APP_BASE_URL || 'https://www.hirly.net';
-    }
-    
-    // Ensure baseUrl doesn't have trailing slash
-    baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    
-    // Use a reliable absolute URL for the logo
+function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = 'https://hirly.net') {
     const logoUrl = `https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg`;
+    const year = new Date().getFullYear();
 
     return `
         <!DOCTYPE html>
@@ -24,101 +15,52 @@ function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = proc
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${subject}</title>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
             <style>
-                body {
-                    font-family: "Segoe UI", Tahoma, Arial, "Noto Kufi Arabic", sans-serif;
-                    margin: 0;
-                    padding: 0;
-                    background-color: #f4f4f4;
-                    color: #333333;
-                    -webkit-font-smoothing: antialiased;
-                    -moz-osx-font-smoothing: grayscale;
-                }
-                .container {
-                    max-width: 600px;
-                    margin: 20px auto;
-                    background-color: #ffffff;
-                    padding: 0;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-                    overflow: hidden;
-                    border: 1px solid #e2e8f0;
-                }
-                .header {
-                    text-align: center;
-                    padding: 25px 20px;
-                    background-color: #ffffff;
-                    border-bottom: 1px solid #f1f5f9;
-                }
-                .header img {
-                    height: 45px;
-                    width: auto;
-                    display: inline-block;
-                    max-width: 100%;
-                }
-                .content {
-                    padding: 30px 25px;
-                    line-height: 1.7;
-                    text-align: right;
-                    color: #334155;
-                    font-size: 16px;
-                    word-wrap: break-word;
-                }
-                .button {
-                    display: inline-block;
-                    background-color: #2563eb;
-                    color: #ffffff;
-                    padding: 12px 28px;
-                    text-decoration: none;
-                    border-radius: 6px;
-                    text-align: center;
-                    font-weight: 700;
-                    margin: 20px 0;
-                    font-size: 15px;
-                }
-                .footer {
-                    text-align: center;
-                    padding: 20px;
-                    border-top: 1px solid #f1f5f9;
-                    font-size: 13px;
-                    color: #94a3b8;
-                    background: #f8fafc;
-                }
-                .footer a {
-                    color: #64748b;
-                    text-decoration: none;
-                    margin: 0 5px;
-                }
-                .footer a:hover {
-                    text-decoration: underline;
-                    color: #2563eb;
-                }
-                h1, h2, h3 { color: #1e293b; margin-top: 0; }
-                p { margin-bottom: 15px; }
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #334155; margin: 0; padding: 0; background-color: #f4f7fa; }
+                .container { max-width: 600px; margin: 20px auto; padding: 40px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+                .header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid #f1f5f9; }
+                .logo-img { height: 75px; width: auto; }
+                .content { text-align: right; }
+                .footer { margin-top: 50px; padding-top: 30px; border-top: 1px solid #f1f5f9; text-align: center; }
+                .footer-brand { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 10px; display: block; }
+                .footer-links { margin: 20px 0; }
+                .footer-link { color: #64748b; text-decoration: none; font-size: 13px; margin: 0 10px; font-weight: 500; }
+                .social-links { margin: 25px 0; }
+                .footer-tagline { font-size: 12px; color: #94a3b8; margin-top: 15px; }
+                .palestine-flag { margin-top: 5px; font-size: 14px; font-weight: 700; }
             </style>
         </head>
-        <body style="text-align: right; direction: rtl;">
+        <body>
             <div class="container">
-                <!-- Unified Header -->
                 <div class="header">
-                    <img src="${logoUrl}" alt="Hirly Logo">
+                    <img src="${logoUrl}" alt="Hirly Logo" class="logo-img">
                 </div>
-                
-                <!-- Main Content -->
                 <div class="content">
                     ${mainContentHtml}
                 </div>
-                
-                <!-- Unified Footer -->
                 <div class="footer">
-                    <p style="margin-bottom: 10px;">&copy; ${new Date().getFullYear()} Hirly. جميع الحقوق محفوظة.</p>
-                    <p style="margin: 0;">
-                        <a href="${appBaseUrl}">زيارة الموقع</a> • 
-                        <a href="${appBaseUrl}/privacy">سياسة الخصوصية</a> • 
-                        <a href="${appBaseUrl}/contact">اتصل بنا</a>
-                    </p>
+                    <span class="footer-brand">Hirly</span>
+                    <p style="font-size: 13px; color: #64748b; max-width: 400px; margin: 0 auto;">Hirly — نوحّد عملية التوظيف، من الفرصة إلى أفضل المرشحين.</p>
+                    
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/share/1CGgEU9Ekw/?mibextid=wwXIfr" target="_blank">
+                            <img src="https://img.icons8.com/ios-filled/50/64748b/facebook-new.png" alt="Facebook" style="width: 24px; height: 24px; margin: 0 10px;">
+                        </a>
+                        <a href="https://www.instagram.com/hirly.ps" target="_blank">
+                            <img src="https://img.icons8.com/ios-filled/50/64748b/instagram-new.png" alt="Instagram" style="width: 24px; height: 24px; margin: 0 10px;">
+                        </a>
+                    </div>
+
+                    <div class="footer-links">
+                        <a href="https://hirly.net" class="footer-link">الموقع الإلكتروني</a>
+                        <a href="https://hirly.net/jobs.html" class="footer-link">تصفح الوظائف</a>
+                        <a href="https://hirly.net/contact.html" class="footer-link">اتصل بنا</a>
+                    </div>
+
+                    <div class="footer-tagline">
+                        © ${year} Hirly. جميع الحقوق محفوظة.
+                        <div class="palestine-flag">صنع بفخر في فلسطين 🇵🇸</div>
+                    </div>
                 </div>
             </div>
         </body>
@@ -133,18 +75,9 @@ function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = proc
  * @param {string} [appBaseUrl] - The base URL of the application (optional).
  * @returns {string} The full HTML content for the email.
  */
-function generateEmailHtmlWrapperLTR(subject, mainContentHtml, appBaseUrl = process.env.APP_BASE_URL || 'https://www.hirly.net') {
-    // Ensure appBaseUrl is a valid URL and doesn't look like a template placeholder
-    let baseUrl = appBaseUrl;
-    if (!baseUrl || typeof baseUrl !== 'string' || baseUrl.includes('{{') || !baseUrl.startsWith('http')) {
-        baseUrl = process.env.APP_BASE_URL || 'https://www.hirly.net';
-    }
-    
-    // Ensure baseUrl doesn't have trailing slash
-    baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    
-    // Use a reliable absolute URL for the logo
+function generateEmailHtmlWrapperLTR(subject, mainContentHtml, appBaseUrl = 'https://hirly.net') {
     const logoUrl = `https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg`;
+    const year = new Date().getFullYear();
 
     return `
         <!DOCTYPE html>
@@ -152,101 +85,52 @@ function generateEmailHtmlWrapperLTR(subject, mainContentHtml, appBaseUrl = proc
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${subject}</title>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
             <style>
-                body {
-                    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-                    margin: 0;
-                    padding: 0;
-                    background-color: #f4f4f4;
-                    color: #333333;
-                    -webkit-font-smoothing: antialiased;
-                    -moz-osx-font-smoothing: grayscale;
-                }
-                .container {
-                    max-width: 600px;
-                    margin: 20px auto;
-                    background-color: #ffffff;
-                    padding: 0;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-                    overflow: hidden;
-                    border: 1px solid #e2e8f0;
-                }
-                .header {
-                    text-align: center;
-                    padding: 25px 20px;
-                    background-color: #ffffff;
-                    border-bottom: 1px solid #f1f5f9;
-                }
-                .header img {
-                    height: 45px;
-                    width: auto;
-                    display: inline-block;
-                    max-width: 100%;
-                }
-                .content {
-                    padding: 30px 25px;
-                    line-height: 1.7;
-                    text-align: left;
-                    color: #334155;
-                    font-size: 16px;
-                    word-wrap: break-word;
-                }
-                .button {
-                    display: inline-block;
-                    background-color: #2563eb;
-                    color: #ffffff;
-                    padding: 12px 28px;
-                    text-decoration: none;
-                    border-radius: 6px;
-                    text-align: center;
-                    font-weight: 700;
-                    margin: 20px 0;
-                    font-size: 15px;
-                }
-                .footer {
-                    text-align: center;
-                    padding: 20px;
-                    border-top: 1px solid #f1f5f9;
-                    font-size: 13px;
-                    color: #94a3b8;
-                    background: #f8fafc;
-                }
-                .footer a {
-                    color: #64748b;
-                    text-decoration: none;
-                    margin: 0 5px;
-                }
-                .footer a:hover {
-                    text-decoration: underline;
-                    color: #2563eb;
-                }
-                h1, h2, h3 { color: #1e293b; margin-top: 0; }
-                p { margin-bottom: 15px; }
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #334155; margin: 0; padding: 0; background-color: #f4f7fa; }
+                .container { max-width: 600px; margin: 20px auto; padding: 40px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+                .header { text-align: center; margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid #f1f5f9; }
+                .logo-img { height: 75px; width: auto; }
+                .content { text-align: left; }
+                .footer { margin-top: 50px; padding-top: 30px; border-top: 1px solid #f1f5f9; text-align: center; }
+                .footer-brand { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 10px; display: block; }
+                .footer-links { margin: 20px 0; }
+                .footer-link { color: #64748b; text-decoration: none; font-size: 13px; margin: 0 10px; font-weight: 500; }
+                .social-links { margin: 25px 0; }
+                .footer-tagline { font-size: 12px; color: #94a3b8; margin-top: 15px; }
+                .palestine-flag { margin-top: 5px; font-size: 14px; font-weight: 700; }
             </style>
         </head>
-        <body style="text-align: left; direction: ltr;">
+        <body>
             <div class="container">
-                <!-- Unified Header -->
                 <div class="header">
-                    <img src="${logoUrl}" alt="Hirly Logo">
+                    <img src="${logoUrl}" alt="Hirly Logo" class="logo-img">
                 </div>
-                
-                <!-- Main Content -->
                 <div class="content">
                     ${mainContentHtml}
                 </div>
-                
-                <!-- Unified Footer -->
                 <div class="footer">
-                    <p style="margin-bottom: 10px;">&copy; ${new Date().getFullYear()} Hirly. All rights reserved.</p>
-                    <p style="margin: 0;">
-                        <a href="${appBaseUrl}">Visit Website</a> • 
-                        <a href="${appBaseUrl}/privacy">Privacy Policy</a> • 
-                        <a href="${appBaseUrl}/contact">Contact Us</a>
-                    </p>
+                    <span class="footer-brand">Hirly</span>
+                    <p style="font-size: 13px; color: #64748b; max-width: 400px; margin: 0 auto;">Hirly — making hiring simpler, smarter, and more organized.</p>
+                    
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/share/1CGgEU9Ekw/?mibextid=wwXIfr" target="_blank">
+                            <img src="https://img.icons8.com/ios-filled/50/64748b/facebook-new.png" alt="Facebook" style="width: 24px; height: 24px; margin: 0 10px;">
+                        </a>
+                        <a href="https://www.instagram.com/hirly.ps" target="_blank">
+                            <img src="https://img.icons8.com/ios-filled/50/64748b/instagram-new.png" alt="Instagram" style="width: 24px; height: 24px; margin: 0 10px;">
+                        </a>
+                    </div>
+
+                    <div class="footer-links">
+                        <a href="https://hirly.net" class="footer-link">Website</a>
+                        <a href="https://hirly.net/jobs.html" class="footer-link">Browse Jobs</a>
+                        <a href="https://hirly.net/contact.html" class="footer-link">Contact Support</a>
+                    </div>
+
+                    <div class="footer-tagline">
+                        © ${year} Hirly. All rights reserved.
+                        <div class="palestine-flag">Proudly Palestinian 🇵🇸</div>
+                    </div>
                 </div>
             </div>
         </body>

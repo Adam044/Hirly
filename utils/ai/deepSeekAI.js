@@ -188,6 +188,7 @@ Extract and return ONLY a JSON object with this exact structure:
   "age_min": "number or null",
   "age_max": "number or null",
   "company_website": "string (official company website URL if you can highly accurately guess it from the company name, otherwise null)",
+  "external_company_email": "string (extract any contact or HR email found in the text, otherwise null)",
   "posted_at": "string (ISO date. CRITICAL: If the text says '2 months ago', you MUST subtract 60 days from ${currentDate}. If it says '1 day ago', subtract 1 day. DO NOT just return today's date.)",
   "deadline": "string (ISO date. Look for 'آخر موعد للتقديم' or 'Deadline' in the text. Convert to ISO format, e.g., '2026-08-10'. If not found, use null. This is extremely important for Palestinian jobs.)"
 }
@@ -254,6 +255,7 @@ Rules:
             age_min: extracted.age_min || null,
             age_max: extracted.age_max || null,
             company_website: extracted.company_website || null,
+            external_company_email: extracted.external_company_email || null,
             posted_at: extracted.posted_at || rawPayload.original_date || null,
             deadline: extracted.deadline || null
         };
@@ -286,6 +288,12 @@ Rules:
         
         let category = 'Other';
         const textToCheck = `${title} ${description}`.toLowerCase();
+        
+        // Basic email extraction fallback
+        const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+        const emails = textToCheck.match(emailRegex);
+        const externalEmail = emails ? emails[0] : null;
+
         for (const [cat, keywords] of Object.entries(categoryKeywords)) {
             if (keywords.some(kw => textToCheck.includes(kw))) {
                 category = cat;
@@ -313,6 +321,7 @@ Rules:
             age_min: null,
             age_max: null,
             company_website: null,
+            external_company_email: externalEmail,
             posted_at: rawPayload.original_date || null
         };
     }

@@ -108,6 +108,11 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#outreachLeadsSection" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="outreachLeadsLink">
+                            <i class="fas fa-paper-plane mr-3 w-5"></i> <span>Outreach Leads</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="/admin/auto-email" class="block py-3 px-4 text-gray-300 hover:bg-slate-700 rounded-lg transition-colors duration-200" id="autoEmailLink">
                             <i class="fas fa-robot mr-3 w-5"></i> <span>Auto Email System</span>
                         </a>
@@ -877,6 +882,82 @@
 
                     </div>
                 </form>
+            </section>
+
+            <!-- Outreach Leads Section -->
+            <section id="outreachLeadsSection" class="dashboard-section hidden mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-primary">Outreach Leads</h2>
+                        <p class="text-gray-400 text-sm">External jobs that have expired and have candidates waiting.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="clearOutreachFilters" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-primary transition-colors flex items-center gap-2">
+                            <i class="fas fa-undo-alt"></i> Reset Filters
+                        </button>
+                        <button id="refreshOutreachLeadsBtn" class="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-700 hover:border-primary">
+                            <i class="fas fa-sync-alt"></i> Refresh Leads
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Outreach Filters -->
+                <div class="bg-card-bg p-6 rounded-xl border border-slate-700 mb-6 shadow-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="form-group">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Search Leads</label>
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                                <input type="text" id="outreachSearchInput" class="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-gray-100 outline-none focus:border-primary transition-all" placeholder="Search by job or company...">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Status Filter</label>
+                            <div class="flex p-1 bg-slate-800 rounded-lg border border-slate-700">
+                                <button class="outreach-status-btn active flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all" data-status="all">All</button>
+                                <button class="outreach-status-btn flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all" data-status="pending">Pending</button>
+                                <button class="outreach-status-btn flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all" data-status="sent">Sent</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex justify-between">
+                                <span>Min Applicants</span>
+                                <span id="minApplicantsValue" class="text-primary font-mono">1</span>
+                            </label>
+                            <div class="pt-2">
+                                <input type="range" id="minApplicantsSlider" min="1" max="100" value="1" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card-bg rounded-xl border border-slate-700 overflow-hidden shadow-lg">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800/50 border-b border-slate-700">
+                                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Job Title</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Company & Email</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Language</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Applicants</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Deadline</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="outreachLeadsTableBody" class="divide-y divide-slate-700">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <i class="fas fa-spinner fa-spin text-2xl text-primary"></i>
+                                            <span>Loading leads...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
         </main>
     </div>

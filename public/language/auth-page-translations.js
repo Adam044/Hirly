@@ -191,7 +191,7 @@ if (typeof window.addTranslations === 'function') {
         'current_profession_label': { 'ar': 'المهنة الحالية', 'en': 'Current Profession' },
         'status_working': { 'ar': 'أعمل حالياً', 'en': 'Working' },
         'status_working_desc': { 'ar': 'موظف أو صاحب عمل', 'en': 'Employee or business owner' },
-        'status_freelance': { 'ar': 'مستقل', 'en': 'Freelancer' },
+        'status_freelance': { 'ar': 'مستقل', 'en': 'Professional' },
         'status_freelance_desc': { 'ar': 'أقدم خدماتي بشكل مستقل', 'en': 'I offer services independently' },
         'status_student': { 'ar': 'طالب/ة', 'en': 'Student' },
         'status_student_desc': { 'ar': 'في المدرسة أو الجامعة', 'en': 'In school or university' },

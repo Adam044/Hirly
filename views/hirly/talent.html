@@ -18,14 +18,14 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://hirly.app/talent.html">
+    <meta property="og:url" content="https://hirly.net/talent.html">
     <meta property="og:title" content="Professionals Network | Hirly Verified Professionals">
     <meta property="og:description" content="Connect with the best professionals in Palestine. Browse verified profiles and hire with confidence in our ecosystem of excellence.">
     <meta property="og:image" content="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/hero-bg.jpg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://hirly.app/talent.html">
+    <meta property="twitter:url" content="https://hirly.net/talent.html">
     <meta property="twitter:title" content="Professionals Network | Hirly Verified Professionals">
     <meta property="twitter:description" content="Connect with the best professionals in Palestine. Browse verified profiles and hire with confidence in our ecosystem of excellence.">
     <meta property="twitter:image" content="https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/hero-bg.jpg">
@@ -35,6 +35,35 @@
     <link rel="stylesheet" href="/styling/main.css">
     <link rel="stylesheet" href="/styling/pages/page-talent.css">
     <link rel="stylesheet" href="/styling/global-rtl.css">
+    
+    <style>
+        .luxe-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .luxe-btn-secondary {
+            background: white;
+            color: #475569;
+            font-weight: 700;
+            border-radius: 1.5rem;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .luxe-btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+    </style>
 
     <!-- Language scripts (MUST be loaded first among JS) -->
     <script src="/language/language.js"></script>
@@ -171,23 +200,17 @@
                     <div class="talent-grid-header">
                         <h2 class="section-title text-left" data-lang-key="browse_talent_section_title">Browse Talent</h2>
                     </div>
-                    <div class="talent-grid-section" id="loadMoreContainer" style="display: none;">
+                    <div class="talent-grid-section">
                          <div class="talent-grid" id="talentGrid" aria-live="polite" aria-atomic="true">
                              <!-- Talent cards will be loaded here by JavaScript -->
                          </div>
-                         <button id="loadMoreBtn" class="btn btn-primary load-more-btn btn-icon" data-lang-key="load_more">
-                             <i class="fas fa-arrow-down"></i>
-                             <span class="button-text">Load More</span>
-                         </button>
+                         <div id="loadMoreContainer" style="display: none; text-align: center; margin-top: 3rem;">
+                            <button id="loadMoreBtn" class="btn btn-primary load-more-btn btn-icon" data-lang-key="load_more">
+                                <i class="fas fa-arrow-down"></i>
+                                <span class="button-text">Load More</span>
+                            </button>
+                         </div>
                      </div>
-                    
-                    <div id="noResults" class="no-results" style="display: none;">
-                        <i class="fas fa-user-slash"></i>
-                        <p data-lang-key="no_talent_found">No talent found matching your criteria</p>
-                        <button class="btn btn-outline" id="clearFiltersFromNoResults">
-                            <i class="fas fa-undo"></i> <span data-lang-key="clear_filters">Clear Filters</span>
-                        </button>
-                    </div>
                 </div>
             </div>
             <!-- END: New layout -->

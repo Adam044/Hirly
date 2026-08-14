@@ -161,7 +161,7 @@ async function handleAuthDisplayAndRedirect() {
             const authPages = ['/login', '/signup', '/verify-email', '/email_verification_pending'].map(normalizePath);
 
             if (authPages.includes(currentPathNormalized)) {
-                const redirectPath = userType === 'freelancer' ? '/dashboard.html' : (userType === 'employer' ? '/hire_dashboard.html' : '/admin_dashboard.html');
+                const redirectPath = (userType === 'professional' || userType === 'freelancer') ? '/dashboard.html' : (userType === 'employer' ? '/hire_dashboard.html' : '/admin_dashboard.html');
                 window._isRedirecting = true;
                 window.location.href = redirectPath;
                 return;

@@ -34,6 +34,7 @@ if (typeof window.addTranslations === 'function') {
         'view_profile': { 'ar': 'عرض الملف الشخصي', 'en': 'View Profile' },
         'no_results_found': { 'ar': 'لم يتم العثور على نتائج', 'en': 'No Results Found' },
         'no_talent_matching_criteria': { 'ar': 'لم نتمكن من العثور على أي مهنيين مطابقين لمعاييرك.', 'en': 'We couldn\'t find any professionals matching your criteria.' },
+        'searching': { 'ar': 'جاري البحث عن المهنيين...', 'en': 'Searching talent...' },
         'quick_services': { 'ar': 'خدمات سريعة', 'en': 'Quick Services' }, // Renamed from one_person_team_jobs
         'select_professions': { 'ar': 'اختر المهن', 'en': 'Select Professions' },
         'professions_selected': { 'ar': 'مهن مختارة', 'en': 'Professions Selected' },
@@ -53,13 +54,13 @@ if (typeof window.addTranslations === 'function') {
         'employer_access_message_unauthenticated': { 'ar': 'هذا القسم مخصص لأصحاب العمل للعثور على المهنيين. يرجى تسجيل الدخول أو إنشاء حساب للمتابعة.', 'en': 'This section is for employers to find professionals. Please log in or sign up to continue.' },
         'login': { 'ar': 'تسجيل الدخول', 'en': 'Log In' },
         'signup_as_employer': { 'ar': 'إنشاء حساب كصاحب عمل', 'en': 'Sign Up as Employer' },
-        'employer_access_message_freelancer': { 'ar': 'أنت مسجل حاليًا كمهني مستقل. هذا القسم مخصص لأصحاب العمل.', 'en': 'You are currently logged in as a freelancer. This section is for employers.' },
+        'employer_access_message_freelancer': { 'ar': 'أنت مسجل حاليًا كمهني. هذا القسم مخصص لأصحاب العمل.', 'en': 'You are currently logged in as a professional. This section is for employers.' },
         'go_to_my_dashboard': { 'ar': 'اذهب إلى لوحة التحكم الخاصة بي', 'en': 'Go to My Dashboard' },
         'login_as_employer': { 'ar': 'تسجيل الدخول كصاحب عمل', 'en': 'Login as Employer' },
-        'freelancer_privacy_title': { 'ar': 'خصوصية المهنيين المستقلين', 'en': 'Freelancer Privacy' },
-        'freelancer_privacy_message': { 'ar': 'في هايرلي، نحن نحترم خصوصية جميع المهنيين المستقلين لدينا. لهذا السبب، لا نسمح للمهنيين المستقلين الآخرين بمشاهدة ملفك الشخصي أو تفاصيلك. هذا القسم مخصص فقط لأصحاب العمل للعثور على الكفاءات وتوظيفها.', 'en': 'At Hirly, we respect the privacy of all our freelancers. For this reason, we don\'t allow other freelancers to view your profile or details. This section is strictly for employers to find and hire talent.' },
+        'freelancer_privacy_title': { 'ar': 'خصوصية المهنيين', 'en': 'Professional Privacy' },
+        'freelancer_privacy_message': { 'ar': 'في هايرلي، نحن نحترم خصوصية جميع المهنيين لدينا. لهذا السبب، لا نسمح للمهنيين الآخرين بمشاهدة ملفك الشخصي أو تفاصيلك. هذا القسم مخصص فقط لأصحاب العمل للعثور على الكفاءات وتوظيفها.', 'en': 'At Hirly, we respect the privacy of all our professionals. For this reason, we don\'t allow other professionals to view your profile or details. This section is strictly for employers to find and hire talent.' },
         'verification_required_modal_title': { 'ar': 'التوثيق مطلوب', 'en': 'Verification Required' },
-        'talent_verification_required_message': { 'ar': 'لعرض ملفات المهنيين المستقلين، يجب أن يكون حالة توثيق هوية حساب صاحب العمل الخاص بك "موثق".', 'en': 'To view freelancer profiles, your employer account\'s ID verification status must be Verified.' },
+        'talent_verification_required_message': { 'ar': 'لعرض ملفات المهنيين، يجب أن يكون حالة توثيق هوية حساب صاحب العمل الخاص بك "موثق".', 'en': 'To view professional profiles, your employer account\'s ID verification status must be Verified.' },
         'go_to_profile': { 'ar': 'اذهب إلى الملف الشخصي', 'en': 'Go to Profile' },
         'close_modal': { 'ar': 'إغلاق', 'en': 'Close' },
         // Category translations (copied from categories-professions-translations for direct use by data-lang-key)
@@ -86,7 +87,7 @@ if (typeof window.addTranslations === 'function') {
         'are_you_sure_proceed_modal': { 'ar': 'هل أنت متأكد أنك تريد المتابعة؟', 'en': 'Are you sure you want to proceed?' },
         'yes_confirm_modal': { 'ar': 'نعم، تأكيد', 'en': 'Yes, Confirm' },
         'access_denied_title': { 'ar': 'الوصول مرفوض', 'en': 'Access Denied' }, // Ensure this is explicitly here for modals
-        'access_denied_message': { 'ar': 'يجب أن تكون صاحب عمل موثق لعرض ملفات المهنيين المستقلين.', 'en': 'You must be a verified employer to view freelancer profiles.' }, // Ensure this is explicitly here for modals
+        'access_denied_message': { 'ar': 'يجب أن تكون صاحب عمل موثق لعرض ملفات المهنيين.', 'en': 'You must be a verified employer to view professional profiles.' }, // Ensure this is explicitly here for modals
         'more': { 'ar': 'المزيد', 'en': 'more' }, // Ensure 'more' is defined
         // Quick Fix Professions - these are needed for direct lookup in populateQuickFilters
         'plumber': { 'ar': 'سباك', 'en': 'Plumber' },

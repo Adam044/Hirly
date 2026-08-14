@@ -41,7 +41,7 @@ if (typeof window.addTranslations === 'function') {
         'submit_application': { 'ar': 'إرسال الطلب', 'en': 'Submit Application' },
         'login': { 'ar': 'تسجيل الدخول', 'en': 'Login' },
         'login_as_employer_title': { 'ar': 'تسجيل الدخول كصاحب عمل', 'en': 'Login as an Employer' },
-        'login_as_employer_message': { 'ar': 'يجب عليك تسجيل الدخول كصاحب عمل لعرض ملفات المهنيين.', 'en': 'You need to log in as an employer to view freelancer profiles.' },
+        'login_as_employer_message': { 'ar': 'يجب عليك تسجيل الدخول كصاحب عمل لعرض ملفات المهنيين.', 'en': 'You need to log in as an employer to view professional profiles.' },
         'signup': { 'ar': 'إنشاء حساب', 'en': 'Sign Up' },
         'login_as_freelancer_title': { 'ar': 'تسجيل الدخول إلى هايرلي', 'en': 'Login to Hirly' },
         'login_as_freelancer_message': { 'ar': 'يجب عليك تسجيل الدخول لعرض ملفات الشركات والتقدم للوظائف.', 'en': 'You need to log in to view company profiles and apply to jobs.' },
@@ -90,6 +90,10 @@ if (typeof window.addTranslations === 'function') {
         // Added missing translation for job description default
         'no_description_provided': { 'ar': 'لم يتم تقديم وصف.', 'en': 'No description provided.' },
         'job_id_missing': { 'ar': 'معرف الوظيفة مفقود من الرابط.', 'en': 'Job ID is missing from the URL.' },
+        'country': { 'ar': 'الدولة', 'en': 'Country' },
+        'any': { 'ar': 'أي', 'en': 'Any' },
+        'any_option': { 'ar': 'أي جنس', 'en': 'Any' },
+        'select_gender_any': { 'ar': 'أي جنس', 'en': 'Any' },
         // NEW MODAL TRANSLATIONS (Ensure these are present and correct)
         'employer_cannot_apply_title': { 'ar': 'حساب صاحب عمل', 'en': 'Employer Account' },
         'employer_cannot_apply_desc': { 'ar': 'أنت مسجل الدخول كصاحب عمل. لا يمكنك التقدم للوظائف كصاحب عمل.', 'en': 'You are logged in as an employer. You cannot apply for jobs with an employer account.' },
@@ -130,6 +134,20 @@ if (typeof window.addTranslations === 'function') {
         'apply_externally': { 'ar': 'تقدم الآن', 'en': 'Apply Now' },
         'hirly_benefit_title': { 'ar': 'تقدم بأولوية هايرلي', 'en': 'Apply with Hirly Priority' },
         'hirly_benefit_desc': { 'ar': 'أنت على وشك التقديم خارجياً. لضمان تميزك، تأكد من إكمال ملفك الشخصي على هايرلي. مشاركة رابطك الخاص أو رمز QR يمنحك الأولوية، ويظهرك بشكل أكثر احترافية، ويسهل العملية على أصحاب العمل.', 'en': 'You\'re about to apply externally. To stand out, ensure your Hirly profile is complete. Sharing your unique Hirly link or QR code gives you priority, looks more professional, and makes the process seamless for employers.' },
+        
+        'external_job_modal_title': { 'ar': 'هذه فرصة خارجية', 'en': 'This is an external opportunity' },
+        'external_job_modal_desc': { 
+            'ar': 'تم نشر هذه الوظيفة في الأصل بواسطة {company} على {source}. لا يزال بإمكانك التقديم عبر هايرلي. سنقوم بمشاركة ملفك المهني وطلبك بأمان مع صاحب العمل للنظر فيه.', 
+            'en': 'This job was originally posted by {company} on {source}. You can still apply through Hirly. We\'ll securely share your Hirly professional profile and application with the employer for consideration.' 
+        },
+        'profile_includes_title': { 'ar': 'يتضمن ملفك الشخصي:', 'en': 'Your profile includes:' },
+        'profile_includes_list': { 'ar': 'السيرة الذاتية · الخبرة · التعليم · المهارات · المعلومات المهنية', 'en': 'CV · Experience · Education · Skills · Professional information' },
+        'share_profile_apply_btn': { 'ar': 'مشاركة ملفي والتقديم', 'en': 'Share My Profile & Apply' },
+        'apply_on_source_btn': { 'ar': 'التقديم على {source}', 'en': 'Apply on {source}' },
+        'external_job_agreement_text': { 
+            'ar': 'بالتقديم، أنت توافق على مشاركة ملفك الشخصي المهني الكامل في هايرلي (السيرة الذاتية، الخبرة، المهارات) مع صاحب العمل الخارجي هذا.', 
+            'en': 'By applying, you agree to share your full Hirly professional profile (CV, Experience, Skills) with this external employer.' 
+        },
 
         'complete_account': { 'ar': 'أكمل حسابك', 'en': 'Complete Your Account' },
         'visit_external_site': { 'ar': 'زيارة الموقع', 'en': 'Visit the Site' },
@@ -145,7 +163,18 @@ if (typeof window.addTranslations === 'function') {
         'any_option': { 'ar': 'أي جنس', 'en': 'Any' },
         'responsibilities': { 'ar': 'المسؤوليات', 'en': 'Responsibilities' },
         'preferred_qualifications': { 'ar': 'المؤهلات المفضلة', 'en': 'Preferred Qualifications' },
-        'benefits': { 'ar': 'المميزات والفوائد', 'en': 'Benefits' }
+        'benefits': { 'ar': 'المميزات والفوائد', 'en': 'Benefits' },
+        'apply_to_opportunity': { 'ar': 'قدّم لهذا الطلب', 'en': 'Apply to this opportunity' },
+        'application_share_info': { 'ar': 'سيتم مشاركة ملفك الشخصي وطلبك مع صاحب العمل للمراجعة.', 'en': 'Your profile and application will be shared with the employer for consideration.' },
+        'application_message': { 'ar': 'رسالة التقديم', 'en': 'Application message' },
+        'application_message_placeholder': { 'ar': 'أخبر صاحب العمل لماذا أنت مناسب لهذه الفرصة...', 'en': 'Tell the employer why you\'re a good fit for this opportunity...' },
+        'your_profile': { 'ar': 'ملفك الشخصي', 'en': 'Your profile' },
+        'professional_profile': { 'ar': 'الملف المهني', 'en': 'Professional profile' },
+        'cv_shared': { 'ar': 'السيرة الذاتية', 'en': 'CV' },
+        'experience_skills': { 'ar': 'الخبرات والمهارات', 'en': 'Experience & skills' },
+        'application_submitted_success_title': { 'ar': 'تم إرسال الطلب ✓', 'en': 'Application submitted ✓' },
+        'application_submitted_success_desc': { 'ar': 'تم إرسال طلبك بنجاح إلى صاحب العمل.', 'en': 'Your application has been sent to the employer.' },
+        'view_application': { 'ar': 'عرض الطلب', 'en': 'View Application' }
     });
 } else {
     console.error("window.addTranslations is not defined. Ensure language.js is loaded correctly before job-details-translations.js.");

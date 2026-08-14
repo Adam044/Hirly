@@ -25,7 +25,7 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
     handleValidationErrors,
     async (req, res) => {
     let client;
-    if (!req.session.userId || req.session.userType !== 'professional') {
+    if (!req.session.userId || (req.session.userType !== 'professional' && req.session.userType !== 'freelancer' && req.session.userType !== 'admin')) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
     const { jobId, professionalId } = req.query;
@@ -216,10 +216,11 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
         SELECT 
           a.id, a.job_id, j.title AS job_title, j.job_type, a.status, a.applied_at, a.proposal_message, 
           a.bid_amount, a.timeline, j.profession_required, j.job_image_path, j.currency, j.employer_id,
+          j.is_external, j.external_company_name, j.external_source,
           u.first_name, u.last_name, e.company_name
         FROM applications a
         JOIN jobs j ON a.job_id = j.id
-        JOIN users u ON j.employer_id = u.id
+        LEFT JOIN users u ON j.employer_id = u.id
         LEFT JOIN employers e ON u.id = e.user_id
         WHERE a.professional_id = $1
         ORDER BY a.applied_at DESC

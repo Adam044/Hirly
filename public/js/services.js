@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             ${avatarContent}
                         </div>
                         <div class="freelancer-info">
-                            <div class="freelancer-name">${freelancerName || 'Freelancer'}</div>
+                            <div class="freelancer-name">${freelancerName || 'Professional'}</div>
                             <!-- FIXED: City display -->
                             <div class="freelancer-city">
                                 <i class="fas fa-map-marker-alt"></i> <span>${translatedCity || getTranslatedText('not_available', 'N/A')}</span>

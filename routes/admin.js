@@ -15,7 +15,8 @@ module.exports = function registerAdminRoutes(app, pool, {
   sendEmailCampaignTest,
   sendEmailCampaignWithProgress,
   sendVerificationEmail,
-  sendEmail
+  sendEmail,
+  employerOutreach
 }) {
   const router = express.Router();
 
@@ -137,7 +138,7 @@ module.exports = function registerAdminRoutes(app, pool, {
       const totalCount = parseInt(countRes.rows[0].count);
 
       let query = `
-        SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.city, u.profile_picture_url,
+        SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.city, u.profile_picture_url, u.slug,
                f.profession, f.skills, f.bio, f.verification_status, f.id_verification_path, f.id_rejection_reason, f.id as professional_id, f.current_status, f.created_at
         FROM users u JOIN professionals f ON u.id = f.user_id
         ${whereClause}
@@ -192,7 +193,7 @@ module.exports = function registerAdminRoutes(app, pool, {
       const totalCount = parseInt(countRes.rows[0].count);
 
       let query = `
-        SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.city, u.is_email_verified,
+        SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.city, u.is_email_verified, u.slug,
                e.company_name, e.employer_type, e.id_verification_path, e.verification_status, e.id_rejection_reason, e.company_logo_path, e.id as employer_id, e.created_at
         FROM users u LEFT JOIN employers e ON u.id = e.user_id
         ${whereClause}
@@ -810,7 +811,7 @@ module.exports = function registerAdminRoutes(app, pool, {
       const params = [];
       let query = `
         SELECT j.id, j.title, j.description, j.status, j.created_at, j.has_been_sent, j.city, j.category, j.budget, j.currency,
-               u.id as employer_id, u.first_name AS employer_first_name, u.last_name AS employer_last_name,
+               u.id as employer_id, u.first_name AS employer_first_name, u.last_name AS employer_last_name, u.slug AS employer_slug,
                e.company_name as employer_company_name
         FROM jobs j JOIN users u ON j.employer_id = u.id LEFT JOIN employers e ON u.id = e.user_id
       `;
@@ -908,7 +909,7 @@ module.exports = function registerAdminRoutes(app, pool, {
       const { search, city, category, notified } = req.query;
       let query = `
         SELECT DISTINCT j.id, j.title, j.description, j.budget, j.currency, j.city, j.category, j.created_at, j.employer_id,
-               u.first_name as employer_first_name, u.last_name as employer_last_name, u.email as employer_email,
+               u.first_name as employer_first_name, u.last_name as employer_last_name, u.email as employer_email, u.slug as employer_slug,
                e.company_name as employer_company_name, COUNT(a.id) as application_count,
                CASE WHEN jan.job_id IS NOT NULL THEN true ELSE false END as notification_sent
         FROM jobs j JOIN users u ON j.employer_id = u.id LEFT JOIN employers e ON u.id = e.user_id
@@ -922,7 +923,7 @@ module.exports = function registerAdminRoutes(app, pool, {
       if (notified && notified !== 'all') { if (notified === 'notified') { query += ' AND jan.job_id IS NOT NULL'; } else if (notified === 'not_notified') { query += ' AND jan.job_id IS NULL'; } }
       query += `
         GROUP BY j.id, j.title, j.description, j.budget, j.currency, j.city, j.category, j.created_at, j.employer_id,
-                 u.first_name, u.last_name, u.email, e.company_name, jan.job_id
+                 u.first_name, u.last_name, u.email, u.slug, e.company_name, jan.job_id
         HAVING COUNT(a.id) > 0 ORDER BY j.created_at DESC
       `;
       const result = await client.query(query, params);
@@ -1041,6 +1042,34 @@ module.exports = function registerAdminRoutes(app, pool, {
       await client.query('COMMIT'); res.json({ success: true, message: 'New verification email sent successfully.' });
     } catch (error) { if (client) await client.query('ROLLBACK'); res.status(500).json({ success: false, error: error.message || 'Failed to send verification email.' }); }
     finally { if (client) client.release(); }
+  });
+
+  // --- Manual Outreach Routes ---
+  router.get('/admin/outreach-leads', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const leads = await employerOutreach.getPendingLeads();
+      res.json({ success: true, leads });
+    } catch (error) {
+      logger.error('Error fetching outreach leads:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch outreach leads.' });
+    }
+  });
+
+  router.post('/admin/send-outreach', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      let { jobId, testEmail, language = 'en' } = req.body;
+      if (!jobId) return res.status(400).json({ success: false, error: 'Job ID is required.' });
+
+      if (testEmail === 'self') {
+        testEmail = req.session.user.email;
+      }
+
+      const result = await employerOutreach.sendManualOutreach(jobId, language, testEmail);
+      res.json({ success: true, message: `Email sent to ${result.recipient}`, recipient: result.recipient });
+    } catch (error) {
+      logger.error('Error sending manual outreach:', error);
+      res.status(500).json({ success: false, error: error.message || 'Failed to send outreach.' });
+    }
   });
 
   router.get('/admin/template-preview/:templateId', isAuthenticated, isAdmin, (req, res) => {

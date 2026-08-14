@@ -311,12 +311,19 @@
                     disableButtons(true);
 
                     try {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const claimJobId = urlParams.get('claimJobId');
+                        
                         const response = await fetch('/api/verify-email', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({ code: verificationCode, email: userEmail })
+                            body: JSON.stringify({ 
+                                code: verificationCode, 
+                                email: userEmail,
+                                claimJobId: claimJobId 
+                            })
                         });
 
                         const result = await response.json();

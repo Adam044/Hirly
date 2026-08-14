@@ -6,6 +6,10 @@
 window.translations = {
     // --- General/Shared Translations ---
     // These are translations that are commonly used across multiple pages (e.g., header, footer, modals).
+    'language': {
+        'ar': 'اللغة',
+        'en': 'Language'
+    },
     'hirly_app_name': {
         'ar': 'هايرلي',
         'en': 'Hirly'
@@ -93,6 +97,22 @@ window.translations = {
     'confirm_delete': {
         'ar': 'هل أنت متأكد أنك تريد حذف هذا؟',
         'en': 'Are you sure you want to delete this?'
+    },
+    'country': {
+        'ar': 'الدولة',
+        'en': 'Country'
+    },
+    'any': {
+        'ar': 'أي',
+        'en': 'Any'
+    },
+    'any_option': {
+        'ar': 'أي جنس',
+        'en': 'Any'
+    },
+    'select_gender_any': {
+        'ar': 'أي جنس',
+        'en': 'Any'
     },
     'cancel': {
         'ar': 'إلغاء',
@@ -576,15 +596,17 @@ window.addTranslations = function(newTranslations) {
     }
 };
 
-// Function to apply translations to the current page
-window.applyTranslations = function(lang) {
-    // Set the global current language
-    window.currentLanguage = lang;
-    localStorage.setItem('hirlyLang', lang); // Save preference to local storage
+// Function to apply translations to a specific container or the whole document
+window.applyTranslations = function(lang, container = document) {
+    // Set the global current language if we're translating the whole document
+    if (container === document) {
+        window.currentLanguage = lang;
+        localStorage.setItem('hirlyLang', lang); // Save preference to local storage
+    }
 
-    // Update the HTML tag's lang and dir attributes
+    // Update the HTML tag's lang and dir attributes if we're translating the whole document
     const htmlTag = document.documentElement || document.getElementById('htmlTag');
-    if (htmlTag) {
+    if (container === document && htmlTag) {
         htmlTag.setAttribute('lang', lang);
         // Always set RTL for Arabic, LTR for English
         htmlTag.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
@@ -597,29 +619,24 @@ window.applyTranslations = function(lang) {
     }
 
     // --- Dynamic Logo Display Logic ---
-    const headerImageLogo = document.getElementById('headerImageLogo');
-    const headerTextLogo = document.getElementById('headerTextLogo');
-    // Removed headerLogoLink and aria-label manipulation from here
-    // const headerLogoLink = document.getElementById('headerLogoLink'); // No longer needed for aria-label
+    const headerImageLogo = container.querySelector ? container.querySelector('#headerImageLogo') : document.getElementById('headerImageLogo');
+    const headerTextLogo = container.querySelector ? container.querySelector('#headerTextLogo') : document.getElementById('headerTextLogo');
 
-    if (headerImageLogo && headerTextLogo) { // Simplified condition
+    if (headerImageLogo && headerTextLogo) { 
         if (lang === 'ar') {
             headerImageLogo.style.display = 'none';
             headerTextLogo.style.display = 'block';
-            // Removed: headerLogoLink.setAttribute('aria-label', window.translations['hirly_app_name_aria_label']['ar']);
         } else { // lang === 'en'
             headerImageLogo.style.display = 'block';
             headerTextLogo.style.display = 'none';
-            // Removed: headerLogoLink.setAttribute('aria-label', window.translations['hirly_app_name_aria_label']['en']);
         }
     }
     // --- End Dynamic Logo Display Logic ---
 
 
-    // Iterate over all elements with a data-lang-key attribute
-    document.querySelectorAll('[data-lang-key]').forEach(element => {
+    // Iterate over all elements with a data-lang-key attribute within the container
+    container.querySelectorAll('[data-lang-key]').forEach(element => {
         const key = element.getAttribute('data-lang-key');
-        // Now `window.translations` should contain all merged translations from global and page-specific files
         if (window.translations[key] && window.translations[key][lang]) {
             const translatedText = window.translations[key][lang];
             
@@ -641,8 +658,8 @@ window.applyTranslations = function(lang) {
                             element.textContent = translatedText;
                         }
                     }
-                } else if (element.tagName === 'H2' || element.tagName === 'H3' || element.tagName === 'A') {
-                    // For H2, H3, A tags, specifically handle their content to preserve icons
+                } else if (element.tagName === 'H2' || element.tagName === 'H3' || element.tagName === 'A' || element.tagName === 'BUTTON') {
+                    // For H2, H3, A, BUTTON tags, specifically handle their content to preserve icons
                     const existingIcon = element.querySelector('i');
                     if (existingIcon) {
                         element.innerHTML = `${existingIcon.outerHTML} ${translatedText}`;
@@ -650,7 +667,6 @@ window.applyTranslations = function(lang) {
                         element.textContent = translatedText;
                     }
                 } else if (element.tagName === 'SPAN' && element.id && (element.id.includes('Label') || element.id.includes('Display'))) {
-                    // For span elements with IDs containing 'Label' or 'Display' (like firstNameLabel, selectedCategoriesDisplay), just update text content
                     element.textContent = translatedText;
                 } else {
                     element.innerHTML = translatedText;
@@ -663,27 +679,31 @@ window.applyTranslations = function(lang) {
                     element.textContent = translatedText;
                 }
             }
-        } else {
-            console.warn(`Translation key '${key}' not found for language '${lang}'.`);
         }
     });
 
-    // NEW: Handle elements with data-lang-placeholder
-    document.querySelectorAll('[data-lang-placeholder]').forEach(element => {
+    // Handle elements with data-lang-placeholder
+    container.querySelectorAll('[data-lang-placeholder]').forEach(element => {
         const key = element.getAttribute('data-lang-placeholder');
         if (window.translations[key] && window.translations[key][lang]) {
             element.setAttribute('placeholder', window.translations[key][lang]);
         }
     });
 
-    // Dispatch a custom event to notify other scripts that translations have been applied
-    // This is useful for components that need to update their UI based on the new language (e.g., header language switcher)
-    const event = new CustomEvent('translationsApplied', {
-        detail: {
-            lang: lang
-        }
-    });
-    window.dispatchEvent(event);
+    // Only dispatch event and update logo if we translated the whole document
+    if (container === document) {
+        const event = new CustomEvent('translationsApplied', {
+            detail: { lang: lang }
+        });
+        window.dispatchEvent(event);
+    }
+};
+
+// Helper for translating specific sections
+window.translatePage = function(container) {
+    if (container) {
+        window.applyTranslations(window.currentLanguage, container);
+    }
 };
 
 // Function to show the language selection modal

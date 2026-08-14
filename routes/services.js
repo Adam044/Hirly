@@ -10,7 +10,7 @@ module.exports = function registerServicesRoutes(app, pool, { getOptimizedImageU
       const { category } = req.query;
       let query = `
         SELECT s.id, s.service_title, s.service_description, s.price, s.currency, s.delivery_time, s.service_image_path, s.category,
-               f.id AS professional_id, u.first_name, u.last_name, u.profile_picture_url, u.city
+               f.id AS professional_id, u.first_name, u.last_name, u.profile_picture_url, u.city, u.slug
         FROM services s
         JOIN professionals f ON s.professional_id = f.id
         JOIN users u ON f.user_id = u.id

@@ -51,7 +51,7 @@ async function initializeDatabaseSchema(pool) {
                 company_logo_path TEXT,
                 company_category TEXT,
                 job_post_credits INTEGER DEFAULT 0 CHECK (job_post_credits >= 0),
-                profile_view_credits INTEGER DEFAULT 0 CHECK (profile_view_credits >= 0),
+                profile_views INTEGER DEFAULT 0,
                 has_claimed_free_credit BOOLEAN DEFAULT false,
                 rating REAL DEFAULT 0,
                 website_link TEXT
@@ -534,12 +534,34 @@ async function initializeDatabaseSchema(pool) {
             );
         `);
 
+        // 38. Employer Lead OTPs Table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS employer_lead_otps (
+                id SERIAL PRIMARY KEY,
+                job_id INTEGER NOT NULL REFERENCES jobs(id),
+                email TEXT NOT NULL,
+                otp TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         // Add country column to users if it doesn't exist
         await client.query(`
             DO $$ 
             BEGIN 
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='country') THEN
                     ALTER TABLE users ADD COLUMN country TEXT;
+                END IF;
+            END $$;
+        `);
+
+        // Migration: Rename profile_view_credits to profile_views in employers table
+        await client.query(`
+            DO $$ 
+            BEGIN 
+                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='employers' AND column_name='profile_view_credits') THEN
+                    ALTER TABLE employers RENAME COLUMN profile_view_credits TO profile_views;
                 END IF;
             END $$;
         `);

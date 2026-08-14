@@ -626,7 +626,7 @@ async function initializeMobileMenu() {
         // Dashboard Link
         const dashboardLi = document.createElement('li');
         const dashboardLink = document.createElement('a');
-        dashboardLink.href = window.currentUser.user_type === 'freelancer' ? '/dashboard.html' : '/hire_dashboard.html';
+        dashboardLink.href = (window.currentUser.user_type === 'professional' || window.currentUser.user_type === 'freelancer') ? '/dashboard.html' : '/hire_dashboard.html';
         dashboardLink.innerHTML = `<i class="fas fa-tachometer-alt"></i> <span data-lang-key="dashboard_link">${(window.translations && window.translations['dashboard_link'] && window.translations['dashboard_link'][window.currentLanguage]) || 'Dashboard'}</span>`;
         dashboardLink.classList.add('mobile-nav-link');
         dashboardLi.appendChild(dashboardLink);

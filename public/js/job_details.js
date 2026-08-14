@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const applyStatusMessage = document.getElementById('applyStatusMessage');
 
     // Application Modal
+    const externalJobAgreement = document.getElementById('externalJobAgreement');
     const applicationModal = document.getElementById('applicationModal');
     const closeApplicationModalBtn = document.getElementById('closeApplicationModalBtn');
     const applicationForm = document.getElementById('applicationForm');
@@ -67,6 +68,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     const applicationMessageStatus = document.getElementById('applicationMessageStatus');
     const cancelApplicationBtn = document.getElementById('cancelApplicationBtn');
     const submitApplicationBtn = document.getElementById('submitApplicationBtn');
+    const applicationSuccessModal = document.getElementById('applicationSuccessModal');
+    const viewApplicationBtn = document.getElementById('viewApplicationBtn');
 
     // Login Modals
     const employerLoginModal = document.getElementById('employerLoginModal');
@@ -77,6 +80,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const idVerificationModal = document.getElementById('idVerificationModal');
     const lowCompletenessModal = document.getElementById('lowCompletenessModal');
     const externalApplyModal = document.getElementById('externalApplyModal');
+    const applyViaHirlyBtn = document.getElementById('applyViaHirlyBtn');
+    const externalJobModalDesc = document.getElementById('externalJobModalDesc');
+    const applyOnSourceText = document.getElementById('applyOnSourceText');
     const continueToExternalBtn = document.getElementById('continueToExternalBtn');
     const externalApplyRingProgress = document.getElementById('externalApplyRingProgress');
     const externalApplyPercentText = document.getElementById('externalApplyPercentText');
@@ -215,6 +221,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             hideModal(idVerificationModal);
             hideModal(lowCompletenessModal);
             hideModal(externalApplyModal);
+            hideModal(applicationSuccessModal);
         });
     });
 
@@ -342,17 +349,27 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (jobTitleModalElem && currentJobData) {
             jobTitleModalElem.textContent = currentJobData.title;
         }
-        const jobType = currentJobData.job_type?.toLowerCase();
-        if (jobType === 'full-time' || jobType === 'part-time' || jobType === 'internship' || jobType === 'temporary') {
-            if (bidAmountInput) bidAmountInput.closest('.form-group').style.display = 'none';
-            if (timelineInput) timelineInput.closest('.form-group').style.display = 'none';
-            bidAmountInput.removeAttribute('required');
-            timelineInput.removeAttribute('required');
+
+        const freelanceFields = document.getElementById('freelanceFields');
+        const isAggregated = currentJobData && currentJobData.is_external;
+        
+        if (isAggregated) {
+            if (freelanceFields) freelanceFields.style.display = 'none';
+            if (bidAmountInput) bidAmountInput.removeAttribute('required');
+            if (timelineInput) timelineInput.removeAttribute('required');
         } else {
-            if (bidAmountInput) bidAmountInput.closest('.form-group').style.display = 'block';
-            if (timelineInput) timelineInput.closest('.form-group').style.display = 'block';
-            bidAmountInput.setAttribute('required', 'true');
-            timelineInput.setAttribute('required', 'true');
+            const jobType = (currentJobData.job_type || '').toLowerCase();
+            const isFreelance = !(jobType === 'full-time' || jobType === 'part-time' || jobType === 'internship' || jobType === 'temporary');
+            
+            if (isFreelance) {
+                if (freelanceFields) freelanceFields.style.display = 'flex';
+                if (bidAmountInput) bidAmountInput.setAttribute('required', 'true');
+                if (timelineInput) timelineInput.setAttribute('required', 'true');
+            } else {
+                if (freelanceFields) freelanceFields.style.display = 'none';
+                if (bidAmountInput) bidAmountInput.removeAttribute('required');
+                if (timelineInput) timelineInput.removeAttribute('required');
+            }
         }
         showModal(applicationModal);
     }
@@ -389,31 +406,36 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         try {
-            const response = await fetch(`/api/jobs/${currentJobId}`);
-            if (!response.ok) {
-                const errorData = await response.json();
+            // Fetch job and auth status in parallel
+            const [jobRes, authStatus] = await Promise.all([
+                fetch(`/api/jobs/${currentJobId}`),
+                checkAuthStatus()
+            ]);
+
+            if (!jobRes.ok) {
+                const errorData = await jobRes.json();
                 throw new Error(errorData.error || (window.translations[window.currentLanguage]?.['failed_fetch_job_details'] || 'Failed to fetch job details.'));
             }
-            currentJobData = await response.json();
+            currentJobData = await jobRes.json();
 
             // Record a view for this job (counts any visitor)
             try {
                 fetch(`/api/jobs/${currentJobId}/view`, { method: 'POST' });
             } catch (e) {}
 
-            await checkAuthStatus();
+            // If user is logged in and is a professional, pre-fetch their profile for completeness
+            if (currentLoggedInUser && (currentLoggedInUser.user_type === 'professional' || currentLoggedInUser.user_type === 'freelancer')) {
+                // Background fetch to have it ready
+                fetch('/api/user/profile').then(res => res.json()).then(data => {
+                    window._cachedProfile = data.data;
+                }).catch(() => {});
+            }
 
             // IMPORTANT: Call renderJobDetails directly here after data is loaded and auth is checked.
-            // This ensures the dynamic content is built with the latest data.
             renderJobDetails(currentJobData);
-
-            // Now, trigger the general translation update for data-lang-key elements
-            // and any other elements that might not be covered by renderJobDetails.
             updateTranslations(); 
             
-            // Removed: fetchMoreJobsFromEmployer(currentJobData.employer_user_id, currentJobData.id);
             checkApplicationStatus(currentJobData.id, currentLoggedInUser ? currentLoggedInUser.id : null);
-
 
             if (jobDetailsContent) {
                 jobDetailsContent.style.display = 'grid';
@@ -641,9 +663,10 @@ function renderJobDetails(job) {
         const translatedAboutEmployer = t['about_the_employer']?.[lang] || 'About the Employer';
         const translatedViewProfile = t['view_employer_profile']?.[lang] || 'View Employer Profile';
         
+        const employerSlug = job.employer_slug;
+        const profileUrl = employerSlug ? `/${employerSlug}` : `/employer_profile.html?id=${job.employer_user_id}`;
+
         if (job.is_external) {
-            const translatedApplyExternally = t['apply_externally']?.[lang] || 'Apply Externally';
-            
             aboutEmployerSection.innerHTML = `
                 <h2 data-lang-key="about_the_employer"><i class="fas fa-info-circle"></i> ${translatedAboutEmployer}</h2>
                 <div class="employer-info-card">
@@ -655,16 +678,8 @@ function renderJobDetails(job) {
                             ${employerDisplayName ? `<h3 class="employer-name-header" id="employerName">${employerDisplayName}</h3>` : ''}
                         </div>
                     </div>
-                    <button id="externalApplyBtnDetails" class="btn btn-primary btn-icon">
-                        <i class="fas fa-external-link-alt"></i> <span class="button-text">${translatedApplyExternally}</span>
-                    </button>
                 </div>
             `;
-            
-            const extBtn = aboutEmployerSection.querySelector('#externalApplyBtnDetails');
-            if (extBtn) {
-                extBtn.addEventListener('click', () => applyNowBtn.click());
-            }
         } else {
             // Manual/Internal Job
             aboutEmployerSection.innerHTML = `
@@ -679,7 +694,7 @@ function renderJobDetails(job) {
                         </div>
                     </div>
                     ${!isHidden ? `
-                    <a href="/employer_profile.html?id=${job.employer_user_id}" id="viewEmployerProfileBtn" class="btn btn-primary btn-icon" data-lang-key="view_employer_profile">
+                    <a href="${profileUrl}" id="viewEmployerProfileBtn" class="btn btn-primary btn-icon" data-lang-key="view_employer_profile">
                         <i class="fas fa-user-tie"></i> <span class="button-text">${translatedViewProfile}</span>
                     </a>
                     ` : ''}
@@ -690,8 +705,8 @@ function renderJobDetails(job) {
             if (employerProfileBtn) {
                 employerProfileBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    if (currentLoggedInUser && currentLoggedInUser.user_type === 'freelancer') {
-                        window.location.href = `/employer_profile.html?id=${job.employer_user_id}`;
+                    if (currentLoggedInUser && (currentLoggedInUser.user_type === 'professional' || currentLoggedInUser.user_type === 'freelancer')) {
+                        window.open(profileUrl, '_blank');
                     } else {
                         showModal(freelancerLoginModal);
                     }
@@ -779,7 +794,7 @@ function renderJobDetails(job) {
 }
 
 
-    async function checkApplicationStatus(jobId, freelancerId) {
+    async function checkApplicationStatus(jobId, professionalId) {
         const t = window.translations[window.currentLanguage] || {};
 
         // If external apply is available, always show Apply Now (bypass internal application gating)
@@ -803,8 +818,9 @@ function renderJobDetails(job) {
             return;
         }
 
-        if (!freelancerId || currentLoggedInUser.user_type !== 'freelancer') {
-            // Check deadline for employers/guest views
+        // Only professionals can have an application status to check
+        if (!professionalId || currentLoggedInUser.user_type === 'employer') {
+            // Check deadline for employers/admins/guest views
             if (currentJobData.deadline) {
                 const deadlineDate = new Date(currentJobData.deadline);
                 const currentDate = new Date();
@@ -846,7 +862,8 @@ function renderJobDetails(job) {
         }
 
         try {
-            const response = await fetch(`/api/applications/check?jobId=${jobId}&freelancerId=${freelancerId}`);
+            // Fix: Use professionalId instead of freelancerId to match backend validation
+            const response = await fetch(`/api/applications/check?jobId=${jobId}&professionalId=${professionalId}`);
             const data = await response.json();
 
             if (data.success && data.hasApplied) {
@@ -862,7 +879,7 @@ function renderJobDetails(job) {
             }
         } catch (error) {
             console.error('Error checking application status:', error);
-            showToast(t['failed_check_app_status']?.[window.currentLanguage] || 'Failed to check application status.', 'error');
+            // On error, show Apply Now as fallback
             applyNowBtn.style.display = 'block';
             alreadyAppliedBtn.style.display = 'none';
             jobClosedBtn.style.display = 'none';
@@ -873,103 +890,98 @@ function renderJobDetails(job) {
     if (applyNowBtn) {
         applyNowBtn.addEventListener('click', async () => {
             const t = window.translations;
+            const originalContent = applyNowBtn.innerHTML;
+            
+            // Immediately show loading state for better perceived performance
+            applyNowBtn.disabled = true;
+            applyNowBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t['loading_text']?.[window.currentLanguage] || 'Loading...'}`;
 
-            // Guard: if logged out, show freelancer login modal and prevent action (even for external URL jobs)
-            if (!currentLoggedInUser) {
-                showModal(freelancerLoginModal);
-                return;
-            }
+            try {
+                // Guard: if logged out, show freelancer login modal
+                if (!currentLoggedInUser) {
+                    showModal(freelancerLoginModal);
+                    return;
+                }
 
-            // If the job has an external apply URL, show the branded modal
-            if (currentJobData && currentJobData.external_apply_url) {
-                // Ensure we have fresh user data for completeness calculation
+                if (currentLoggedInUser.user_type === 'employer') {
+                    console.log('[Apply] User blocked: type is employer', currentLoggedInUser);
+                    showModal(employerCannotApplyModal);
+                    return;
+                }
+
+                // Get profile data (prefer cached)
                 let completeness = 0;
-                try {
+                let detailedProfile = null;
+                
+                if (window._cachedProfile) {
+                    detailedProfile = window._cachedProfile;
+                    completeness = detailedProfile.profile_completeness || 0;
+                } else {
                     const profileResp = await fetch('/api/user/profile');
                     if (profileResp.ok) {
                         const profileData = await profileResp.json();
-                        completeness = profileData.data.profile_completeness || 0;
-                    } else {
-                        // Fallback to client-side calculation if API fails
-                        await checkAuthStatus();
-                        completeness = computeProfileCompletenessFromUser(currentLoggedInUser);
+                        detailedProfile = profileData.data;
+                        window._cachedProfile = detailedProfile;
+                        completeness = detailedProfile.profile_completeness || 0;
                     }
-                } catch (e) {
-                    await checkAuthStatus();
-                    completeness = computeProfileCompletenessFromUser(currentLoggedInUser);
+                }
+
+                // If the job has an external apply URL, show the branded modal
+                if (currentJobData && currentJobData.external_apply_url) {
+                    const company = currentJobData.display_employer_name || currentJobData.external_company_name || 'Company';
+                    const source = currentJobData.external_source || 'External Source';
+                    
+                    if (externalJobModalDesc) {
+                        const descTemplate = t['external_job_modal_desc']?.[window.currentLanguage] || 'This job was originally posted by {company} on {source}...';
+                        externalJobModalDesc.innerHTML = descTemplate
+                            .replace('{company}', `<strong class="text-hirly-600">${company}</strong>`)
+                            .replace('{source}', `<strong class="text-hirly-600">${source}</strong>`);
+                    }
+                    
+                    if (applyOnSourceText) {
+                        const btnTemplate = t['apply_on_source_btn']?.[window.currentLanguage] || 'Apply on {source}';
+                        applyOnSourceText.textContent = btnTemplate.replace('{source}', source);
+                    }
+
+                    updateExternalApplyCompletenessRing(completeness);
+                    showModal(externalApplyModal);
+                    return;
+                }
+
+                let hasCv = !!(detailedProfile && (detailedProfile.cv_path || detailedProfile.cv || detailedProfile.cv_url || detailedProfile.resume_url || detailedProfile.cvPath));
+
+                // Check completeness threshold
+                if (completeness < 75 || !hasCv) {
+                    updateLowCompletenessRing(completeness);
+                    lowCompletenessMissingList.innerHTML = '';
+                    if (!hasCv) {
+                        const li = document.createElement('li');
+                        li.textContent = (t['missing_cv']?.[window.currentLanguage] || 'CV');
+                        lowCompletenessMissingList.appendChild(li);
+                        if (lowCompletenessDynamicDesc) {
+                            lowCompletenessDynamicDesc.textContent = (t['low_profile_modal_desc_cv_missing']?.[window.currentLanguage] || 'Your profile is missing a CV. Are you sure you want to continue?');
+                        }
+                    } else if (lowCompletenessDynamicDesc) {
+                        lowCompletenessDynamicDesc.textContent = (t['low_profile_modal_desc_low']?.[window.currentLanguage] || 'Your profile completeness is low. Are you sure you want to continue?');
+                    }
+                    showModal(lowCompletenessModal);
+                    return;
                 }
                 
-                updateExternalApplyCompletenessRing(completeness);
-                showModal(externalApplyModal);
-                return;
+                openApplicationModal();
+            } catch (err) {
+                console.error('[Apply] Action failed:', err);
+                showToast(t['error_loading_job']?.[window.currentLanguage] || 'An error occurred.', 'error');
+            } finally {
+                applyNowBtn.disabled = false;
+                applyNowBtn.innerHTML = originalContent;
             }
+        });
+    }
 
-            if (!currentLoggedInUser) {
-                showModal(freelancerLoginModal);
-                return;
-            }
-
-            if (currentLoggedInUser.user_type !== 'freelancer') {
-                showModal(employerCannotApplyModal);
-                return;
-            }
-            
-            // Ensure we have fresh user data from the profile API for accurate completeness
-            let completeness = 0;
-            let detailedProfile = null;
-            try {
-                const profileResp = await fetch('/api/user/profile');
-                if (profileResp.ok) {
-                    const profileData = await profileResp.json();
-                    detailedProfile = profileData.data;
-                    completeness = detailedProfile.profile_completeness || 0;
-                } else {
-                    await checkAuthStatus();
-                    detailedProfile = currentLoggedInUser ? currentLoggedInUser.profile : null;
-                    completeness = computeProfileCompletenessFromUser(currentLoggedInUser);
-                }
-            } catch (e) {
-                await checkAuthStatus();
-                detailedProfile = currentLoggedInUser ? currentLoggedInUser.profile : null;
-                completeness = computeProfileCompletenessFromUser(currentLoggedInUser);
-            }
-
-            let hasCv = !!(detailedProfile && (detailedProfile.cv_path || detailedProfile.cv || detailedProfile.cv_url || detailedProfile.resume_url || detailedProfile.cvPath));
-
-            try {
-                const cachedPercentStr = localStorage.getItem('hirly_profile_completeness_percent');
-                const cachedPercent = cachedPercentStr ? parseInt(cachedPercentStr, 10) : NaN;
-                if (!isNaN(cachedPercent)) completeness = cachedPercent;
-                const cachedHasCvStr = localStorage.getItem('hirly_has_cv');
-                if (cachedHasCvStr === 'true' || cachedHasCvStr === 'false') {
-                    hasCv = hasCv || (cachedHasCvStr === 'true');
-                }
-                const snapshotStr = localStorage.getItem('hirly_profile_snapshot');
-                if (snapshotStr) {
-                    const snapshot = JSON.parse(snapshotStr);
-                    if (isNaN(cachedPercent)) {
-                        completeness = computeProfileCompletenessFromUser(null, snapshot);
-                    }
-                    hasCv = hasCv || !!(snapshot && snapshot.cv_path);
-                }
-            } catch (e) {}
-
-            if (completeness < 75 || !hasCv) {
-                updateLowCompletenessRing(completeness);
-                lowCompletenessMissingList.innerHTML = '';
-                if (!hasCv) {
-                    const li = document.createElement('li');
-                    li.textContent = (window.translations['missing_cv']?.[window.currentLanguage] || 'CV');
-                    lowCompletenessMissingList.appendChild(li);
-                    if (lowCompletenessDynamicDesc) {
-                        lowCompletenessDynamicDesc.textContent = (window.translations['low_profile_modal_desc_cv_missing']?.[window.currentLanguage] || 'Your profile is missing a CV. Are you sure you want to continue?');
-                    }
-                } else if (lowCompletenessDynamicDesc) {
-                    lowCompletenessDynamicDesc.textContent = (window.translations['low_profile_modal_desc_low']?.[window.currentLanguage] || 'Your profile completeness is low. Are you sure you want to continue?');
-                }
-                showModal(lowCompletenessModal);
-                return;
-            }
+    if (applyViaHirlyBtn) {
+        applyViaHirlyBtn.addEventListener('click', () => {
+            hideModal(externalApplyModal);
             openApplicationModal();
         });
     }
@@ -1020,8 +1032,13 @@ function renderJobDetails(job) {
                     throw new Error(data.error || (t['failed_submit_application']?.[window.currentLanguage] || 'Failed to submit application.'));
                 }
 
-                showToast(data.message || (t['app_submitted_success']?.[window.currentLanguage] || 'Application submitted successfully!'), 'success');
+                // Show success modal instead of just a toast
                 hideModal(applicationModal);
+                if (applicationSuccessModal) {
+                    showModal(applicationSuccessModal);
+                } else {
+                    showToast(data.message || (t['app_submitted_success']?.[window.currentLanguage] || 'Application submitted successfully!'), 'success');
+                }
                 checkApplicationStatus(currentJobId, currentLoggedInUser.id);
             } catch (error) {
                 console.error('Error submitting application:', error);
@@ -1070,6 +1087,12 @@ function renderJobDetails(job) {
                 continueToExternalBtn.disabled = false;
                 continueToExternalBtn.innerHTML = originalContent;
             }, 800);
+        });
+    }
+
+    if (viewApplicationBtn) {
+        viewApplicationBtn.addEventListener('click', () => {
+            window.location.href = '/dashboard.html';
         });
     }
 

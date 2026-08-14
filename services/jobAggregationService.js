@@ -885,6 +885,65 @@ class JobAggregationService {
         return types[externalType] || 'Full-time';
     }
 
+    async findMatchingEmployer(companyName, email, website) {
+        const client = await this.pool.connect();
+        try {
+            // 1. Match by email directly
+            if (email) {
+                const emailMatch = await client.query(
+                    `SELECT u.id FROM users u 
+                     JOIN employers e ON u.id = e.user_id 
+                     WHERE u.email = $1 OR e.company_email = $1`,
+                    [email]
+                );
+                if (emailMatch.rows.length > 0) return emailMatch.rows[0].id;
+
+                // 2. Match by email domain
+                const domain = email.split('@')[1];
+                if (domain && !['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'].includes(domain.toLowerCase())) {
+                    const domainMatch = await client.query(
+                        `SELECT u.id FROM users u 
+                         JOIN employers e ON u.id = e.user_id 
+                         WHERE u.email LIKE $1 OR e.company_email LIKE $1 OR e.website_link LIKE $2`,
+                        [`%@${domain}`, `%${domain}%`]
+                    );
+                    if (domainMatch.rows.length > 0) return domainMatch.rows[0].id;
+                }
+            }
+
+            // 3. Match by company name
+            if (companyName) {
+                const nameMatch = await client.query(
+                    `SELECT user_id FROM employers 
+                     WHERE LOWER(company_name) = LOWER($1) OR LOWER(company_name) LIKE $2`,
+                    [companyName, `%${companyName}%`]
+                );
+                if (nameMatch.rows.length > 0) return nameMatch.rows[0].user_id;
+            }
+
+            // 4. Match by website domain
+            if (website) {
+                const url = new URL(website.startsWith('http') ? website : `https://${website}`);
+                const domain = url.hostname.replace('www.', '');
+                if (domain) {
+                    const webMatch = await client.query(
+                        `SELECT user_id FROM employers 
+                         WHERE website_link LIKE $1`,
+                        [`%${domain}%`]
+                    );
+                    if (webMatch.rows.length > 0) return webMatch.rows[0].user_id;
+                }
+            }
+
+            return null;
+        } catch (error) {
+            this.addLog(`Employer matching failed: ${error.message}`, 'debug');
+            return null;
+        } finally {
+            client.release();
+        }
+    }
+
     async saveJobs(jobs) {
         if (!jobs || jobs.length === 0) return 0;
 
@@ -960,7 +1019,8 @@ class JobAggregationService {
                                 location: job.location,
                                 city: job.city,
                                 country: job.location,
-                                original_date: job.created_at
+                                original_date: job.created_at,
+                                external_company_email: job.email // Pass email found by scraper to AI for verification
                             }, hirlyHierarchy);
 
                             cleanJob.title = aiData.title || job.title;
@@ -978,6 +1038,7 @@ class JobAggregationService {
                             cleanJob.age_min = aiData.age_min || null;
                             cleanJob.age_max = aiData.age_max || null;
                             cleanJob.company_website = aiData.company_website || null;
+                            cleanJob.external_company_email = aiData.external_company_email || job.email || null;
                             cleanJob.requirements = aiData.requirements || [];
                             cleanJob.job_dossier = {
                                 responsibilities: aiData.responsibilities || [],
@@ -1024,6 +1085,21 @@ class JobAggregationService {
                             this.addLog(`Failed to fetch logo for ${job.company_name}: ${logoError.message}`, 'debug');
                         }
 
+                        // 3b. Try to match an existing Hirly employer
+                        let matchedEmployerId = null;
+                        try {
+                            matchedEmployerId = await this.findMatchingEmployer(
+                                cleanJob.company_name, 
+                                cleanJob.external_company_email, 
+                                cleanJob.company_website
+                            );
+                            if (matchedEmployerId) {
+                                this.addLog(`[Matching] Found existing Hirly employer for ${cleanJob.company_name} (ID: ${matchedEmployerId})`, 'debug');
+                            }
+                        } catch (matchError) {
+                            this.addLog(`Employer matching failed: ${matchError.message}`, 'debug');
+                        }
+
                         // 4. Insert into database
                         await client.query(
                             `INSERT INTO jobs (
@@ -1032,8 +1108,9 @@ class JobAggregationService {
                                 job_site_type, external_apply_url, external_source, 
                                 external_id, is_external, status, external_company_logo,
                                 budget, currency, gender_requirement, age_min, age_max, 
-                                requirements, created_at, deadline, job_dossier
-                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
+                                requirements, created_at, deadline, job_dossier,
+                                external_company_email, employer_id
+                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)`,
                             [
                                 cleanJob.title, cleanJob.description, cleanJob.category, 
                                 JSON.stringify(cleanJob.profession_required),
@@ -1042,7 +1119,8 @@ class JobAggregationService {
                                 cleanJob.external_source, cleanJob.external_id, true, 'open', companyLogo,
                                 cleanJob.budget, cleanJob.currency, cleanJob.gender_requirement,
                                 cleanJob.age_min, cleanJob.age_max, JSON.stringify(cleanJob.requirements),
-                                cleanJob.created_at, cleanJob.deadline, JSON.stringify(cleanJob.job_dossier)
+                                cleanJob.created_at, cleanJob.deadline, JSON.stringify(cleanJob.job_dossier),
+                                cleanJob.external_company_email, matchedEmployerId
                             ]
                         );
                         return { status: 'saved' };

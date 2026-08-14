@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 class AuthService {
     constructor(pool, supabaseAdmin) {
@@ -61,7 +62,8 @@ class AuthService {
                 userType, employerType, interests, currentStatus, mainProfession, mainCategory,
                 studentType, universityYear, schoolGrade,
                 companyName, companyEmail, companyPhone, address, companyDescription, companyCategory,
-                gender, birthdate, website_link, degree, degree_field, university
+                gender, birthdate, website_link, degree, degree_field, university,
+                claimJobId
             } = userData;
 
             let emailToAuthWith = (email || '').trim().toLowerCase();
@@ -146,9 +148,11 @@ class AuthService {
                 userFirstName = companyName || 'Company';
                 userLastName = '';
                 userPhone = companyPhone;
-                // For companies, we might want to split address if it contains country
-                userCountry = address ? address.split(',').pop().trim() : '';
-                userCity = address ? address.split(',')[0].trim() : '';
+                // Use the provided country if available, otherwise fallback
+                if (country) {
+                    userCountry = this.cleanLocation(country);
+                }
+                userCity = ''; // City removed for companies
             }
 
             let baseName = (userType === 'employer' && employerType === 'company') ? companyName : `${firstName} ${lastName}`;
@@ -213,10 +217,19 @@ class AuthService {
             const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
             await client.query('INSERT INTO email_verification_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)', [userId, verificationCode, expiresAt]);
 
+            // --- Phase 5: Claim Job Logic ---
+            if (claimJobId && userType === 'employer') {
+                await client.query(
+                    'UPDATE jobs SET employer_id = $1 WHERE id = $2 AND is_external = true',
+                    [userId, claimJobId]
+                );
+                logger.info(`Job ${claimJobId} claimed by new employer ${userId}`);
+            }
+
             await sendVerificationEmail(emailToAuthWith, verificationCode);
             await client.query('COMMIT');
 
-            return { email: emailToAuthWith };
+            return { email: emailToAuthWith, claimJobId: claimJobId || null };
         } catch (error) {
             if (client) await client.query('ROLLBACK');
             if (authUserUuid) {

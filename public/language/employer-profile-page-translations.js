@@ -23,6 +23,13 @@ if (typeof window.addTranslations === 'function') {
         'leave_a_review': { 'ar': 'ترك تقييم', 'en': 'Leave a Review' },
         'no_reviews_yet_title': { 'ar': 'لا توجد تقييمات بعد', 'en': 'No Reviews Yet' },
         'no_reviews_yet_message': { 'ar': 'كن أول من يترك تقييمًا لهذا صاحب العمل!', 'en': 'Be the first to leave a review for this employer!' },
+        'community_feedback': { 'ar': 'آراء المجتمع', 'en': 'COMMUNITY FEEDBACK' },
+        'access_restricted': { 'ar': 'الوصول مقيد', 'en': 'Access Restricted' },
+        'got_it': { 'ar': 'فهمت', 'en': 'Got it' },
+        'login_required_review': { 'ar': 'يجب عليك تسجيل الدخول كمهني لتتمكن من ترك تقييم.', 'en': 'You must be logged in as a professional to leave a review.' },
+        'employer_restriction_review': { 'ar': 'نأسف، لا يمكن لأصحاب العمل ترك تقييمات لأصحاب عمل آخرين.', 'en': 'Sorry, employers cannot leave reviews for other employers.' },
+        'self_review_restriction': { 'ar': 'لا يمكنك تقييم شركتك الخاصة.', 'en': 'You cannot review your own company.' },
+        'login_now': { 'ar': 'سجل الدخول الآن', 'en': 'Login Now' },
         'info_section_title': { 'ar': 'معلومات', 'en': 'Info' },
         'contact_employer_btn': { 'ar': 'اتصل بصاحب العمل', 'en': 'Contact Employer' },
         'review_modal_title_leave': { 'ar': 'ترك تقييم', 'en': 'Leave a Review' },
@@ -81,6 +88,8 @@ if (typeof window.addTranslations === 'function') {
         'contact_modal_subtitle': { 'ar': 'اختر طريقة للتواصل', 'en': 'Choose a method to connect' },
         'call': { 'ar': 'اتصال', 'en': 'Call' },
         'email': { 'ar': 'بريد إلكتروني', 'en': 'Email' },
+        'address': { 'ar': 'العنوان', 'en': 'Address' },
+        'contact_information': { 'ar': 'معلومات الاتصال', 'en': 'Contact Information' },
         
         // Job Types
         'full_time': { 'ar': 'دوام كامل', 'en': 'Full-time' },

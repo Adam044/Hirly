@@ -189,7 +189,8 @@
 .freelancer-id-filter-btn.active,
 .employer-id-filter-btn.active,
 .employer-logo-filter-btn.active,
-.employer-type-filter-btn.active {
+.employer-type-filter-btn.active,
+.outreach-status-btn.active {
     background-color: #6366f1 !important;
     color: white !important;
     border-color: #6366f1 !important;

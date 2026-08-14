@@ -561,6 +561,7 @@ module.exports = function registerTalentRoutes(app, pool, { isAuthenticated, isE
           u.last_name,
           u.city,
           u.country,
+          u.slug,
           f.profession,
           f.current_status,
           f.skills,

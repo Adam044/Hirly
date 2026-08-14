@@ -53,6 +53,7 @@ const {
     sendPasswordResetEmail,
     sendPasswordResetConfirmationEmail,
     sendAccountActivationEmail,
+    sendEmployerLeadOTPEmail,
     sendApplicationAcceptedEmail,
     sendApplicationRejectedEmail,
     sendJobOfferEmail,
@@ -90,6 +91,8 @@ const {
 
 const { resetSequence, initializeDatabaseSchema, cleanupLegacyEducationColumns } = require('./database/schema');
 const JobAggregationService = require('./services/jobAggregationService');
+const AIEvaluationService = require('./services/aiEvaluationService');
+const EmployerOutreachService = require('./services/employerOutreachService');
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -824,7 +827,7 @@ function isAuthenticated(req, res, next) {
 }
 
 function isProfessional(req, res, next) {
-    if (req.session.userId && (req.session.userType === 'professional' || req.session.userType === 'freelancer')) {
+    if (req.session.userId && (req.session.userType === 'professional' || req.session.userType === 'freelancer' || req.session.userType === 'admin')) {
         return next();
     }
     
@@ -1138,6 +1141,12 @@ const educationService = new EducationService(pool);
 const jobAggregator = new JobAggregationService(pool);
 app.set('jobAggregator', jobAggregator);
 
+const aiEvaluationService = new AIEvaluationService(pool);
+app.set('aiEvaluationService', aiEvaluationService);
+
+const employerOutreach = new EmployerOutreachService(pool, app);
+app.set('employerOutreach', employerOutreach);
+
 registerUserRoutes(app, pool, {
     isAuthenticated,
     isProfessional,
@@ -1195,7 +1204,8 @@ registerAdminRoutes(app, pool, {
     sendEmailCampaignWithProgress,
     sendVerificationEmail,
     sendEmail,
-    checkAuthStatus
+    checkAuthStatus,
+    employerOutreach
 });
 
 const registerAutoEmailRoutes = require('./routes/autoEmail');
@@ -1240,6 +1250,10 @@ registerStorageRoutes(app, pool, {
     getCacheDuration,
     cleanupCache
 });
+
+// --- Employer Review routes ---
+const registerEmployerReviewRoutes = require('./routes/employerReview');
+registerEmployerReviewRoutes(app, pool, { sendEmployerLeadOTPEmail });
 
 // --- Pages routes (SPA) - Must be registered AFTER all API and Admin routes ---
 const registerPagesRoutes = require('./routes/pages');
@@ -1361,6 +1375,7 @@ const server = app.listen(PORT, () => {
         logger.info('Internal cron scheduler is DISABLED (External trigger mode)');
     } else {
         jobAggregator.initSchedule();
+        employerOutreach.initSchedule();
         logger.info('Internal cron scheduler is ACTIVE');
     }
 

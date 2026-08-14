@@ -17,14 +17,14 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://hirly.app/job_details/{{JOB_ID}}">
+    <meta property="og:url" content="https://hirly.net/job_details/{{JOB_ID}}">
     <meta property="og:title" content="{{JOB_TITLE}} — {{COMPANY_NAME}} | Hirly">
     <meta property="og:description" content="Strategic opportunity at {{COMPANY_NAME}}. Explore this professional milestone on Hirly's curated career network.">
     <meta property="og:image" content="{{COMPANY_LOGO}}">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://hirly.app/job_details/{{JOB_ID}}">
+    <meta property="twitter:url" content="https://hirly.net/job_details/{{JOB_ID}}">
     <meta property="twitter:title" content="{{JOB_TITLE}} — {{COMPANY_NAME}} | Hirly">
     <meta property="twitter:description" content="Strategic opportunity at {{COMPANY_NAME}}. Explore this professional milestone on Hirly's curated career network.">
     <meta property="twitter:image" content="{{COMPANY_LOGO}}">
@@ -150,9 +150,6 @@
                                 <!-- Employer logo or initials will be loaded here by JS -->
                             </div>
                         </div>
-                        <a href="#" id="viewEmployerProfileBtn" class="btn btn-primary btn-icon" data-lang-key="view_employer_profile">
-                            <i class="fas fa-user-tie"></i> <span class="button-text">View Employer Profile</span>
-                        </a>
                     </div>
                 </section>
             </div>
@@ -190,32 +187,81 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <div id="applicationModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content large-modal">
+        <div class="modal-content large-modal application-modal-clean">
             <span class="modal-close-btn" id="closeApplicationModalBtn"></span>
-            <h2 data-lang-key="apply_for_job_modal_title">Apply for Job</h2>
+            
+            <div class="modal-header-clean">
+                <h2 data-lang-key="apply_now">Apply Now</h2>
+                <p class="modal-subtitle" data-lang-key="apply_to_opportunity">Apply to this opportunity</p>
+            </div>
+
+            <div class="modal-info-banner">
+                <i class="fas fa-info-circle"></i>
+                <p data-lang-key="application_share_info">Your profile and application will be shared with the employer for consideration.</p>
+            </div>
+
             <form id="applicationForm">
-                <p class="job-title-modal" id="jobTitleModal"></p>
                 <div class="form-group">
-                    <label for="proposalMessage" data-lang-key="proposal_message">Proposal Message</label>
-                    <textarea id="proposalMessage" name="proposalMessage" class="form-control" rows="6" placeholder="Tell the employer why you are the best fit for this job..." data-lang-key="proposal_message_placeholder" required></textarea>
+                    <label class="form-label-bold" data-lang-key="application_message">Application message</label>
+                    <textarea id="proposalMessage" name="proposalMessage" class="form-control clean-textarea" rows="5" 
+                        placeholder="Tell the employer why you're a good fit for this opportunity..." 
+                        data-lang-key="application_message_placeholder" required></textarea>
                 </div>
-                <div class="form-row">
-                    <div class="form-group budget-group">
+
+                <!-- Bid and Timeline (Conditionally shown for non-aggregated freelance jobs) -->
+                <div id="freelanceFields" class="form-row freelance-fields-row" style="display: none;">
+                    <div class="form-group">
                         <label for="bidAmount" data-lang-key="your_bid_amount">Your Bid Amount</label>
-                        <input type="number" id="bidAmount" name="bidAmount" class="form-control input-with-currency" placeholder="e.g., 500" data-lang-key="bid_amount_placeholder" min="0" step="0.01">
-                        <!-- Currency display removed as per request -->
+                        <input type="number" id="bidAmount" name="bidAmount" class="form-control" placeholder="e.g., 500" data-lang-key="bid_amount_placeholder" min="0" step="0.01">
                     </div>
-                    <div class="form-group timeline-group">
+                    <div class="form-group">
                         <label for="timeline" data-lang-key="estimated_timeline">Estimated Timeline</label>
                         <input type="text" id="timeline" name="timeline" class="form-control" placeholder="e.g., 2 weeks" data-lang-key="timeline_placeholder">
                     </div>
                 </div>
-                <div id="applicationMessageStatus" class="form-message mt-2" style="display: none;"></div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-outline-secondary" id="cancelApplicationBtn" data-lang-key="cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="submitApplicationBtn" data-lang-key="submit_application">Submit Application</button>
+
+                <div class="profile-preview-section">
+                    <h4 class="section-title-small" data-lang-key="your_profile">Your profile</h4>
+                    <div class="profile-items-grid">
+                        <div class="profile-item">
+                            <i class="fas fa-user-circle"></i>
+                            <span data-lang-key="professional_profile">Professional profile</span>
+                        </div>
+                        <div class="profile-item">
+                            <i class="fas fa-file-pdf"></i>
+                            <span data-lang-key="cv_shared">CV</span>
+                        </div>
+                        <div class="profile-item">
+                            <i class="fas fa-briefcase"></i>
+                            <span data-lang-key="experience_skills">Experience & skills</span>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="modal-footer-clean">
+                    <div class="modal-actions-clean">
+                        <button type="button" class="btn btn-outline-secondary" id="cancelApplicationBtn" data-lang-key="cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="submitApplicationBtn" data-lang-key="submit_application">Submit Application</button>
+                    </div>
+                </div>
+                <div id="applicationMessageStatus" class="form-message mt-2" style="display: none;"></div>
             </form>
+        </div>
+    </div>
+
+    <!-- Application Success Modal -->
+    <div id="applicationSuccessModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content small-modal text-center success-modal-clean">
+            <div class="success-icon-wrapper">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="text-xl font-bold mb-2" data-lang-key="application_submitted_success_title">Application submitted ✓</h2>
+            <p class="text-sm text-gray-600 mb-6" data-lang-key="application_submitted_success_desc">Your application has been sent to the employer.</p>
+            
+            <div class="modal-actions-vertical">
+                <button id="viewApplicationBtn" class="btn btn-primary w-full" data-lang-key="view_application">View Application</button>
+                <button class="btn btn-link modal-close-btn-text" onclick="hideModal(document.getElementById('applicationSuccessModal'))" data-lang-key="close_modal">Close</button>
+            </div>
         </div>
     </div>
 
@@ -299,14 +345,21 @@
             
             <div class="modal-body-editorial">
                 <h2 class="editorial-modal-title">
-                    <i class="fas fa-external-link-alt title-icon"></i>
-                    <span data-lang-key="hirly_benefit_title">Apply with Hirly Priority</span>
+                    <i class="fas fa-globe title-icon"></i>
+                    <span data-lang-key="external_job_modal_title">This is an external opportunity</span>
                 </h2>
-                <p class="editorial-modal-subtitle" data-lang-key="hirly_benefit_desc">
-                    You're about to apply externally. To stand out, ensure your Hirly profile is complete. Sharing your unique Hirly link or QR code gives you priority, looks more professional, and makes the process seamless for employers.
+                <p class="editorial-modal-subtitle" id="externalJobModalDesc">
+                    <!-- Populated by JS -->
                 </p>
 
-                <div class="profile-completeness-card">
+                <div class="profile-includes-card mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2" data-lang-key="profile_includes_title">Your profile includes:</h4>
+                    <p class="text-sm text-slate-600 font-medium" data-lang-key="profile_includes_list">
+                        CV · Experience · Education · Skills · Professional information
+                    </p>
+                </div>
+
+                <div class="profile-completeness-card mt-4">
                     <div class="completeness-visual">
                         <svg class="progress-ring-luxe" width="70" height="70">
                             <circle class="progress-ring-bg" cx="35" cy="35" r="30" stroke-width="6"></circle>
@@ -320,14 +373,14 @@
                 </div>
             </div>
 
-            <div class="modal-actions-editorial">
-                <a href="/dashboard.html" class="btn btn-outline-primary btn-luxe" id="modalCompleteProfileBtn">
-                    <i class="fas fa-user-edit"></i>
-                    <span id="completeAccountBtnText" data-lang-key="complete_account">Complete Your Account</span>
-                </a>
-                <button id="continueToExternalBtn" class="btn btn-primary btn-luxe">
-                    <span data-lang-key="visit_external_site">Visit the Site</span>
-                    <i class="fas fa-arrow-right"></i>
+            <div class="modal-actions-editorial flex-col gap-3">
+                <button id="applyViaHirlyBtn" class="btn btn-primary btn-luxe w-full py-4">
+                    <i class="fas fa-paper-plane"></i>
+                    <span data-lang-key="share_profile_apply_btn">Share My Profile & Apply</span>
+                </button>
+                <button id="continueToExternalBtn" class="btn btn-outline-primary btn-luxe w-full py-4">
+                    <span id="applyOnSourceText">Apply on Source</span>
+                    <i class="fas fa-external-link-alt"></i>
                 </button>
             </div>
         </div>

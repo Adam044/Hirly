@@ -68,7 +68,7 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     'hire_dashboard', 'about', 'contact', 'post_job', 'ai',
     'profile', 'applicants', 'admin_dashboard',
     'employer_profile', 'email_verification_pending', 'start', 'employers', 'services', 'interviews_analysis', 'talent', 'privacy', 'terms',
-    'for-individuals', 'for-companies', 'for-professionals'
+    'for-individuals', 'for-companies', 'for-professionals', 'employer_review'
   ];
 
   htmlPages.forEach(page => {
@@ -97,6 +97,13 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     });
   });
 
+  router.get(['/employer-review', '/employer-review.html'], (req, res) => {
+    sendSmart(res, [
+      path.join('employer', 'employer_review.html'),
+      'employer_review.html'
+    ]);
+  });
+
   router.get('/components/:componentName.html', (req, res) => {
     const cacheKey = `component_${req.params.componentName}`;
     let componentPath;
@@ -121,7 +128,15 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
 
   router.get('/job_details/:id', async (req, res) => {
     const jobId = req.params.id;
-    const candidates = [path.join('employer', 'job_details.html'), path.join('hirly', 'job_details.html'), 'job_details.html'];
+    const page = 'job_details';
+    const candidates = [
+      path.join('employer', `${page}.html`),
+      path.join('user', `${page}.html`),
+      path.join('admin', `${page}.html`),
+      path.join('hirly', `${page}.html`),
+      path.join('technical', `${page}.html`),
+      `${page}.html`
+    ];
     const fullPath = resolveViewCandidates(candidates);
 
     if (!fullPath) return res.status(404).send('Page not found');
@@ -132,10 +147,10 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
         SELECT 
           j.title, 
           COALESCE(j.external_company_name, e.company_name, 'Private Company') as company_name,
-          COALESCE(j.company_logo, e.company_logo_path, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg') as company_logo
+          COALESCE(j.external_company_logo, e.company_logo_path, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg') as company_logo
         FROM jobs j
         LEFT JOIN employers e ON j.employer_id = e.user_id
-        WHERE j.id = $1 OR j.external_id = $1
+        WHERE j.id::text = $1::text OR j.external_id = $1::text
         LIMIT 1
       `, [jobId]);
 

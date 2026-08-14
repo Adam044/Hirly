@@ -19,8 +19,8 @@ module.exports = function registerReviewsRoutes(app, pool, {
     try {
       client = await pool.connect();
       const query = `
-        SELECT r.id, r.rating, r.comment, r.created_at,
-               u.first_name, u.last_name, u.profile_picture_url
+        SELECT r.id, r.rating, r.comment, r.created_at, r.reviewer_id,
+               u.first_name AS reviewer_first_name, u.last_name AS reviewer_last_name, u.profile_picture_url, u.slug AS reviewer_slug
         FROM employer_reviews r
         JOIN users u ON r.reviewer_id = u.id
         WHERE r.employer_id = $1
@@ -141,17 +141,42 @@ module.exports = function registerReviewsRoutes(app, pool, {
   router.get('/employer/reviewable-jobs', isAuthenticated, isEmployer, async (req, res) => {
     let client;
     const employerId = req.session.userId;
+    const professionalIdRaw = req.query.professionalId || req.query.freelancerId;
+    
     try {
       client = await pool.connect();
-      const result = await client.query(`
-        SELECT j.id AS job_id, j.title AS job_title
+      
+      let professionalId = professionalIdRaw;
+      
+      // If professionalId is not a numeric ID, try to resolve it as a slug
+      if (professionalId && !/^\d+$/.test(professionalId)) {
+        const slugResult = await client.query('SELECT id FROM users WHERE slug = $1', [professionalId]);
+        if (slugResult.rows.length > 0) {
+          professionalId = slugResult.rows[0].id;
+        } else {
+          // If not a valid slug, it's an invalid ID
+          return res.json({ success: true, reviewableJobs: [] });
+        }
+      }
+      
+      let query = `
+        SELECT DISTINCT j.id AS job_id, j.title AS job_title, j.created_at
         FROM jobs j
+        JOIN applications a ON j.id = a.job_id
         LEFT JOIN reviews r ON j.id = r.job_id AND r.reviewer_id = $1
-        WHERE j.employer_id = $1 AND r.id IS NULL
-        ORDER BY j.created_at DESC;
-      `, [employerId]);
+        WHERE j.employer_id = $1 
+        AND a.professional_id = $2
+        AND a.status = 'accepted'
+        AND r.id IS NULL
+      `;
+      const params = [employerId, professionalId];
+      
+      query += ` ORDER BY j.created_at DESC;`;
+      
+      const result = await client.query(query, params);
       res.json({ success: true, reviewableJobs: result.rows });
     } catch (error) {
+      console.error('Error fetching reviewable jobs:', error);
       res.status(500).json({ success: false, error: 'Failed to fetch reviewable jobs.' });
     } finally {
       if (client) client.release();
@@ -171,13 +196,24 @@ module.exports = function registerReviewsRoutes(app, pool, {
     try {
       client = await pool.connect();
       await client.query('BEGIN');
-      const jobResult = await client.query('SELECT id FROM jobs WHERE id = $1 AND employer_id = $2;', [jobId, reviewerId]);
-      const job = jobResult.rows[0];
-      if (!job) {
+
+      // 1. Verify that the employer has actually hired this professional (non-rejected application exists)
+      const hiringCheck = await client.query(`
+        SELECT a.id 
+        FROM applications a
+        JOIN jobs j ON a.job_id = j.id
+        WHERE j.id = $1 AND j.employer_id = $2 AND a.professional_id = $3 AND a.status != 'rejected'
+      `, [jobId, reviewerId, professionalId]);
+
+      if (hiringCheck.rows.length === 0) {
         await client.query('ROLLBACK');
-        return res.status(403).json({ success: false, error: 'Job not found or does not belong to you.' });
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Review restricted: You can only review professionals you have hired for this job.' 
+        });
       }
-      const professionalUserCheck = await client.query("SELECT id FROM users WHERE id = $1 AND user_type = 'professional';", [professionalId]);
+
+      const professionalUserCheck = await client.query("SELECT id FROM users WHERE id = $1 AND user_type IN ('professional', 'freelancer');", [professionalId]);
       if (professionalUserCheck.rows.length === 0) {
         await client.query('ROLLBACK');
         return res.status(400).json({ success: false, error: 'Invalid user ID provided.' });

@@ -26,6 +26,7 @@ const sendPasswordResetConfirmationEmailTemplate = require('./emailTemplates/pas
 const sendUserToProfessionalEmailTemplate = require('./emailTemplates/userToProfessional');
 
 const sendAccountActivationEmailTemplate = require('./emailTemplates/accountActivation');
+const sendEmployerLeadOTPTemplate = require('./emailTemplates/employerLeadOTP');
 
 // Initialize PostgreSQL pool
 const pool = new Pool({
@@ -140,7 +141,7 @@ const smartTransporter = {
         
         // Ensure 'from' is correct if not explicitly set to something else
         if (!mailOptions.from || mailOptions.from.includes(process.env.EMAIL_USER) || mailOptions.from.includes(process.env.AUTO_EMAIL_USER)) {
-            const senderName = process.env.EMAIL_SENDER_NAME || 'Hirly Notifications';
+            const senderName = process.env.EMAIL_SENDER_NAME || 'Hirly';
             mailOptions.from = `"${senderName}" <${senderEmail}>`;
         }
         
@@ -797,6 +798,30 @@ async function sendPasswordResetEmail(recipientEmail, resetCode) {
         return { success: true };
     } catch (error) {
         logger.error(`Error sending password reset code email to ${recipientEmail}:`, error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Sends an OTP email to an external employer lead.
+ * @param {string} recipientEmail
+ * @param {string} otpCode
+ * @param {string} jobTitle
+ */
+async function sendEmployerLeadOTPEmail(recipientEmail, otpCode, jobTitle) {
+    try {
+        const { subject, html } = sendEmployerLeadOTPTemplate(otpCode, jobTitle);
+        const mailOptions = {
+            from: process.env.AUTO_EMAIL_USER || process.env.EMAIL_USER,
+            to: recipientEmail,
+            subject,
+            html
+        };
+        await transporter.sendMail(mailOptions);
+        logger.info(`Employer lead OTP email sent to ${recipientEmail} for job ${jobTitle}`);
+        return { success: true };
+    } catch (error) {
+        logger.error(`Error sending employer lead OTP email:`, error);
         return { success: false, error: error.message };
     }
 }
@@ -1581,5 +1606,6 @@ module.exports = {
     sendUserToProfessionalEmail,
     sendInterviewInviteEmail,
     sendInterviewCompletedEmail,
-    sendAccountActivationEmail
+    sendAccountActivationEmail,
+    sendEmployerLeadOTPEmail
 };

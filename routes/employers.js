@@ -13,6 +13,33 @@ module.exports = function registerEmployersRoutes(app, pool, {
 }) {
   const router = express.Router();
 
+  router.get('/employer/profile', isAuthenticated, isEmployer, async (req, res) => {
+    let client;
+    const employerId = req.session.userId;
+    try {
+      client = await pool.connect();
+      const result = await client.query(`
+        SELECT u.id, u.first_name as "firstName", u.last_name as "lastName", u.email, u.phone, u.city, u.country, u.slug, u.user_type as "userType",
+               e.company_name as "companyName", e.company_description as "companyDescription", e.address, e.employer_type as "employerType",
+               e.company_logo_path as "companyLogo", e.id_verification_path as "idVerificationPath",
+               e.verification_status as "idVerificationStatus", e.company_category as "companyCategory",
+               e.website_link as "websiteLink", e.company_email as "companyEmail", e.company_phone as "companyPhone",
+               (SELECT COUNT(*) FROM applications a JOIN jobs j ON a.job_id = j.id WHERE j.employer_id = u.id) as "totalApplications",
+               e.profile_views as "profileViews"
+        FROM users u
+        LEFT JOIN employers e ON u.id = e.user_id
+        WHERE u.id = $1 AND u.user_type = 'employer'
+      `, [employerId]);
+      const employer = result.rows[0];
+      if (!employer) { return res.status(404).json({ success: false, error: 'Employer profile not found.' }); }
+      res.json({ success: true, user: employer });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'Failed to fetch employer profile.' });
+    } finally {
+      if (client) client.release();
+    }
+  });
+
   router.post('/employer/profile', isAuthenticated, isEmployer, isEmailVerified, uploadProfileFiles, async (req, res) => {
     let client;
     const employerId = req.session.userId;
@@ -105,7 +132,7 @@ module.exports = function registerEmployersRoutes(app, pool, {
       client = await pool.connect();
       const { search, location, category, sort } = req.query;
       let query = `
-        SELECT u.id, u.first_name, u.last_name, u.city,
+        SELECT u.id, u.first_name, u.last_name, u.city, u.slug,
                e.company_name, e.company_description, e.company_logo_path, e.verification_status, e.company_category, e.website_link,
                (SELECT COUNT(*) FROM jobs WHERE employer_id = u.id AND status = 'open') AS jobs_posted_count
         FROM users u JOIN employers e ON u.id = e.user_id
@@ -165,10 +192,14 @@ module.exports = function registerEmployersRoutes(app, pool, {
         await autoCloseExpiredJobs();
       }
       client = await pool.connect();
+      // Increment profile views
+      await client.query('UPDATE employers SET profile_views = COALESCE(profile_views, 0) + 1 WHERE user_id = (SELECT id FROM users WHERE slug = $1)', [slug]);
+      
       const result = await client.query(`
         SELECT u.id, u.first_name, u.last_name, u.city AS location, u.slug,
                e.company_name, e.company_description, e.address, e.employer_type, e.company_logo_path,
-               e.id_verification_path, e.verification_status, e.company_category, e.website_link, u.email, u.phone
+               e.id_verification_path, e.verification_status, e.company_category, e.website_link, u.email, u.phone,
+               e.profile_views
         FROM users u JOIN employers e ON u.id = e.user_id
         WHERE u.slug = $1 AND u.user_type = 'employer'
       `, [slug]);
@@ -190,10 +221,14 @@ module.exports = function registerEmployersRoutes(app, pool, {
         await autoCloseExpiredJobs();
       }
       client = await pool.connect();
+      // Increment profile views
+      await client.query('UPDATE employers SET profile_views = COALESCE(profile_views, 0) + 1 WHERE user_id = $1', [employerId]);
+
       const result = await client.query(`
         SELECT u.id, u.first_name, u.last_name, u.city AS location, u.slug,
                e.company_name, e.company_description, e.address, e.employer_type, e.company_logo_path,
-               e.id_verification_path, e.verification_status, e.company_category, e.website_link, e.rating, u.email, u.phone
+               e.id_verification_path, e.verification_status, e.company_category, e.website_link, e.rating, u.email, u.phone,
+               e.profile_views
         FROM users u JOIN employers e ON u.id = e.user_id
         WHERE u.id = $1 AND u.user_type = 'employer'
       `, [employerId]);
@@ -215,7 +250,7 @@ module.exports = function registerEmployersRoutes(app, pool, {
       }
       client = await pool.connect();
       const result = await client.query(`
-        SELECT e.company_name, e.company_logo_path, u.id AS user_id, e.company_category
+        SELECT e.company_name, e.company_logo_path, u.id AS user_id, u.slug, e.company_category
         FROM employers e JOIN users u ON e.user_id = u.id
         WHERE e.company_name IS NOT NULL AND e.verification_status = 'Verified'
         ORDER BY u.created_at DESC;

@@ -46,7 +46,7 @@ module.exports = function registerAuthRoutes(
         .matches(/^[\u0600-\u06FFa-zA-Z0-9\s]+$/)
         .withMessage('Last name must be 2-50 characters and contain only letters and numbers'),
       body('country')
-        .if((value, { req }) => req.body.userType === 'professional' || (req.body.userType === 'employer' && req.body.employerType === 'individual'))
+        .if((value, { req }) => req.body.userType === 'professional' || req.body.userType === 'employer')
         .trim()
         .isLength({ min: 2, max: 100 })
         .withMessage('Country is required'),
@@ -139,7 +139,7 @@ module.exports = function registerAuthRoutes(
         res.status(200).json({
           success: true,
           message: 'Please verify your email to complete signup.',
-          redirect: `/email_verification_pending.html?email=${encodeURIComponent(result.email)}`
+          redirect: `/email_verification_pending.html?email=${encodeURIComponent(result.email)}${result.claimJobId ? `&claimJobId=${result.claimJobId}` : ''}`
         });
       } catch (error) {
         // Validation/Conflict errors come with proper status codes
@@ -614,10 +614,20 @@ module.exports = function registerAuthRoutes(
       await client.query('UPDATE users SET is_email_verified = TRUE WHERE id = $1', [user.id]);
       await client.query('DELETE FROM email_verification_tokens WHERE user_id = $1 AND token = $2', [user.id, code]);
       await client.query('COMMIT');
+      
       req.session.userId = user.id;
       req.session.userType = user.user_type;
       req.session.authUserId = user.auth_user_id;
-      res.json({ success: true, message: 'Email verified successfully!', redirect: '/login.html?message=email_verified_success' });
+      
+      const claimJobId = req.body.claimJobId;
+      let redirectUrl = '/login.html?message=email_verified_success';
+      if (user.user_type === 'professional') {
+        redirectUrl = '/dashboard.html';
+      } else if (user.user_type === 'employer') {
+        redirectUrl = `/hire_dashboard.html?welcome=true${claimJobId ? `&jobId=${claimJobId}` : ''}`;
+      }
+      
+      res.json({ success: true, message: 'Email verified successfully!', redirect: redirectUrl });
     } catch (error) {
       if (client) await client.query('ROLLBACK');
       res.status(500).json({ success: false, error: error.message || 'An error occurred during verification.' });

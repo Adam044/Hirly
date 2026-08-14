@@ -38,7 +38,8 @@ import {
     loadJobSources,
     saveJobSource,
     deleteJobSource,
-    triggerSourceScan
+    triggerSourceScan,
+    loadOutreachLeads
 } from './dashboard-api.js';
 import { 
     applyEmailTemplate, 
@@ -134,6 +135,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const icon = refreshStatsBtn.querySelector('i');
             if (icon) icon.classList.add('fa-spin');
             loadDashboardStats().finally(() => {
+                if (icon) icon.classList.remove('fa-spin');
+            });
+        });
+    }
+
+    const refreshOutreachLeadsBtn = document.getElementById('refreshOutreachLeadsBtn');
+    if (refreshOutreachLeadsBtn) {
+        refreshOutreachLeadsBtn.addEventListener('click', () => {
+            const icon = refreshOutreachLeadsBtn.querySelector('i');
+            if (icon) icon.classList.add('fa-spin');
+            loadOutreachLeads().finally(() => {
                 if (icon) icon.classList.remove('fa-spin');
             });
         });
@@ -521,6 +533,51 @@ document.addEventListener('DOMContentLoaded', function() {
             state.filters.aggregatedJobs = { search: '', logoStatus: 'all' };
             aggregatedLogoFilterButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.logoStatus === 'all'));
             loadAggregatedJobs('', 'all');
+        });
+    }
+
+    // Outreach Leads Filters
+    const outreachSearchInput = document.getElementById('outreachSearchInput');
+    const outreachStatusBtns = document.querySelectorAll('.outreach-status-btn');
+    const minApplicantsSlider = document.getElementById('minApplicantsSlider');
+    const minApplicantsValue = document.getElementById('minApplicantsValue');
+
+    if (outreachSearchInput) {
+        outreachSearchInput.addEventListener('input', debounce(() => {
+            state.filters.outreach.search = outreachSearchInput.value;
+            renderOutreachLeads(state.allOutreachLeads);
+        }, 300));
+    }
+
+    if (outreachStatusBtns.length > 0) {
+        outreachStatusBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                outreachStatusBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.filters.outreach.status = btn.dataset.status;
+                renderOutreachLeads(state.allOutreachLeads);
+            });
+        });
+    }
+
+    if (minApplicantsSlider) {
+        minApplicantsSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            if (minApplicantsValue) minApplicantsValue.textContent = val;
+            state.filters.outreach.minApplicants = val;
+            renderOutreachLeads(state.allOutreachLeads);
+        });
+    }
+
+    const clearOutreachFiltersBtn = document.getElementById('clearOutreachFilters');
+    if (clearOutreachFiltersBtn) {
+        clearOutreachFiltersBtn.addEventListener('click', () => {
+            if (outreachSearchInput) outreachSearchInput.value = '';
+            state.filters.outreach = { search: '', status: 'all', minApplicants: 1 };
+            if (minApplicantsSlider) minApplicantsSlider.value = 1;
+            if (minApplicantsValue) minApplicantsValue.textContent = 1;
+            outreachStatusBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.status === 'all'));
+            renderOutreachLeads(state.allOutreachLeads);
         });
     }
 

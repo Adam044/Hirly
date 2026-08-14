@@ -373,8 +373,9 @@
                 }
                 const me = await meRes.json();
                 const u = me.user;
-                if (!u || u.user_type !== 'freelancer' || u.id !== session.freelancer_id) {
-                    const msg = u && u.user_type !== 'freelancer' ? 'Please log in with a freelancer account.' : 'This link is assigned to a different account.';
+                const isFreelancer = u && (u.user_type === 'professional' || u.user_type === 'freelancer');
+                if (!u || !isFreelancer || u.id !== session.freelancer_id) {
+                    const msg = u && !isFreelancer ? 'Please log in with a freelancer account.' : 'This link is assigned to a different account.';
                     showAuthModal(msg, session.freelancer_email);
                     __authorizedForSession = false;
                     return;

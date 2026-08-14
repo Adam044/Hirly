@@ -228,7 +228,8 @@ module.exports = function registerJobsRoutes(app, pool, {
       const result = await client.query(`
         SELECT j.id, j.title, j.city, j.country, j.category, j.job_site_type, j.created_at, j.job_image_path, j.job_type,
                COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS company_name,
-               COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS company_logo
+               COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS company_logo,
+               u.slug AS employer_slug, u.id AS employer_id
         FROM jobs j
         LEFT JOIN employers e ON j.employer_id = e.user_id
         LEFT JOIN users u ON j.employer_id = u.id
@@ -291,7 +292,8 @@ module.exports = function registerJobsRoutes(app, pool, {
                 ELSE 'individual'
              END AS display_employer_type,
              u.user_type AS employer_type,
-             u.id AS employer_user_id
+             u.id AS employer_user_id,
+             u.slug AS employer_slug
       FROM jobs j
       LEFT JOIN employers e ON j.employer_id = e.user_id
       LEFT JOIN users u ON j.employer_id = u.id
@@ -383,6 +385,7 @@ module.exports = function registerJobsRoutes(app, pool, {
             e.company_name,
             e.company_logo_path,
             u.id AS user_id,
+            u.slug,
             e.company_category
         FROM employers e
         JOIN users u ON e.user_id = u.id
@@ -430,6 +433,7 @@ module.exports = function registerJobsRoutes(app, pool, {
             u.first_name AS employer_first_name,
             u.last_name AS employer_last_name,
             u.id AS employer_user_id,
+            u.slug AS employer_slug,
             u.city AS employer_city,
             (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE professional_id = u.id) AS professional_average_rating,
             (SELECT COUNT(id) FROM reviews WHERE professional_id = u.id) AS professional_reviews_count
@@ -520,8 +524,10 @@ module.exports = function registerJobsRoutes(app, pool, {
       await autoCloseExpiredJobs();
       client = await pool.connect();
       let query = `
-        SELECT j.id, j.title, j.description, j.budget, j.currency, j.category, j.job_site_type, j.city, j.created_at, j.job_image_path, j.job_type
+        SELECT j.id, j.title, j.description, j.budget, j.currency, j.category, j.job_site_type, j.city, j.created_at, j.job_image_path, j.job_type,
+               u.slug AS employer_slug
         FROM jobs j
+        JOIN users u ON j.employer_id = u.id
         WHERE j.employer_id = $1
       `;
       const params = [employerId];
@@ -617,6 +623,16 @@ module.exports = function registerJobsRoutes(app, pool, {
       logLiveEvent('application', `New application submitted for <b>${job.title}</b>`);
 
       await client.query('COMMIT');
+
+      // Trigger AI evaluation in the background if it's an external job
+      if (job.is_external || !job.employer_id) {
+          const aiEvalService = req.app.get('aiEvaluationService');
+          if (aiEvalService) {
+              aiEvalService.analyzeApplication(applicationId).catch(err => {
+                  logger.error(`Auto AI evaluation failed for app ${applicationId}:`, err);
+              });
+          }
+      }
 
       res.status(201).json({ success: true, message: 'Application submitted successfully.', applicationId: applicationId });
     } catch (error) {

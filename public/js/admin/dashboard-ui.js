@@ -12,7 +12,9 @@ import {
     loadJobsWithApplications,
     loadEmailTemplate,
     loadAggregatedJobs,
-    loadJobSources
+    loadJobSources,
+    loadOutreachLeads,
+    sendOutreach
 } from './dashboard-api.js';
 import { getStatusBadgeClass, createLoadingSpinner } from './dashboard-utils.js';
 
@@ -66,7 +68,7 @@ export const renderFreelancers = (freelancers = [], append = false) => {
             </td>
             <td class="py-4 px-4 text-right">
                 <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="btn-icon btn-primary" title="View Profile" onclick="window.open('/profile.html?id=${f.id}', '_blank')">
+                    <button class="btn-icon btn-primary" title="View Profile" onclick="window.open('${f.slug ? `/${f.slug}` : `/profile.html?id=${f.id}`}', '_blank')">
                         <i class="fas fa-external-link-alt"></i>
                     </button>
                     <button class="btn-icon btn-warning edit-user-btn" data-id="${f.id}" data-type="freelancer" title="Edit Info">
@@ -141,7 +143,7 @@ export const renderEmployers = (employers = [], append = false) => {
             </td>
             <td class="py-4 px-4 text-right">
                 <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="btn-icon btn-primary" title="View Profile" onclick="window.open('/employer_profile.html?id=${e.id}', '_blank')">
+                    <button class="btn-icon btn-primary" title="View Profile" onclick="window.open('${e.slug ? `/${e.slug}` : `/employer_profile.html?id=${e.id}`}', '_blank')">
                         <i class="fas fa-external-link-alt"></i>
                     </button>
                     <button class="btn-icon btn-warning edit-user-btn" data-id="${e.id}" data-type="employer" title="Edit Info">
@@ -332,7 +334,11 @@ export const renderJobs = (jobs = [], sectionId = 'jobsSection') => {
                             value="${j.id || ''}" ${isSelected ? 'checked' : ''}>
                     </td>
                     <td class="py-3 px-4 text-sm text-white font-medium">${j.title || 'Untitled Job'}</td>
-                    <td class="py-3 px-4 text-sm text-gray-300">${j.employer_company_name || `${j.employer_first_name || ''} ${j.employer_last_name || ''}`.trim() || 'Not Specified'}</td>
+                    <td class="py-3 px-4 text-sm text-gray-300">
+                    <a href="${j.employer_slug ? `/${j.employer_slug}` : `/employer_profile.html?id=${j.employer_id}`}" target="_blank" class="hover:text-primary transition-colors">
+                        ${j.employer_company_name || `${j.employer_first_name || ''} ${j.employer_last_name || ''}`.trim() || 'Not Specified'}
+                    </a>
+                </td>
                     <td class="py-3 px-4 text-sm text-gray-300">${j.category || 'N/A'}</td>
                     <td class="py-3 px-4 text-sm text-gray-300">${j.city || 'N/A'}</td>
                     <td class="py-3 px-4 text-sm text-center">
@@ -350,7 +356,11 @@ export const renderJobs = (jobs = [], sectionId = 'jobsSection') => {
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-300">#${j.id || 'N/A'}</td>
                 <td class="py-3 px-4 text-sm text-white font-medium">${j.title || 'Untitled Job'}</td>
-                <td class="py-3 px-4 text-sm text-gray-300">${j.employer_company_name || `${j.employer_first_name || ''} ${j.employer_last_name || ''}`.trim() || 'Not Specified'}</td>
+                <td class="py-3 px-4 text-sm text-gray-300">
+                    <a href="${j.employer_slug ? `/${j.employer_slug}` : `/employer_profile.html?id=${j.employer_id}`}" target="_blank" class="hover:text-primary transition-colors">
+                        ${j.employer_company_name || `${j.employer_first_name || ''} ${j.employer_last_name || ''}`.trim() || 'Not Specified'}
+                    </a>
+                </td>
                 <td class="py-3 px-4 text-sm">
                     <span class="${getStatusBadgeClass(j.status === 'open' ? 'verified' : 'pending')} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border">
                         ${j.status || 'unknown'}
@@ -419,7 +429,11 @@ export const renderJobsWithApplications = (jobs = []) => {
                 </td>
                 <td class="py-3 px-4 border-b border-slate-700">
                     <div class="font-bold text-white">${job.title || 'Untitled Job'}</div>
-                    <div class="text-sm text-gray-400">${job.employer_company_name || `${job.employer_first_name || ''} ${job.employer_last_name || ''}`.trim() || 'Not Specified'}</div>
+                    <div class="text-sm text-gray-400">
+                        <a href="${job.employer_slug ? `/${job.employer_slug}` : `/employer_profile.html?id=${job.employer_id}`}" target="_blank" class="hover:text-primary transition-colors">
+                            ${job.employer_company_name || `${job.employer_first_name || ''} ${job.employer_last_name || ''}`.trim() || 'Not Specified'}
+                        </a>
+                    </div>
                 </td>
                 <td class="py-3 px-4 border-b border-slate-700 text-gray-300">
                     <div>${job.city || 'N/A'}</div>
@@ -573,6 +587,159 @@ export const renderDashboardStats = (stats) => {
     }
 };
 
+export const renderOutreachLeads = (leads = []) => {
+    const tableBody = document.getElementById('outreachLeadsTableBody');
+    if (!tableBody) return;
+
+    // Filter Logic using state
+    const searchTerm = state.filters.outreach.search.toLowerCase();
+    const statusFilter = state.filters.outreach.status;
+    const minApps = state.filters.outreach.minApplicants;
+
+    const filteredLeads = leads.filter(l => {
+        const matchesSearch = !searchTerm || 
+                            l.title.toLowerCase().includes(searchTerm) || 
+                            (l.external_company_name && l.external_company_name.toLowerCase().includes(searchTerm)) ||
+                            (l.external_company_email && l.external_company_email.toLowerCase().includes(searchTerm));
+        
+        const matchesStatus = statusFilter === 'all' || 
+                            (statusFilter === 'pending' && !l.auto_outreach_sent) ||
+                            (statusFilter === 'sent' && l.auto_outreach_sent);
+        
+        const matchesApps = parseInt(l.applicant_count) >= minApps;
+
+        return matchesSearch && matchesStatus && matchesApps;
+    });
+
+    if (filteredLeads.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-12 text-gray-500"><i class="fas fa-filter text-4xl mb-3 block opacity-20"></i>No leads match your current filters.</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = filteredLeads.map(l => {
+        const selectedLang = state.leadLanguages.get(l.id.toString()) || 'en';
+        
+        return `
+        <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-all group">
+            <td class="py-4 px-6">
+                <div class="flex flex-col">
+                    <p class="text-sm font-semibold text-white group-hover:text-primary transition-colors">${l.title}</p>
+                    <p class="text-[10px] text-gray-500 font-medium">Job #${l.id}</p>
+                </div>
+            </td>
+            <td class="py-4 px-6">
+                <div class="flex flex-col">
+                    <p class="text-sm text-gray-300 font-medium">${l.external_company_name || 'Unknown'}</p>
+                    <p class="text-[10px] text-primary font-bold">${l.external_company_email}</p>
+                </div>
+            </td>
+            <td class="py-4 px-6">
+                <span class="${l.auto_outreach_sent ? 'bg-success/10 text-success border-success/20' : 'bg-warning/10 text-warning border-warning/20'} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border">
+                    ${l.auto_outreach_sent ? 'Sent' : 'Pending'}
+                </span>
+            </td>
+            <td class="py-4 px-6">
+                <div class="flex items-center bg-slate-800/80 rounded-lg p-0.5 border border-slate-700 w-fit">
+                    <button class="px-2 py-1 text-[10px] font-bold rounded-md transition-all lang-toggle-btn ${selectedLang === 'en' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}" 
+                        data-id="${l.id}" data-lang="en">EN</button>
+                    <button class="px-2 py-1 text-[10px] font-bold rounded-md transition-all lang-toggle-btn ${selectedLang === 'ar' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}" 
+                        data-id="${l.id}" data-lang="ar">AR</button>
+                </div>
+            </td>
+            <td class="py-4 px-6">
+                <div class="flex flex-col gap-1">
+                    <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider w-fit">
+                        ${l.applicant_count} Applicants
+                    </span>
+                    ${l.high_match_count > 0 ? `
+                        <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider w-fit">
+                            <i class="fas fa-check-circle mr-1"></i> ${l.high_match_count} High-Match
+                        </span>
+                    ` : ''}
+                </div>
+            </td>
+            <td class="py-4 px-6">
+                <div class="flex flex-col">
+                    <p class="text-xs text-gray-400">${new Date(l.deadline).toLocaleDateString()}</p>
+                    <p class="text-[10px] text-danger font-semibold italic">Expired</p>
+                </div>
+            </td>
+            <td class="py-4 px-6 text-right">
+                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="btn-icon btn-info send-outreach-self-btn" data-id="${l.id}" title="Send to Self (Test)">
+                        <i class="fas fa-vial"></i>
+                    </button>
+                    <button class="btn-icon ${l.auto_outreach_sent ? 'btn-secondary' : 'btn-primary'} send-outreach-employer-btn" data-id="${l.id}" title="${l.auto_outreach_sent ? 'Resend to Employer' : 'Send to Employer'}">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `; }).join('');
+
+    // Attach Language Toggle Listeners
+    tableBody.querySelectorAll('.lang-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const jobId = btn.dataset.id;
+            const lang = btn.dataset.lang;
+            state.leadLanguages.set(jobId.toString(), lang);
+            renderOutreachLeads(state.allOutreachLeads);
+        });
+    });
+
+    // Attach Listeners
+    tableBody.querySelectorAll('.send-outreach-self-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const jobId = btn.dataset.id;
+            const language = state.leadLanguages.get(jobId.toString()) || 'en';
+            const testEmail = prompt("Enter test email (leave blank for yours):");
+            if (testEmail === null) return;
+
+            btn.disabled = true;
+            const icon = btn.querySelector('i');
+            icon.className = 'fas fa-spinner fa-spin';
+
+            try {
+                const res = await sendOutreach(jobId, testEmail || 'self', language);
+                showToast(`Test email (${language.toUpperCase()}) sent to ${res.recipient}`, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                icon.className = 'fas fa-vial';
+            }
+        });
+    });
+
+    tableBody.querySelectorAll('.send-outreach-employer-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const jobId = btn.dataset.id;
+            const language = state.leadLanguages.get(jobId.toString()) || 'en';
+            showConfirmationModal(
+                'Confirm Outreach',
+                `Are you sure you want to send the outreach email in <b>${language === 'ar' ? 'Arabic' : 'English'}</b> to the employer?`,
+                async () => {
+                    btn.disabled = true;
+                    const icon = btn.querySelector('i');
+                    const originalIcon = icon.className;
+                    icon.className = 'fas fa-spinner fa-spin';
+
+                    try {
+                        const res = await sendOutreach(jobId, null, language);
+                        showToast(`Outreach email sent to ${res.recipient}`, 'success');
+                        loadOutreachLeads(); // Refresh to update status
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                    } finally {
+                        btn.disabled = false;
+                        icon.className = originalIcon;
+                    }
+                }
+            );
+        });
+    });
+};
+
 // --- UI Helpers ---
 
 export const showToast = (message, type = 'info') => {
@@ -710,6 +877,9 @@ export const showSection = (sectionId) => {
             case 'jobSourcesSection':
                 loadJobSources();
                 break;
+            case 'outreachLeadsSection':
+                loadOutreachLeads();
+                break;
             default: 
                 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
                     console.warn('Unknown section:', sectionId);
@@ -733,7 +903,7 @@ export const setActiveLink = (linkId) => {
 
 export const getDisplayStatus = (status) => {
     switch (status) {
-        case 'freelancer': return 'Freelancer';
+        case 'freelancer': return 'Professional';
         case 'employer': return 'Employer';
         default: return status;
     }

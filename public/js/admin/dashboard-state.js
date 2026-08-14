@@ -17,12 +17,15 @@ export const state = {
         freelancers: { search: '', status: 'All', category: 'all', profession: 'all', city: 'all' },
         employers: { search: '', status: 'All', type: 'all', logo: 'all', city: 'all' },
         jobs: { search: '', status: 'all', category: 'all', city: 'all' },
-        aggregatedJobs: { search: '', logoStatus: 'all' }
+        aggregatedJobs: { search: '', logoStatus: 'all' },
+        outreach: { search: '', status: 'all', minApplicants: 1 }
     },
     
+    leadLanguages: new Map(), // Store selected language per job ID
     allCategories: [],
     allCities: [],
     allJobsData: [],
+    allOutreachLeads: [],
     selectedJobs: new Map(),
     matchingRecipients: [],
     loggedInUserEmail: null,

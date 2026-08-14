@@ -81,11 +81,25 @@ const DashboardAPI = {
             const data = await response.json();
             
             // Normalize application data for UI
-            const applications = (data.applications || []).map(app => ({
-                ...app,
-                company_name: app.company_name || `${app.first_name} ${app.last_name}`.trim() || '',
-                created_at: app.applied_at // Map applied_at to created_at for UI
-            }));
+            const applications = (data.applications || []).map(app => {
+                let companyName = app.company_name;
+                
+                if (!companyName) {
+                    if (app.is_external && app.external_company_name) {
+                        companyName = app.external_company_name;
+                    } else if (app.first_name || app.last_name) {
+                        companyName = `${app.first_name || ''} ${app.last_name || ''}`.trim();
+                    } else if (app.is_external && app.external_source) {
+                        companyName = app.external_source;
+                    }
+                }
+
+                return {
+                    ...app,
+                    company_name: companyName || (window.translations?.company_fallback?.[window.currentLanguage] || 'Company'),
+                    created_at: app.applied_at // Map applied_at to created_at for UI
+                };
+            });
 
             return { success: true, data: applications };
         } catch (error) {
