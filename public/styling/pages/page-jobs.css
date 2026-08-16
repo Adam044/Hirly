@@ -651,6 +651,7 @@ html[dir="rtl"] .checkbox-item input[type="checkbox"] {
 }
 
 .employer-name-display {
+    display: block;
     font-size: 1.05rem;
     color: var(--text-light);
     font-weight: 600;

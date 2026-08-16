@@ -5,6 +5,18 @@ class EducationService {
         this.pool = pool;
     }
 
+    _normalizeDate(dateStr) {
+        if (!dateStr) return null;
+        const s = String(dateStr).trim();
+        // If it's just a year (e.g. "2026")
+        if (/^\d{4}$/.test(s)) {
+            return `${s}-01-01`;
+        }
+        // If it's already a valid date string, try to parse it
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
+    }
+
     async getUserEducation(userId) {
         const query = 'SELECT * FROM education WHERE user_id = $1 ORDER BY end_date DESC, created_at DESC';
         const result = await this.pool.query(query, [userId]);
@@ -38,7 +50,10 @@ class EducationService {
 
         const values = [
             userId, type.toLowerCase(), institution_name, institution_id, title,
-            field_of_study, education_level, start_date, end_date, is_current || false,
+            field_of_study, education_level, 
+            this._normalizeDate(start_date), 
+            this._normalizeDate(end_date), 
+            is_current || false,
             grade_score, credential_url, description
         ];
 
@@ -83,7 +98,10 @@ class EducationService {
 
         const values = [
             type.toLowerCase(), institution_name, institution_id, title,
-            field_of_study, education_level, start_date, end_date, is_current || false,
+            field_of_study, education_level, 
+            this._normalizeDate(start_date), 
+            this._normalizeDate(end_date), 
+            is_current || false,
             grade_score, credential_url, description,
             educationId, userId
         ];

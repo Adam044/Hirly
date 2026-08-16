@@ -38,7 +38,7 @@ if (typeof window.addTranslations === 'function') {
         'add_education': { 'ar': 'أضف تعليمك', 'en': 'Add your education' },
         'add_services': { 'ar': 'أضف خدماتك', 'en': 'Add your services' },
         'complete_personal': { 'ar': 'أكمل بياناتك الشخصية', 'en': 'Complete personal details' },
-        'all_tasks_done': { 'ar': 'حالة الملف المميزة', 'en': 'Elite Profile Status' },
+        'all_tasks_done': { 'ar': 'حالة ملف النخبة', 'en': 'Elite Profile Status' },
         'profile_perfect_desc': { 'ar': 'ملفك الشخصي محسن بالكامل للحصول على أقصى قدر من الظهور.', 'en': 'Your profile is fully optimized for maximum visibility.' },
         'dashboard': { 'ar': 'لوحة التحكم', 'en': 'Dashboard' },
 

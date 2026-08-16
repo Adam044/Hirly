@@ -1050,6 +1050,15 @@ class JobAggregationService {
                             cleanJob.created_at = aiData.posted_at || job.created_at || new Date().toISOString();
                             cleanJob.deadline = aiData.deadline || null;
 
+                            // 2a. Deadline Fallback: If no deadline, set to 30 days from posting
+                            if (!cleanJob.deadline) {
+                                const postedDate = new Date(cleanJob.created_at);
+                                const fallbackDeadline = new Date(postedDate);
+                                fallbackDeadline.setDate(fallbackDeadline.getDate() + 30);
+                                cleanJob.deadline = fallbackDeadline.toISOString();
+                                this.addLog(`[Deadline Guard] No deadline for "${job.title}". Fallback: 30 days applied.`, 'debug');
+                            }
+
                             // 2b. Future Date Guard: Ensure created_at is not in the future
                             const createdAtDate = new Date(cleanJob.created_at);
                             if (createdAtDate > new Date()) {

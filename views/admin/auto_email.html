@@ -300,8 +300,10 @@
                 const select = document.getElementById('campaignSelect');
                 
                 if (data.success && data.templates) {
-                    // Filter to only show Employer Marketing as requested
-                    const filtered = data.templates.filter(t => t.id === 'employer-marketing');
+                    // Filter to show Outreach/Marketing templates for new leads
+                    const filtered = data.templates.filter(t => 
+                        ['employer-marketing'].includes(t.id)
+                    );
                     
                     if (filtered.length > 0) {
                         select.innerHTML = '';

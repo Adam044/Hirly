@@ -351,36 +351,15 @@
                 <p class="editorial-modal-subtitle" id="externalJobModalDesc">
                     <!-- Populated by JS -->
                 </p>
-
-                <div class="profile-includes-card mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2" data-lang-key="profile_includes_title">Your profile includes:</h4>
-                    <p class="text-sm text-slate-600 font-medium" data-lang-key="profile_includes_list">
-                        CV · Experience · Education · Skills · Professional information
-                    </p>
-                </div>
-
-                <div class="profile-completeness-card mt-4">
-                    <div class="completeness-visual">
-                        <svg class="progress-ring-luxe" width="70" height="70">
-                            <circle class="progress-ring-bg" cx="35" cy="35" r="30" stroke-width="6"></circle>
-                            <circle id="externalApplyRingProgress" class="progress-ring-fill" cx="35" cy="35" r="30" stroke-width="6"></circle>
-                            <text id="externalApplyPercentText" x="35" y="35" text-anchor="middle" class="progress-ring-label">0%</text>
-                        </svg>
-                    </div>
-                    <div class="completeness-info">
-                        <h4 data-lang-key="profile_completeness_title">Profile Completeness</h4>
-                    </div>
-                </div>
             </div>
 
             <div class="modal-actions-editorial flex-col gap-3">
                 <button id="applyViaHirlyBtn" class="btn btn-primary btn-luxe w-full py-4">
                     <i class="fas fa-paper-plane"></i>
-                    <span data-lang-key="share_profile_apply_btn">Share My Profile & Apply</span>
+                    <span data-lang-key="share_profile_apply_btn">Apply via Hirly</span>
                 </button>
-                <button id="continueToExternalBtn" class="btn btn-outline-primary btn-luxe w-full py-4">
-                    <span id="applyOnSourceText">Apply on Source</span>
-                    <i class="fas fa-external-link-alt"></i>
+                <button id="cancelExternalApplyBtn" class="btn btn-outline-secondary btn-luxe w-full py-3" data-lang-key="cancel">
+                    Cancel
                 </button>
             </div>
         </div>

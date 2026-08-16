@@ -321,13 +321,13 @@ class PalestineCollector {
                                         
                                         // Try to find Posted Date
                                         if (!dateText) {
-                                            const postedMatch = text.match(/(?:Posted on|Published|تاريخ النشر|نشر في):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+                                            const postedMatch = text.match(/(?:Posted on|Published|تاريخ النشر|نشر في):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
                                             if (postedMatch) dateText = postedMatch[1];
                                         }
 
                                         // Try to find Deadline
                                         if (!deadlineText) {
-                                            const deadlineMatch = text.match(/(?:Deadline|Expiry|Closing|آخر موعد|تاريخ الانتهاء):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+                                            const deadlineMatch = text.match(/(?:Deadline|Expiry|Closing|آخر موعد|تاريخ الانتهاء):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
                                             if (deadlineMatch) deadlineText = deadlineMatch[1];
                                         }
                                     }
@@ -340,11 +340,11 @@ class PalestineCollector {
                                 infoItems.forEach(item => {
                                     const text = item.innerText.trim();
                                     if (text.includes('النشر') || text.includes('Posted')) {
-                                        const match = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/);
+                                        const match = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
                                         if (match) dateText = match[0];
                                     }
                                     if (text.includes('الانتهاء') || text.includes('Deadline') || text.includes('Expiry')) {
-                                        const match = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/);
+                                        const match = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
                                         if (match) deadlineText = match[0];
                                     }
                                 });
@@ -354,11 +354,11 @@ class PalestineCollector {
                             if (!dateText || !deadlineText) {
                                 const bodyText = document.body.innerText;
                                 if (!dateText) {
-                                    const match = bodyText.match(/(?:Posted on|Published|نشر في):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+                                    const match = bodyText.match(/(?:Posted on|Published|نشر في):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
                                     if (match) dateText = match[1];
                                 }
                                 if (!deadlineText) {
-                                    const match = bodyText.match(/(?:Deadline|Expiry|Closing|آخر موعد):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+                                    const match = bodyText.match(/(?:Deadline|Expiry|Closing|آخر موعد):?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
                                     if (match) deadlineText = match[1];
                                 }
                             }
@@ -371,7 +371,26 @@ class PalestineCollector {
                                 page_logo: logo, 
                                 page_company: company,
                                 page_date: dateText,
-                                page_deadline: deadlineText
+                                page_deadline: deadlineText,
+                                page_email: (() => {
+                                    // 1. Try mailto links
+                                    const mailto = document.querySelector('a[href^="mailto:"]');
+                                    if (mailto) return mailto.href.replace('mailto:', '').split('?')[0].trim();
+                                    
+                                    // 2. Try to find in high-value selectors
+                                    const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+                                    for (const sel of highValueSelectors) {
+                                        const el = document.querySelector(sel);
+                                        if (el && el.innerText) {
+                                            const match = el.innerText.match(emailRegex);
+                                            if (match) return match[0];
+                                        }
+                                    }
+                                    
+                                    // 3. Last resort: Body search
+                                    const bodyMatch = document.body.innerText.match(emailRegex);
+                                    return bodyMatch ? bodyMatch[0] : null;
+                                })()
                             };
                         });
 
@@ -443,17 +462,20 @@ class PalestineCollector {
                                 external_url: job.link,
                                 external_source: 'Jobs.ps',
                                 location: job.location,
+                                email: fullData.page_email || job.email, // Use deep scan email, fallback to listing email
                                 job_text: fullData.full_text,
                                 created_at: createdAt,
                                 deadline: deadline,
                                 raw_payload: {
+                                    ...job.raw_payload,
                                     source_name: source.name,
                                     fetch_date: new Date().toISOString(),
                                     extracted_company: finalCompany,
                                     extracted_location: job.location,
                                     page_logo: fullData.page_logo,
                                     extracted_date: fullData.page_date,
-                                    extracted_deadline: fullData.page_deadline
+                                    extracted_deadline: fullData.page_deadline,
+                                    external_source: 'Jobs.ps'
                                 }
                             }
                         };

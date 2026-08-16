@@ -39,9 +39,12 @@ const DashboardProfile = {
         window.addEventListener('translationsApplied', () => {
             this.populateEducationDropdowns();
             this.renderEducationList();
+            this.populateCountryDropdownForEdit();
+            this.populateCityDropdownForEdit();
             if (window.currentUser) {
                 this.updateSidebar(window.currentUser);
                 this.initSettings(window.currentUser);
+                this.renderPersonalSection(window.currentUser);
             }
         });
     },
@@ -715,19 +718,10 @@ const DashboardProfile = {
                         <input type="text" id="editField-${id}" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:border-indigo-500 transition-all outline-none text-xs font-bold text-slate-700 shadow-sm" value="${entry.title || ''}" placeholder="${type === 'Certificate' ? (window.translations?.cert_name_placeholder?.[lang] || 'e.g., AWS Certified Developer') : (type === 'Course' ? (window.translations?.course_name_placeholder?.[lang] || 'e.g., Full Stack Web Development') : (window.translations?.grade_placeholder?.[lang] || 'e.g., 90% or 3.8/4.0'))}">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-full">
                         <div class="space-y-3">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="year_label">${window.translations?.year_label?.[lang] || 'Year'}</label>
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="graduation_year_label">${window.translations?.graduation_year_label?.[lang] || 'Graduation Year'}</label>
                             <input type="text" id="editYear-${id}" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:border-indigo-500 transition-all outline-none text-xs font-bold text-slate-700 shadow-sm" value="${entry.date || ''}">
-                        </div>
-                        <div class="space-y-3">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1" data-lang-key="current_status_label">${window.translations?.current_status_label?.[lang] || 'Current'}</label>
-                            <div class="flex items-center h-[42px]">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="editCurrent-${id}" class="sr-only peer" ${entry.is_current ? 'checked' : ''}>
-                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                                </label>
-                            </div>
                         </div>
                     </div>
 
@@ -877,7 +871,6 @@ const DashboardProfile = {
         // Get values based on source
         const type = container.querySelector('.edu-type-btn.active')?.dataset.type || 'University';
         const year = container.querySelector(isModal ? '#editGradYearModal' : `#editYear-${id}`)?.value.trim();
-        const isCurrent = container.querySelector(isModal ? '#editIsCurrentModal' : `#editCurrent-${id}`)?.checked;
         const link = container.querySelector(isModal ? '#editEduLinkModal' : `#editLink-${id}`)?.value.trim();
         
         let organization = '';
@@ -948,7 +941,7 @@ const DashboardProfile = {
             field_of_study: fieldOfStudy || null,
             education_level: educationLevel || null,
             end_date: year,
-            is_current: !!isCurrent,
+            is_current: false,
             credential_url: link || null
         };
 
@@ -1360,57 +1353,112 @@ const DashboardProfile = {
         if (!menu || !window.palestinianCitiesTranslations) return;
 
         const lang = window.currentLanguage || 'en';
-        const currentCountry = input?.value || window.currentUser?.country || '';
+        let currentCountry = input?.value || window.currentUser?.country || '';
 
-        menu.innerHTML = '';
+        // Mapping logic for legacy strings or custom names
+        if (currentCountry && !currentCountry.startsWith('country_')) {
+            const key = Object.keys(window.palestinianCitiesTranslations).find(k => 
+                k.startsWith('country_') && 
+                (window.palestinianCitiesTranslations[k].en === currentCountry || window.palestinianCitiesTranslations[k].ar === currentCountry)
+            );
+            if (key) {
+                currentCountry = key;
+            }
+        }
 
-        const allowedCountries = [
-            'country_palestine', 'country_jordan', 'country_lebanon', 'country_syria', 
-            'country_iraq', 'country_uae', 'country_saudi_arabia', 'country_qatar', 
-            'country_oman', 'country_bahrain', 'country_kuwait'
-        ];
+        // Add search input at the top
+        const searchPlaceholder = lang === 'ar' ? 'بحث عن دولة...' : 'Search country...';
+        menu.innerHTML = `
+            <div class="sticky top-0 bg-white p-2 border-b border-slate-50 z-10">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="countrySearchInput" class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:bg-white focus:border-emerald-500 transition-all outline-none" placeholder="${searchPlaceholder}">
+                </div>
+            </div>
+            <div id="countryListItems" class="max-h-60 overflow-y-auto custom-scrollbar"></div>
+        `;
+
+        const listContainer = menu.querySelector('#countryListItems');
+        const searchInput = menu.querySelector('#countrySearchInput');
 
         const countries = Object.keys(window.palestinianCitiesTranslations)
-            .filter(key => allowedCountries.includes(key))
+            .filter(key => key.startsWith('country_'))
             .map(key => ({
                 key: key,
-                name: window.palestinianCitiesTranslations[key][lang] || window.palestinianCitiesTranslations[key].en
+                name: window.palestinianCitiesTranslations[key][lang] || window.palestinianCitiesTranslations[key].en,
+                en: window.palestinianCitiesTranslations[key].en,
+                ar: window.palestinianCitiesTranslations[key].ar
             }))
-            .sort((a, b) => a.name.localeCompare(b.name, lang));
-
-        countries.forEach(country => {
-            const countryData = window.palestinianCitiesTranslations[country.key];
-            const countryEnName = countryData?.en || country.key;
-
-            const isSelected = country.key === currentCountry || countryEnName === currentCountry;
-            
-            if (isSelected && display) {
-                display.textContent = country.name;
-                display.classList.remove('text-slate-400');
-                display.removeAttribute('data-lang-key');
-            }
-
-            const item = document.createElement('div');
-            item.className = `p-4 hover:bg-slate-50 cursor-pointer flex items-center justify-between transition-all border-b border-slate-50 last:border-0 group ${isSelected ? 'bg-emerald-50/30' : ''}`;
-            item.innerHTML = `
-                <span class="text-sm font-bold ${isSelected ? 'text-emerald-700' : 'text-slate-600'} group-hover:text-slate-900 transition-colors">${country.name}</span>
-                ${isSelected ? `
-                    <div class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm shadow-emerald-200 animate-in zoom-in-50 duration-200">
-                        <i class="fa-solid fa-check text-[10px]"></i>
-                    </div>
-                ` : `
-                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 opacity-0 group-hover:opacity-100 transition-all">
-                        <i class="fa-solid fa-globe text-[10px]"></i>
-                    </div>
-                `}
-            `;
-
-            item.addEventListener('click', () => {
-                this.selectCountry(countryEnName, country.name);
+            .sort((a, b) => {
+                if (a.key === 'country_palestine') return -1;
+                if (b.key === 'country_palestine') return 1;
+                return a.name.localeCompare(b.name, lang);
             });
 
-            menu.appendChild(item);
-        });
+        const renderList = (filter = '') => {
+            listContainer.innerHTML = '';
+            const filtered = countries.filter(c => 
+                c.name.toLowerCase().includes(filter.toLowerCase()) || 
+                c.en.toLowerCase().includes(filter.toLowerCase()) ||
+                (c.ar && c.ar.includes(filter))
+            );
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">${lang === 'ar' ? 'لا توجد نتائج' : 'No results found'}</div>`;
+                return;
+            }
+
+            filtered.forEach(country => {
+                const isSelected = country.key === currentCountry;
+                
+                if (isSelected && display && !filter) {
+                    display.textContent = country.name;
+                    display.classList.remove('text-slate-400');
+                    if (input) input.value = country.key;
+                }
+
+                const item = document.createElement('div');
+                item.className = `p-4 hover:bg-slate-50 cursor-pointer flex items-center justify-between transition-all border-b border-slate-50 last:border-0 group ${isSelected ? 'bg-emerald-50/30' : ''}`;
+                item.innerHTML = `
+                    <span class="text-sm font-bold ${isSelected ? 'text-emerald-700' : 'text-slate-600'} group-hover:text-slate-900 transition-colors">${country.name}</span>
+                    ${isSelected ? `
+                        <div class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm shadow-emerald-200 animate-in zoom-in-50 duration-200">
+                            <i class="fa-solid fa-check text-[10px]"></i>
+                        </div>
+                    ` : `
+                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 opacity-0 group-hover:opacity-100 transition-all">
+                            <i class="fa-solid fa-globe text-[10px]"></i>
+                        </div>
+                    `}
+                `;
+
+                item.addEventListener('click', () => {
+                    if (country.key === 'country_other') {
+                        const customCountry = prompt(lang === 'ar' ? 'أدخل اسم الدولة:' : 'Enter country name:');
+                        if (customCountry) {
+                            this.selectCountry(customCountry, customCountry);
+                        }
+                    } else {
+                        this.selectCountry(country.key, country.name);
+                    }
+                });
+
+                listContainer.appendChild(item);
+             });
+         };
+
+         // Handle custom country display (not a key)
+         if (currentCountry && !currentCountry.startsWith('country_')) {
+             if (display) {
+                 display.textContent = currentCountry;
+                 display.classList.remove('text-slate-400');
+             }
+         }
+
+         searchInput.addEventListener('input', (e) => renderList(e.target.value));
+        searchInput.addEventListener('click', (e) => e.stopPropagation());
+        
+        renderList();
     },
 
     selectCountry(value, label) {
@@ -1424,11 +1472,12 @@ const DashboardProfile = {
             display.classList.remove('text-slate-400');
             display.removeAttribute('data-lang-key');
         }
+        
         if (input) {
             const oldVal = input.value;
             input.value = value;
             if (oldVal !== value) {
-                // Reset city if country changed
+                // Reset city hidden input to ensure it doesn't carry over old city
                 if (cityInput) cityInput.value = '';
                 if (cityDisplay) {
                     cityDisplay.textContent = window.translations?.select_city_placeholder?.[window.currentLanguage || 'en'] || 'Select City';
@@ -1460,97 +1509,162 @@ const DashboardProfile = {
         if (!menu || !window.palestinianCitiesTranslations) return;
 
         const lang = window.currentLanguage || 'en';
-        const currentCity = input?.value || window.currentUser?.city || '';
-        const selectedCountry = countryInput?.value || window.currentUser?.country || '';
+        const selectedCountryKey = countryInput?.value || '';
+        
+        let currentCity = input?.value || '';
+        if (currentCity === '' && input && input.dataset.initialValue === undefined) {
+            currentCity = window.currentUser?.city || '';
+            input.dataset.initialValue = currentCity;
+        }
 
-        menu.innerHTML = '';
+        // Mapping logic for legacy strings or custom names
+        if (currentCity && !currentCity.startsWith('city_')) {
+            const key = Object.keys(window.palestinianCitiesTranslations).find(k => 
+                k.startsWith('city_') && 
+                (window.palestinianCitiesTranslations[k].en === currentCity || window.palestinianCitiesTranslations[k].ar === currentCity)
+            );
+            if (key) {
+                currentCity = key;
+            }
+        }
 
         // If no country selected, show a message
-        if (!selectedCountry) {
-            menu.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs font-medium" data-lang-key="select_country_first">Please select a country first</div>`;
-            if (typeof window.applyTranslations === 'function') window.applyTranslations(lang);
+        if (!selectedCountryKey) {
+            const msg = window.translations?.select_country_first?.[lang] || 'Please select a country first';
+            menu.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs font-medium">${msg}</div>`;
             return;
         }
+
+        // Add search input at the top
+        const searchPlaceholder = lang === 'ar' ? 'بحث عن مدينة...' : 'Search city...';
+        menu.innerHTML = `
+            <div class="sticky top-0 bg-white p-2 border-b border-slate-50 z-10">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="citySearchInput" class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:bg-white focus:border-emerald-500 transition-all outline-none" placeholder="${searchPlaceholder}">
+                </div>
+            </div>
+            <div id="cityListItems" class="max-h-60 overflow-y-auto custom-scrollbar"></div>
+        `;
+
+        const listContainer = menu.querySelector('#cityListItems');
+        const searchInput = menu.querySelector('#citySearchInput');
 
         const cities = Object.keys(window.palestinianCitiesTranslations)
             .filter(key => {
                 const data = window.palestinianCitiesTranslations[key];
-                return key.startsWith('city_') && data.country === selectedCountry;
+                return key.startsWith('city_') && data.country === selectedCountryKey;
             })
             .map(key => ({
                 key: key,
-                name: window.palestinianCitiesTranslations[key][lang] || window.palestinianCitiesTranslations[key].en
+                name: window.palestinianCitiesTranslations[key][lang] || window.palestinianCitiesTranslations[key].en,
+                en: window.palestinianCitiesTranslations[key].en,
+                ar: window.palestinianCitiesTranslations[key].ar
             }))
             .sort((a, b) => a.name.localeCompare(b.name, lang));
 
-        // If no cities for this country, show "Other" or a message
-        if (cities.length === 0) {
-            const otherKey = 'city_other';
-            const otherName = window.palestinianCitiesTranslations[otherKey][lang] || window.palestinianCitiesTranslations[otherKey].en;
-            cities.push({ key: otherKey, name: otherName });
+        // Add "Other" option
+        const otherKey = 'city_other';
+        const otherData = window.palestinianCitiesTranslations[otherKey];
+        if (otherData) {
+            cities.push({ 
+                key: otherKey, 
+                name: otherData[lang] || otherData.en,
+                en: otherData.en,
+                ar: otherData.ar
+            });
         }
 
-        cities.forEach(city => {
-            const cityData = window.palestinianCitiesTranslations[city.key];
-            const cityEnName = cityData?.en || city.key;
+        const renderList = (filter = '') => {
+            listContainer.innerHTML = '';
+            const filtered = cities.filter(c => 
+                c.name.toLowerCase().includes(filter.toLowerCase()) || 
+                c.en.toLowerCase().includes(filter.toLowerCase()) ||
+                (c.ar && c.ar.includes(filter))
+            );
 
-            // Robust matching: check key, or English name, or Arabic name
-            const isSelected = city.key === currentCity || 
-                             cityEnName === currentCity ||
-                             cityData?.ar === currentCity;
-            
-            if (isSelected && display) {
-            display.textContent = city.name;
-            display.dataset.value = cityEnName; // Store the English name
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">${lang === 'ar' ? 'لا توجد نتائج' : 'No results found'}</div>`;
+                return;
+            }
+
+            let cityFound = false;
+            filtered.forEach(city => {
+                const isSelected = city.key === currentCity;
+                
+                if (isSelected && !filter) {
+                    cityFound = true;
+                    if (display) {
+                        display.textContent = city.name;
+                        display.classList.remove('text-slate-400');
+                    }
+                    if (input) input.value = city.key;
+                }
+
+                const item = document.createElement('div');
+                item.className = `p-4 hover:bg-slate-50 cursor-pointer flex items-center justify-between transition-all border-b border-slate-50 last:border-0 group ${isSelected ? 'bg-emerald-50/30' : ''}`;
+                item.innerHTML = `
+                    <span class="text-sm font-bold ${isSelected ? 'text-emerald-700' : 'text-slate-600'} group-hover:text-slate-900 transition-colors">${city.name}</span>
+                    ${isSelected ? `
+                        <div class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm shadow-emerald-200 animate-in zoom-in-50 duration-200">
+                            <i class="fa-solid fa-check text-[10px]"></i>
+                        </div>
+                    ` : `
+                        <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 opacity-0 group-hover:opacity-100 transition-all">
+                            <i class="fa-solid fa-location-dot text-[10px]"></i>
+                        </div>
+                    `}
+                `;
+
+                item.addEventListener('click', () => {
+                    if (city.key === 'city_other') {
+                        const customCity = prompt(lang === 'ar' ? 'أدخل اسم المدينة:' : 'Enter city name:');
+                        if (customCity) {
+                            this.selectCity(customCity, customCity);
+                        }
+                    } else {
+                        this.selectCity(city.key, city.name);
+                    }
+                });
+
+                listContainer.appendChild(item);
+            });
+
+            // If current city was not found in the list (custom value), show it
+            if (!cityFound && currentCity && !currentCity.startsWith('city_') && !filter) {
+                if (display) {
+                    display.textContent = currentCity;
+                    display.classList.remove('text-slate-400');
+                }
+            }
+        };
+
+        searchInput.addEventListener('input', (e) => renderList(e.target.value));
+        searchInput.addEventListener('click', (e) => e.stopPropagation());
+        
+        renderList();
+    },
+
+    selectCity(key, label) {
+        const display = document.getElementById('selectedEditCity');
+        const input = document.getElementById('editCityInput');
+        if (display) {
+            display.textContent = label;
             display.classList.remove('text-slate-400');
             display.removeAttribute('data-lang-key');
         }
+        if (input) {
+            const oldVal = input.value;
+            input.value = key;
+            if (oldVal !== key) this.setDirty();
+        }
 
-        const item = document.createElement('div');
-        item.className = `p-4 hover:bg-slate-50 cursor-pointer flex items-center justify-between transition-all border-b border-slate-50 last:border-0 group ${isSelected ? 'bg-emerald-50/30' : ''}`;
-        item.innerHTML = `
-            <span class="text-sm font-bold ${isSelected ? 'text-emerald-700' : 'text-slate-600'} group-hover:text-slate-900 transition-colors">${city.name}</span>
-            ${isSelected ? `
-                <div class="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm shadow-emerald-200 animate-in zoom-in-50 duration-200">
-                    <i class="fa-solid fa-check text-[10px]"></i>
-                </div>
-            ` : `
-                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 opacity-0 group-hover:opacity-100 transition-all">
-                    <i class="fa-solid fa-location-dot text-[10px]"></i>
-                </div>
-            `}
-        `;
-
-        item.addEventListener('click', () => {
-            this.selectCity(cityEnName, city.name);
-        });
-
-        menu.appendChild(item);
-    });
-},
-
-selectCity(value, label) {
-    const display = document.getElementById('selectedEditCity');
-    const input = document.getElementById('editCityInput');
-    if (display) {
-        display.textContent = label;
-        display.dataset.value = value;
-        display.classList.remove('text-slate-400');
-        display.removeAttribute('data-lang-key');
-    }
-    if (input) {
-        const oldVal = input.value;
-        input.value = value;
-        if (oldVal !== value) this.setDirty();
-    }
-
-    // Close menu
-    const menu = document.getElementById('editCityMenu');
-    if (menu) menu.classList.add('hidden');
-    
-    // Update menu to show checkmark (optional, but good for UI consistency)
-    this.populateCityDropdownForEdit();
-},
+        // Close menu
+        const menu = document.getElementById('editCityMenu');
+        if (menu) menu.classList.add('hidden');
+        
+        this.populateCityDropdownForEdit();
+    },
 
     /**
      * Save personal info changes
@@ -2237,14 +2351,34 @@ selectCity(value, label) {
         
         let countryLabel = '-';
         if (u.country && window.palestinianCitiesTranslations) {
-            const countryData = window.palestinianCitiesTranslations[u.country];
+            let countryKey = u.country;
+            // If it's a name, find the key
+            if (!countryKey.startsWith('country_')) {
+                const foundKey = Object.keys(window.palestinianCitiesTranslations).find(k => 
+                    k.startsWith('country_') && 
+                    (window.palestinianCitiesTranslations[k].en === countryKey || window.palestinianCitiesTranslations[k].ar === countryKey)
+                );
+                if (foundKey) countryKey = foundKey;
+            }
+            
+            const countryData = window.palestinianCitiesTranslations[countryKey];
             if (countryData) countryLabel = countryData[lang] || countryData.en;
             else countryLabel = u.country;
         }
 
         let cityLabel = '-';
         if (u.city && window.palestinianCitiesTranslations) {
-            const cityData = window.palestinianCitiesTranslations[u.city];
+            let cityKey = u.city;
+            // If it's a name, find the key
+            if (!cityKey.startsWith('city_')) {
+                const foundKey = Object.keys(window.palestinianCitiesTranslations).find(k => 
+                    k.startsWith('city_') && 
+                    (window.palestinianCitiesTranslations[k].en === cityKey || window.palestinianCitiesTranslations[k].ar === cityKey)
+                );
+                if (foundKey) cityKey = foundKey;
+            }
+
+            const cityData = window.palestinianCitiesTranslations[cityKey];
             if (cityData) cityLabel = cityData[lang] || cityData.en;
             else cityLabel = u.city;
         }
@@ -2430,18 +2564,28 @@ selectCity(value, label) {
             const result = await response.json();
             
             if (result.success) {
-                this.educationHistory = result.data.map(e => ({
-                    id: e.id,
-                    type: e.type.charAt(0).toUpperCase() + e.type.slice(1),
-                    organization: e.institution_name,
-                    orgId: e.institution_id,
-                    title: e.title,
-                    field: e.field_of_study,
-                    level: e.education_level,
-                    date: e.end_date,
-                    link: e.credential_url,
-                    is_current: !!e.is_current
-                }));
+                this.educationHistory = result.data.map(e => {
+                    // Extract year from date string (e.g. "2026-01-01" or ISO string)
+                    let yearOnly = e.end_date;
+                    if (e.end_date) {
+                        const dateObj = new Date(e.end_date);
+                        if (!isNaN(dateObj.getTime())) {
+                            yearOnly = dateObj.getFullYear().toString();
+                        }
+                    }
+                    
+                    return {
+                        id: e.id,
+                        type: e.type.charAt(0).toUpperCase() + e.type.slice(1),
+                        organization: e.institution_name,
+                        orgId: e.institution_id,
+                        title: e.title,
+                        field: e.field_of_study,
+                        level: e.education_level,
+                        date: yearOnly,
+                        link: e.credential_url
+                    };
+                });
             }
         } catch (error) {
             console.error('Error fetching education:', error);
@@ -2531,7 +2675,7 @@ selectCity(value, label) {
                                                 <div class="flex items-center gap-4 mt-3">
                                                     <div class="flex items-center gap-1.5">
                                                         <i class="fa-solid fa-calendar-check text-[8px] text-slate-300"></i>
-                                                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">${edu.date}${edu.is_current ? ` (${window.translations?.current_status_label?.[lang] || 'Current'})` : ''}</span>
+                                                        <span class="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">${edu.date}</span>
                                                     </div>
                                                     ${edu.link ? `
                                                         <a href="${edu.link}" target="_blank" class="flex items-center gap-1.5 text-indigo-500 hover:text-indigo-600 transition-colors">
@@ -2917,38 +3061,53 @@ selectCity(value, label) {
      */
     calculateCompleteness(user) {
         const u = { ...user, ...(user.profile || {}) };
-        const fields = [
-            { key: 'first_name', weight: 10 },
-            { key: 'last_name', weight: 10 },
-            { key: 'email', weight: 10 },
-            { key: 'phone', weight: 10 },
-            { key: 'city', weight: 5 },
-            { key: 'country', weight: 5 },
-            { key: 'bio', weight: 15 },
-            { key: 'profession', weight: 10 },
-            { key: 'skills', weight: 10 },
-            { key: 'education_history', weight: 15 }
-        ];
+        let score = 0;
 
-        let total = 0;
-        let completed = 0;
+        // 1. Personal Info (20%)
+        if (u.first_name || u.firstName) score += 3;
+        if (u.last_name || u.lastName) score += 3;
+        if (u.phone) score += 4;
+        if (u.city) score += 3;
+        if (u.country) score += 3;
+        if (u.birthdate) score += 4;
 
-        fields.forEach(f => {
-            total += f.weight;
-            let val = u[f.key];
-            
-            // Handle special cases
-            if (f.key === 'skills' || f.key === 'education_history') {
-                if (typeof val === 'string') {
-                    try { val = JSON.parse(val); } catch (e) { val = val ? [val] : []; }
-                }
-                if (Array.isArray(val) && val.length > 0) completed += f.weight;
-            } else if (val && String(val).trim().length > 0) {
-                completed += f.weight;
-            }
-        });
+        // 2. Profile Picture (10%)
+        if (u.profile_picture_url || u.profilePictureUrl) score += 10;
 
-        return Math.round((completed / total) * 100);
+        // 3. Bio (10%)
+        const bioText = String(u.bio || '').trim();
+        if (bioText.length >= 20) score += 10;
+
+        // 4. Skills (15%)
+        let skills = u.skills;
+        if (typeof skills === 'string') {
+            try { skills = JSON.parse(skills); } catch(e) { skills = skills ? [skills] : []; }
+        }
+        if (Array.isArray(skills) && skills.length > 0) score += 15;
+
+        // 5. Interested Professions (10%)
+        let interests = u.interested_professions || u.interestedProfessions;
+        if (typeof interests === 'string') {
+            try { interests = JSON.parse(interests); } catch(e) { interests = interests ? [interests] : []; }
+        }
+        if (Array.isArray(interests) && interests.length > 0) score += 10;
+
+        // 6. CV (15%)
+        if (u.cv_path || u.cvPath) score += 15;
+
+        // 7. Status & Education (20%)
+        if (u.current_status || u.currentStatus) score += 5;
+        
+        let history = u.education_history || u.educationHistory;
+        if (typeof history === 'string') {
+            try { history = JSON.parse(history); } catch(e) { history = []; }
+        }
+        if (Array.isArray(history) && history.length > 0) score += 10;
+
+        // Website / Presence (5%) - Bonus for bio > 50 if website is missing
+        if (u.website_link || u.websiteLink || bioText.length >= 50) score += 5;
+
+        return Math.min(100, score);
     }
 };
 

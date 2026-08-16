@@ -5,6 +5,7 @@ const companyInvite = require('./emailTemplates/companyInvite');
 const emailVerificationReminder = require('./emailTemplates/emailVerificationReminder');
 const employerEngagement = require('./emailTemplates/employerEngagement');
 const employerMarketing = require('./emailTemplates/employerMarketing');
+const professionalEngagement = require('./emailTemplates/professionalEngagement');
 const professionalWelcome = require('./emailTemplates/professionalWelcome');
 const generalWelcome = require('./emailTemplates/generalWelcome');
 const idVerificationReminder = require('./emailTemplates/idVerificationReminder');
@@ -52,6 +53,11 @@ const templates = {
         name: 'Employer Marketing',
         fn: employerMarketing,
         args: []
+    },
+    'professional-engagement': {
+        name: 'Professional Engagement',
+        fn: professionalEngagement,
+        args: ['{{Recipient Name}}']
     },
     'professional-welcome': {
         name: 'Professional Welcome',

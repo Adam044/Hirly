@@ -1,60 +1,80 @@
-const sendEmployerEngagementEmailTemplate = () => {
-    const subject = 'اكتشف هايرلي واستفد من منصتنا الآن!';
-    const html = `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${subject}</title>
-</head>
-<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f9f9f9; margin: 0; padding: 0;">
-    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow: hidden;">
-        <div style="background-color: #6366f1; color: #ffffff; padding: 20px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px;">أهلاً بك في هايرلي!</h1>
+const { generateEmailHtmlWrapperRTL } = require('./layout');
+
+const sendEmployerEngagementEmailTemplate = (recipientName = 'شريكنا العزيز', appBaseUrl = process.env.APP_BASE_URL || 'https://www.hirly.net') => {
+    const subject = '🚀 هل تتوجه لتوظيف أفضل الكفاءات؟ اكتشف ما فاتك على هايرلي';
+    
+    const contentHtml = `
+        <!-- Preheader -->
+        <div style="display:none !important; visibility:hidden; mso-hide:all; opacity:0; color:transparent; height:0; width:0;">
+            أكثر من 600 وظيفة و130+ مؤسسة رائدة تثق بهايرلي. لا تترك مقعدك شاغراً.
         </div>
-        <div style="padding: 30px;">
-            <p style="font-size: 16px;">مرحباً،</p>
-            
-            <p style="font-size: 16px;">نشكرك على تسجيلك في منصة هايرلي! 🎉</p>
-            
-            <p style="font-size: 16px;">نحن متحمسون لوجودك معنا ونريد أن نساعدك في الاستفادة من كل ما تقدمه منصتنا.</p>
-            
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 12px; color: white; text-align: center; margin: 25px 0;">
-                <h3 style="margin: 0 0 15px 0; font-size: 22px;">🎯 اكتشف إمكانيات هايرلي</h3>
-                <p style="margin: 0; font-size: 18px; font-weight: bold;">منصتك الشاملة للعثور على أفضل المحترفين في جميع المجالات</p>
-            </div>
 
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border-right: 4px solid #6366f1; margin: 15px 0;">
-                <strong style="font-size: 18px; color: #1e293b;">🏢 للشركات وأصحاب الأعمال:</strong><br>
-                <p style="margin-top: 5px; color: #475569;">ابحث عن المحترفين في أكثر من 150 مجال مهني - مثل المبرمجين والمصممين والمحاسبين والمسوقين وغيرهم الكثير</p>
+        <!-- Hero Section -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="color: #0f172a; font-size: 26px; font-weight: 800; margin-bottom: 16px; line-height: 1.3;">
+                مرحباً ${recipientName}.. هل شركتك بين الـ 130 مؤسسة النشطة؟ 💼
+            </h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">
+                نحن ننمو بسرعة! انضم إلى مجتمع يضم أكثر من <strong>130 مؤسسة رائدة</strong>، تشمل البنوك الوطنية، المؤسسات الحكومية، والمنظمات الدولية التي اختارت <strong>هايرلي</strong> كشريكها التقني الأول للتوظيف.
+            </p>
+            <div style="margin-bottom: 25px;">
+                <p style="color: #ef4444; font-weight: 700; font-size: 18px; margin-bottom: 15px;">⚠️ هناك أكثر من 600 وظيفة نشطة حالياً على المنصة!</p>
             </div>
-
-            <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; border-right: 4px solid #22c55e; margin: 15px 0;">
-                <strong style="font-size: 18px; color: #1e293b;">🏠 للأفراد:</strong><br>
-                <p style="margin-top: 5px; color: #475569;">احصل على خدمات من أكثر من 150 تخصص مهني - مثل الكهربائيين والسباكين والمصممين والمدرسين الخصوصيين وغيرهم الكثير</p>
-            </div>
-
-            <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; border-right: 4px solid #f59e0b; margin: 15px 0;">
-                <strong style="font-size: 18px; color: #1e293b;">🌟 صفحة الخدمات:</strong><br>
-                <p style="margin-top: 5px; color: #475569;">اكتشف خدمات جاهزة من محترفين معتمدين في أكثر من 150 مجال - مثل التصميم والبرمجة والترجمة والتسويق والمحاسبة وغيرها الكثير</p>
-            </div>
-
-            <div style="text-align: center; margin: 35px 0;">
-                 <a href="https://www.hirly.net" style="display: inline-block; background-color: #6366f1; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                    ابدأ الاستكشاف الآن
-                </a>
-            </div>
-            
-            <p style="font-size: 16px;">مع أطيب التحيات،<br>فريق هايرلي</p>
+            <a href="${appBaseUrl}/hire_dashboard.html" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);">
+                إدارة توظيفك الآن
+            </a>
         </div>
-        <div style="background-color: #f3f4f6; padding: 15px; text-align: center; font-size: 12px; color: #666;">
-            <p>&copy; ${new Date().getFullYear()} Hirly. جميع الحقوق محفوظة.</p>
-        </div>
-    </div>
-</body>
-</html>`;
 
-    return { subject, html };
+        <!-- Stats Grid -->
+        <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 25px; border-radius: 16px; margin-bottom: 35px; border: 1px solid #e2e8f0;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td width="33%" style="text-align: center; border-left: 1px solid #cbd5e1;">
+                        <div style="font-size: 28px; font-weight: 900; color: #1e293b;">600+</div>
+                        <div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 5px;">وظيفة منشورة</div>
+                    </td>
+                    <td width="33%" style="text-align: center; border-left: 1px solid #cbd5e1;">
+                        <div style="font-size: 28px; font-weight: 900; color: #2563eb;">130+</div>
+                        <div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 5px;">شريك توظيف</div>
+                    </td>
+                    <td width="33%" style="text-align: center;">
+                        <div style="font-size: 28px; font-weight: 900; color: #1e293b;">10k+</div>
+                        <div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 5px;">مهني متخصص</div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Social Proof Section -->
+        <div style="margin-bottom: 35px; text-align: center;">
+            <p style="color: #64748b; font-size: 14px; font-weight: 600; margin-bottom: 20px;">مؤسسات تثق بنا</p>
+            <div style="opacity: 0.7; filter: grayscale(100%);">
+                <p style="font-size: 13px; color: #94a3b8; font-style: italic;">
+                    البنوك الوطنية • كبرى شركات التكنولوجيا • منظمات دولية • بلديات ومؤسسات عامة
+                </p>
+            </div>
+        </div>
+
+        <!-- Feature Highlighting -->
+        <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; margin-bottom: 35px;">
+            <h3 style="margin: 0 0 15px; color: #0f172a; font-size: 18px; font-weight: 700;">لماذا يفضل المحترفون التقديم عبر هايرلي؟ 🌟</h3>
+            <ul style="padding: 0; margin: 0; list-style: none; color: #475569; font-size: 15px;">
+                <li style="margin-bottom: 12px; display: flex; align-items: center;">✅ تجربة مستخدم سلسة واحترافية (Luxe UI).</li>
+                <li style="margin-bottom: 12px; display: flex; align-items: center;">✅ شفافية كاملة في عملية التوظيف.</li>
+                <li style="margin-bottom: 0; display: flex; align-items: center;">✅ وصول مباشر لأفضل الفرص في السوق الفلسطيني.</li>
+            </ul>
+        </div>
+
+        <!-- CTA -->
+        <div style="text-align: center; border-top: 1px solid #e2e8f0; pt: 30px;">
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">لا تدع الكفاءات تفوتك، ابدأ النشر اليوم!</p>
+            <a href="${appBaseUrl}/hire_dashboard.html" style="color: #2563eb; font-weight: 700; text-decoration: none;">انتقل إلى لوحة التحكم ←</a>
+        </div>
+    `;
+
+    return { subject, html: generateEmailHtmlWrapperRTL(subject, contentHtml, appBaseUrl) };
 };
+
+module.exports = sendEmployerEngagementEmailTemplate;
 
 module.exports = sendEmployerEngagementEmailTemplate;

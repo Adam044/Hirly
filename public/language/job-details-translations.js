@@ -135,14 +135,14 @@ if (typeof window.addTranslations === 'function') {
         'hirly_benefit_title': { 'ar': 'تقدم بأولوية هايرلي', 'en': 'Apply with Hirly Priority' },
         'hirly_benefit_desc': { 'ar': 'أنت على وشك التقديم خارجياً. لضمان تميزك، تأكد من إكمال ملفك الشخصي على هايرلي. مشاركة رابطك الخاص أو رمز QR يمنحك الأولوية، ويظهرك بشكل أكثر احترافية، ويسهل العملية على أصحاب العمل.', 'en': 'You\'re about to apply externally. To stand out, ensure your Hirly profile is complete. Sharing your unique Hirly link or QR code gives you priority, looks more professional, and makes the process seamless for employers.' },
         
-        'external_job_modal_title': { 'ar': 'هذه فرصة خارجية', 'en': 'This is an external opportunity' },
+        'external_job_modal_title': { 'ar': 'تقديم خارجي عبر هايرلي', 'en': 'External Application via Hirly' },
         'external_job_modal_desc': { 
-            'ar': 'تم نشر هذه الوظيفة في الأصل بواسطة {company} على {source}. لا يزال بإمكانك التقديم عبر هايرلي. سنقوم بمشاركة ملفك المهني وطلبك بأمان مع صاحب العمل للنظر فيه.', 
-            'en': 'This job was originally posted by {company} on {source}. You can still apply through Hirly. We\'ll securely share your Hirly professional profile and application with the employer for consideration.' 
+            'ar': 'هذه وظيفة خارجية مقدمة من {company}. يمكنك التقديم مباشرة عبر هايرلي لمشاركة ملفك المهني واحترافيتك مع صاحب العمل بأمان.', 
+            'en': 'This is an external job opportunity from {company}. You can apply directly through Hirly to securely share your professional profile and expertise with the employer.' 
         },
         'profile_includes_title': { 'ar': 'يتضمن ملفك الشخصي:', 'en': 'Your profile includes:' },
         'profile_includes_list': { 'ar': 'السيرة الذاتية · الخبرة · التعليم · المهارات · المعلومات المهنية', 'en': 'CV · Experience · Education · Skills · Professional information' },
-        'share_profile_apply_btn': { 'ar': 'مشاركة ملفي والتقديم', 'en': 'Share My Profile & Apply' },
+        'share_profile_apply_btn': { 'ar': 'التقديم عبر هايرلي', 'en': 'Apply via Hirly' },
         'apply_on_source_btn': { 'ar': 'التقديم على {source}', 'en': 'Apply on {source}' },
         'external_job_agreement_text': { 
             'ar': 'بالتقديم، أنت توافق على مشاركة ملفك الشخصي المهني الكامل في هايرلي (السيرة الذاتية، الخبرة، المهارات) مع صاحب العمل الخارجي هذا.', 

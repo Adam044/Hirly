@@ -254,7 +254,7 @@ Extract and return ONLY a JSON object with this exact structure:
   "company_website": "string (official company website URL if you can highly accurately guess it from the company name, otherwise null)",
   "external_company_email": "string (extract any contact or HR email found in the text, otherwise null)",
   "posted_at": "string (ISO date. CRITICAL: If the text says '2 months ago', you MUST subtract 60 days from ${currentDate}. If it says '1 day ago', subtract 1 day. DO NOT just return today's date.)",
-  "deadline": "string (ISO date. Look for 'آخر موعد للتقديم' or 'Deadline' in the text. Convert to ISO format, e.g., '2026-08-10'. If not found, use null. This is extremely important for Palestinian jobs.)"
+  "deadline": "string (ISO date. Look for 'آخر موعد للتقديم', 'Deadline', 'تاريخ الانتهاء', or 'Expiry' in the text. Handle multiple formats like 'DD/MM/YYYY', 'YYYY-MM-DD', or 'DD Month YYYY' in both English and Arabic. If not found, use null.)"
 }
 
 Rules:
@@ -272,7 +272,8 @@ Rules:
 12. SYSTEM FIELDS: 'title', 'company', 'location', 'city', 'country', 'job_type', 'job_site_type', 'category', 'professions', and 'experience_level' MUST ALWAYS be in English regardless of the source language.
 13. GEOGRAPHIC RULE: For Palestine, you MUST map any Arabic city name (e.g. 'الخليل') to its English counterpart from the provided list (e.g. 'Hebron'). If the city is not in the list, use the English transliteration.
 14. NO HALLUCINATION: Only use the information provided in the text. If a field like 'experience_level' or 'years of experience' is not mentioned, use null. Do NOT guess or use general knowledge.
-15. JOBS.PS SPECIFIC: For Jobs.ps, the deadline is usually in a table at the bottom labeled 'آخر موعد للتقديم'. Always check that section.`;
+15. JOBS.PS SPECIFIC: For Jobs.ps, the deadline is usually in a table at the bottom labeled 'آخر موعد للتقديم' or in a specific info sidebar. Check for both absolute dates and text like 'حتى اكتفاء العدد' (until filled). If it says 'until filled', use null so the fallback kicks in.
+16. DEADLINE PRECISION: If a date is ambiguous (e.g., 10/12/2026), assume DD/MM/YYYY as it is the standard in MENA.`;
     }
 
     /**

@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const applyStatusMessage = document.getElementById('applyStatusMessage');
 
     // Application Modal
-    const externalJobAgreement = document.getElementById('externalJobAgreement');
     const applicationModal = document.getElementById('applicationModal');
     const closeApplicationModalBtn = document.getElementById('closeApplicationModalBtn');
     const applicationForm = document.getElementById('applicationForm');
@@ -81,11 +80,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     const lowCompletenessModal = document.getElementById('lowCompletenessModal');
     const externalApplyModal = document.getElementById('externalApplyModal');
     const applyViaHirlyBtn = document.getElementById('applyViaHirlyBtn');
+    const cancelExternalApplyBtn = document.getElementById('cancelExternalApplyBtn');
     const externalJobModalDesc = document.getElementById('externalJobModalDesc');
-    const applyOnSourceText = document.getElementById('applyOnSourceText');
-    const continueToExternalBtn = document.getElementById('continueToExternalBtn');
-    const externalApplyRingProgress = document.getElementById('externalApplyRingProgress');
-    const externalApplyPercentText = document.getElementById('externalApplyPercentText');
 
     const completeAccountBtnText = document.getElementById('completeAccountBtnText');
 
@@ -291,16 +287,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         const offset = circumference - (percent / 100) * circumference;
         lowCompletenessRingProgress.style.strokeDashoffset = offset;
         lowCompletenessPercent.textContent = `${percent}%`;
-    }
-
-    function updateExternalApplyCompletenessRing(percent) {
-        if (!externalApplyRingProgress || !externalApplyPercentText) return;
-        const r = 30;
-        const circumference = 2 * Math.PI * r;
-        externalApplyRingProgress.setAttribute('stroke-dasharray', `${circumference} ${circumference}`);
-        const offset = circumference - (percent / 100) * circumference;
-        externalApplyRingProgress.style.strokeDashoffset = offset;
-        externalApplyPercentText.textContent = `${percent}%`;
     }
 
     function populateLowCompletenessDetails(user, percent, overrideProfile = null) {
@@ -932,18 +918,11 @@ function renderJobDetails(job) {
                     const source = currentJobData.external_source || 'External Source';
                     
                     if (externalJobModalDesc) {
-                        const descTemplate = t['external_job_modal_desc']?.[window.currentLanguage] || 'This job was originally posted by {company} on {source}...';
+                        const descTemplate = t['external_job_modal_desc']?.[window.currentLanguage] || 'This is an external job opportunity from {company}.';
                         externalJobModalDesc.innerHTML = descTemplate
-                            .replace('{company}', `<strong class="text-hirly-600">${company}</strong>`)
-                            .replace('{source}', `<strong class="text-hirly-600">${source}</strong>`);
+                            .replace('{company}', `<strong class="text-hirly-600">${company}</strong>`);
                     }
                     
-                    if (applyOnSourceText) {
-                        const btnTemplate = t['apply_on_source_btn']?.[window.currentLanguage] || 'Apply on {source}';
-                        applyOnSourceText.textContent = btnTemplate.replace('{source}', source);
-                    }
-
-                    updateExternalApplyCompletenessRing(completeness);
                     showModal(externalApplyModal);
                     return;
                 }
@@ -983,6 +962,12 @@ function renderJobDetails(job) {
         applyViaHirlyBtn.addEventListener('click', () => {
             hideModal(externalApplyModal);
             openApplicationModal();
+        });
+    }
+
+    if (cancelExternalApplyBtn) {
+        cancelExternalApplyBtn.addEventListener('click', () => {
+            hideModal(externalApplyModal);
         });
     }
 
@@ -1062,31 +1047,6 @@ function renderJobDetails(job) {
         lowCompletenessImproveBtn.addEventListener('click', (e) => {
             e.preventDefault();
             window.location.href = '/dashboard.html';
-        });
-    }
-
-    if (continueToExternalBtn) {
-        continueToExternalBtn.addEventListener('click', async () => {
-            if (!currentJobData || !currentJobData.external_apply_url) return;
-            
-            const originalContent = continueToExternalBtn.innerHTML;
-            continueToExternalBtn.disabled = true;
-            continueToExternalBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${window.translations['redirecting']?.[window.currentLanguage] || 'Redirecting...'}`;
-
-            try {
-                // Record the click
-                await fetch(`/api/jobs/${currentJobId}/external-apply-click`, { method: 'POST' });
-            } catch (err) {
-                console.warn('Failed to record external apply click:', err);
-            }
-
-            // Small delay for UX then open in new tab
-            setTimeout(() => {
-                window.open(currentJobData.external_apply_url, '_blank');
-                hideModal(externalApplyModal);
-                continueToExternalBtn.disabled = false;
-                continueToExternalBtn.innerHTML = originalContent;
-            }, 800);
         });
     }
 

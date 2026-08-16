@@ -79,7 +79,13 @@ class AIEvaluationService {
         if (lowerPath.includes('.pdf')) {
             try {
                 let pdfjsLib;
-                try { pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js'); } catch { return null; }
+                try { 
+                    // Suppress canvas warnings on environments without native build tools
+                    const oldWarn = console.warn;
+                    console.warn = () => {};
+                    pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js'); 
+                    console.warn = oldWarn;
+                } catch { return null; }
                 
                 const u8 = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
                 const loadingTask = pdfjsLib.getDocument({

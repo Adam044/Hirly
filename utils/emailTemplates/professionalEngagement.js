@@ -1,6 +1,6 @@
 const { generateEmailHtmlWrapperRTL } = require('./layout');
 
-const sendFreelancerWelcomeEmailTemplate = (recipientName, appBaseUrl = 'https://www.hirly.net') => {
+const sendProfessionalEngagementEmailTemplate = (recipientName = 'مبدعنا العزيز', appBaseUrl = process.env.APP_BASE_URL || 'https://www.hirly.net') => {
     const subject = '✨ أكثر من 600 وظيفة بانتظارك! ابدأ رحلتك على هايرلي الآن';
     
     const contentHtml = `
@@ -12,7 +12,7 @@ const sendFreelancerWelcomeEmailTemplate = (recipientName, appBaseUrl = 'https:/
         <!-- Hero Section -->
         <div style="text-align: center; margin-bottom: 30px;">
             <h2 style="color: #0f172a; font-size: 26px; font-weight: 800; margin-bottom: 16px; line-height: 1.3;">
-                مرحباً ${recipientName}، مستقبلك يبدأ هنا! 🚀
+                مرحباً ${recipientName}.. مستقبلك يبدأ هنا! 🚀
             </h2>
             <p style="color: #475569; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">
                 هل تعلم أن هناك أكثر من <strong>600 فرصة عمل</strong> مفتوحة الآن على هايرلي؟ من كبرى البنوك الفلسطينية إلى المنظمات الدولية والشركات الناشئة المبدعة.
@@ -88,4 +88,4 @@ const sendFreelancerWelcomeEmailTemplate = (recipientName, appBaseUrl = 'https:/
     return { subject, html: generateEmailHtmlWrapperRTL(subject, contentHtml, appBaseUrl) };
 };
 
-module.exports = sendFreelancerWelcomeEmailTemplate;
+module.exports = sendProfessionalEngagementEmailTemplate;

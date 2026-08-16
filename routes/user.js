@@ -116,22 +116,25 @@ module.exports = function registerUserRoutes(app, pool, {
   const calculateCompleteness = (u) => {
     let score = 0;
     
-    // 1. Personal Info (25% total - 5% each)
-    if (u.first_name) score += 5;
-    if (u.last_name) score += 5;
-    if (u.phone) score += 5;
-    if (u.city) score += 5;
-    if (u.country) score += 5; // Added country
-    if (u.birthdate) score += 5;
+    // 1. Personal Info (20% total)
+    if (u.first_name) score += 3;
+    if (u.last_name) score += 3;
+    if (u.phone) score += 4;
+    if (u.city) score += 3;
+    if (u.country) score += 3;
+    if (u.birthdate) score += 4;
 
     // 2. Profile Picture (10%)
     if (u.profile_picture_url) score += 10;
 
-    // 3. Bio (10%)
-    if (u.bio && u.bio.length > 10) score += 10;
+    // 3. Bio (10%) - Minimum 20 characters for professional quality
+    if (u.bio && String(u.bio).trim().length >= 20) score += 10;
 
     // 4. Skills (15%)
-    if (u.skills && (Array.isArray(u.skills) ? u.skills.length > 0 : String(u.skills).length > 0)) score += 15;
+    const skills = u.skills;
+    if (skills && (Array.isArray(skills) ? skills.length > 0 : String(skills).trim().length > 0)) {
+        score += 15;
+    }
 
     // 5. Interested Professions (10%)
     let interests = u.interested_professions;
@@ -143,29 +146,24 @@ module.exports = function registerUserRoutes(app, pool, {
     }
 
     // 6. CV / Resume (15%)
-    if (u.cv_path) score += 15;
+    if (u.cv_path && u.cv_path !== '/api/files/censored') score += 15;
 
-    // 7. Status & Work/Education Details (15%)
-    if (u.current_status) {
-        score += 5; // Base for having a status
-        
-        // Handle Education History
-        let hasEducation = false;
-        let history = u.education_history || [];
-        if (typeof history === 'string') {
-            try { history = JSON.parse(history); } catch(e) { history = []; }
-        }
-        if (Array.isArray(history) && history.length > 0) hasEducation = true;
+    // 7. Status & Work/Education Details (20%)
+    if (u.current_status) score += 5; // Base for having a status
+    
+    // Education History
+    let history = u.education_history || [];
+    if (typeof history === 'string') {
+        try { history = JSON.parse(history); } catch(e) { history = []; }
+    }
+    if (Array.isArray(history) && history.length > 0) {
+        score += 10;
+    }
 
-        if (u.current_status === 'Student') {
-            // Check if they have any current school or university entry
-            const hasCurrentEdu = history.some(e => e.is_current === true || e.is_current === 'true');
-            if (hasCurrentEdu || hasEducation) score += 10;
-        } else {
-            // Working / Professional
-            if (u.profession) score += 10;
-            if (hasEducation) score = Math.min(100, score + 5); 
-        }
+    // Website / Presence
+    const bioLength = String(u.bio || '').trim().length;
+    if (u.website_link || u.websiteLink || (bioLength >= 50)) {
+        score += 5;
     }
 
     return Math.min(100, score);
@@ -602,7 +600,7 @@ router.post(
         const professionalUserResult = await client.query(`
           SELECT u.id, u.first_name, u.last_name, 
                  CASE WHEN f.privacy_hide_contact_info THEN NULL ELSE u.email END AS email,
-                 u.city AS location, 
+                 u.city AS location, u.country,
                  CASE WHEN f.privacy_hide_contact_info THEN NULL ELSE u.phone END AS phone,
                  u.created_at, u.profile_picture_url, u.slug,
                  f.skills, f.bio, f.profession, f.current_status, f.interested_professions, f.verification_status, f.profile_views_count,
@@ -722,7 +720,7 @@ router.post(
         const professionalUserResult = await client.query(`
           SELECT u.id, u.first_name, u.last_name, 
                  CASE WHEN f.privacy_hide_contact_info THEN NULL ELSE u.email END AS email,
-                 u.city AS location, 
+                 u.city AS location, u.country,
                  CASE WHEN f.privacy_hide_contact_info THEN NULL ELSE u.phone END AS phone,
                  u.created_at, u.profile_picture_url, u.slug,
                  f.skills, f.bio, f.profession, f.current_status, f.interested_professions, f.verification_status, f.profile_views_count,

@@ -448,13 +448,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return data[cityInput][lang] || data[cityInput].en;
         }
 
-        // 2. Try to find by normalized English name
+        // 2. Try to find by normalized English or Arabic name
         const normalize = (s) => String(s).toLowerCase().replace(/[_\s\-]/g, '');
         const normalizedInput = normalize(cityInput);
 
         const foundKey = Object.keys(data).find(key => {
             const cityData = data[key];
-            return normalize(cityData.en) === normalizedInput || normalize(key.replace('city_', '')) === normalizedInput;
+            return normalize(cityData.en) === normalizedInput || normalize(cityData.ar || '') === normalizedInput || normalize(key.replace('city_', '')) === normalizedInput;
         });
 
         if (foundKey) {
@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 3. Fallback: Clean up the raw input for display
-        let displayValue = cityInput.replace('city_', '').replace(/_/g, ' ');
+        let displayValue = cityInput.replace('city_', '').replace('country_', '').replace(/_/g, ' ');
         return displayValue.charAt(0).toUpperCase() + displayValue.slice(1);
     }
     
@@ -1007,9 +1007,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (profileLocation) {
-            const translatedLocation = getTranslatedCityName(freelancer.location);
+            const city = getTranslatedCityName(freelancer.location);
+            const country = getTranslatedCityName(freelancer.country); // Re-use same logic for country translation
+            
+            let translatedLocation = city;
+            if (city && country && city !== country) {
+                translatedLocation = lang === 'ar' ? `${city}، ${country}` : `${city}, ${country}`;
+            } else if (!city && country) {
+                translatedLocation = country;
+            }
+
             const locationParent = profileLocation.closest('.flex.items-center.gap-2') || profileLocation.parentElement;
-            if (freelancer.location && freelancer.location !== 'N/A' && freelancer.location !== translate('n_a', 'N/A')) {
+            if (translatedLocation && translatedLocation !== 'N/A' && translatedLocation !== translate('n_a', 'N/A')) {
                 profileLocation.textContent = translatedLocation;
                 if (locationParent) locationParent.style.display = 'flex';
             } else {
@@ -1113,42 +1122,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            const isStudent = (freelancer.current_status || '').trim().toLowerCase() === 'student';
-            const studentType = freelancer.student_type; // 'University' or 'School'
-            
             let eduHtml = '';
-
-            // 1. Render Student Current Status (School or Uni)
-            if (isStudent) {
-                if (studentType === 'School') {
-                    const schoolDir = getTextDirection(freelancer.school_name || '');
-                    const gradeKey = `grade_${freelancer.school_grade}`;
-                    const gradeLabel = (window.translations && window.translations[gradeKey] && window.translations[gradeKey][lang]) || (lang === 'ar' ? `طالب صف ${freelancer.school_grade}` : `Grade ${freelancer.school_grade} Student`);
-
-                    eduHtml += `
-                        <div class="flex items-start gap-4 md:gap-6 p-6 md:p-8 bg-white/60 backdrop-blur-sm rounded-[2rem] border border-white/50 group hover:border-hirly-200 hover:bg-white hover:shadow-lg transition-all duration-500 mb-6">
-                            <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-hirly-500 flex-shrink-0 group-hover:bg-hirly-500 group-hover:text-white transition-all duration-500 shadow-sm">
-                                <i class="fas fa-school text-xl md:text-2xl"></i>
-                            </div>
-                            <div class="space-y-2 min-w-0 flex-1">
-                                <h3 class="font-black text-slate-900 text-lg md:text-xl leading-tight break-words group-hover:text-hirly-700 transition-colors" dir="${schoolDir}">${freelancer.school_name || translate('school_label', 'School')}</h3>
-                                <p class="text-slate-500 font-bold text-sm md:text-base break-words">${gradeLabel}</p>
-                                <div class="pt-2">
-                                    <span class="px-3 py-1 bg-hirly-50 text-hirly-600 text-[10px] font-black uppercase tracking-wider rounded-lg border border-hirly-100">
-                                        ${translate('status_studying', 'Currently Studying')}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
 
             // 2. Render Education History List
             if (Array.isArray(history) && history.length > 0) {
                 eduHtml += history.map(edu => {
+                    // Extract Year from date (e.g. "2026-01-01" or ISO string)
+                    let yearOnly = edu.date || edu.grad_year;
+                    if (yearOnly && yearOnly.includes('-')) {
+                        const dateObj = new Date(yearOnly);
+                        if (!isNaN(dateObj.getTime())) {
+                            yearOnly = dateObj.getFullYear().toString();
+                        }
+                    }
+
                     // Translate Degree Type
-                    const degreeLabel = getTranslatedDegreeName(edu.degree);
+                    const degreeLabel = getTranslatedDegreeName(edu.degree || edu.level);
 
                     // Translate Field of Study
                     let fieldLabel = edu.degree_field;
@@ -1184,9 +1173,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <h3 class="font-black text-slate-900 text-lg md:text-xl leading-tight break-words group-hover:text-hirly-700 transition-colors" dir="${uniDir}">${uniLabel || translate('university_label', 'University')}</h3>
                                 <p class="text-slate-500 font-bold text-sm md:text-base break-words" dir="${degreeDir}">${degreeLabel || ''} ${fieldLabel ? ' • ' + fieldLabel : ''}</p>
                                 <div class="flex flex-wrap items-center gap-2 pt-2">
-                                    ${edu.grad_year ? `
+                                    ${yearOnly ? `
                                         <span class="px-3 py-1 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-slate-900/10">
-                                            ${edu.grad_year}
+                                            ${yearOnly}
                                         </span>
                                     ` : ''}
                                     ${edu.field_category ? `

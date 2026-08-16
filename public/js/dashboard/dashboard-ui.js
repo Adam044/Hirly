@@ -154,9 +154,9 @@ const DashboardUI = {
         const u = { ...(user || {}), ...(user && user.profile ? user.profile : {}) };
         
         // 1. Personal Info Fields
-        // Fields: First Name, Last Name, Phone, City, Birthdate, Gender, Profile Picture
+        // Fields: First Name, Last Name, Phone, City, Country, Birthdate, Profile Picture
         const personalFields = [
-            'first_name', 'last_name', 'phone', 'city', 'birthdate', 'gender', 'profile_picture_url'
+            'first_name', 'last_name', 'phone', 'city', 'country', 'birthdate', 'profile_picture_url'
         ];
         let personalMissing = 0;
         personalFields.forEach(f => {
@@ -182,7 +182,7 @@ const DashboardUI = {
         if (!isStudent && !u.profession) profMissing++;
         
         // Bio
-        if (!u.bio || String(u.bio).trim().length < 10) profMissing++;
+        if (!u.bio || String(u.bio).trim().length < 20) profMissing++;
         
         // Website
         if (!u.website_link && !u.websiteLink) profMissing++;
@@ -376,7 +376,8 @@ const DashboardUI = {
             tasks.push({ key: 'add_skills_task', priority: 'high', section: 'professional', field: 'newSkillInput', icon: 'fa-bolt' });
         }
         // 4. Bio
-        if (!u.bio || String(u.bio).trim().length < 20) {
+        const bioText = String(u.bio || '').trim();
+        if (bioText.length < 20) {
             tasks.push({ key: 'write_bio_task', priority: 'high', section: 'professional', field: 'editBio', icon: 'fa-pen-nib' });
         }
 
@@ -390,17 +391,17 @@ const DashboardUI = {
             tasks.push({ key: 'add_education_task', priority: 'medium', section: 'education', field: 'addEducationBtn', icon: 'fa-graduation-cap' });
         }
         // 6. City
-        if (!u.city) {
+        if (!u.city || !u.country) {
             tasks.push({ key: 'add_city_task', priority: 'medium', section: 'personal', field: 'editCity', icon: 'fa-location-dot' });
         }
-        // 7. Personal Details (Gender, Birthdate)
-        if (!u.gender || !u.birthdate) {
-            tasks.push({ key: 'complete_personal_task', priority: 'medium', section: 'personal', field: 'editGender', icon: 'fa-user-check' });
+        // 7. Personal Details (Birthdate)
+        if (!u.birthdate) {
+            tasks.push({ key: 'complete_personal_task', priority: 'medium', section: 'personal', field: 'editBirthdate', icon: 'fa-user-check' });
         }
 
         // --- LOW PRIORITY ---
-        // 8. Website
-        if (!u.website_link && !u.websiteLink) {
+        // 8. Website (Only suggest if no website AND bio is not long enough to cover the presence score)
+        if (!u.website_link && !u.websiteLink && bioText.length < 50) {
             tasks.push({ key: 'add_website_task', priority: 'low', section: 'professional', field: 'editWebsite', icon: 'fa-globe' });
         }
         // 9. Services (Suggest if Freelancing/Working)
@@ -417,8 +418,8 @@ const DashboardUI = {
                     <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm mx-auto mb-4">
                         <i class="fa-solid fa-crown text-2xl"></i>
                     </div>
-                    <h3 class="text-sm font-black text-emerald-900 uppercase tracking-widest" data-lang-key="all_tasks_done">Elite Profile Status</h3>
-                    <p class="text-[10px] text-emerald-600 font-bold mt-2 opacity-70" data-lang-key="profile_perfect_desc">Your profile is fully optimized for maximum visibility.</p>
+                    <h3 class="text-sm font-black text-emerald-900 uppercase tracking-widest" data-lang-key="all_tasks_done">${window.translations?.['all_tasks_done']?.[lang] || 'Elite Profile Status'}</h3>
+                    <p class="text-[10px] text-emerald-600 font-bold mt-2 opacity-70" data-lang-key="profile_perfect_desc">${window.translations?.['profile_perfect_desc']?.[lang] || 'Your profile is fully optimized for maximum visibility.'}</p>
                 </div>
             `;
             return;

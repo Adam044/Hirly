@@ -100,6 +100,7 @@ module.exports = function registerAdminRoutes(app, pool, {
           'email-verification': 'email-verification-reminder',
           'general-welcome': 'general-welcome',
           'professional-welcome': 'professional-welcome',
+          'professional-engagement': 'professional-engagement',
           'employer-marketing': 'employer-marketing',
           'employer-engagement': 'employer-engagement',
           'job-application-notification': 'job-application-notification'
@@ -1081,6 +1082,7 @@ module.exports = function registerAdminRoutes(app, pool, {
         'email-verification': 'email-verification-reminder',
         'general-welcome': 'general-welcome',
         'professional-welcome': 'professional-welcome',
+        'professional-engagement': 'professional-engagement',
         'employer-marketing': 'employer-marketing',
         'employer-engagement': 'employer-engagement',
         'job-application-notification': 'job-application-notification'

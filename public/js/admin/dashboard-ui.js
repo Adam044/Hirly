@@ -1092,15 +1092,15 @@ export const applyEmailTemplate = async (templateId) => {
             let message = '';
             
             switch (templateId) {
+                case 'employer-engagement':
                 case 'employer-marketing':
-                    subject = 'Find Top Talent on Hirly';
-                    message = `
-                        <p>Hello,</p>
-                        <p>Did you know that Hirly has thousands of verified freelancers ready to work?</p>
-                        <p>Post a job today and find the perfect match for your project.</p>
-                        <br>
-                        <p>Best regards,<br>The Hirly Team</p>
-                    `;
+                    subject = '🚀 هل تتوجه لتوظيف أفضل الكفاءات؟ اكتشف ما فاتك على هايرلي';
+                    message = `أكثر من 600 وظيفة و130+ مؤسسة رائدة تثق بهايرلي. لا تترك مقعدك شاغراً.`;
+                    break;
+                case 'professional-engagement':
+                case 'professional-welcome':
+                    subject = '✨ أكثر من 600 وظيفة بانتظارك! ابدأ رحلتك على هايرلي الآن';
+                    message = `وظائف من البنوك، المؤسسات الدولية، والشركات الكبرى. لا تفوت فرصتك اليوم.`;
                     break;
                 case 'employer-engagement':
                     subject = 'How was your experience?';
