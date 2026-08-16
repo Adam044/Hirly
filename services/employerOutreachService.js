@@ -21,10 +21,47 @@ class EmployerOutreachService {
         logger.info('[Outreach] Employer Outreach Service initialized (Manual Mode)');
     }
 
-    async getPendingLeads() {
+    async getPendingLeads(page = 1, limit = 10, filters = {}) {
         let client;
         try {
             client = await this.pool.connect();
+            const offset = (page - 1) * limit;
+            const { search, status, minApplicants, emailStatus } = filters;
+
+            let queryConditions = ['j.is_external = true'];
+            let queryParams = [];
+
+            if (search) {
+                queryParams.push(`%${search.toLowerCase()}%`);
+                queryConditions.push(`(LOWER(j.title) LIKE $${queryParams.length} OR LOWER(j.external_company_name) LIKE $${queryParams.length} OR LOWER(j.external_company_email) LIKE $${queryParams.length})`);
+            }
+
+            if (status === 'pending') {
+                queryConditions.push('j.auto_outreach_sent = false');
+            } else if (status === 'sent') {
+                queryConditions.push('j.auto_outreach_sent = true');
+            }
+
+            if (emailStatus === 'has_email') {
+                queryConditions.push('j.external_company_email IS NOT NULL');
+            } else if (emailStatus === 'no_email') {
+                queryConditions.push('j.external_company_email IS NULL');
+            }
+
+            // For minApplicants, we need a subquery in WHERE or a CTE
+            // Let's use a subquery for simplicity
+            if (minApplicants && parseInt(minApplicants) > 0) {
+                queryParams.push(parseInt(minApplicants));
+                queryConditions.push(`(SELECT COUNT(*) FROM applications WHERE job_id = j.id) >= $${queryParams.length}`);
+            }
+
+            const whereClause = queryConditions.length > 0 ? `WHERE ${queryConditions.join(' AND ')}` : '';
+
+            const countResult = await client.query(`
+                SELECT COUNT(*) FROM jobs j ${whereClause}
+            `, queryParams);
+            const totalCount = parseInt(countResult.rows[0].count);
+
             const result = await client.query(`
                 SELECT j.id, j.title, j.external_company_name, j.external_company_email, 
                 (SELECT COUNT(*) FROM applications WHERE job_id = j.id) as applicant_count,
@@ -37,13 +74,34 @@ class EmployerOutreachService {
                 ) as high_match_count,
                 j.deadline, j.created_at, j.auto_outreach_sent
                 FROM jobs j
-                WHERE j.is_external = true
-                AND j.deadline < NOW()
-                AND j.external_company_email IS NOT NULL
-                AND (SELECT COUNT(*) FROM applications WHERE job_id = j.id) > 0
-                ORDER BY j.auto_outreach_sent ASC, j.deadline DESC
-            `);
-            return result.rows;
+                ${whereClause}
+                ORDER BY j.auto_outreach_sent ASC, j.created_at DESC
+                LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
+            `, [...queryParams, limit, offset]);
+            
+            return {
+                leads: result.rows,
+                pagination: {
+                    total: totalCount,
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    hasMore: totalCount > offset + result.rows.length
+                }
+            };
+        } finally {
+            if (client) client.release();
+        }
+    }
+
+    async updateExternalCompanyEmail(jobId, email) {
+        let client;
+        try {
+            client = await this.pool.connect();
+            await client.query(
+                'UPDATE jobs SET external_company_email = $1 WHERE id = $2 AND is_external = true',
+                [email, jobId]
+            );
+            return { success: true };
         } finally {
             if (client) client.release();
         }

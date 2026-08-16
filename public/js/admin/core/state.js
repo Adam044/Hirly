@@ -9,7 +9,8 @@ export const state = {
         freelancers: { page: 1, limit: 10, hasMore: true, loading: false },
         employers: { page: 1, limit: 10, hasMore: true, loading: false },
         jobs: { page: 1, limit: 10, hasMore: true, loading: false },
-        aggregatedJobs: { page: 1, limit: 10, hasMore: true, loading: false }
+        aggregatedJobs: { page: 1, limit: 10, hasMore: true, loading: false },
+        outreach: { page: 1, limit: 10, hasMore: true, loading: false }
     },
     
     // Advanced Filters
@@ -17,8 +18,8 @@ export const state = {
         freelancers: { search: '', status: 'All', category: 'all', profession: 'all', city: 'all' },
         employers: { search: '', status: 'All', type: 'all', logo: 'all', city: 'all' },
         jobs: { search: '', status: 'all', category: 'all', city: 'all' },
-        aggregatedJobs: { search: '', logoStatus: 'all' },
-        outreach: { search: '', status: 'all', minApplicants: 1 }
+        aggregatedJobs: { search: '', logoStatus: 'all', sortBy: 'created_at', sortOrder: 'DESC' },
+        outreach: { search: '', status: 'all', minApplicants: 5, emailStatus: 'all' }
     },
     
     leadLanguages: new Map(), // Store selected language per job ID
@@ -35,6 +36,11 @@ export const state = {
     selectedFreelancers: new Set(),
     selectedEmployers: new Set(),
     selectedJobsList: new Set(),
+    selectedJobAppNotificationIds: new Set(),
+    
+    // Campaign Progress
+    activeCampaignId: null,
+    campaignPollingInterval: null,
     
     // Jobs with Applications (Notifications)
     allJobsWithApplicationsData: [],

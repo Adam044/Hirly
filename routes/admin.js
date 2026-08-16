@@ -23,8 +23,14 @@ module.exports = function registerAdminRoutes(app, pool, {
   router.get('/admin/dashboard-stats', isAuthenticated, isAdmin, async (req, res) => {
     let client;
     try {
+      const { range = '30D' } = req.query;
       client = await pool.connect();
       
+      let growthInterval = 'day';
+      let growthLimit = '30 days';
+      if (range === '90D') { growthInterval = 'week'; growthLimit = '90 days'; }
+      if (range === '1Y') { growthInterval = 'month'; growthLimit = '1 year'; }
+
       const [
         totalUsersRes,
         totalProfessionalsRes,
@@ -36,7 +42,9 @@ module.exports = function registerAdminRoutes(app, pool, {
         pendingApplicationsRes,
         totalVerifiedUsersRes,
         pendingVerificationsRes,
-        emailStatsRes
+        emailStatsRes,
+        growthDataRes,
+        recentEventsRes
       ] = await Promise.all([
         client.query('SELECT COUNT(*) FROM users'),
         client.query('SELECT COUNT(*) FROM professionals'),
@@ -48,7 +56,24 @@ module.exports = function registerAdminRoutes(app, pool, {
         client.query("SELECT COUNT(*) FROM applications WHERE status = 'pending'"),
         client.query('SELECT COUNT(*) FROM users WHERE is_email_verified = TRUE'),
         client.query("SELECT COUNT(*) FROM professionals WHERE verification_status = 'Pending Verification'"),
-        client.query("SELECT sender_email, COUNT(*) as count FROM email_logs WHERE sent_at > NOW() - INTERVAL '24 hours' GROUP BY sender_email")
+        client.query("SELECT sender_email, COUNT(*) as count FROM email_logs WHERE sent_at > NOW() - INTERVAL '24 hours' GROUP BY sender_email"),
+        client.query(`
+          SELECT 
+            DATE_TRUNC($1, created_at) as date, 
+            COUNT(*) as count 
+          FROM users 
+          WHERE created_at > NOW() - $2::INTERVAL
+          GROUP BY 1 
+          ORDER BY 1 ASC
+        `, [growthInterval, growthLimit]),
+        client.query(`
+          (SELECT 'user' as type, first_name || ' ' || last_name as title, 'Joined Hirly' as detail, created_at FROM users ORDER BY created_at DESC LIMIT 5)
+          UNION ALL
+          (SELECT 'job' as type, title, 'New job posted' as detail, created_at FROM jobs ORDER BY created_at DESC LIMIT 5)
+          UNION ALL
+          (SELECT 'application' as type, 'New Application' as title, 'Application received' as detail, applied_at as created_at FROM applications ORDER BY applied_at DESC LIMIT 5)
+          ORDER BY created_at DESC LIMIT 10
+        `)
       ]);
 
       const emailStatsMap = {};
@@ -67,6 +92,8 @@ module.exports = function registerAdminRoutes(app, pool, {
         pendingApplications: pendingApplicationsRes.rows[0].count,
         totalVerifiedUsers: totalVerifiedUsersRes.rows[0].count,
         pendingVerifications: pendingVerificationsRes.rows[0].count,
+        growthData: growthDataRes.rows,
+        recentEvents: recentEventsRes.rows,
         emailStats: {
           sender1: { email: process.env.EMAIL_USER, count: emailStatsMap[process.env.EMAIL_USER] || 0 },
           sender2: { email: process.env.AUTO_EMAIL_USER, count: emailStatsMap[process.env.AUTO_EMAIL_USER] || 0 }
@@ -806,27 +833,56 @@ module.exports = function registerAdminRoutes(app, pool, {
 
   router.get('/admin/jobs', isAuthenticated, isAdmin, async (req, res) => {
     let client;
-    const { search, city, category, sentStatus } = req.query;
+    const { search, city, category, status, page = 1, limit = 10 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
     try {
       client = await pool.connect();
       const params = [];
+      let paramIndex = 1;
+      const whereClauses = ["j.is_external = FALSE"];
+      
+      if (search) { 
+        const s = `%${search.toLowerCase()}%`; 
+        whereClauses.push(`(LOWER(j.title) ILIKE $${paramIndex} OR LOWER(u.first_name) ILIKE $${paramIndex} OR LOWER(u.last_name) ILIKE $${paramIndex} OR LOWER(e.company_name) ILIKE $${paramIndex})`); 
+        params.push(s); 
+        paramIndex++; 
+      }
+      if (city && city !== 'all') { whereClauses.push(`j.city = $${paramIndex++}`); params.push(city); }
+      if (category && category !== 'all') { whereClauses.push(`j.category = $${paramIndex++}`); params.push(category); }
+      if (status && status !== 'all') { whereClauses.push(`j.status = $${paramIndex++}`); params.push(status); }
+      
+      const whereClause = ` WHERE ${whereClauses.join(' AND ')}`;
+      
+      const countRes = await client.query(`SELECT COUNT(*) FROM jobs j JOIN users u ON j.employer_id = u.id ${whereClause}`, params);
+      const totalCount = parseInt(countRes.rows[0].count);
+
       let query = `
         SELECT j.id, j.title, j.description, j.status, j.created_at, j.has_been_sent, j.city, j.category, j.budget, j.currency,
                u.id as employer_id, u.first_name AS employer_first_name, u.last_name AS employer_last_name, u.slug AS employer_slug,
-               e.company_name as employer_company_name
+               e.company_name as employer_company_name,
+               (SELECT COUNT(*) FROM applications WHERE job_id = j.id) as app_count
         FROM jobs j JOIN users u ON j.employer_id = u.id LEFT JOIN employers e ON u.id = e.user_id
+        ${whereClause}
+        ORDER BY j.created_at DESC
+        LIMIT $${paramIndex++} OFFSET $${paramIndex++}
       `;
-      let paramIndex = 1;
-      const whereClauses = [];
-      if (search) { const s = `%${search.toLowerCase()}%`; whereClauses.push(`(LOWER(j.title) ILIKE $${paramIndex} OR LOWER(u.first_name) ILIKE $${paramIndex} OR LOWER(u.last_name) ILIKE $${paramIndex} OR LOWER(e.company_name) ILIKE $${paramIndex})`); params.push(s); paramIndex++; }
-      if (city && city !== 'all') { whereClauses.push(`j.city = $${paramIndex++}`); params.push(city); }
-      if (category && category !== 'all') { whereClauses.push(`j.category = $${paramIndex++}`); params.push(category); }
-      if (sentStatus && sentStatus !== 'all') { whereClauses.push(`j.has_been_sent = $${paramIndex++}`); params.push(sentStatus === 'sent'); }
-      if (whereClauses.length > 0) { query += ` WHERE ${whereClauses.join(' AND ')}`; }
-      query += ' ORDER BY j.created_at DESC';
+      params.push(parseInt(limit), offset);
+      
       const { rows: jobs } = await client.query(query, params);
-      res.json({ success: true, jobs });
-    } catch { res.status(500).json({ success: false, error: 'Failed to fetch jobs.' }); }
+      res.json({ 
+        success: true, 
+        jobs,
+        pagination: {
+          total: totalCount,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          hasMore: offset + jobs.length < totalCount
+        }
+      });
+    } catch (error) {
+      logger.error('Error fetching jobs:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch jobs.' }); 
+    }
     finally { if (client) client.release(); }
   });
 
@@ -1048,11 +1104,32 @@ module.exports = function registerAdminRoutes(app, pool, {
   // --- Manual Outreach Routes ---
   router.get('/admin/outreach-leads', isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const leads = await employerOutreach.getPendingLeads();
-      res.json({ success: true, leads });
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const filters = {
+        search: req.query.search,
+        status: req.query.status,
+        minApplicants: req.query.minApplicants,
+        emailStatus: req.query.emailStatus
+      };
+      const data = await employerOutreach.getPendingLeads(page, limit, filters);
+      res.json({ success: true, ...data });
     } catch (error) {
       logger.error('Error fetching outreach leads:', error);
       res.status(500).json({ success: false, error: 'Failed to fetch outreach leads.' });
+    }
+  });
+
+  router.post('/admin/update-outreach-email', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { jobId, email } = req.body;
+      if (!jobId) return res.status(400).json({ success: false, error: 'Job ID is required.' });
+      
+      await employerOutreach.updateExternalCompanyEmail(jobId, email);
+      res.json({ success: true, message: 'Email updated successfully.' });
+    } catch (error) {
+      logger.error('Error updating outreach email:', error);
+      res.status(500).json({ success: false, error: 'Failed to update email.' });
     }
   });
 
@@ -1257,7 +1334,7 @@ module.exports = function registerAdminRoutes(app, pool, {
   router.get('/admin/aggregated-jobs', isAuthenticated, isAdmin, async (req, res) => {
     let client;
     try {
-      const { search = '', logoStatus = 'all', page = 1, limit = 10 } = req.query;
+      const { search = '', logoStatus = 'all', page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'DESC' } = req.query;
       const offset = (parseInt(page) - 1) * parseInt(limit);
       client = await pool.connect();
       
@@ -1280,14 +1357,34 @@ module.exports = function registerAdminRoutes(app, pool, {
       
       const whereClause = ` WHERE ${whereClauses.join(' AND ')}`;
       
+      // Fetch insights
+      const [totalAgg, activeAgg, totalApps] = await Promise.all([
+        client.query('SELECT COUNT(*) FROM jobs WHERE is_external = TRUE'),
+        client.query("SELECT COUNT(*) FROM jobs WHERE is_external = TRUE AND status = 'open'"),
+        client.query("SELECT COUNT(*) FROM applications a JOIN jobs j ON a.job_id = j.id WHERE j.is_external = TRUE")
+      ]);
+
       const countRes = await client.query(`SELECT COUNT(*) FROM jobs${whereClause}`, params);
       const totalCount = parseInt(countRes.rows[0].count);
       
+      // Allowed sort columns
+      const allowedSortColumns = {
+        'created_at': 'j.created_at',
+        'app_count': 'app_count',
+        'views': 'j.external_apply_clicks'
+      };
+      const sortCol = allowedSortColumns[sortBy] || 'j.created_at';
+      const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
       const query = `
-        SELECT id, title, external_company_name, external_company_logo, external_apply_url, created_at, country, city
-        FROM jobs
-        ${whereClause}
-        ORDER BY created_at DESC
+        SELECT j.id, j.title, j.external_company_name, j.external_company_logo, j.external_apply_url, j.created_at, j.country, j.city,
+               j.external_apply_clicks as views,
+               (SELECT COUNT(*) FROM applications WHERE job_id = j.id) as app_count,
+               s.name as source_name
+        FROM jobs j
+        LEFT JOIN job_sources s ON j.external_source = s.name
+        ${whereClause.replace('WHERE ', 'WHERE j.')}
+        ORDER BY ${sortCol} ${order}
         LIMIT $${paramIndex++} OFFSET $${paramIndex++}
       `;
       params.push(parseInt(limit), offset);
@@ -1296,6 +1393,11 @@ module.exports = function registerAdminRoutes(app, pool, {
       res.json({ 
         success: true, 
         jobs,
+        insights: {
+          total: totalAgg.rows[0].count,
+          active: activeAgg.rows[0].count,
+          applications: totalApps.rows[0].count
+        },
         pagination: {
           total: totalCount,
           page: parseInt(page),
