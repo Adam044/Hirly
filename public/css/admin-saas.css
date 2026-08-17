@@ -285,3 +285,194 @@ body {
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet and smaller screens */
+@media (max-width: 1024px) {
+    .stat-card-modern .value {
+        font-size: 1.5rem;
+    }
+    
+    .saas-table th,
+    .saas-table td {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Mobile screens */
+@media (max-width: 768px) {
+    /* Sidebar mobile handling */
+    #sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 280px !important;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    #sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    /* Main content adjustments */
+    main {
+        width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Header adjustments */
+    .section-header h1 {
+        font-size: 1.25rem;
+    }
+    
+    .section-header p {
+        font-size: 0.75rem;
+    }
+    
+    /* Stats cards - 2 columns on mobile */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+    
+    .stat-card-modern {
+        padding: 1rem;
+    }
+    
+    .stat-card-modern .label {
+        font-size: 0.7rem;
+    }
+    
+    .stat-card-modern .value {
+        font-size: 1.25rem;
+    }
+    
+    .stat-card-modern .trend {
+        font-size: 0.65rem;
+    }
+    
+    /* Tables - horizontal scroll */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .saas-table {
+        min-width: 800px;
+    }
+    
+    .saas-table th,
+    .saas-table td {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Filter bar - stack vertically */
+    .filter-bar {
+        flex-direction: column !important;
+        gap: 1rem !important;
+        padding: 1rem !important;
+    }
+    
+    .filter-bar .flex {
+        flex-direction: column !important;
+        width: 100%;
+    }
+    
+    .filter-bar input,
+    .filter-bar select {
+        width: 100% !important;
+    }
+    
+    /* Modal adjustments for mobile */
+    .modal-content {
+        max-width: calc(100vw - 2rem) !important;
+        margin: 1rem !important;
+        max-height: calc(100vh - 2rem) !important;
+    }
+    
+    .modal-content h3 {
+        font-size: 1rem;
+    }
+    
+    /* Buttons - full width on mobile */
+    .btn-saas-primary,
+    .btn-saas-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Form elements */
+    .input-saas,
+    .select-saas {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    /* Mobile header with menu button */
+    .mobile-header {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: white;
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+    
+    /* Hide desktop-only elements on mobile */
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+/* Small mobile screens */
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .stat-card-modern {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .section-header h1 {
+        font-size: 1.1rem;
+    }
+}
+
+/* Large screens - desktop optimizations */
+@media (min-width: 769px) {
+    .mobile-only {
+        display: none !important;
+    }
+    
+    #sidebar {
+        transform: none !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    #sidebar,
+    .mobile-header,
+    .filter-bar,
+    .btn-saas-primary,
+    .btn-saas-secondary {
+        display: none !important;
+    }
+    
+    main {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+}

@@ -79,6 +79,60 @@ export const getAggregatedJobs = async (params) => {
     return await handleFetchResponse(response);
 };
 
+export const magicFetchLogo = async (jobId) => {
+    const response = await fetch('/admin/magic-fetch-aggregated-logo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId })
+    });
+    return await handleFetchResponse(response);
+};
+
+export const fetchLogoFromUrl = async (companyName, url) => {
+    const response = await fetch('/admin/fetch-logo-from-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyName, url })
+    });
+    return await handleFetchResponse(response);
+};
+
+export const deleteAggregatedJob = async (jobId) => {
+    const response = await fetch('/admin/delete-aggregated-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId })
+    });
+    return await handleFetchResponse(response);
+};
+
+export const updateAggregatedJobLogo = async (formData) => {
+    const response = await fetch('/admin/update-aggregated-job-logo', {
+        method: 'POST',
+        body: formData
+    });
+    return await handleFetchResponse(response);
+};
+
+export const bulkMagicFetchLogos = async (options = {}) => {
+    const response = await fetch('/admin/bulk-magic-fetch-logos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options)
+    });
+    return await handleFetchResponse(response);
+};
+
+export const getBulkLogoProgress = async () => {
+    const response = await fetch('/admin/bulk-logo-progress');
+    return await handleFetchResponse(response);
+};
+
+export const stopBulkLogoFetch = async () => {
+    const response = await fetch('/admin/stop-bulk-logo-fetch', { method: 'POST' });
+    return await handleFetchResponse(response);
+};
+
 export const bulkRemoveJobs = async (jobIds) => {
     const response = await fetch('/admin/bulk-remove-jobs', {
         method: 'POST',

@@ -683,7 +683,7 @@ const uploadAdminLogo = multer({
         if (mimetype && extname) return cb(null, true);
         cb(new Error('Only JPG, PNG, GIF, and SVG image files are allowed for logos'));
     }
-}).single('logo');
+}).fields([{ name: 'logo', maxCount: 1 }, { name: 'company_logo', maxCount: 1 }]);
 
 const uploadJobImageMiddleware = multer({
     storage: memoryStorage,

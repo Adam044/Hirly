@@ -79,7 +79,7 @@ const handleTableActions = async (e) => {
 
     if (viewBtn) {
         const id = viewBtn.dataset.id;
-        window.open(`/jobs/${id}`, '_blank');
+        window.open(`/job_details.html?id=${id}`, '_blank');
     }
 
     if (deleteBtn) {
@@ -178,7 +178,7 @@ const renderJobs = (jobs, append) => {
             </td>
             <td class="py-4 px-6 text-[10px] text-gray-400 font-bold uppercase tracking-widest">#${j.id}</td>
             <td class="py-4 px-6">
-                <a href="/jobs/${j.id}" target="_blank" class="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors">${j.title}</a>
+                <a href="/job_details.html?id=${j.id}" target="_blank" class="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors">${j.title}</a>
                 <div class="flex items-center gap-2 mt-1">
                     <span class="text-[10px] text-gray-400 font-medium">${j.city || 'Remote'}</span>
                 </div>

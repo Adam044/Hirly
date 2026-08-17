@@ -233,7 +233,7 @@ module.exports = function registerJobsRoutes(app, pool, {
         FROM jobs j
         LEFT JOIN employers e ON j.employer_id = e.user_id
         LEFT JOIN users u ON j.employer_id = u.id
-        WHERE j.status = 'open'
+        WHERE j.status = 'open' AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE)
         ORDER BY j.created_at DESC
         LIMIT $1
       `, [limit]);
@@ -297,7 +297,7 @@ module.exports = function registerJobsRoutes(app, pool, {
       FROM jobs j
       LEFT JOIN employers e ON j.employer_id = e.user_id
       LEFT JOIN users u ON j.employer_id = u.id
-      WHERE (j.status = 'open' OR j.status = 'closed')
+      WHERE (j.status = 'open' OR j.status = 'closed') AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE)
     `;
     const params = [];
     let paramIndex = 1;

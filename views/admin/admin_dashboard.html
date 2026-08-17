@@ -55,6 +55,9 @@
         <p class="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] animate-pulse">Initializing Hirly Elite Panel</p>
     </div>
 
+    <!-- Mobile Overlay for Sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden backdrop-blur-sm transition-opacity duration-300"></div>
+
     <div class="dashboard-wrapper flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <aside id="sidebar" dir="ltr" class="w-72 flex flex-col flex-shrink-0 z-50 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out">
@@ -147,9 +150,25 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-grow flex flex-col min-w-0">
-            <!-- Top Header -->
-            <header class="h-20 bg-white border-b border-gray-200 px-8 flex items-center justify-between sticky top-0 z-40">
+        <main class="flex-grow flex flex-col min-w-0 overflow-hidden">
+            <!-- Mobile Header (visible only on small screens) -->
+            <header class="mobile-header md:hidden">
+                <div class="flex items-center gap-3">
+                    <button id="sidebarToggle" class="text-gray-500 hover:text-indigo-600 transition-colors p-2 -ml-2">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-rocket text-sm"></i>
+                    </div>
+                    <span class="font-bold text-gray-900">Hirly</span>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 border border-indigo-200">
+                    <i class="fas fa-user text-sm"></i>
+                </div>
+            </header>
+
+            <!-- Top Header (desktop) -->
+            <header class="hidden md:flex h-20 bg-white border-b border-gray-200 px-8 items-center justify-between sticky top-0 z-40 flex-shrink-0">
                 <div class="flex items-center gap-4">
                     <button id="sidebarToggle" class="md:hidden text-gray-500 hover:text-gray-700">
                         <i class="fas fa-bars text-xl"></i>
@@ -359,6 +378,27 @@
                             <p class="text-sm text-gray-500 font-medium">Insights and management for discovered listings</p>
                         </div>
                         <div class="flex items-center gap-3">
+                            <div class="relative group">
+                                <button id="bulkLogoFetchBtn" class="btn-saas-secondary flex items-center gap-2">
+                                    <i class="fas fa-magic"></i>
+                                    <span>Bulk Logo Discovery</span>
+                                    <i class="fas fa-chevron-down text-[10px] ml-1 opacity-50"></i>
+                                </button>
+                                <!-- Bulk Fetch Options Dropdown -->
+                                <div class="absolute right-0 top-full pt-2 w-56 hidden group-hover:block z-50">
+                                    <div class="bg-white rounded-xl shadow-xl border border-gray-100 py-2">
+                                        <button class="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors bulk-option-btn" data-mode="selected">
+                                            <i class="fas fa-check-square mr-2 opacity-50"></i> Selected Jobs Only
+                                        </button>
+                                        <button class="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors bulk-option-btn" data-mode="no-logo">
+                                            <i class="fas fa-image mr-2 opacity-50"></i> Only Missing Logos
+                                        </button>
+                                        <button class="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors bulk-option-btn" data-mode="all">
+                                            <i class="fas fa-globe mr-2 opacity-50"></i> All Aggregated Jobs
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <a href="/admin/job-aggregator" class="btn-saas-secondary flex items-center gap-2">
                                 <i class="fas fa-microchip"></i>
                                 <span>Go to Aggregator</span>
@@ -386,21 +426,46 @@
                         </div>
                     </div>
 
+                    <div class="filter-bar grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Search Aggregated</label>
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" id="aggregatorSearchInput" class="input-saas pl-10" placeholder="Job title or company...">
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Logo Status</label>
+                            <select id="aggregatorLogoFilter" class="input-saas select-saas">
+                                <option value="all">All Jobs</option>
+                                <option value="no-logo">Missing Logo</option>
+                                <option value="has-logo">Has Logo</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <div id="aggregatedJobBulkActions" class="hidden flex items-center justify-end gap-3 h-full pt-6">
+                                <span class="text-xs font-bold text-gray-400"><span id="selectedAggregatedJobsCount">0</span> selected</span>
+                                <button id="bulkDeleteAggregatedJobsBtn" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-red-100 transition-all">
+                                    Delete Selected
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="saas-card p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <i class="fas fa-list text-indigo-600"></i>
                                 Aggregated Listings
                             </h3>
-                            <div class="relative">
-                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="text" id="aggregatorSearchInput" class="input-saas pl-10 w-64" placeholder="Search aggregated...">
-                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="saas-table">
                                 <thead>
                                     <tr>
+                                        <th class="w-10 text-center">
+                                            <input type="checkbox" id="selectAllAggregatedJobs" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                        </th>
                                         <th>Job & Company</th>
                                         <th>Source</th>
                                         <th class="text-center cursor-pointer hover:text-indigo-600 transition-colors agg-sort-btn" data-sort="app_count">
@@ -1128,17 +1193,21 @@
             </div>
             
             <!-- Body (Scrollable) -->
-            <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar flex-grow">
-                <!-- Method 1: Website URL -->
+            <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-grow">
+                <!-- Method 1: Smart Fetch -->
                 <div class="space-y-3">
-                    <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Website / Logo URL</label>
+                    <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Institutional Brand Identity</label>
                     <div class="flex gap-2">
-                        <input type="url" id="companyWebsiteUrl" class="input-saas flex-grow" placeholder="https://example.com">
-                        <button id="fetchLogoFromUrlBtn" class="btn-saas-primary">
-                            <i class="fas fa-sync-alt mr-1"></i> Fetch
+                        <input type="url" id="companyWebsiteUrl" class="input-saas flex-grow" placeholder="Enter website or leave empty to Auto-Guess">
+                        <button id="fetchLogoFromUrlBtn" class="btn-saas-primary px-8">
+                            <i class="fas fa-magic mr-2"></i> Fetch Logo
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-500">We'll automatically extract the best logo from this URL.</p>
+                    <div id="fetchStatus" class="hidden p-3 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3">
+                        <div class="status-spinner w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span class="status-text text-[10px] font-bold text-gray-500 uppercase tracking-widest">Initializing discovery...</span>
+                    </div>
+                    <p class="text-[10px] text-gray-500">We'll intelligently resolve the domain and extract the official brand asset.</p>
                 </div>
 
                 <div class="relative py-2 flex items-center justify-center">
@@ -1146,14 +1215,14 @@
                     <span class="relative px-4 bg-white text-[10px] font-bold text-gray-400 uppercase tracking-widest">OR</span>
                 </div>
 
-                <!-- Method 2: Manual Upload -->
+                <!-- Method 2: Manual Upload & Paste -->
                 <div class="space-y-3">
-                    <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Manual Upload</label>
-                    <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 hover:border-primary transition-all bg-gray-50 cursor-pointer group" onclick="document.getElementById('aggregatedLogoFileInput').click()">
+                    <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Manual Upload & Paste</label>
+                    <div id="aggregatedLogoPasteZone" class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl p-8 hover:border-primary transition-all bg-gray-50 cursor-pointer group" onclick="document.getElementById('aggregatedLogoFileInput').click()">
                         <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-sm">
-                            <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 group-hover:text-primary transition-colors"></i>
+                            <i class="fas fa-paste text-2xl text-gray-400 group-hover:text-primary transition-colors"></i>
                         </div>
-                        <span class="text-xs font-bold text-gray-500 group-hover:text-gray-700 transition-colors">Choose an image file</span>
+                        <span class="text-xs font-bold text-gray-500 group-hover:text-gray-700 transition-colors">Click to upload or Paste image here</span>
                         <p class="text-[10px] text-gray-400 mt-1">PNG, JPG, WebP (Max 2MB)</p>
                         <input type="file" id="aggregatedLogoFileInput" class="hidden" accept="image/*">
                     </div>

@@ -169,7 +169,7 @@ html[dir="rtl"] .job-meta-info span i {
     height: 60px;
     object-fit: cover;
     border: 3px solid transparent;
-    background: var(--primary-extra-light);
+    background: #f8fafc; /* Lighter, more neutral background */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -192,7 +192,8 @@ html[dir="rtl"] .job-meta-info span i {
 .employer-logo-sm img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* Changed to contain to avoid stretching small logos */
+    background: white; /* Ensure logo has white background if transparent */
     border-radius: inherit;
 }
 

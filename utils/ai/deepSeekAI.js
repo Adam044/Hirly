@@ -20,6 +20,97 @@ class DeepSeekAI {
     }
 
     /**
+     * Discover a company's LinkedIn profile URL
+     * @param {string} companyName 
+     * @returns {Promise<string|null>}
+     */
+    async discoverLinkedInProfile(companyName) {
+        if (!this.apiKey || !companyName) return null;
+
+        try {
+            const response = await axios.post(
+                `${this.baseUrl}/chat/completions`,
+                {
+                    model: this.model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `You are a corporate intelligence agent. 
+Your task is to provide the most likely official LinkedIn Company Profile URL for a given company name. 
+
+Rules:
+1. Return ONLY the full URL (e.g., https://www.linkedin.com/company/google).
+2. If the company is Palestinian, look for their official presence.
+3. Return "null" if you are not at least 85% sure.
+4. NO extra text.`
+                        },
+                        {
+                            role: 'user',
+                            content: `Company Name: ${companyName}`
+                        }
+                    ],
+                    temperature: 0.1,
+                    max_tokens: 60
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 10000
+                }
+            );
+
+            const content = response.data.choices[0]?.message?.content?.trim();
+            if (!content || content.toLowerCase() === 'null') return null;
+            if (content.includes('linkedin.com/company/')) return content;
+            return null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    /**
+     * Generate search queries for finding company brand assets
+     */
+    async generateBrandSearchQueries(companyName) {
+        if (!this.apiKey || !companyName) return [`${companyName} official website logo`];
+
+        try {
+            const response = await axios.post(
+                `${this.baseUrl}/chat/completions`,
+                {
+                    model: this.model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `Return a JSON array of 3 search queries to find the official logo or brand assets for a company. 
+Example for "Hirly": ["Hirly official website logo", "Hirly brand assets press kit", "Hirly company profile logo png"]`
+                        },
+                        {
+                            role: 'user',
+                            content: `Company: ${companyName}`
+                        }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 100
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            const content = response.data.choices[0]?.message?.content;
+            return this.safeJsonParse(content) || [`${companyName} official website logo`];
+        } catch (error) {
+            return [`${companyName} official website logo`];
+        }
+    }
+
+    /**
      * Guess a company's official website URL based on its name
      * @param {string} companyName 
      * @returns {Promise<string|null>}
@@ -40,17 +131,19 @@ Your task is to provide the most likely official website domain for a given comp
 
 Rules:
 1. Return ONLY the domain (e.g., google.com).
-2. For Palestinian companies, prioritize .ps, .com.ps, and .org.ps extensions if applicable.
-3. For NGOs and international organizations, prioritize .org or .int.
-4. Return "null" if you are not at least 80% sure.
-5. NO extra text, no "http://", no "www.".
+2. For Palestinian companies, prioritize .ps, .com.ps, and .org.ps extensions.
+3. For international tech companies, prioritize .com, .io, or .ai.
+4. For NGOs and international organizations, prioritize .org or .int.
+5. If the company is well-known (e.g., Paltel, Jawwal, QXO), return their exact domain.
+6. Return "null" if you are not at least 90% sure.
+7. NO extra text, no "http://", no "www.".
 
 Examples:
 - "Paltel" -> "paltel.ps"
 - "Bank of Palestine" -> "bankofpalestine.com"
-- "UNRWA" -> "unrwa.org"
-- "Aura Design Studio" -> "auradesign.com"
-- "Results Physiotherapy" -> "resultspt.com"`
+- "QXO, Inc." -> "qxo.com"
+- "Wefaq Society" -> "wefaq.org"
+- "Aura Design Studio" -> "auradesign.com"`
                         },
                         {
                             role: 'user',
@@ -70,6 +163,7 @@ Examples:
             );
 
             const content = response.data.choices[0]?.message?.content?.trim()?.toLowerCase();
+            logger.info(`[AI-Domain] DeepSeek response for "${companyName}": ${content}`);
             if (!content || content === 'null') return null;
             
             // Basic domain validation

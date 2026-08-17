@@ -1213,7 +1213,9 @@ module.exports = function registerAdminRoutes(app, pool, {
 
   router.post('/admin/upload-company-logo', isAuthenticated, isAdmin, uploadAdminLogo, async (req, res) => {
     try {
-      const { employerId } = req.body; const logoFile = req.file;
+      const { employerId } = req.body; 
+      const logoFile = req.files?.['logo']?.[0] || req.files?.['company_logo']?.[0];
+      
       if (!employerId) { return res.status(400).json({ error: 'Employer ID is required.' }); }
       if (!logoFile) { return res.status(400).json({ error: 'Logo file is required.' }); }
       let client; try {
@@ -1449,19 +1451,25 @@ module.exports = function registerAdminRoutes(app, pool, {
         return res.status(400).json({ success: false, error: 'A bulk fetch is already in progress.' });
       }
 
+      const { mode, jobIds } = req.body;
       client = await pool.connect();
       
-      const jobsRes = await client.query(`
-        SELECT id, external_company_name, external_apply_url 
-        FROM jobs 
-        WHERE is_external = true 
-        AND (external_company_logo IS NULL OR external_company_logo = '')
-        AND status = 'open'
-        ORDER BY created_at DESC
-      `);
+      let query = "SELECT id, external_company_name, external_apply_url FROM jobs WHERE is_external = true";
+      let params = [];
+
+      if (mode === 'selected' && jobIds && jobIds.length > 0) {
+        query += ' AND id = ANY($1)';
+        params.push(jobIds);
+      } else if (mode === 'no-logo') {
+        query += " AND (external_company_logo IS NULL OR external_company_logo = '' OR external_company_logo LIKE '%ui-avatars.com%')";
+      }
+      
+      query += ' ORDER BY created_at DESC';
+      
+      const jobsRes = await client.query(query, params);
 
       if (jobsRes.rows.length === 0) {
-        return res.json({ success: true, count: 0, message: 'No jobs found missing logos.' });
+        return res.json({ success: true, count: 0, message: 'No jobs found for processing.' });
       }
 
       // Initialize status
@@ -1494,26 +1502,17 @@ module.exports = function registerAdminRoutes(app, pool, {
     }
   });
 
-  // Helper function for background processing
+  // Helper function for background processing with concurrency
   async function processBulkLogos(jobs, pool, status) {
-    // Patterns for generic/anonymous employers that should be sanitized
+    const concurrency = 5;
     const sanitizationPatterns = [
-      /private company/i,
-      /anonymous/i,
-      /employer identity hidden/i,
-      /هوية صاحب العمل مخفية/i,
-      /confidential/i,
-      /hidden/i,
-      /unknown/i,
-      /شركة خاصة/i,
-      /unspecified/i,
-      /N\/A/i,
-      /Not Provided/i,
-      /Hirly Professional/i,
-      /Professional User/i
+      /private company/i, /anonymous/i, /employer identity hidden/i, /هوية صاحب العمل مخفية/i,
+      /confidential/i, /hidden/i, /unknown/i, /شركة خاصة/i, /unspecified/i,
+      /N\/A/i, /Not Provided/i, /Hirly Professional/i, /Professional User/i
     ];
 
-    for (const job of jobs) {
+    // Split jobs into chunks
+    for (let i = 0; i < jobs.length; i += concurrency) {
       if (status.stopRequested) {
         status.isWorking = false;
         status.logs.push({ 
@@ -1523,67 +1522,88 @@ module.exports = function registerAdminRoutes(app, pool, {
         });
         return;
       }
-      
-      status.current++;
-      const companyName = job.external_company_name || '';
 
-      // Sanitization Step: Check for generic/anonymous names
-      const isGeneric = sanitizationPatterns.some(pattern => pattern.test(companyName));
+      const chunk = jobs.slice(i, i + concurrency);
       
-      if (isGeneric) {
-        try {
-          await pool.query("DELETE FROM jobs WHERE id = $1", [job.id]);
-          status.sanitized++;
-          status.logs.push({ 
-            timestamp: new Date().toISOString(), 
-            message: `Sanitized: Deleted job with generic employer "${companyName}"`, 
-            type: 'warning' 
-          });
-        } catch (err) {
-          logger.error(`Failed to sanitize job ${job.id}:`, err);
+      await Promise.all(chunk.map(async (job) => {
+        status.current++;
+        const companyName = job.external_company_name || '';
+
+        // Sanitization
+        const isGeneric = sanitizationPatterns.some(pattern => pattern.test(companyName));
+        if (isGeneric) {
+          try {
+            await pool.query("DELETE FROM jobs WHERE id = $1", [job.id]);
+            status.sanitized++;
+            status.logs.push({ 
+              timestamp: new Date().toISOString(), 
+              message: `Sanitized: Deleted generic employer "${companyName}"`, 
+              type: 'warning' 
+            });
+          } catch (err) {}
+          return;
         }
-        continue; // Skip logo fetching for sanitized jobs
-      }
 
-      try {
-        const logoUrl = await logoFetcher.getLogoUrl(companyName, job.external_apply_url);
-        
-        if (logoUrl) {
-          await pool.query(
-            "UPDATE jobs SET external_company_logo = $1 WHERE id = $2",
-            [logoUrl, job.id]
-          );
-          status.success++;
-          status.logs.push({ 
-            timestamp: new Date().toISOString(), 
-            message: `Found logo for ${companyName}`, 
-            type: 'success' 
-          });
-        } else {
+        try {
+          const logoUrl = await logoFetcher.getLogoUrl(companyName, job.external_apply_url);
+          if (logoUrl) {
+            let finalLogoUrl = logoUrl;
+            
+            // Persist external logo to Supabase
+            try {
+              const buffer = await logoFetcher.fetchImageBuffer(logoUrl);
+              const extension = path.extname(new URL(logoUrl).pathname) || '.png';
+              const filename = `logo_${Date.now()}${extension}`;
+              const mockFile = {
+                buffer: buffer,
+                originalname: filename,
+                mimetype: 'image/png'
+              };
+              // Using a dummy admin ID (0) or the first admin's ID
+              finalLogoUrl = await storeFileInSupabase(0, 'company_logo', mockFile);
+            } catch (persistErr) {
+              logger.warn(`Bulk persist failed for ${companyName}, using hotlink:`, persistErr.message);
+            }
+
+            await pool.query("UPDATE jobs SET external_company_logo = $1 WHERE id = $2", [finalLogoUrl, job.id]);
+            status.success++;
+            status.logs.push({ 
+              timestamp: new Date().toISOString(), 
+              message: `Found & Persisted logo for ${companyName}`, 
+              type: 'success' 
+            });
+          } else {
+            status.failed++;
+            status.logs.push({ 
+              timestamp: new Date().toISOString(), 
+              message: `No logo found for ${companyName}`, 
+              type: 'warning' 
+            });
+          }
+        } catch (err) {
           status.failed++;
           status.logs.push({ 
             timestamp: new Date().toISOString(), 
-            message: `No logo found for ${companyName}`, 
-            type: 'warning' 
+            message: `Error for ${companyName}: ${err.message}`, 
+            type: 'error' 
           });
         }
-        
-        // Small delay to be polite
-        await new Promise(resolve => setTimeout(resolve, 800));
-      } catch (err) {
-        status.failed++;
-        status.logs.push({ 
-          timestamp: new Date().toISOString(), 
-          message: `Error fetching ${companyName}: ${err.message}`, 
-          type: 'error' 
-        });
-      }
+      }));
+
+      // Small delay between chunks
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Keep only last 50 logs to avoid memory bloat
-      if (status.logs.length > 50) status.logs.shift();
+      // Keep logs manageable
+      if (status.logs.length > 50) status.logs = status.logs.slice(-50);
     }
     
     status.isWorking = false;
+    
+    // Close browser after bulk operation to save resources
+    try {
+      await logoFetcher.closeBrowser();
+    } catch (e) {}
+
     status.logs.push({ 
       timestamp: new Date().toISOString(), 
       message: `Bulk fetch completed. Success: ${status.success}, Failed: ${status.failed}, Sanitized: ${status.sanitized}`, 
@@ -1611,20 +1631,14 @@ module.exports = function registerAdminRoutes(app, pool, {
       
       const { external_company_name, external_apply_url } = jobRes.rows[0];
       
-      // Magic Fetch
+      // Multi-Source Fetch
       const logoUrl = await logoFetcher.getLogoUrl(external_company_name, external_apply_url);
       
       if (!logoUrl) {
         return res.json({ success: false, error: 'Could not find a suitable logo automatically.' });
       }
       
-      // Update the job with the found logo
-      await client.query(
-        'UPDATE jobs SET external_company_logo = $1 WHERE id = $2',
-        [logoUrl, jobId]
-      );
-      
-      res.json({ success: true, logoUrl, message: 'Logo fetched and updated successfully!' });
+      res.json({ success: true, logoUrl, message: 'Logo discovered successfully!' });
     } catch (error) {
       logger.error('Error in magic logo fetch:', error);
       res.status(500).json({ success: false, error: 'Failed to perform magic logo fetch.' });
@@ -1637,7 +1651,7 @@ module.exports = function registerAdminRoutes(app, pool, {
     try {
       const { url, companyName } = req.body;
       
-      // Pass the URL as the third parameter (providedWebsite) to prioritize it
+      // Pass the URL as the third parameter to prioritize it
       const logoUrl = await logoFetcher.getLogoUrl(companyName, null, url);
       if (logoUrl) {
         res.json({ success: true, logoUrl });
@@ -1650,24 +1664,68 @@ module.exports = function registerAdminRoutes(app, pool, {
     }
   });
 
+  router.post('/admin/delete-aggregated-job', isAuthenticated, isAdmin, async (req, res) => {
+    let client;
+    try {
+      const { jobId } = req.body;
+      if (!jobId) return res.status(400).json({ success: false, error: 'Job ID is required.' });
+      
+      client = await pool.connect();
+      const result = await client.query('DELETE FROM jobs WHERE id = $1 AND is_external = TRUE', [jobId]);
+      
+      if (result.rowCount === 0) {
+        return res.status(404).json({ success: false, error: 'Job not found or is not an aggregated job.' });
+      }
+      
+      res.json({ success: true, message: 'Job deleted successfully.' });
+    } catch (error) {
+      logger.error('Error deleting aggregated job:', error);
+      res.status(500).json({ success: false, error: 'Failed to delete job.' });
+    } finally {
+      if (client) client.release();
+    }
+  });
+
   router.post('/admin/update-aggregated-job-logo', isAuthenticated, isAdmin, uploadAdminLogo, async (req, res) => {
     let client;
     try {
       const { jobId, logoUrl } = req.body;
-      const logoFile = req.file;
+      const logoFile = req.files?.['logo']?.[0] || req.files?.['company_logo']?.[0];
+      const adminId = req.session.userId;
       
       if (!jobId) return res.status(400).json({ success: false, error: 'Job ID is required.' });
-      
-      let finalLogoUrl = logoUrl;
       
       client = await pool.connect();
       await client.query('BEGIN');
       
-      // If a file was uploaded, store it in Supabase
+      let finalLogoUrl = null;
+
+      // 1. Priority: File Upload
       if (logoFile) {
-        // We use a dummy user ID for admin uploads or the admin's own ID
-        const adminId = req.session.userId;
         finalLogoUrl = await storeFileInSupabase(adminId, 'company_logo', logoFile);
+      } 
+      // 2. Secondary: External Logo URL (Download and Persist)
+      else if (logoUrl) {
+        try {
+          // Download the external logo
+          const buffer = await logoFetcher.fetchImageBuffer(logoUrl);
+          
+          // Determine extension from URL or content type
+          const extension = path.extname(new URL(logoUrl).pathname) || '.png';
+          const filename = `logo_${Date.now()}${extension}`;
+          
+          // Mock a file object for storeFileInSupabase
+          const mockFile = {
+            buffer: buffer,
+            originalname: filename,
+            mimetype: 'image/png' // fallback
+          };
+          
+          finalLogoUrl = await storeFileInSupabase(adminId, 'company_logo', mockFile);
+        } catch (downloadErr) {
+          logger.error('Failed to persist external logo, using hotlink as fallback:', downloadErr);
+          finalLogoUrl = logoUrl;
+        }
       }
       
       if (!finalLogoUrl) {
@@ -1686,7 +1744,7 @@ module.exports = function registerAdminRoutes(app, pool, {
       }
       
       await client.query('COMMIT');
-      res.json({ success: true, message: 'Logo updated successfully.', logoUrl: finalLogoUrl });
+      res.json({ success: true, message: 'Logo updated and persisted successfully.', logoUrl: finalLogoUrl });
     } catch (error) {
       if (client) await client.query('ROLLBACK');
       logger.error('Error updating aggregated job logo:', error);

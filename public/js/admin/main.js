@@ -45,10 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast('Initialization error. Some features may be limited.', 'warning');
     }
 
-    // 2. Initialize Core Components
-    const renderer = new DashboardRenderer();
-
-    // 3. Initialize Section Modules
+    // 2. Initialize Section Modules First (so they can catch the initial sectionLoaded event)
     initOverview();
     initLeads();
     initAggregator();
@@ -61,6 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     initBalancer();
     initReviews();
     initCampaigns();
+
+    // 3. Initialize Core Components (this will trigger the initial section load)
+    const renderer = new DashboardRenderer();
 
     // 4. Global Event Listeners
     setupGlobalListeners();
@@ -79,11 +79,46 @@ function setupGlobalListeners() {
     // Sidebar Toggle for Mobile
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    function openSidebar() {
+        sidebar.classList.add('mobile-open');
+        sidebar.classList.remove('-translate-x-full');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeSidebar() {
+        sidebar.classList.remove('mobile-open');
+        sidebar.classList.add('-translate-x-full');
+        if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    
     if (sidebarToggle && sidebar) {
         sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
+            if (sidebar.classList.contains('mobile-open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
         });
     }
+    
+    // Close sidebar when clicking overlay
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+    
+    // Close sidebar when clicking a nav link (mobile)
+    const navLinks = sidebar?.querySelectorAll('a');
+    navLinks?.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth < 768) {
+                closeSidebar();
+            }
+        });
+    });
 
     // Logout
     const logoutBtn = document.getElementById('logoutLinkSidebar');
