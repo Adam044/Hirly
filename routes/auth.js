@@ -287,6 +287,7 @@ module.exports = function registerAuthRoutes(
                 orgId: e.institution_id,
                 title: e.title,
                 field: e.field_of_study,
+                level: e.education_level,
                 date: e.end_date,
                 link: e.credential_url,
                 is_current: e.is_current

@@ -1136,14 +1136,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
 
+                    // Support both new and old schemas
+                    const universityName = edu.organization || edu.university;
+                    const degreeField = edu.field || edu.degree_field;
+                    const degreeLevel = edu.level || edu.degree;
+                    const degreeTitle = edu.title; // New field from enhanced schema
+
                     // Translate Degree Type
-                    const degreeLabel = getTranslatedDegreeName(edu.degree || edu.level);
+                    const degreeLabel = getTranslatedDegreeName(degreeLevel || degreeTitle);
 
                     // Translate Field of Study
-                    let fieldLabel = edu.degree_field;
+                    let fieldLabel = degreeField;
                     if (window.educationData && window.educationData.fieldCategories) {
                         window.educationData.fieldCategories.some(cat => {
-                            const foundField = cat.fields.find(f => (f.name?.en || f.en || f) === edu.degree_field || f.id === edu.field_id);
+                            const foundField = cat.fields.find(f => (f.name?.en || f.en || f) === degreeField || f.id === edu.field_id);
                             if (foundField) {
                                 fieldLabel = foundField.name ? (foundField.name[lang] || foundField.name.en) : (typeof foundField === 'object' ? (foundField[lang] || foundField.en) : foundField);
                                 return true;
@@ -1153,34 +1159,57 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     // Translate University
-                    let uniLabel = edu.university;
+                    let uniLabel = universityName;
                     if (window.educationData && window.educationData.universities) {
-                        const foundUni = window.educationData.universities.find(u => (u.name?.en === edu.university) || (u.id === edu.university_id));
+                        const foundUni = window.educationData.universities.find(u => (u.name?.en === universityName) || (u.id === edu.university_id) || (u.id === edu.orgId));
                         if (foundUni) {
                             uniLabel = foundUni.name ? (foundUni.name[lang] || foundUni.name.en) : (foundUni[lang] || foundUni.en);
                         }
                     }
 
                     const uniDir = getTextDirection(uniLabel || '');
-                    const degreeDir = getTextDirection((degreeLabel || '') + (fieldLabel || ''));
+                    
+                    // Construct secondary label (Degree + Field + Title)
+                    let secondaryLabel = degreeLabel || '';
+                    if (fieldLabel) secondaryLabel += (secondaryLabel ? ' • ' : '') + fieldLabel;
+                    if (degreeTitle && degreeTitle !== fieldLabel && degreeTitle !== degreeLevel) {
+                        secondaryLabel += (secondaryLabel ? ' • ' : '') + degreeTitle;
+                    }
+                    const degreeDir = getTextDirection(secondaryLabel);
+
+                    // Determine Icon based on type
+                    let iconClass = 'fa-graduation-cap';
+                    let accentColor = 'hirly';
+                    const eduType = (edu.type || 'University').toLowerCase();
+                    
+                    if (eduType === 'school') {
+                        iconClass = 'fa-school';
+                        accentColor = 'blue';
+                    } else if (eduType === 'certificate') {
+                        iconClass = 'fa-award';
+                        accentColor = 'emerald';
+                    } else if (eduType === 'course') {
+                        iconClass = 'fa-book';
+                        accentColor = 'amber';
+                    }
 
                     return `
-                        <div class="flex items-start gap-4 md:gap-6 p-6 md:p-8 bg-white/60 backdrop-blur-sm rounded-[2rem] border border-white/50 group hover:border-hirly-200 hover:bg-white hover:shadow-lg transition-all duration-500">
-                            <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-hirly-500 flex-shrink-0 group-hover:bg-hirly-500 group-hover:text-white transition-all duration-500 shadow-sm">
-                                <i class="fas fa-graduation-cap text-xl md:text-2xl"></i>
+                        <div class="flex items-start gap-4 md:gap-6 p-6 md:p-8 bg-white/60 backdrop-blur-sm rounded-[2rem] border border-white/50 group hover:border-${accentColor}-200 hover:bg-white hover:shadow-lg transition-all duration-500">
+                            <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-${accentColor}-500 flex-shrink-0 group-hover:bg-${accentColor}-500 group-hover:text-white transition-all duration-500 shadow-sm">
+                                <i class="fas ${iconClass} text-xl md:text-2xl"></i>
                             </div>
                             <div class="space-y-2 min-w-0 flex-1">
-                                <h3 class="font-black text-slate-900 text-lg md:text-xl leading-tight break-words group-hover:text-hirly-700 transition-colors" dir="${uniDir}">${uniLabel || translate('university_label', 'University')}</h3>
-                                <p class="text-slate-500 font-bold text-sm md:text-base break-words" dir="${degreeDir}">${degreeLabel || ''} ${fieldLabel ? ' • ' + fieldLabel : ''}</p>
+                                <h3 class="font-black text-slate-900 text-lg md:text-xl leading-tight break-words group-hover:text-${accentColor}-700 transition-colors" dir="${uniDir}">${uniLabel || translate('university_label', 'University')}</h3>
+                                <p class="text-slate-500 font-bold text-sm md:text-base break-words" dir="${degreeDir}">${secondaryLabel}</p>
                                 <div class="flex flex-wrap items-center gap-2 pt-2">
                                     ${yearOnly ? `
                                         <span class="px-3 py-1 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-slate-900/10">
                                             ${yearOnly}
                                         </span>
                                     ` : ''}
-                                    ${edu.field_category ? `
-                                        <span class="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-wider rounded-lg border border-slate-200">
-                                            ${edu.field_category}
+                                    ${edu.type && edu.type !== 'University' ? `
+                                        <span class="px-3 py-1 bg-${accentColor}-50 text-${accentColor}-600 text-[10px] font-black uppercase tracking-wider rounded-lg border border-${accentColor}-100">
+                                            ${edu.type}
                                         </span>
                                     ` : ''}
                                 </div>
