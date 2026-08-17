@@ -5,7 +5,7 @@
 import { DashboardRenderer } from './core/Renderer.js';
 import { getLoggedInUser, getCategories, getCities } from './core/api.js';
 import { state } from './core/state.js';
-import { showToast } from './components/UI.js';
+import { showToast, showConfirmationModal } from './components/UI.js';
 
 // Import Section Modules
 import { initOverview } from './sections/Overview.js';
@@ -90,7 +90,32 @@ function setupGlobalListeners() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = '/logout';
+            
+            showConfirmationModal(
+                'Sign Out',
+                'Are you sure you want to log out of the admin dashboard?',
+                async () => {
+                    try {
+                        const response = await fetch('/api/logout', { 
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            window.location.href = data.redirect || '/login.html';
+                        } else {
+                            showToast(data.error || 'Logout failed', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                        showToast('An error occurred during logout.', 'error');
+                    }
+                }
+            );
         });
     }
 

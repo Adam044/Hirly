@@ -2179,14 +2179,26 @@
                     
                     <div class="form-group">
                         <label class="form-label" data-lang-key="service_description">Description</label>
-                        <textarea id="serviceDescription" name="serviceDescription" class="form-textarea" required></textarea>
+                        <textarea id="serviceDescription" name="serviceDescription" class="form-textarea" required minlength="5" maxlength="2000"></textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" data-lang-key="category">Category</label>
-                        <select id="serviceCategory" name="category" class="form-select" required>
-                            <option value="" data-lang-key="select_category">Select Category</option>
-                        </select>
+                        <div class="custom-dropdown relative" id="serviceCategoryDropdown">
+                            <div class="dropdown-trigger flex items-center justify-between px-6 py-4 bg-slate-50 border border-slate-100 rounded-[20px] cursor-pointer hover:border-emerald-300 transition-all group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-slate-300 group-hover:text-emerald-500 shadow-sm transition-all" id="selectedCategoryIcon">
+                                        <i class="fa-solid fa-layer-group text-xs"></i>
+                                    </div>
+                                    <span class="text-sm font-bold text-slate-400 group-hover:text-slate-900 transition-colors" id="selectedCategoryText" data-lang-key="select_category">Select Category</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 group-hover:text-slate-900 transition-all"></i>
+                            </div>
+                            <div class="dropdown-menu hidden absolute z-[100] mt-2 left-0 right-0 max-h-64 overflow-y-auto bg-white border border-slate-100 rounded-[24px] shadow-2xl animate-in fade-in zoom-in-95 duration-200 custom-scrollbar">
+                                <!-- Options will be populated via JS -->
+                            </div>
+                            <input type="hidden" id="serviceCategory" name="category" required>
+                        </div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -2438,6 +2450,28 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal="logoutConfirmationModal" data-lang-key="cancel">Cancel</button>
                 <button type="button" id="confirmLogoutBtn" class="btn btn-danger" data-lang-key="logout">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Service Modal -->
+    <div id="deleteServiceModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <div class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 mb-2">
+                    <i class="fa-solid fa-trash-can text-xl"></i>
+                </div>
+                <h3 class="modal-title" data-lang-key="delete_service">Delete Service</h3>
+                <button class="modal-close" data-modal="deleteServiceModal">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-slate-600 font-medium" data-lang-key="delete_service_confirm">Are you sure you want to delete this service? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal="deleteServiceModal" data-lang-key="cancel">Cancel</button>
+                <button type="button" id="confirmDeleteServiceBtn" class="btn bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-100" data-lang-key="delete">Delete</button>
             </div>
         </div>
     </div>

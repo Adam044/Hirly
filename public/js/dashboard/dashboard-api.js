@@ -150,7 +150,13 @@ const DashboardAPI = {
                 method: method,
                 body: formData
             });
-            if (!response.ok) throw new Error(`Failed to ${serviceId ? 'update' : 'add'} service`);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const errorMessage = errorData.error || errorData.message || (errorData.errors && errorData.errors[0]?.msg) || `Failed to ${serviceId ? 'update' : 'add'} service`;
+                throw new Error(errorMessage);
+            }
+            
             return await response.json();
         } catch (error) {
             console.error('API Error (saveService):', error);

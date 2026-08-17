@@ -659,7 +659,7 @@ const uploadServiceImageMiddleware = multer({
         if (mimetype && extname) return cb(null, true);
         cb(new Error('Only JPG, PNG, and GIF image files are allowed for service images.'));
     }
-}).single('serviceImageFile');
+}).single('serviceImage');
 
 const uploadLogo = multer({
     storage: memoryStorage,

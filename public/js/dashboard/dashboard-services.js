@@ -86,22 +86,25 @@ const DashboardServices = {
         if (confirmDeleteBtn) {
             confirmDeleteBtn.addEventListener('click', async () => {
                 if (window.serviceToDeleteId && window.DashboardAPI) {
+                    const originalBtnText = confirmDeleteBtn.innerHTML;
                     try {
-                        if (window.DashboardUI) window.DashboardUI.toggleLoading(true);
+                        confirmDeleteBtn.disabled = true;
+                        confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Deleting...';
+                        
                         const result = await window.DashboardAPI.deleteService(window.serviceToDeleteId);
                         if (result.success) {
                             const modal = document.getElementById('deleteServiceModal');
                             if (modal && window.DashboardModals) window.DashboardModals.hide(modal);
-                            if (window.DashboardUI) {
-                                window.DashboardUI.showToast(window.translations?.service_deleted?.[window.currentLanguage] || 'Service deleted successfully!', 'success');
-                                await window.DashboardUI.loadServices();
-                            }
+                            
+                            window.DashboardUI.showToast(window.translations?.service_deleted?.[window.currentLanguage] || 'Service deleted successfully!', 'success');
+                            await window.DashboardUI.loadServices();
                         }
                     } catch (error) {
                         console.error('Error deleting service:', error);
-                        if (window.DashboardUI) window.DashboardUI.showToast(window.translations?.service_delete_failed?.[window.currentLanguage] || 'Failed to delete service.', 'error');
+                        window.DashboardUI.showToast(window.translations?.service_delete_failed?.[window.currentLanguage] || 'Failed to delete service.', 'error');
                     } finally {
-                        if (window.DashboardUI) window.DashboardUI.toggleLoading(false);
+                        confirmDeleteBtn.disabled = false;
+                        confirmDeleteBtn.innerHTML = originalBtnText;
                     }
                 }
             });
@@ -116,9 +119,17 @@ const DashboardServices = {
         if (!window.DashboardAPI || !window.DashboardUI) return;
 
         const serviceId = document.getElementById('serviceId').value;
+        const submitBtn = document.querySelector('#serviceForm').closest('.modal-container').querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
         
         try {
-            window.DashboardUI.toggleLoading(true);
+            // Local loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                <span class="uppercase tracking-widest text-[10px] font-black">${serviceId ? 'Updating...' : 'Creating...'}</span>
+            `;
+
             const result = await window.DashboardAPI.saveService(formData, serviceId);
             
             if (result.success) {
@@ -135,9 +146,10 @@ const DashboardServices = {
             }
         } catch (error) {
             console.error('Service save error:', error);
-            window.DashboardUI.showToast(window.translations?.service_save_failed?.[window.currentLanguage] || 'Failed to save service.', 'error');
+            window.DashboardUI.showToast(error.message || window.translations?.service_save_failed?.[window.currentLanguage] || 'Failed to save service.', 'error');
         } finally {
-            window.DashboardUI.toggleLoading(false);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
         }
     },
 
@@ -279,6 +291,21 @@ const DashboardServices = {
         if (removeImageBtn) removeImageBtn.classList.add('hidden');
         if (imageInput) imageInput.value = '';
 
+        // Reset custom dropdown
+        const selectedText = document.getElementById('selectedCategoryText');
+        const selectedIconContainer = document.getElementById('selectedCategoryIcon');
+        const input = document.getElementById('serviceCategory');
+        if (selectedText) {
+            selectedText.textContent = window.translations?.select_category?.[window.currentLanguage] || 'Select Category';
+            selectedText.classList.add('text-slate-400');
+            selectedText.classList.remove('text-slate-900');
+        }
+        if (selectedIconContainer) {
+            selectedIconContainer.innerHTML = '<i class="fa-solid fa-layer-group text-xs"></i>';
+            selectedIconContainer.classList.remove('text-emerald-500');
+        }
+        if (input) input.value = '';
+
         if (service) {
             // Edit mode
             document.getElementById('serviceModalTitle').textContent = window.translations?.edit_service_title?.[window.currentLanguage] || 'Edit Service';
@@ -288,7 +315,21 @@ const DashboardServices = {
             document.getElementById('servicePrice').value = service.price;
             document.getElementById('serviceCurrency').value = service.currency || 'USD';
             document.getElementById('serviceDescription').value = service.description;
-            document.getElementById('serviceCategory').value = service.category || '';
+            
+            // Set custom dropdown value
+            const lang = window.currentLanguage || 'en';
+            
+            input.value = service.category || '';
+            if (service.category && window.globalCategoriesAndProfessions) {
+                const cat = window.globalCategoriesAndProfessions.find(c => (c.name.en || c.name) === service.category);
+                if (cat) {
+                    selectedText.textContent = cat.name[lang] || cat.name.en;
+                    selectedText.classList.remove('text-slate-400');
+                    selectedText.classList.add('text-slate-900');
+                    selectedIconContainer.innerHTML = `<i class="${cat.icon || 'fa-solid fa-layer-group'} text-xs"></i>`;
+                    selectedIconContainer.classList.add('text-emerald-500');
+                }
+            }
             
             if (service.image_url && service.image_url !== '/images/IT.jpg') {
                 if (imagePreviewImg) imagePreviewImg.src = service.image_url;
@@ -322,13 +363,45 @@ const DashboardServices = {
      * Populates the category dropdown in the service modal
      */
     populateCategories() {
-        const categorySelect = document.getElementById('serviceCategory');
-        if (!categorySelect || !window.globalCategoriesAndProfessions) return;
+        const dropdown = document.getElementById('serviceCategoryDropdown');
+        if (!dropdown || !window.globalCategoriesAndProfessions) return;
 
-        const lang = window.currentLanguage || 'en';
-        const placeholder = window.translations?.select_category_placeholder?.[lang] || 'Select a category';
+        const trigger = dropdown.querySelector('.dropdown-trigger');
+        const menu = dropdown.querySelector('.dropdown-menu');
+        const input = document.getElementById('serviceCategory');
+        const selectedText = document.getElementById('selectedCategoryText');
+        const selectedIconContainer = document.getElementById('selectedCategoryIcon');
         
-        categorySelect.innerHTML = `<option value="" data-lang-key="select_category_placeholder">${placeholder}</option>`;
+        const lang = window.currentLanguage || 'en';
+        
+        // Toggle menu
+        trigger.onclick = (e) => {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            
+            // Close other dropdowns if any
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.dropdown-trigger').forEach(t => t.classList.remove('border-emerald-500', 'ring-2', 'ring-emerald-500/20'));
+            
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                trigger.classList.add('border-emerald-500', 'ring-2', 'ring-emerald-500/20');
+                trigger.querySelector('.fa-chevron-down').classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                trigger.classList.remove('border-emerald-500', 'ring-2', 'ring-emerald-500/20');
+                trigger.querySelector('.fa-chevron-down').classList.remove('rotate-180');
+            }
+        };
+
+        // Close menu on outside click
+        document.addEventListener('click', () => {
+            menu.classList.add('hidden');
+            trigger.classList.remove('border-emerald-500', 'ring-2', 'ring-emerald-500/20');
+            trigger.querySelector('.fa-chevron-down').classList.remove('rotate-180');
+        });
+
+        menu.innerHTML = '';
 
         // Sort categories alphabetically by translated name
         const sortedCategories = [...window.globalCategoriesAndProfessions].sort((a, b) => {
@@ -340,11 +413,31 @@ const DashboardServices = {
         sortedCategories.forEach(cat => {
             const nameEn = typeof cat.name === 'object' ? cat.name.en : cat.name;
             const nameTranslated = typeof cat.name === 'object' ? (cat.name[lang] || cat.name.en) : cat.name;
+            const icon = cat.icon || 'fa-solid fa-layer-group';
             
-            const option = document.createElement('option');
-            option.value = nameEn;
-            option.textContent = nameTranslated;
-            categorySelect.appendChild(option);
+            const option = document.createElement('div');
+            option.className = 'flex items-center gap-3 px-6 py-4 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50 last:border-none group';
+            option.innerHTML = `
+                <div class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:bg-white transition-all shadow-sm">
+                    <i class="${icon} text-xs"></i>
+                </div>
+                <span class="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">${nameTranslated}</span>
+            `;
+            
+            option.onclick = () => {
+                input.value = nameEn;
+                selectedText.textContent = nameTranslated;
+                selectedText.classList.remove('text-slate-400');
+                selectedText.classList.add('text-slate-900');
+                selectedIconContainer.innerHTML = `<i class="${icon} text-xs"></i>`;
+                selectedIconContainer.classList.add('text-emerald-500');
+                
+                menu.classList.add('hidden');
+                trigger.classList.remove('border-emerald-500', 'ring-2', 'ring-emerald-500/20');
+                trigger.querySelector('.fa-chevron-down').classList.remove('rotate-180');
+            };
+            
+            menu.appendChild(option);
         });
     },
 

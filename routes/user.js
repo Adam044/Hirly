@@ -25,7 +25,11 @@ module.exports = function registerUserRoutes(app, pool, {
     [
       param('id').isInt({ min: 1 }),
       body('serviceTitle').isString().trim().isLength({ min: 3 }),
-      body('serviceDescription').isString().trim().isLength({ min: 10 }),
+      body('serviceDescription')
+        .isString()
+        .trim()
+        .isLength({ min: 5 })
+        .withMessage('Service description must be at least 5 characters long.'),
       body('price').isFloat({ gt: 0 }),
       body('currency').isString().notEmpty(),
       body('deliveryTime').isString().notEmpty(),
@@ -454,7 +458,11 @@ router.post(
     uploadServiceImageMiddleware,
     [
       body('serviceTitle').isString().trim().isLength({ min: 3 }),
-      body('serviceDescription').isString().trim().isLength({ min: 10 }),
+      body('serviceDescription')
+        .isString()
+        .trim()
+        .isLength({ min: 5 })
+        .withMessage('Service description must be at least 5 characters long.'),
       body('price').isFloat({ gt: 0 }),
       body('currency').isString().notEmpty(),
       body('deliveryTime').isString().notEmpty(),
