@@ -16,6 +16,8 @@ const fs = require('fs'); // Keep fs for routes
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { body, validationResult, param, query } = require('express-validator');
 const morgan = require('morgan');
+const helmet = require('helmet');
+const compression = require('compression');
 const logger = require('./utils/logger');
 const { initRealtime, trackVisitor } = require('./realtime/manager');
 const errorHandler = require('./middleware/errorHandler');
@@ -46,6 +48,15 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
 
 
 app.set('trust proxy', 1);
+
+// Professional Security Headers
+app.use(helmet({
+    contentSecurityPolicy: false, // Set to false if you have many external scripts like GTM, FontAwesome
+    crossOriginEmbedderPolicy: false,
+}));
+
+// "Fast AF" Compression
+app.use(compression());
 
 const {
     sendVerificationEmail,
@@ -1502,22 +1513,19 @@ app.use('/api', (req, res) => {
     res.status(404).json({ error: 'API Endpoint not found' });
 });
 
-app.get('*', (req, res, next) => {
-    if (req.accepts('html')) {
-        res.sendFile(path.join(__dirname, 'views', 'hirly', 'index.html'));
-    } else {
-        const error = new Error('Not Found');
-        error.status = 404;
-        next(error);
-    }
-});
-
-app.use(errorHandler);
-
-// Add health check endpoint for Cloud Run
+// Health check endpoint for Cloud Run
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
+
+// 404 Handler for undefined routes
+app.use((req, res, next) => {
+    const err = new Error('Page not found');
+    err.statusCode = 404;
+    next(err);
+});
+
+app.use(errorHandler);
 
 // Start server immediately, initialize database asynchronously
 const server = app.listen(PORT, () => {

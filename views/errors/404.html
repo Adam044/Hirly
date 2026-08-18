@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | Hirly</title>
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .error-page-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--background-light);
+            text-align: center;
+            padding: 2rem;
+        }
+        .error-card {
+            background: white;
+            padding: 4rem;
+            border-radius: 32px;
+            box-shadow: var(--shadow-xl);
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid var(--border-color);
+        }
+        .error-icon {
+            font-size: 5rem;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .error-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+        .error-text {
+            color: var(--text-body);
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+        .btn-home {
+            padding: 1.25rem 2.5rem;
+            font-size: 1.1rem;
+            border-radius: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-page-container">
+        <div class="error-card">
+            <div class="error-icon">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <h1 class="error-title">Lost in Transition?</h1>
+            <p class="error-text">
+                The page you are looking for has been moved, deleted, or never existed. 
+                Don't worry, your professional journey continues here.
+            </p>
+            <a href="/" class="btn btn-primary btn-home">
+                <i class="fas fa-home mr-2"></i> Return to Homepage
+            </a>
+        </div>
+    </div>
+</body>
+</html>

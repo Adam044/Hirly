@@ -25,6 +25,7 @@ function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = 'htt
                 .footer-brand { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 10px; display: block; }
                 .footer-links { margin: 20px 0; }
                 .footer-link { color: #64748b; text-decoration: none; font-size: 13px; margin: 0 10px; font-weight: 500; }
+                .footer-link:hover { color: #2563eb; }
                 .social-links { margin: 25px 0; }
                 .footer-tagline { font-size: 12px; color: #94a3b8; margin-top: 15px; }
                 .palestine-flag { margin-top: 5px; font-size: 14px; font-weight: 700; }
@@ -54,6 +55,7 @@ function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = 'htt
                     <div class="footer-links">
                         <a href="https://hirly.net" class="footer-link">الموقع الإلكتروني</a>
                         <a href="https://hirly.net/jobs.html" class="footer-link">تصفح الوظائف</a>
+                        <a href="https://hirly.net/privacy" class="footer-link">سياسة الخصوصية</a>
                         <a href="https://hirly.net/contact.html" class="footer-link">اتصل بنا</a>
                     </div>
 
@@ -95,6 +97,7 @@ function generateEmailHtmlWrapperLTR(subject, mainContentHtml, appBaseUrl = 'htt
                 .footer-brand { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 10px; display: block; }
                 .footer-links { margin: 20px 0; }
                 .footer-link { color: #64748b; text-decoration: none; font-size: 13px; margin: 0 10px; font-weight: 500; }
+                .footer-link:hover { color: #2563eb; }
                 .social-links { margin: 25px 0; }
                 .footer-tagline { font-size: 12px; color: #94a3b8; margin-top: 15px; }
                 .palestine-flag { margin-top: 5px; font-size: 14px; font-weight: 700; }
@@ -124,6 +127,7 @@ function generateEmailHtmlWrapperLTR(subject, mainContentHtml, appBaseUrl = 'htt
                     <div class="footer-links">
                         <a href="https://hirly.net" class="footer-link">Website</a>
                         <a href="https://hirly.net/jobs.html" class="footer-link">Browse Jobs</a>
+                        <a href="https://hirly.net/privacy" class="footer-link">Privacy Policy</a>
                         <a href="https://hirly.net/contact.html" class="footer-link">Contact Support</a>
                     </div>
 

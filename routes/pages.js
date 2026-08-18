@@ -32,35 +32,76 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     return null;
   }
 
-  function sendSmart(res, candidates) {
+  function sendSmart(req, res, next, candidates) {
     const full = resolveViewCandidates(candidates);
     if (full) return res.sendFile(full);
-    return res.status(404).send('Page not found');
+    
+    const err = new Error('Page not found');
+    err.statusCode = 404;
+    next(err);
+  }
+
+  /**
+   * Inject Global SEO Tags (Canonical, Hreflang)
+   */
+  function injectGlobalSEO(html, req) {
+    const siteUrl = 'https://hirly.net';
+    const currentUrl = `${siteUrl}${req.path}`;
+    
+    const seoTags = `
+    <!-- Institutional SEO -->
+    <link rel="canonical" href="${currentUrl}" />
+    <link rel="alternate" hreflang="en" href="${currentUrl}" />
+    <link rel="alternate" hreflang="ar" href="${currentUrl}" />
+    <link rel="alternate" hreflang="x-default" href="${currentUrl}" />
+    `;
+
+    return html.replace('</head>', `${seoTags}\n</head>`);
+  }
+
+  async function sendSmartSEO(req, res, next, candidates) {
+    const full = resolveViewCandidates(candidates);
+    if (!full) {
+      const err = new Error('Page not found');
+      err.statusCode = 404;
+      return next(err);
+    }
+
+    try {
+      let html = fs.readFileSync(full, 'utf8');
+      html = injectGlobalSEO(html, req);
+      res.send(html);
+    } catch (err) {
+      logger.error('SEO Injection Error:', err);
+      res.sendFile(full);
+    }
   }
 
   const ALLOWED_GROUPS = ['employer', 'user', 'admin', 'hirly', 'technical'];
 
-  router.get('/:group/:page.html', (req, res) => {
+  router.get('/:group/:page.html', (req, res, next) => {
     const { group, page } = req.params;
     if (!ALLOWED_GROUPS.includes(group)) {
-      return res.status(404).send('Page not found');
+      const err = new Error('Page not found');
+      err.statusCode = 404;
+      return next(err);
     }
     if (page === 'interview') {
-      return sendSmart(res, [
+      return sendSmart(req, res, next, [
         path.join('employer', 'interview.html'),
         path.join('user', 'interview.html'),
         'interview.html'
       ]);
     }
-    sendSmart(res, [path.join(group, `${page}.html`)]);
+    sendSmart(req, res, next, [path.join(group, `${page}.html`)]);
   });
 
-  router.get('/forgot_password.html', (req, res) => {
-    sendSmart(res, [path.join('technical', 'forgot_password.html'), 'forgot_password.html']);
+  router.get('/forgot_password.html', (req, res, next) => {
+    sendSmart(req, res, next, [path.join('technical', 'forgot_password.html'), 'forgot_password.html']);
   });
 
-  router.get('/reset_password.html', (req, res) => {
-    sendSmart(res, [path.join('technical', 'reset_password.html'), 'reset_password.html']);
+  router.get('/reset_password.html', (req, res, next) => {
+    sendSmart(req, res, next, [path.join('technical', 'reset_password.html'), 'reset_password.html']);
   });
 
   const htmlPages = [
@@ -75,8 +116,8 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     if (['dashboard', 'hire_dashboard', 'post_job', 'applicants', 'profile', 'admin_dashboard', 'forgot_password', 'reset_password', 'ai', 'interviews_analysis'].includes(page)) {
       return;
     }
-    router.get(`/${page}`, (req, res) => {
-      sendSmart(res, [
+    router.get(`/${page}`, (req, res, next) => {
+      sendSmartSEO(req, res, next, [
         path.join('employer', `${page}.html`),
         path.join('user', `${page}.html`),
         path.join('admin', `${page}.html`),
@@ -85,8 +126,8 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
         `${page}.html`
       ]);
     });
-    router.get(`/${page}.html`, (req, res) => {
-      sendSmart(res, [
+    router.get(`/${page}.html`, (req, res, next) => {
+      sendSmartSEO(req, res, next, [
         path.join('employer', `${page}.html`),
         path.join('user', `${page}.html`),
         path.join('admin', `${page}.html`),
@@ -97,8 +138,8 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     });
   });
 
-  router.get(['/employer-review', '/employer-review.html'], (req, res) => {
-    sendSmart(res, [
+  router.get(['/employer-review', '/employer-review.html'], (req, res, next) => {
+    sendSmart(req, res, next, [
       path.join('employer', 'employer_review.html'),
       'employer_review.html'
     ]);
@@ -128,7 +169,7 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
 
   const { generateJobSlug } = require('../utils/seoHelper');
 
-  router.get(['/job_details/:id', '/jobs/:id/:slug'], async (req, res) => {
+  router.get(['/job_details/:id', '/jobs/:id/:slug'], async (req, res, next) => {
     const jobId = req.params.id;
     const page = 'job_details';
     const candidates = [
@@ -141,7 +182,11 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     ];
     const fullPath = resolveViewCandidates(candidates);
 
-    if (!fullPath) return res.status(404).send('Page not found');
+    if (!fullPath) {
+      const err = new Error('Page not found');
+      err.statusCode = 404;
+      return next(err);
+    }
 
     try {
       // Fetch job details for SEO
@@ -194,6 +239,9 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
           .replace(/{{JOB_DESCRIPTION}}/g, 'Explore professional milestones on Hirly\'s curated career network.')
           .replace(/{{JOB_LOCATION}}/g, 'Palestine');
       }
+      
+      // SEO: Inject Global SEO Tags
+      html = injectGlobalSEO(html, req);
 
       res.send(html);
     } catch (error) {
@@ -202,64 +250,73 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     }
   });
 
-  router.get('/', (req, res) => {
-    sendSmart(res, [path.join('hirly', 'index.html'), 'index.html']);
+  router.get('/', (req, res, next) => {
+    sendSmartSEO(req, res, next, [path.join('hirly', 'index.html'), 'index.html']);
   });
 
-  router.get(['/start', '/start.html'], isAuthenticated, (req, res) => {
-    res.sendFile(path.join(VIEWS_DIR, 'start.html'));
+  router.get(['/start', '/start.html'], isAuthenticated, (req, res, next) => {
+    sendSmartSEO(req, res, next, ['start.html']);
   });
 
-  router.get(['/talent', '/talent.html'], (req, res) => {
-    sendSmart(res, [path.join('hirly', 'talent.html'), 'talent.html']);
+  router.get(['/talent', '/talent.html'], (req, res, next) => {
+    sendSmartSEO(req, res, next, [path.join('hirly', 'talent.html'), 'talent.html']);
   });
 
-  router.get(['/dashboard', '/dashboard.html'], isAuthenticated, isProfessional, (req, res) => {
-    sendSmart(res, [path.join('user', 'dashboard.html'), 'dashboard.html']);
+  // Legal Routes
+  router.get(['/privacy', '/privacy.html'], (req, res, next) => {
+    sendSmartSEO(req, res, next, [path.join('legal', 'privacy.html'), 'privacy.html']);
   });
 
-  router.get(['/hire_dashboard', '/hire_dashboard.html'], isAuthenticated, isEmployer, (req, res) => {
-    sendSmart(res, [path.join('employer', 'hire_dashboard.html'), 'hire_dashboard.html']);
+  router.get(['/terms', '/terms.html'], (req, res, next) => {
+    sendSmartSEO(req, res, next, [path.join('legal', 'terms.html'), 'terms.html']);
   });
 
-  router.get(['/post_job', '/post_job.html'], isAuthenticated, isEmployer, isEmployerVerified, (req, res) => {
-    sendSmart(res, [path.join('employer', 'post_job.html'), 'post_job.html']);
+  router.get(['/dashboard', '/dashboard.html'], isAuthenticated, isProfessional, (req, res, next) => {
+    sendSmart(req, res, next, [path.join('user', 'dashboard.html'), 'dashboard.html']);
   });
 
-  router.get(['/applicants', '/applicants.html'], isAuthenticated, isEmployer, async (req, res) => {
-    sendSmart(res, [path.join('employer', 'applicants.html'), 'applicants.html']);
+  router.get(['/hire_dashboard', '/hire_dashboard.html'], isAuthenticated, isEmployer, (req, res, next) => {
+    sendSmart(req, res, next, [path.join('employer', 'hire_dashboard.html'), 'hire_dashboard.html']);
   });
 
-  router.get(['/ai', '/ai.html'], isAuthenticated, isEmployer, (req, res) => {
-    sendSmart(res, [path.join('employer', 'ai.html'), 'ai.html']);
+  router.get(['/post_job', '/post_job.html'], isAuthenticated, isEmployer, isEmployerVerified, (req, res, next) => {
+    sendSmart(req, res, next, [path.join('employer', 'post_job.html'), 'post_job.html']);
   });
 
-  router.get(['/interviews_analysis', '/interviews_analysis.html'], isAuthenticated, isEmployer, (req, res) => {
-    sendSmart(res, [path.join('employer', 'interviews_analysis.html'), 'interviews_analysis.html']);
+  router.get(['/applicants', '/applicants.html'], isAuthenticated, isEmployer, async (req, res, next) => {
+    sendSmart(req, res, next, [path.join('employer', 'applicants.html'), 'applicants.html']);
   });
 
-  router.get('/profile/:id', (req, res) => {
-    sendSmart(res, [path.join('user', 'profile.html'), 'profile.html']);
+  router.get(['/ai', '/ai.html'], isAuthenticated, isEmployer, (req, res, next) => {
+    sendSmart(req, res, next, [path.join('employer', 'ai.html'), 'ai.html']);
   });
 
-  router.get('/profile.html', (req, res) => {
-    sendSmart(res, [path.join('user', 'profile.html'), 'profile.html']);
+  router.get(['/interviews_analysis', '/interviews_analysis.html'], isAuthenticated, isEmployer, (req, res, next) => {
+    sendSmart(req, res, next, [path.join('employer', 'interviews_analysis.html'), 'interviews_analysis.html']);
   });
 
-  router.get('/employer_profile/:id', (req, res) => {
-    sendSmart(res, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
+  router.get('/profile/:id', (req, res, next) => {
+    sendSmart(req, res, next, [path.join('user', 'profile.html'), 'profile.html']);
   });
 
-  router.get('/employer_profile.html', (req, res) => {
-    sendSmart(res, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
+  router.get('/profile.html', (req, res, next) => {
+    sendSmart(req, res, next, [path.join('user', 'profile.html'), 'profile.html']);
   });
 
-  router.get(['/admin_dashboard', '/admin_dashboard.html'], isAuthenticated, isAdmin, (req, res) => {
-    sendSmart(res, [path.join('admin', 'admin_dashboard.html'), 'admin_dashboard.html']);
+  router.get('/employer_profile/:id', (req, res, next) => {
+    sendSmart(req, res, next, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
   });
 
-  router.get(['/interview', '/interview.html'], (req, res) => {
-    sendSmart(res, [
+  router.get('/employer_profile.html', (req, res, next) => {
+    sendSmart(req, res, next, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
+  });
+
+  router.get(['/admin_dashboard', '/admin_dashboard.html'], isAuthenticated, isAdmin, (req, res, next) => {
+    sendSmart(req, res, next, [path.join('admin', 'admin_dashboard.html'), 'admin_dashboard.html']);
+  });
+
+  router.get(['/interview', '/interview.html'], (req, res, next) => {
+    sendSmart(req, res, next, [
       path.join('employer', 'interview.html'),
       path.join('user', 'interview.html'),
       'interview.html'

@@ -1373,14 +1373,14 @@ module.exports = function registerAdminRoutes(app, pool, {
       const allowedSortColumns = {
         'created_at': 'j.created_at',
         'app_count': 'app_count',
-        'views': 'j.external_apply_clicks'
+        'views': 'j.views_count'
       };
       const sortCol = allowedSortColumns[sortBy] || 'j.created_at';
       const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
       const query = `
         SELECT j.id, j.title, j.external_company_name, j.external_company_logo, j.external_apply_url, j.created_at, j.country, j.city,
-               j.external_apply_clicks as views,
+               j.views_count as views,
                (SELECT COUNT(*) FROM applications WHERE job_id = j.id) as app_count,
                s.name as source_name
         FROM jobs j
