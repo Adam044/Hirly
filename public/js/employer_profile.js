@@ -91,7 +91,9 @@ document.addEventListener('DOMContentLoaded', function() {
         card.addEventListener('click', (e) => {
             // Prevent if clicking a button inside (if any)
             if (!e.target.closest('button, a')) {
-                window.open(`/job_details.html?id=${job.id}`, '_blank');
+                const companyName = employerName ? employerName.textContent : (job.company_name || 'hirly');
+                const slug = window.generateJobSlug ? window.generateJobSlug(job.title, companyName) : 'details';
+                window.open(`/jobs/${job.id}/${slug}`, '_blank');
             }
         });
 

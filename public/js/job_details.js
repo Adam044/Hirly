@@ -94,10 +94,61 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     const modalCloseButtons = document.querySelectorAll('.modal-close, .modal-close-btn, .modal-cancel-btn');
 
+    // Share Buttons
+    const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
+    const shareLinkedInBtn = document.getElementById('shareLinkedInBtn');
+    const copyJobLinkBtn = document.getElementById('copyJobLinkBtn');
 
     let currentJobId = null;
     let currentJobData = null;
     let currentLoggedInUser = null;
+
+    // --- Share Logic ---
+    const getShareContent = () => {
+        if (!currentJobData) return null;
+        const companyName = currentJobData.employer_company_name || currentJobData.external_company_name || 'Hirly Network';
+        const jobTitle = currentJobData.title;
+        const jobUrl = window.location.href;
+        const text = `Check out this job opportunity: ${jobTitle} at ${companyName}\n\nView details: ${jobUrl}`;
+        return { text, url: jobUrl, title: jobTitle };
+    };
+
+    if (shareWhatsAppBtn) {
+        shareWhatsAppBtn.addEventListener('click', () => {
+            const content = getShareContent();
+            if (!content) return;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(content.text)}`;
+            window.open(whatsappUrl, '_blank');
+        });
+    }
+
+    if (shareLinkedInBtn) {
+        shareLinkedInBtn.addEventListener('click', () => {
+            const content = getShareContent();
+            if (!content) return;
+            const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(content.url)}`;
+            window.open(linkedinUrl, '_blank');
+        });
+    }
+
+    if (copyJobLinkBtn) {
+        copyJobLinkBtn.addEventListener('click', async () => {
+            const content = getShareContent();
+            if (!content) return;
+            try {
+                await navigator.clipboard.writeText(content.url);
+                const originalHtml = copyJobLinkBtn.innerHTML;
+                copyJobLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
+                copyJobLinkBtn.classList.add('success');
+                setTimeout(() => {
+                    copyJobLinkBtn.innerHTML = originalHtml;
+                    copyJobLinkBtn.classList.remove('success');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        });
+    }
 
     // Access global translation objects directly from window scope
     const globalTalentCategories = window.globalCategoriesAndProfessions || [];
@@ -184,6 +235,98 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (!dateString) return t['not_available']?.[window.currentLanguage] || 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString(window.currentLanguage, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    /**
+     * SEO: Inject JSON-LD Schema for Google Jobs
+     * This provides structured data for search engines to index the job listing accurately.
+     */
+    function injectJobSchema(job) {
+        if (!job) return;
+
+        // Remove existing schema if any
+        const existingSchema = document.getElementById('job-jsonld-schema');
+        if (existingSchema) existingSchema.remove();
+
+        const siteUrl = window.location.origin;
+        const jobUrl = window.location.href;
+        const logoUrl = job.display_employer_logo || `${siteUrl}/favicon.ico`;
+
+        const schema = {
+            "@context": "https://schema.org/",
+            "@type": "JobPosting",
+            "title": job.title,
+            "description": job.description || "",
+            "identifier": {
+                "@type": "PropertyValue",
+                "name": job.display_employer_name,
+                "value": job.id
+            },
+            "datePosted": job.created_at,
+            "validThrough": job.deadline || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            "employmentType": (job.job_type || "Full-time").toUpperCase().replace(' ', '_'),
+            "hiringOrganization": {
+                "@type": "Organization",
+                "name": job.display_employer_name,
+                "sameAs": siteUrl,
+                "logo": logoUrl
+            },
+            "jobLocation": {
+                "@type": "Place",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": job.job_city || job.city || "Remote",
+                    "addressRegion": job.job_country || job.country || "Palestine",
+                    "addressCountry": "PS"
+                }
+            },
+            "baseSalary": job.budget ? {
+                "@type": "MonetaryAmount",
+                "currency": job.currency || "USD",
+                "value": {
+                    "@type": "QuantitativeValue",
+                    "value": job.budget,
+                    "unitText": "MONTH"
+                }
+            } : undefined
+        };
+
+        const script = document.createElement('script');
+        script.id = 'job-jsonld-schema';
+        script.type = 'application/ld+json';
+        script.innerHTML = JSON.stringify(schema);
+        document.head.appendChild(script);
+
+        // SEO: Breadcrumb Schema
+        const breadcrumbSchema = {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": siteUrl
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Jobs",
+                    "item": `${siteUrl}/jobs`
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": job.title,
+                    "item": jobUrl
+                }
+            ]
+        };
+        const bcScript = document.createElement('script');
+        bcScript.id = 'breadcrumb-jsonld-schema';
+        bcScript.type = 'application/ld+json';
+        bcScript.innerHTML = JSON.stringify(breadcrumbSchema);
+        document.head.appendChild(bcScript);
     }
 
     function getPlaceholderUrl(text, width = 60, height = 60) {
@@ -367,18 +510,25 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (jobDetailsContent) jobDetailsContent.style.display = 'none';
         if (pageErrorMessage) pageErrorMessage.style.display = 'none';
 
-        const pathParts = window.location.pathname.split('/');
-        let lastPart = pathParts[pathParts.length - 1];
-
-        if (lastPart.endsWith('.html')) {
-            lastPart = lastPart.replace('.html', '');
-        }
-
-        if (lastPart && !isNaN(lastPart) && parseInt(lastPart) > 0) {
-            currentJobId = lastPart;
+        const pathParts = window.location.pathname.split('/').filter(p => p !== '');
+        
+        // Elite SEO: Handle /jobs/:id/:slug format
+        if (pathParts[0] === 'jobs' && pathParts[1] && !isNaN(pathParts[1])) {
+            currentJobId = pathParts[1];
         } else {
-            const urlParams = new URLSearchParams(window.location.search);
-            currentJobId = urlParams.get('id');
+            // Fallback for legacy /job_details.html?id= or /job_details/ID
+            let lastPart = pathParts[pathParts.length - 1];
+
+            if (lastPart && lastPart.endsWith('.html')) {
+                lastPart = lastPart.replace('.html', '');
+            }
+
+            if (lastPart && !isNaN(lastPart) && parseInt(lastPart) > 0) {
+                currentJobId = lastPart;
+            } else {
+                const urlParams = new URLSearchParams(window.location.search);
+                currentJobId = urlParams.get('id');
+            }
         }
 
         if (!currentJobId) {
@@ -420,6 +570,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             // IMPORTANT: Call renderJobDetails directly here after data is loaded and auth is checked.
             renderJobDetails(currentJobData);
             updateTranslations(); 
+            
+            // SEO: Inject JSON-LD Schema for Google Jobs
+            injectJobSchema(currentJobData);
             
             checkApplicationStatus(currentJobData.id, currentLoggedInUser ? currentLoggedInUser.id : null);
 

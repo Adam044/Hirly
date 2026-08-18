@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             
             <div class="actions-row">
-                <button onclick="window.open('/job_details.html?id=${job.id}', '_blank')" class="btn-job-action btn-job-view">
+                <button onclick="const slug = window.generateJobSlug ? window.generateJobSlug('${job.title}', lastLoadedUserData ? lastLoadedUserData.companyName : 'hirly') : 'details'; window.open('/jobs/${job.id}/' + slug, '_blank')" class="btn-job-action btn-job-view">
                     <i class="fas fa-eye"></i>
                     <span data-lang-key="view_btn">View</span>
                 </button>

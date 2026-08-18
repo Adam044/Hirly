@@ -126,7 +126,9 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     res.sendFile(componentPath);
   });
 
-  router.get('/job_details/:id', async (req, res) => {
+  const { generateJobSlug } = require('../utils/seoHelper');
+
+  router.get(['/job_details/:id', '/jobs/:id/:slug'], async (req, res) => {
     const jobId = req.params.id;
     const page = 'job_details';
     const candidates = [
@@ -146,8 +148,11 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
       const jobResult = await pool.query(`
         SELECT 
           j.title, 
+          j.description,
           COALESCE(j.external_company_name, e.company_name, 'Private Company') as company_name,
-          COALESCE(j.external_company_logo, e.company_logo_path, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg') as company_logo
+          COALESCE(j.external_company_logo, e.company_logo_path, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg') as company_logo,
+          j.city,
+          j.country
         FROM jobs j
         LEFT JOIN employers e ON j.employer_id = e.user_id
         WHERE j.id::text = $1::text OR j.external_id = $1::text
@@ -158,18 +163,36 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
 
       if (jobResult.rows.length > 0) {
         const job = jobResult.rows[0];
+        const jobSlug = generateJobSlug(job);
+        
+        // SEO: Redirect to slugified URL if not already there (Elite practice)
+        if (req.path.startsWith('/job_details/') || (req.params.slug && req.params.slug !== jobSlug)) {
+          return res.redirect(301, `/jobs/${jobId}/${jobSlug}`);
+        }
+
+        // Clean description for meta tag (strip HTML, limit length)
+        const cleanDesc = (job.description || '')
+          .replace(/<[^>]*>?/gm, '')
+          .substring(0, 160)
+          .trim();
+
         html = html
           .replace(/{{JOB_TITLE}}/g, job.title)
           .replace(/{{COMPANY_NAME}}/g, job.company_name)
           .replace(/{{COMPANY_LOGO}}/g, job.company_logo)
-          .replace(/{{JOB_ID}}/g, jobId);
+          .replace(/{{JOB_ID}}/g, jobId)
+          .replace(/{{JOB_SLUG}}/g, jobSlug)
+          .replace(/{{JOB_DESCRIPTION}}/g, cleanDesc || `Strategic opportunity at ${job.company_name}.`)
+          .replace(/{{JOB_LOCATION}}/g, `${job.city || ''}, ${job.country || ''}`);
       } else {
         // Fallback for missing job
         html = html
           .replace(/{{JOB_TITLE}}/g, 'Professional Milestone')
           .replace(/{{COMPANY_NAME}}/g, 'Hirly Network')
           .replace(/{{COMPANY_LOGO}}/g, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg')
-          .replace(/{{JOB_ID}}/g, jobId);
+          .replace(/{{JOB_ID}}/g, jobId)
+          .replace(/{{JOB_DESCRIPTION}}/g, 'Explore professional milestones on Hirly\'s curated career network.')
+          .replace(/{{JOB_LOCATION}}/g, 'Palestine');
       }
 
       res.send(html);

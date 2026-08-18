@@ -422,3 +422,38 @@ html[dir="rtl"] .btn-text:hover i {
     0%, 100% { transform: scale(1.1); }
     50% { transform: scale(1.2); }
 }
+
+/* Social Sharing Buttons */
+.btn-whatsapp {
+    background: #25D366;
+    color: white;
+    border: none;
+}
+.btn-whatsapp:hover {
+    background: #128C7E;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+.btn-linkedin {
+    background: #0077B5;
+    color: white;
+    border: none;
+}
+.btn-linkedin:hover {
+    background: #005582;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 119, 181, 0.3);
+}
+
+.btn-icon-only {
+    padding: 0.9rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+}
+.btn-icon-only i {
+    margin: 0;
+}

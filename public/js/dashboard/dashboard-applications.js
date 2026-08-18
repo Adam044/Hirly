@@ -160,7 +160,7 @@ const DashboardApplications = {
                         <span class="text-sm font-extrabold text-slate-900">${new Date(app.created_at).toLocaleDateString()}</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <a href="/job_details/${app.job_id}" target="_blank" rel="noopener noreferrer" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:bg-slate-900 hover:text-white shadow-sm transition-all duration-300 border border-slate-100" title="View Job">
+                        <a href="#" onclick="const slug = window.generateJobSlug ? window.generateJobSlug('${app.job_title}', '${app.company_name}') : 'details'; this.href = '/jobs/${app.job_id}/' + slug; return true;" target="_blank" rel="noopener noreferrer" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:bg-slate-900 hover:text-white shadow-sm transition-all duration-300 border border-slate-100" title="View Job">
                             <i class="fas fa-external-link-alt text-sm"></i>
                         </a>
                         <button class="view-details-btn w-11 h-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 hover:bg-slate-900 hover:text-white shadow-sm transition-all duration-300 border border-slate-100" data-id="${app.id}" title="View Details">

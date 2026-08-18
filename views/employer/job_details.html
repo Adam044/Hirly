@@ -13,21 +13,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-lang-key="job_details_title">{{JOB_TITLE}} — {{COMPANY_NAME}} | Hirly</title>
-    <meta name="description" content="Strategic opportunity at {{COMPANY_NAME}}. Explore this professional milestone on Hirly's curated career network.">
+    <meta name="description" content="{{JOB_DESCRIPTION}}">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://hirly.net/job_details/{{JOB_ID}}">
+    <meta property="og:url" content="https://hirly.net/jobs/{{JOB_ID}}/{{JOB_SLUG}}">
     <meta property="og:title" content="{{JOB_TITLE}} — {{COMPANY_NAME}} | Hirly">
-    <meta property="og:description" content="Strategic opportunity at {{COMPANY_NAME}}. Explore this professional milestone on Hirly's curated career network.">
+    <meta property="og:description" content="{{JOB_DESCRIPTION}}">
     <meta property="og:image" content="{{COMPANY_LOGO}}">
+    <meta property="og:image:alt" content="{{JOB_TITLE}} at {{COMPANY_NAME}}">
+    <meta property="og:site_name" content="Hirly">
+    <meta property="og:locale" content="en_US">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://hirly.net/job_details/{{JOB_ID}}">
+    <meta property="twitter:url" content="https://hirly.net/jobs/{{JOB_ID}}/{{JOB_SLUG}}">
     <meta property="twitter:title" content="{{JOB_TITLE}} — {{COMPANY_NAME}} | Hirly">
-    <meta property="twitter:description" content="Strategic opportunity at {{COMPANY_NAME}}. Explore this professional milestone on Hirly's curated career network.">
+    <meta property="twitter:description" content="{{JOB_DESCRIPTION}}">
     <meta property="twitter:image" content="{{COMPANY_LOGO}}">
+    <meta property="twitter:image:alt" content="{{JOB_TITLE}} at {{COMPANY_NAME}}">
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -149,6 +153,24 @@
                             <div class="employer-logo-sm" id="employerLogoContainer">
                                 <!-- Employer logo or initials will be loaded here by JS -->
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sleek Share Section -->
+                <section class="job-share-section-sleek mt-4">
+                    <div class="share-content-sleek">
+                        <span class="share-label-sleek" data-lang-key="share_this_job">Share this Job</span>
+                        <div class="share-buttons-sleek">
+                            <button id="shareWhatsAppBtn" class="btn-share-sleek whatsapp" title="WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            <button id="shareLinkedInBtn" class="btn-share-sleek linkedin" title="LinkedIn">
+                                <i class="fab fa-linkedin"></i>
+                            </button>
+                            <button id="copyJobLinkBtn" class="btn-share-sleek copy" title="Copy Link">
+                                <i class="fas fa-link"></i>
+                            </button>
                         </div>
                     </div>
                 </section>

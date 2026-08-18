@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { generateJobSlug } = require('./seoHelper');
 const logger = require('./logger');
 const { Pool } = require('pg');
 const crypto = require('crypto');
@@ -943,14 +944,15 @@ const sendManualJobAlerts = async (jobIds, filters) => {
             const translatedCategory = categoriesAndProfessionsTranslations.find(c => c.name.en === job.category)?.name.ar || job.category;
             const translatedCity = citiesTranslations[Object.keys(citiesTranslations).find(key => citiesTranslations[key].en === job.city)]?.ar || job.city;
             const categoryIcon = getCategoryIcon(job.category);
-            jobsHtml += `
+            const jobSlug = generateJobSlug(job);
+                    jobsHtml += `
                 <div style="padding: 15px; border-radius: 8px; border: 1px solid #e0e6eb; margin-bottom: 15px; background-color: #fdfdfd; text-align: right; direction: rtl;">
                     <h4 style="margin-top: 0; font-size: 18px; color: #333;">${job.title}</h4>
                     <p style="margin: 5px 0; font-size: 14px; color: #666;"><strong>صاحب العمل:</strong> ${employerName}</p>
                     <p style="margin: 5px 0; font-size: 14px; color: #666;">${categoryIcon} <strong>الفئة:</strong> ${translatedCategory}</p>
                     <p style="margin: 5px 0; font-size: 14px; color: #666;"><strong>الموقع:</strong> ${translatedCity}</p>
                     <p style="margin: 5px 0; font-size: 14px; color: #666;"><strong>المبلغ:</strong> ${currencySymbol}${parseFloat(job.budget).toLocaleString()}</p>
-                    <a href="${appBaseUrl}/job_details.html?id=${job.id}" style="display: inline-block; margin-top: 10px; padding: 8px 15px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-size: 14px;">عرض الوظيفة</a>
+                    <a href="${appBaseUrl}/jobs/${job.id}/${jobSlug}" style="display: inline-block; margin-top: 10px; padding: 8px 15px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-size: 14px;">عرض الوظيفة</a>
                 </div>
             `;
         });

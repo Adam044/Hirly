@@ -949,7 +949,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (response.ok) {
                     // Trigger success modal and confetti
-                    showJobSuccessModal(data.jobId);
+                    showJobSuccessModal(data.jobId, title);
                     
                     postJobMessage.textContent = ''; 
                     postJobMessage.classList.add('hidden');
@@ -1102,8 +1102,9 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * Shows the job success modal with QR code and share link
      * @param {string} jobId The ID of the newly created job
+     * @param {string} title The title of the job
      */
-    function showJobSuccessModal(jobId) {
+    function showJobSuccessModal(jobId, title) {
         const modal = document.getElementById('successModal');
         if (!modal) return;
 
@@ -1139,7 +1140,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const goToDashboardBtn = document.getElementById('goToDashboardBtn');
 
         // Generate share link
-        const shareLink = `${window.location.origin}/job_details.html?id=${jobId}`;
+        const companyName = window.currentUser ? (window.currentUser.companyName || `${window.currentUser.firstName} ${window.currentUser.lastName}`) : 'hirly';
+        const slug = window.generateJobSlug ? window.generateJobSlug(title, companyName) : 'details';
+        const shareLink = `${window.location.origin}/jobs/${jobId}/${slug}`;
         if (linkInput) linkInput.value = shareLink;
 
         // Generate QR Code

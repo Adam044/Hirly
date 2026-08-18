@@ -186,7 +186,11 @@ function formatLocationDisplay(jobOrTalent, lang) {
 function createJobCard(job) {
     const lang = window.currentLanguage || 'ar';
     const card = document.createElement('a');
-    card.href = `/job_details.html?id=${job.id}`;
+    
+    // SEO: Use slugified URL
+    const slug = window.generateJobSlug(job.title, job.company_name);
+    card.href = `/jobs/${job.id}/${slug}`;
+    
     card.target = '_blank';
     card.className = 'home-job-card';
     

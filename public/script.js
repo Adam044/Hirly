@@ -34,6 +34,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- SEO Helpers ---
+    window.slugify = (text) => {
+        return text
+            .toString()
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\u0600-\u06FF-]+/g, '-') // Replace non-alphanumeric/non-Arabic with hyphens
+            .replace(/--+/g, '-')                  // Collapse hyphens
+            .replace(/^-+/, '')                    // Trim start
+            .replace(/-+$/, '');                   // Trim end
+    };
+
+    window.generateJobSlug = (jobTitle, companyName) => {
+        const title = window.slugify(jobTitle || 'job');
+        const company = window.slugify(companyName || 'hirly');
+        return `${title}-at-${company}`;
+    };
+
     // FAQ Accordion (if present on the page)
     const faqQuestions = document.querySelectorAll('.faq-question');
     if (faqQuestions.length > 0) {
@@ -126,8 +144,8 @@ function createJobCard(job, currentLanguage, translations, palestinianCitiesTran
         return `https://placehold.co/${width}x${height}/999999/ffffff?text=${encodeURIComponent(text)}`;
     }
 
-    const card = document.createElement('a');
-    card.href = `/job_details.html?id=${job.id}`;
+    const slug = window.generateJobSlug ? window.generateJobSlug(job.title, employerDisplayName) : 'details';
+    card.href = `/jobs/${job.id}/${slug}`;
     card.className = 'job-card';
 
     // Unified Employer Display Logic

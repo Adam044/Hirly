@@ -1433,7 +1433,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const interactiveElement = event.target.closest('a, button');
             if (jobCard && !interactiveElement) {
                 const jobId = jobCard.dataset.jobId;
-                window.open(`/job_details.html?id=${jobId}`, '_blank');
+                const jobTitle = jobCard.dataset.jobTitle;
+                const companyName = jobCard.dataset.companyName;
+                
+                // SEO: Use slugified URL
+                const slug = window.generateJobSlug(jobTitle, companyName);
+                window.open(`/jobs/${jobId}/${slug}`, '_blank');
             }
         });
     }
@@ -1529,7 +1534,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const cardClass = 'job-card';
             
             return `
-                <div class="${cardClass}" data-job-id="${job.id}" data-is-external="${job.is_external}" data-external-url="${job.external_apply_url || ''}" tabindex="0" role="link">
+                <div class="${cardClass}" 
+                     data-job-id="${job.id}" 
+                     data-job-title="${job.title.replace(/"/g, '&quot;')}"
+                     data-company-name="${employerDisplayName.replace(/"/g, '&quot;')}"
+                     data-is-external="${job.is_external}" 
+                     data-external-url="${job.external_apply_url || ''}" 
+                     tabindex="0" role="link">
                     <div class="job-card-header-new">
                         <div class="job-card-avatar-wrapper">
                             <div class="${avatarContainerClass}">

@@ -79,7 +79,10 @@ const handleTableActions = async (e) => {
 
     if (viewBtn) {
         const id = viewBtn.dataset.id;
-        window.open(`/job_details.html?id=${id}`, '_blank');
+        const title = viewBtn.dataset.title;
+        const company = viewBtn.dataset.company;
+        const slug = window.generateJobSlug ? window.generateJobSlug(title, company) : 'job';
+        window.open(`/jobs/${id}/${slug}`, '_blank');
     }
 
     if (deleteBtn) {
@@ -171,20 +174,24 @@ const renderJobs = (jobs, append) => {
         return;
     }
 
-    const html = jobs.map(j => `
+    const html = jobs.map(j => {
+        const companyName = j.employer_company_name || 'Individual';
+        const slug = window.generateJobSlug ? window.generateJobSlug(j.title, companyName) : 'job';
+        
+        return `
         <tr class="hover:bg-gray-50/50 transition-all group">
             <td class="py-4 px-6 text-center">
                 <input type="checkbox" class="job-checkbox h-4 w-4 text-indigo-600 rounded border-gray-300" data-id="${j.id}" ${state.selectedJobsList.has(j.id.toString()) ? 'checked' : ''}>
             </td>
             <td class="py-4 px-6 text-[10px] text-gray-400 font-bold uppercase tracking-widest">#${j.id}</td>
             <td class="py-4 px-6">
-                <a href="/job_details.html?id=${j.id}" target="_blank" class="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors">${j.title}</a>
+                <a href="/jobs/${j.id}/${slug}" target="_blank" class="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors">${j.title}</a>
                 <div class="flex items-center gap-2 mt-1">
                     <span class="text-[10px] text-gray-400 font-medium">${j.city || 'Remote'}</span>
                 </div>
             </td>
             <td class="py-4 px-6">
-                <p class="text-xs text-gray-700 font-bold">${j.employer_company_name || 'Individual'}</p>
+                <p class="text-xs text-gray-700 font-bold">${companyName}</p>
             </td>
             <td class="py-4 px-6 text-center">
                 <span class="text-xs font-bold ${j.app_count > 0 ? 'text-indigo-600' : 'text-gray-400'}">${j.app_count || 0}</span>
@@ -199,7 +206,10 @@ const renderJobs = (jobs, append) => {
             </td>
             <td class="py-4 px-6 text-right">
                 <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                    <button class="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center view-job-btn" data-id="${j.id}">
+                    <button class="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center view-job-btn" 
+                            data-id="${j.id}" 
+                            data-title="${j.title.replace(/"/g, '&quot;')}" 
+                            data-company="${companyName.replace(/"/g, '&quot;')}">
                         <i class="fas fa-eye text-xs"></i>
                     </button>
                     <button class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center delete-job-btn" data-id="${j.id}">
@@ -208,7 +218,8 @@ const renderJobs = (jobs, append) => {
                 </div>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 
     if (append) tableBody.insertAdjacentHTML('beforeend', html);
     else tableBody.innerHTML = html;

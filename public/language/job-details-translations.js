@@ -97,6 +97,8 @@ if (typeof window.addTranslations === 'function') {
         // NEW MODAL TRANSLATIONS (Ensure these are present and correct)
         'employer_cannot_apply_title': { 'ar': 'حساب صاحب عمل', 'en': 'Employer Account' },
         'employer_cannot_apply_desc': { 'ar': 'أنت مسجل الدخول كصاحب عمل. لا يمكنك التقدم للوظائف كصاحب عمل.', 'en': 'You are logged in as an employer. You cannot apply for jobs with an employer account.' },
+        'share_this_job': { 'ar': 'شارك هذه الوظيفة', 'en': 'Share this Job' },
+        'copy_link': { 'ar': 'نسخ الرابط', 'en': 'Copy Link' },
         'go_to_dashboard': { 'ar': 'اذهب إلى لوحة التحكم', 'en': 'Go to Dashboard' },
         'verification_required_modal_title': { 'ar': 'توثيق الهوية مطلوب', 'en': 'Verification Required' },
         'verification_required_modal_desc': { 'ar': 'يجب توثيق هويتك للتقدم للوظائف. يرجى توثيق هويتك في لوحة التحكم الخاصة بك للمتابعة.', 'en': 'Your profile must be verified to apply for jobs. Please verify your ID on your dashboard to continue.' },

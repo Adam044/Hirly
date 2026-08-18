@@ -763,6 +763,163 @@ async function storeFileInSupabase(userId, fileType, file) {
     }
 }
 
+const { generateJobSlug } = require('./utils/seoHelper');
+const { generateJobsRss } = require('./utils/rssHelper');
+
+// Sitemap generation utility
+async function generateSitemap(pool) {
+    let client;
+    try {
+        client = await pool.connect();
+        const siteUrl = 'https://hirly.net'; // Replace with your production domain
+        
+        // Static pages
+        const staticPages = [
+            '', '/jobs', '/talent', '/about', '/contact', '/employers', 
+            '/for-individuals', '/for-companies', '/for-professionals', '/services'
+        ];
+
+        // Fetch dynamic jobs with company names for slug generation
+        const jobsResult = await client.query(`
+            SELECT 
+                j.id, 
+                j.title, 
+                j.updated_at,
+                COALESCE(j.external_company_name, e.company_name, 'Company') as company_name
+            FROM jobs j
+            LEFT JOIN employers e ON j.employer_id = e.user_id
+            WHERE j.status = 'open' 
+            AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE)
+        `);
+        
+        // Fetch dynamic companies
+        const companiesResult = await client.query(`
+            SELECT u.slug, u.updated_at 
+            FROM users u
+            JOIN employers e ON u.id = e.user_id
+            WHERE u.slug IS NOT NULL
+        `);
+
+        // Fetch dynamic talent profiles (professionals)
+        const talentsResult = await client.query(`
+            SELECT u.id, u.first_name, u.last_name, u.updated_at 
+            FROM users u
+            WHERE u.user_type IN ('professional', 'freelancer')
+            AND u.id_verified = true
+        `);
+
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+        // Add static pages
+        staticPages.forEach(page => {
+            xml += '  <url>\n';
+            xml += `    <loc>${siteUrl}${page}</loc>\n`;
+            xml += '    <changefreq>daily</changefreq>\n';
+            xml += '    <priority>1.0</priority>\n';
+            xml += '  </url>\n';
+        });
+
+        // Add jobs with SEO-friendly slugs
+        jobsResult.rows.forEach(job => {
+            const slug = generateJobSlug(job);
+            xml += '  <url>\n';
+            xml += `    <loc>${siteUrl}/jobs/${job.id}/${slug}</loc>\n`;
+            xml += `    <lastmod>${new Date(job.updated_at || Date.now()).toISOString()}</lastmod>\n`;
+            xml += '    <changefreq>weekly</changefreq>\n';
+            xml += '    <priority>0.9</priority>\n';
+            xml += '  </url>\n';
+        });
+
+        // Add companies
+        companiesResult.rows.forEach(company => {
+            xml += '  <url>\n';
+            xml += `    <loc>${siteUrl}/${company.slug}</loc>\n`;
+            xml += `    <lastmod>${new Date(company.updated_at || Date.now()).toISOString()}</lastmod>\n`;
+            xml += '    <changefreq>weekly</changefreq>\n';
+            xml += '    <priority>0.8</priority>\n';
+            xml += '  </url>\n';
+        });
+
+        // Add talent profiles
+        talentsResult.rows.forEach(talent => {
+            xml += '  <url>\n';
+            xml += `    <loc>${siteUrl}/profile.html?id=${talent.id}</loc>\n`;
+            xml += `    <lastmod>${new Date(talent.updated_at || Date.now()).toISOString()}</lastmod>\n`;
+            xml += '    <changefreq>weekly</changefreq>\n';
+            xml += '    <priority>0.6</priority>\n';
+            xml += '  </url>\n';
+        });
+
+        xml += '</urlset>';
+        return xml;
+    } catch (error) {
+        logger.error('Sitemap generation error:', error);
+        return null;
+    } finally {
+        if (client) client.release();
+    }
+}
+
+app.get('/sitemap.xml', async (req, res) => {
+    const sitemap = await generateSitemap(pool);
+    if (sitemap) {
+        res.header('Content-Type', 'application/xml');
+        res.send(sitemap);
+    } else {
+        res.status(500).send('Error generating sitemap');
+    }
+});
+
+app.get('/jobs/rss', async (req, res) => {
+    let client;
+    try {
+        client = await pool.connect();
+        const siteUrl = 'https://hirly.net';
+        const result = await client.query(`
+            SELECT 
+                j.id, j.title, j.description, j.created_at,
+                COALESCE(j.external_company_name, e.company_name, 'Company') as company_name,
+                COALESCE(j.external_company_logo, e.company_logo_path) as company_logo
+            FROM jobs j
+            LEFT JOIN employers e ON j.employer_id = e.user_id
+            WHERE j.status = 'open' 
+            AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE)
+            ORDER BY j.created_at DESC
+            LIMIT 50
+        `);
+
+        const jobs = result.rows.map(job => ({
+            ...job,
+            slug: generateJobSlug(job)
+        }));
+
+        const rss = generateJobsRss(jobs, siteUrl);
+        res.header('Content-Type', 'application/rss+xml');
+        res.send(rss);
+    } catch (error) {
+        logger.error('RSS generation error:', error);
+        res.status(500).send('Error generating RSS feed');
+    } finally {
+        if (client) client.release();
+    }
+});
+
+app.get('/robots.txt', (req, res) => {
+    const siteUrl = 'https://hirly.net';
+    let robots = 'User-agent: *\n';
+    robots += 'Allow: /\n';
+    robots += 'Disallow: /admin/\n';
+    robots += 'Disallow: /api/\n';
+    robots += 'Disallow: /dashboard.html\n';
+    robots += 'Disallow: /hire_dashboard.html\n';
+    robots += 'Disallow: /profile.html\n';
+    robots += `Sitemap: ${siteUrl}/sitemap.xml\n`;
+    robots += `RSS: ${siteUrl}/jobs/rss\n`;
+    res.header('Content-Type', 'text/plain');
+    res.send(robots);
+});
+
 async function deleteFileFromSupabase(fileUrl, bucket = 'uploads') {
     try {
         if (!fileUrl) return false;

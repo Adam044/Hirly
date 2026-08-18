@@ -697,6 +697,7 @@ const renderAggregatedJobs = (jobs, append) => {
         aggregatedJobsMap.set(jobId, j);
         const hasLogo = j.external_company_logo && j.external_company_logo !== '' && !j.external_company_logo.includes('ui-avatars.com');
         const isSelected = selectedJobIds.has(jobId);
+        const slug = window.generateJobSlug ? window.generateJobSlug(j.title, j.external_company_name) : 'job';
         
         return `
             <tr class="hover:bg-gray-50/50 transition-all group">
@@ -712,7 +713,7 @@ const renderAggregatedJobs = (jobs, append) => {
                             </div>
                         </div>
                         <div>
-                            <a href="/job_details.html?id=${j.id}" target="_blank" class="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors">${j.title}</a>
+                            <a href="/jobs/${j.id}/${slug}" target="_blank" class="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors">${j.title}</a>
                             <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${j.external_company_name || 'Unknown Company'}</p>
                         </div>
                     </div>
@@ -736,7 +737,7 @@ const renderAggregatedJobs = (jobs, append) => {
                         <button class="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 hover:bg-indigo-600 hover:text-white transition-all inline-flex items-center justify-center shadow-sm manage-logo-btn" data-job-id="${j.id}">
                             <i class="fas fa-image text-xs"></i>
                         </button>
-                        <a href="/job_details.html?id=${j.id}" target="_blank" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 hover:bg-indigo-600 hover:text-white transition-all inline-flex items-center justify-center shadow-sm">
+                        <a href="/jobs/${j.id}/${slug}" target="_blank" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 hover:bg-indigo-600 hover:text-white transition-all inline-flex items-center justify-center shadow-sm">
                             <i class="fas fa-eye text-xs"></i>
                         </a>
                         <button class="w-8 h-8 rounded-lg bg-gray-50 text-red-400 hover:bg-red-600 hover:text-white transition-all inline-flex items-center justify-center shadow-sm delete-job-btn" data-job-id="${j.id}">
