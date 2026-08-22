@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Helper function to update all filter UIs based on current state
-    function updateAllFilterUIs() {
+    function updateAllFilterUIs(forceRepopulate = false) {
         // Update quick filter active states by checking against selectedAdvancedFilterCategories/Professions
         document.querySelectorAll('.quick-filter-card').forEach(card => {
             const category = card.dataset.category;
@@ -169,33 +169,31 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Re-populate dropdowns to reflect current state (checked checkboxes, updated text)
-        // Only populate if the dropdown is currently active to avoid unnecessary re-renders
-        // and to prevent dropdowns from closing unexpectedly.
+        // Re-populate dropdowns to reflect current state
         if (categoryDropdown) {
             updateCategoryDropdownTriggerText(selectedAdvancedFilterCategories, categoryDropdownToggle, selectedCategoriesDisplay);
-            if (categoryDropdown.classList.contains('active')) {
+            if (forceRepopulate || categoryDropdown.classList.contains('active')) {
                 populateCategoryDropdown(categoryCheckboxes, selectedAdvancedFilterCategories, categoryDropdownToggle, selectedCategoriesDisplay);
             }
         }
 
         if (professionsDropdown) {
             updateProfessionsDropdownTriggerText(selectedAdvancedFilterProfessions, professionsDropdownToggle, selectedProfessionsDisplay);
-            if (professionsDropdown.classList.contains('active')) {
+            if (forceRepopulate || professionsDropdown.classList.contains('active')) {
                 populateProfessionsDropdown(professionsCheckboxesContainer, selectedAdvancedFilterProfessions, professionsDropdownToggle, selectedProfessionsDisplay);
             }
         }
 
         if (countryDropdown) {
             updateCountryDropdownTriggerText(selectedCountries, countryDropdownToggle, selectedCountriesDisplay);
-            if (countryDropdown.classList.contains('active')) {
+            if (forceRepopulate || countryDropdown.classList.contains('active')) {
                 populateCountryDropdown(countryCheckboxes, selectedCountries, countryDropdownToggle, selectedCountriesDisplay);
             }
         }
 
         if (cityDropdown) {
             updateCityDropdownTriggerText(selectedCities, cityDropdownToggle, selectedCitiesDisplay);
-            if (cityDropdown.classList.contains('active')) {
+            if (forceRepopulate || cityDropdown.classList.contains('active')) {
                 populateCitiesDropdown(cityCheckboxes, selectedCities, cityDropdownToggle, selectedCitiesDisplay);
             }
         }
@@ -1292,7 +1290,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function resetFilters() {
         resetAllFiltersState();
-        updateAllFilterUIs();
+        // Force repopulate all dropdowns to clear checkboxes regardless of active state
+        updateAllFilterUIs(true);
         const newUrl = window.location.pathname;
         window.history.pushState({}, '', newUrl);
         loadTalent();
