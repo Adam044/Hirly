@@ -474,6 +474,10 @@ async function initializeDatabaseSchema(pool) {
             );
         `);
 
+        // Index for visitor logs performance (Fast AF)
+        await client.query('CREATE INDEX IF NOT EXISTS idx_visitor_logs_created_at ON visitor_logs(created_at);');
+        await client.query('CREATE INDEX IF NOT EXISTS idx_visitor_logs_visitor_id ON visitor_logs(visitor_id);');
+
         // 34. System Settings Table
         await client.query(`
             CREATE TABLE IF NOT EXISTS system_settings (

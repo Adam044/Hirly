@@ -483,16 +483,17 @@ function addEventToFeed(type, message) {
     const feed = document.getElementById('liveEventList');
     if (!feed) return;
 
-    // Filter logic
-    const isKey = ['signup', 'job', 'application', 'rating'].includes(type);
+    // Filter logic: Business-critical events are "Key" (Priority)
+    const isKey = ['signup', 'job', 'application', 'rating', 'aggregator', 'logo', 'error'].includes(type);
     const filterClass = isKey ? 'event-key' : 'event-view';
     
-    // Hide if "Key" filter is active but this is just a view
+    // Hide if "Priority" filter is active but this is just a view
     const displayStyle = (currentFilter === 'key' && !isKey) ? 'none' : 'flex';
 
     // Remove empty state message if it's there
-    if (feed.querySelector('.text-center')) {
-        feed.innerHTML = '';
+    const emptyState = feed.querySelector('.empty-state');
+    if (emptyState) {
+        emptyState.remove();
     }
 
     const icons = {
@@ -501,7 +502,10 @@ function addEventToFeed(type, message) {
         signup: 'fa-user-check',
         job: 'fa-briefcase',
         application: 'fa-paper-plane',
-        rating: 'fa-star'
+        rating: 'fa-star',
+        aggregator: 'fa-microchip',
+        logo: 'fa-wand-magic-sparkles',
+        error: 'fa-triangle-exclamation'
     };
 
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -521,9 +525,9 @@ function addEventToFeed(type, message) {
 
     feed.prepend(item);
 
-    // Limit to 50 items to keep performance smooth and prevent page "breaking"
+    // Limit to 100 items for a more "Elite" full feed
     const items = feed.getElementsByClassName('feed-item');
-    if (items.length > 50) {
+    if (items.length > 100) {
         feed.removeChild(items[items.length - 1]);
     }
 }

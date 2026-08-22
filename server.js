@@ -110,11 +110,10 @@ const pool = new Pool({
     ssl: {
         rejectUnauthorized: false
     },
-    max: 20, // Restored to original value
-    idleTimeoutMillis: 30000, // Restored to original value
-    connectionTimeoutMillis: 10000, // Restored to original value
-    maxUses: 7500 // Restored to original value
-    // Removed acquireTimeoutMillis which was causing connection delays
+    max: 30, // Increased for stability
+    idleTimeoutMillis: 10000, // Faster reclamation
+    connectionTimeoutMillis: 15000, // More forgiving handshake
+    maxUses: 7500
 });
 
 
@@ -357,6 +356,26 @@ async function populateEmailPreferences() {
 // pool.connect((err, client, release) => { ... });
 
 
+// --- Fast AF: Static Assets First ---
+// Serve public files (both at root and /public prefix for tool compatibility)
+// We serve static assets BEFORE sessions or DB logic to ensure extreme speed and zero DB hits for assets.
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+    }
+}));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// Explicitly serve favicon
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile(path.join(__dirname, 'favicon.ico'));
+});
+
 // --- Middleware ---
 app.use(cookieParser());
 app.use(trackVisitor);
@@ -419,25 +438,6 @@ app.use(session({
         path: '/'
     }
 }));
-
-// --- NEW RLS Middleware: Sets PostgreSQL session variables for RLS ---
-app.use(async (req, res, next) => {
-    if (req.session && req.session.userId) {
-        let client;
-        try {
-            client = await pool.connect();
-            // Use parameterized queries to prevent SQL injection
-            await client.query('SELECT set_config($1, $2, false)', ['app.user_id', req.session.userId.toString()]);
-            await client.query('SELECT set_config($1, $2, false)', ['app.user_type', req.session.userType.toString()]);
-            logger.debug(`PostgreSQL session variables set: app.user_id='${req.session.userId}', app.user_type='${req.session.userType}'`);
-        } catch (err) {
-            logger.error("Error setting PostgreSQL session variables for RLS:", err);
-        } finally {
-            if (client) client.release();
-        }
-    }
-    next();
-});
 
 // Rate limiting for authentication endpoints
 const authLimiter = rateLimit({
@@ -554,24 +554,6 @@ app.use((req, res, next) => {
         logger.debug(`Rewriting URL: ${req.path} -> ${req.url}`);
     }
     next();
-});
-
-// Serve public files (both at root and /public prefix for tool compatibility)
-app.use(express.static(path.join(__dirname, 'public'), {
-    setHeaders: (res, path) => {
-        if (path.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript');
-        }
-        if (path.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css');
-        }
-    }
-}));
-app.use('/public', express.static(path.join(__dirname, 'public')));
-
-// Explicitly serve favicon
-app.get('/favicon.ico', (req, res) => {
-    res.sendFile(path.join(__dirname, 'favicon.ico'));
 });
 
 // Remove dangerous root static middleware and redundant views static middleware
@@ -1516,6 +1498,14 @@ app.use('/api', (req, res) => {
 // Health check endpoint for Cloud Run
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+// Silence DevTools and common noise requests
+app.use((req, res, next) => {
+    if (req.path.includes('.well-known') || req.path.includes('favicon.ico') || req.path.includes('robots.txt')) {
+        return res.status(req.path.includes('favicon') ? 200 : 404).end();
+    }
+    next();
 });
 
 // 404 Handler for undefined routes

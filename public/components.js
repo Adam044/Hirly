@@ -316,7 +316,7 @@ async function loadComponent(componentName, placeholderId) {
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased to 15 seconds for reliability
 
         // Fetch the component HTML
         const response = await fetch(`/components/${componentName}.html`, {

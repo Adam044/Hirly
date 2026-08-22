@@ -18,6 +18,7 @@ const cron = require('node-cron');
 const { logoFetcher } = require('../utils/companyLogoFetcher');
 const { DeepSeekAI } = require('../utils/ai/deepSeekAI');
 const PalestineCollector = require('./palestineCollector');
+const { logLiveEvent } = require('../realtime/manager');
 
 // HTTPS agent that bypasses SSL verification for Jooble API
 const httpsAgent = new https.Agent({
@@ -439,6 +440,7 @@ class JobAggregationService {
         this.shouldStop = false;
 
         this.addLog(`Starting: ${tasks.length} tasks (${keywords.length} keywords × ${Math.round(tasks.length/keywords.length)} countries)`);
+        logLiveEvent('aggregator', `🚀 Job Aggregator started: <b>${tasks.length} tasks</b> across <b>${selectedCountries.length} countries</b>.`);
 
         // Execute tasks
         try {
@@ -468,8 +470,10 @@ class JobAggregationService {
 
             if (this.shouldStop) {
                 this.addLog('Stopped by user', 'warn');
+                logLiveEvent('aggregator', '⚠️ Aggregator stopped by administrator.');
             } else {
                 this.addLog(`Complete! Found: ${this.status.jobsFound}, Saved: ${this.status.jobsSaved}`);
+                logLiveEvent('aggregator', `✅ Aggregation Complete: Found <b>${this.status.jobsFound}</b>, Saved <b>${this.status.jobsSaved}</b> new listings.`);
             }
         } catch (error) {
             this.addLog(`Critical error: ${error.message}`, 'error');

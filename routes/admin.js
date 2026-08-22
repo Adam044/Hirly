@@ -3,6 +3,7 @@ const path = require('path');
 const { getAvailableTemplates, getTemplateContent } = require('../utils/templateHelper');
 const logger = require('../utils/logger');
 const { logoFetcher } = require('../utils/companyLogoFetcher');
+const { logLiveEvent } = require('../realtime/manager');
 
 module.exports = function registerAdminRoutes(app, pool, {
   isAuthenticated,
@@ -1483,6 +1484,8 @@ module.exports = function registerAdminRoutes(app, pool, {
       bulkLogoStatus.logs = [{ timestamp: new Date().toISOString(), message: `Starting discovery for ${jobsRes.rows.length} jobs.`, type: 'info' }];
       bulkLogoStatus.startTime = new Date();
       
+      logLiveEvent('logo', `🔮 Magic Logo Discovery started for <b>${jobsRes.rows.length} jobs</b>.`);
+      
       processBulkLogos(jobsRes.rows, pool, bulkLogoStatus).catch(err => {
         logger.error('Bulk logo processing failed:', err);
         bulkLogoStatus.isWorking = false;
@@ -1609,6 +1612,7 @@ module.exports = function registerAdminRoutes(app, pool, {
       message: `Bulk fetch completed. Success: ${status.success}, Failed: ${status.failed}, Sanitized: ${status.sanitized}`, 
       type: 'info' 
     });
+    logLiveEvent('logo', `✨ Discovery Complete: Success <b>${status.success}</b>, Failed <b>${status.failed}</b>, Sanitized <b>${status.sanitized}</b>.`);
   }
 
   router.post('/admin/magic-fetch-aggregated-logo', isAuthenticated, isAdmin, async (req, res) => {

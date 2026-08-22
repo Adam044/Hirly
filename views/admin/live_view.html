@@ -7,7 +7,7 @@
     
     <!-- External Fonts & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -43,55 +43,84 @@
                 <i class="fas fa-expand"></i>
             </button>
             <div class="hud-coords">
+                <span class="text-indigo-500 mr-1"><i class="fas fa-crosshairs"></i></span>
                 <span id="mapLat">31.9522</span>° N, <span id="mapLon">35.2332</span>° E
             </div>
             <div class="hud-status">
-                <span id="serverCpu" class="text-indigo-400">CPU: 0.00</span> | 
-                <span id="serverMem" class="text-emerald-400">RAM: 0.0%</span>
-                <span class="scanner-line ml-2"></span>
+                <div class="flex items-center gap-4">
+                    <span id="serverCpu" class="text-indigo-400 font-bold">CPU: 0.00</span>
+                    <span class="w-px h-3 bg-white/10"></span>
+                    <span id="serverMem" class="text-emerald-400 font-bold">RAM: 0.0%</span>
+                </div>
+                <div class="status-indicator">
+                    <span class="scanner-line"></span>
+                </div>
             </div>
         </main>
 
         <!-- Sidebar -->
         <aside class="live-sidebar">
-            <div class="live-stat-card primary">
-                <p class="stat-label">Visitors Right Now</p>
+            <div class="live-stat-card primary overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-10 transform rotate-12">
+                    <i class="fas fa-users text-8xl"></i>
+                </div>
+                <p class="stat-label">Active Professionals</p>
                 <h2 class="stat-value" id="activeVisitorsCount">0</h2>
-                <div class="stat-trend flex items-center gap-2 mt-2">
-                    <span class="trend-up"><i class="fas fa-chart-line"></i> <span id="fiveMinVisits">0</span> in last 5m</span>
+                <div class="stat-trend flex items-center gap-2 mt-4">
+                    <span class="trend-up"><i class="fas fa-bolt"></i> <span id="fiveMinVisits">0</span> active in last 5m</span>
                 </div>
             </div>
 
             <!-- New Stats Grid -->
             <div class="live-stats-grid">
                 <div class="stat-mini-card">
-                    <p class="stat-label">Total Visits</p>
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="stat-label">Total Reach</p>
+                        <i class="fas fa-globe-americas text-indigo-500/50 text-xs"></i>
+                    </div>
                     <h3 class="stat-value-mini" id="totalVisits">0</h3>
-                    <div class="stat-sub-label">Signups: <span id="totalSignups">0</span></div>
-                    <div class="stat-sub-label">Rate: <span id="totalConversionRate">0%</span></div>
+                    <div class="stat-sub-footer">
+                        <span class="stat-sub-label">Signups: <span id="totalSignups">0</span></span>
+                    </div>
                 </div>
                 <div class="stat-mini-card">
-                    <p class="stat-label">Daily</p>
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="stat-label">Daily Pulse</p>
+                        <i class="fas fa-calendar-day text-emerald-500/50 text-xs"></i>
+                    </div>
                     <h3 class="stat-value-mini" id="dailyVisits">0</h3>
-                    <div class="stat-sub-label">Signups: <span id="dailySignups">0</span></div>
-                    <div class="stat-sub-label">Rate: <span id="dailyConversionRate">0%</span></div>
+                    <div class="stat-sub-footer">
+                        <span class="stat-sub-label">Conversion: <span id="dailyConversionRate">0%</span></span>
+                    </div>
                 </div>
                 <div class="stat-mini-card">
-                    <p class="stat-label">Weekly</p>
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="stat-label">Weekly Growth</p>
+                        <i class="fas fa-chart-line text-blue-500/50 text-xs"></i>
+                    </div>
                     <h3 class="stat-value-mini" id="weeklyVisits">0</h3>
-                    <div class="stat-sub-label">Signups: <span id="weeklySignups">0</span></div>
-                    <div class="stat-sub-label">Rate: <span id="weeklyConversionRate">0%</span></div>
+                    <div class="stat-sub-footer">
+                        <span class="stat-sub-label">New Users: <span id="weeklySignups">0</span></span>
+                    </div>
                 </div>
                 <div class="stat-mini-card highlight">
-                    <p class="stat-label">Avg Rate</p>
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="stat-label">Success Rate</p>
+                        <i class="fas fa-award text-amber-500/50 text-xs"></i>
+                    </div>
                     <h3 class="stat-value-mini" id="conversionRate">0%</h3>
-                    <div class="stat-sub-label">Overall Conv.</div>
+                    <div class="stat-sub-footer">
+                        <span class="stat-sub-label text-amber-400">Elite Platform</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Traffic Chart -->
             <div class="chart-card">
-                <p class="stat-label mb-3">Traffic History (24h)</p>
+                <div class="flex items-center justify-between mb-4">
+                    <p class="stat-label">24H Traffic Intelligence</p>
+                    <div class="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                </div>
                 <div class="chart-container">
                     <canvas id="trafficChart"></canvas>
                 </div>
@@ -99,17 +128,25 @@
 
             <div class="live-feed">
                 <div class="feed-header flex items-center justify-between">
-                    <span><i class="fas fa-bolt mr-2 text-indigo-400"></i> Activity</span>
-                    <div class="filter-group">
+                    <span class="flex items-center gap-2">
+                        <i class="fas fa-satellite text-indigo-400"></i> 
+                        Real-time Stream
+                    </span>
+                    <div class="filter-group p-1 bg-white/5 rounded-lg flex gap-1">
                         <button id="filterAllEvents" class="filter-btn active">All</button>
-                        <button id="filterKeyEvents" class="filter-btn">Key</button>
+                        <button id="filterKeyEvents" class="filter-btn">Priority</button>
                     </div>
                 </div>
-                <div id="liveEventList" style="height: 400px; overflow-y: auto;">
+                <div id="liveEventList">
                     <!-- Events injected here -->
-                    <div class="text-center py-12 text-gray-500 text-sm">
-                        <i class="fas fa-radar fa-spin mb-3 text-2xl block"></i>
-                        Waiting for activity...
+                    <div class="empty-state">
+                        <div class="radar-container">
+                            <div class="radar-circle"></div>
+                            <div class="radar-circle"></div>
+                            <div class="radar-circle"></div>
+                            <i class="fas fa-satellite-dish"></i>
+                        </div>
+                        <p>Scanning for platform activity...</p>
                     </div>
                 </div>
             </div>
@@ -121,16 +158,16 @@
             <section class="intel-grid">
                 <!-- Device Distribution -->
                 <div class="intel-card">
-                    <h3 class="intel-title"><i class="fas fa-mobile-alt"></i> Device Distribution</h3>
+                    <h3 class="intel-title"><i class="fas fa-laptop-code text-indigo-400"></i> Platform Access</h3>
                     <div id="deviceStats" class="device-stats">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs text-gray-400">Desktop</span>
+                            <span class="text-xs font-semibold text-slate-400">Desktop / Web</span>
                             <span id="desktopPercent" class="text-xs font-bold text-white">0%</span>
                         </div>
                         <div class="progress-bar-bg"><div id="desktopBar" class="progress-bar desktop" style="width: 0%"></div></div>
                         
-                        <div class="flex items-center justify-between mb-2 mt-4">
-                            <span class="text-xs text-gray-400">Mobile</span>
+                        <div class="flex items-center justify-between mb-2 mt-5">
+                            <span class="text-xs font-semibold text-slate-400">Mobile / App</span>
                             <span id="mobilePercent" class="text-xs font-bold text-white">0%</span>
                         </div>
                         <div class="progress-bar-bg"><div id="mobileBar" class="progress-bar mobile" style="width: 0%"></div></div>
@@ -139,8 +176,8 @@
 
                 <!-- Top Referrers -->
                 <div class="intel-card">
-                    <h3 class="intel-title"><i class="fas fa-share-nodes"></i> Top Traffic Sources</h3>
-                    <div id="referrerStats" class="referrer-list">
+                    <h3 class="intel-title"><i class="fas fa-project-diagram text-emerald-400"></i> Acquisition Channels</h3>
+                    <div id="referrerStats" class="referrer-list custom-scrollbar">
                         <!-- Referrers injected here -->
                     </div>
                 </div>
@@ -148,13 +185,14 @@
 
             <!-- Active Pages Grid -->
             <section class="active-pages-section">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fas fa-layer-group text-primary"></i>
-                        Popular Pages
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="intel-title mb-0">
+                        <i class="fas fa-fire text-orange-500"></i>
+                        Popular Destinations
                     </h3>
+                    <div class="live-pulse"></div>
                 </div>
-                <div id="activePagesGrid" class="active-pages-grid">
+                <div id="activePagesGrid" class="active-pages-grid custom-scrollbar">
                     <!-- Page cards injected here -->
                 </div>
             </section>

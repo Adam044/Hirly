@@ -327,11 +327,18 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     res.redirect('/about.html');
   });
 
-  // Human-readable Profile URLs
-  router.get(['/:slug', '/@:slug', '/u/:slug'], async (req, res, next) => {
+  // Institutional Profile URLs
+  // Supports hirly.net/slug (Professional/Employer) as the primary format.
+  // Legacy prefixes like /talent/, /@, /u/ are redirected to the clean root slug.
+  router.get(['/talent/:slug', '/:slug', '/@:slug', '/u/:slug'], async (req, res, next) => {
     let slug = req.params.slug;
+    const reqPath = req.path;
+    const siteUrl = 'https://hirly.net';
     
-    // Basic sanitization and check
+    // Clean up slug if it has prefix
+    if (slug.startsWith('@')) slug = slug.substring(1);
+
+    // Basic sanitization and check to avoid matching static pages or files
     if (!slug || slug.includes('.') || htmlPages.includes(slug) || ALLOWED_GROUPS.includes(slug)) {
       return next();
     }
@@ -339,18 +346,27 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     let client;
     try {
       client = await pool.connect();
-      const result = await client.query('SELECT id, user_type, slug FROM users WHERE slug = $1 OR slug = $2', [slug, slug.replace('@', '')]);
+      // Search for the user by slug
+      const result = await client.query('SELECT id, user_type, slug FROM users WHERE slug = $1', [slug]);
       
       if (result.rows.length > 0) {
         const user = result.rows[0];
-        // If they used @ or /u/ but the slug is just the name, or vice versa, we could redirect or just serve.
-        // For now, let's just serve the correct template.
+        
+        // SEO: Enforce clean root-level slug (hirly.net/slug)
+        // Redirect if using legacy /talent/, /@slug, or /u/slug
+        if (reqPath.startsWith('/talent/') || reqPath.startsWith('/@') || reqPath.startsWith('/u/')) {
+          return res.redirect(301, `/${user.slug}`);
+        }
+
+        // Serve the appropriate profile template with SEO injection
         if (user.user_type === 'professional') {
-          return sendSmart(res, [path.join('user', 'profile.html'), 'profile.html']);
+          return sendSmartSEO(req, res, next, [path.join('user', 'profile.html'), 'profile.html']);
         } else if (user.user_type === 'employer') {
-          return sendSmart(res, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
+          return sendSmartSEO(req, res, next, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
         }
       }
+      
+      // If no user found, fall through to 404
       next();
     } catch (error) {
       logger.error('Error fetching user by slug:', error);

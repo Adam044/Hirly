@@ -7,7 +7,7 @@ const os = require('os');
 let io;
 let dbPool;
 let statsCache = { data: null, lastUpdate: 0 };
-const CACHE_TTL = 30000; // Cache stats for 30 seconds to be highly efficient
+const CACHE_TTL = 60000; // Increased to 60s for "Fast AF" efficiency
 
 const activeVisitors = new Map(); // visitorId -> visitorData
 const socketToVisitor = new Map(); // socket.id -> visitorId
