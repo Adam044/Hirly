@@ -1244,7 +1244,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let avatarContent;
         if (talent.profile_picture_url) {
-            avatarContent = `<img src="${talent.profile_picture_url}" class="talent-avatar-img" onerror="this.onerror=null; this.src='https://placehold.co/80x80/f1f5f9/64748b?text=${initials}';" alt="${firstName}">`;
+            const thumbUrl = typeof ImageOptimizer !== 'undefined' 
+                ? ImageOptimizer.getOptimizedUrl(talent.profile_picture_url, 'thumb')
+                : talent.profile_picture_url;
+            
+            avatarContent = `<img src="${thumbUrl}" class="talent-avatar-img" loading="lazy" width="80" height="80" onerror="this.onerror=null; this.src='https://placehold.co/80x80/f1f5f9/64748b?text=${initials}';" alt="${firstName}">`;
         } else {
             avatarContent = `<div class="talent-avatar-initials">${initials}</div>`;
         }

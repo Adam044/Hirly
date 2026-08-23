@@ -30,7 +30,8 @@ async function seedJobSources() {
                         job_item: 'a.list-3--row',
                         title: '.list-3--cell-title-2',
                         company: '.list--cell--company',
-                        location: '.list-3--cell-1 span.tooltip'
+                        location: '.list-3--cell-1 span.tooltip',
+                        date: '.list-3--cell-4'
                     }
                 },
                 priority: 1
@@ -47,7 +48,8 @@ async function seedJobSources() {
                         job_item: 'a.list-3--row',
                         title: '.list-3--cell-title-2',
                         company: '.list--cell--company',
-                        location: '.list-3--cell-1 span.tooltip'
+                        location: '.list-3--cell-1 span.tooltip',
+                        date: '.list-3--cell-4'
                     }
                 },
                 priority: 1
@@ -64,7 +66,8 @@ async function seedJobSources() {
                         job_item: 'a.list-3--row',
                         title: '.list-3--cell-title-2',
                         company: '.list--cell--company',
-                        location: '.list-3--cell-1 span.tooltip'
+                        location: '.list-3--cell-1 span.tooltip',
+                        date: '.list-3--cell-4'
                     }
                 },
                 priority: 1
@@ -81,7 +84,8 @@ async function seedJobSources() {
                         job_item: 'a.list-3--row',
                         title: '.list-3--cell-title-2',
                         company: '.list--cell--company',
-                        location: '.list-3--cell-1 span.tooltip'
+                        location: '.list-3--cell-1 span.tooltip',
+                        date: '.list-3--cell-4'
                     }
                 },
                 priority: 1
@@ -98,7 +102,8 @@ async function seedJobSources() {
                         job_item: 'a.list-3--row',
                         title: '.list-3--cell-title-2',
                         company: '.list--cell--company',
-                        location: '.list-3--cell-1 span.tooltip'
+                        location: '.list-3--cell-1 span.tooltip',
+                        date: '.list-3--cell-4'
                     }
                 },
                 priority: 1
@@ -115,7 +120,8 @@ async function seedJobSources() {
                         job_item: 'a.list-3--row',
                         title: '.list-3--cell-title-2',
                         company: '.list--cell--company',
-                        location: '.list-3--cell-1 span.tooltip'
+                        location: '.list-3--cell-1 span.tooltip',
+                        date: '.list-3--cell-4'
                     }
                 },
                 priority: 2
@@ -132,7 +138,8 @@ async function seedJobSources() {
                         job_item: 'a.list-3--row',
                         title: '.list-3--cell-title-2',
                         company: '.list--cell--company',
-                        location: '.list-3--cell-1 span.tooltip'
+                        location: '.list-3--cell-1 span.tooltip',
+                        date: '.list-3--cell-4'
                     }
                 },
                 priority: 2

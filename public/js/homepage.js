@@ -197,7 +197,10 @@ function createJobCard(job) {
     // Avatar/Logo
     let avatarHtml = '';
     if (job.company_logo) {
-        avatarHtml = `<div class="home-job-card-avatar-container"><img src="${job.company_logo}" alt="${job.company_name}"></div>`;
+        const thumbUrl = typeof ImageOptimizer !== 'undefined'
+            ? ImageOptimizer.getOptimizedUrl(job.company_logo, 'thumb')
+            : job.company_logo;
+        avatarHtml = `<div class="home-job-card-avatar-container"><img src="${thumbUrl}" loading="lazy" width="48" height="48" onerror="this.onerror=null; this.src='${job.company_logo}'; this.onerror=function(){this.parentElement.innerHTML='<div class=&quot;home-job-card-avatar-placeholder&quot;><i class=&quot;fa-solid fa-building&quot;></i></div>'};" alt="${job.company_name}"></div>`;
     } else {
         avatarHtml = `<div class="home-job-card-avatar-container"><div class="home-job-card-avatar-placeholder"><i class="fa-solid fa-building"></i></div></div>`;
     }
@@ -325,7 +328,10 @@ function createDiscoverTalentCard(talent) {
     const initials = `${firstName.charAt(0)}${(talent.last_name || '').charAt(0)}`.toUpperCase();
     let avatarContent;
     if (talent.profile_picture_url) {
-        avatarContent = `<img src="${talent.profile_picture_url}" class="talent-avatar-img" onerror="this.onerror=null; this.src='https://placehold.co/80x80/f1f5f9/64748b?text=${initials}';" alt="${firstName}">`;
+        const thumbUrl = typeof ImageOptimizer !== 'undefined'
+            ? ImageOptimizer.getOptimizedUrl(talent.profile_picture_url, 'thumb')
+            : talent.profile_picture_url;
+        avatarContent = `<img src="${thumbUrl}" class="talent-avatar-img" loading="lazy" width="80" height="80" onerror="this.onerror=null; this.src='${talent.profile_picture_url}'; this.onerror=function(){this.parentElement.innerHTML='<div class=&quot;talent-avatar-initials&quot;>${initials}</div>'};" alt="${firstName}">`;
     } else {
         avatarContent = `<div class="talent-avatar-initials">${initials}</div>`;
     }

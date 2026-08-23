@@ -394,8 +394,8 @@ async function initializeHeaderScripts() {
         const currentLang = window.currentLanguage;
         langLabel.textContent = currentLang === 'ar' ? 'AR' : 'EN';
         langFlagIcon.src = currentLang === 'ar' 
-            ? 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/palestine-flag.svg' 
-            : 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/united-kingdom-flag.svg';
+            ? '/assets/palestine-flag.svg' 
+            : '/assets/united-kingdom-flag.svg';
     };
 
     const langDropdownToggle = document.getElementById('langDropdownToggle');
@@ -529,11 +529,19 @@ function updateUserAvatar(avatarContainer, avatarImg, avatarText, user) {
     }
 
     if (imageUrl) {
-        avatarImg.src = imageUrl;
+        const thumbUrl = typeof ImageOptimizer !== 'undefined'
+            ? ImageOptimizer.getOptimizedUrl(imageUrl, 'thumb')
+            : imageUrl;
+            
+        avatarImg.src = thumbUrl;
         avatarImg.style.display = 'block';
         avatarText.style.display = 'none';
         avatarImg.onerror = function() {
-            // Fallback to initials if image fails to load
+            // Fallback to original if thumb fails, then to initials if original fails
+            if (this.src !== imageUrl) {
+                this.src = imageUrl;
+                return;
+            }
             this.style.display = 'none';
             avatarText.style.display = 'flex';
             // Re-generate initials for fallback

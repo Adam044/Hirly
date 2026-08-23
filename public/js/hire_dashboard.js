@@ -531,8 +531,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (res.ok) {
                         const data = await res.json();
                         const logoUrl = data.company_logo_path;
+                        const thumbUrl = typeof ImageOptimizer !== 'undefined'
+                            ? ImageOptimizer.getOptimizedUrl(logoUrl, 'thumb')
+                            : logoUrl;
+                            
                         if (logoPreview) {
-                            logoPreview.src = logoUrl;
+                            logoPreview.src = thumbUrl;
+                            logoPreview.onerror = function() {
+                                this.onerror = null;
+                                this.src = logoUrl;
+                            };
                             logoPreview.classList.remove('hidden');
                         }
                         if (logoPlaceholder) logoPlaceholder.classList.add('hidden');

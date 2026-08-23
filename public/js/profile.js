@@ -1030,7 +1030,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (profileAvatar) {
             if (freelancer.profile_picture_url) {
-                profileAvatar.innerHTML = `<img src="${freelancer.profile_picture_url}" alt="${fullName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-glass\'>${initials}</span>'; this.parentElement.classList.add('bg-slate-900');">`;
+                const optUrl = typeof ImageOptimizer !== 'undefined'
+                    ? ImageOptimizer.getOptimizedUrl(freelancer.profile_picture_url, 'opt')
+                    : freelancer.profile_picture_url;
+                
+                profileAvatar.innerHTML = `<img src="${optUrl}" alt="${fullName}" width="160" height="160" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${freelancer.profile_picture_url}'; this.onerror=function(){this.parentElement.innerHTML='<span class=\'text-glass\'>${initials}</span>'; this.parentElement.classList.add('bg-slate-900');};">`;
             } else {
                 profileAvatar.innerHTML = `<span class="text-glass">${initials}</span>`;
                 profileAvatar.classList.add('bg-slate-900');

@@ -79,7 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (app.profile_picture_url) {
             // Escape double quotes for the onerror attribute to prevent breaking the HTML structure
             const escapedFallback = fallbackHtml.replace(/"/g, '&quot;').replace(/'/g, "\\'");
-            return `<img src="${app.profile_picture_url}" class="${sizeClasses} object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null; this.parentElement.innerHTML='${escapedFallback}';">`;
+            const thumbUrl = typeof ImageOptimizer !== 'undefined'
+                ? ImageOptimizer.getOptimizedUrl(app.profile_picture_url, 'thumb')
+                : app.profile_picture_url;
+
+            return `<img src="${thumbUrl}" class="${sizeClasses} object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null; this.src='${app.profile_picture_url}'; this.onerror=function(){this.parentElement.innerHTML='${escapedFallback}'};">`;
         }
         return fallbackHtml;
     };
@@ -108,7 +112,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!container) return;
                     container.innerHTML = companies.map(c => {
                         if (c.company_logo_path) {
-                            return `<div class="company-pill"><img src="${c.company_logo_path}" alt="${c.company_name}"></div>`;
+                            const thumbUrl = typeof ImageOptimizer !== 'undefined'
+                                ? ImageOptimizer.getOptimizedUrl(c.company_logo_path, 'thumb')
+                                : c.company_logo_path;
+                            return `<div class="company-pill"><img src="${thumbUrl}" alt="${c.company_name}" onerror="this.onerror=null; this.src='${c.company_logo_path}';"></div>`;
                         } else {
                             return `<div class="company-pill text-slate-300 text-xs"><i class="fas fa-building"></i></div>`;
                         }
@@ -123,9 +130,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Double items for seamless loop
                     const fullSet = [...companies, ...companies];
                     authMarqueeGrid.innerHTML = fullSet.map(c => {
-                        const logoHtml = c.company_logo_path 
-                            ? `<img src="${c.company_logo_path}" alt="${c.company_name}" class="marquee-logo">`
-                            : `<div class="marquee-logo flex items-center justify-center text-slate-200 text-2xl"><i class="fas fa-building"></i></div>`;
+                        let logoHtml = '';
+                        if (c.company_logo_path) {
+                            const thumbUrl = typeof ImageOptimizer !== 'undefined'
+                                ? ImageOptimizer.getOptimizedUrl(c.company_logo_path, 'thumb')
+                                : c.company_logo_path;
+                            logoHtml = `<img src="${thumbUrl}" alt="${c.company_name}" class="marquee-logo" onerror="this.onerror=null; this.src='${c.company_logo_path}';">`;
+                        } else {
+                            logoHtml = `<div class="marquee-logo flex items-center justify-center text-slate-200 text-2xl"><i class="fas fa-building"></i></div>`;
+                        }
                         
                         return `
                             <div class="marquee-card">

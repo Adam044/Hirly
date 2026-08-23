@@ -163,7 +163,11 @@ const renderProfessionals = (professionals, append) => {
             <td class="py-4 px-6">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
-                        ${f.profile_picture_url ? `<img src="${f.profile_picture_url}" class="w-full h-full object-cover">` : (f.first_name || 'P').charAt(0)}
+                        ${f.profile_picture_url ? 
+                            `<img src="${typeof ImageOptimizer !== 'undefined' ? ImageOptimizer.getOptimizedUrl(f.profile_picture_url, 'thumb') : f.profile_picture_url}" 
+                                  class="w-full h-full object-cover" 
+                                  onerror="this.onerror=null; this.src='${f.profile_picture_url}';">` 
+                            : (f.first_name || 'P').charAt(0)}
                     </div>
                     <div>
                         <p class="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">${f.first_name} ${f.last_name}</p>

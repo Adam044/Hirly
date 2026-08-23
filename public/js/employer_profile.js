@@ -317,7 +317,10 @@ document.addEventListener('DOMContentLoaded', function() {
             contactAddress = employer.address || naText;
             
             if (employer.company_logo_path) {
-                avatarHtml = `<img src="${employer.company_logo_path}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${getPlaceholderUrl((displayName.charAt(0) || 'C').toUpperCase(), 200, 200)}';" alt="${displayName}">`;
+                const optUrl = typeof ImageOptimizer !== 'undefined'
+                    ? ImageOptimizer.getOptimizedUrl(employer.company_logo_path, 'opt')
+                    : employer.company_logo_path;
+                avatarHtml = `<img src="${optUrl}" class="w-full h-full object-cover" width="200" height="200" onerror="this.onerror=null; this.src='${employer.company_logo_path}'; this.onerror=function(){this.src='${getPlaceholderUrl((displayName.charAt(0) || 'C').toUpperCase(), 200, 200)}'};" alt="${displayName}">`;
             } else {
                 avatarHtml = `<i class="fas fa-building text-slate-300"></i>`;
             }
@@ -333,7 +336,10 @@ document.addEventListener('DOMContentLoaded', function() {
             contactAddress = employer.city || naText;
             
             if (employer.profile_picture_url) {
-                avatarHtml = `<img src="${employer.profile_picture_url}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='${getPlaceholderUrl((displayName.charAt(0) || 'I').toUpperCase(), 200, 200)}';" alt="${displayName}">`;
+                const optUrl = typeof ImageOptimizer !== 'undefined'
+                    ? ImageOptimizer.getOptimizedUrl(employer.profile_picture_url, 'opt')
+                    : employer.profile_picture_url;
+                avatarHtml = `<img src="${optUrl}" class="w-full h-full object-cover" width="200" height="200" onerror="this.onerror=null; this.src='${employer.profile_picture_url}'; this.onerror=function(){this.src='${getPlaceholderUrl((displayName.charAt(0) || 'I').toUpperCase(), 200, 200)}'};" alt="${displayName}">`;
             } else {
                 const initials = `${(employer.first_name?.charAt(0) || '').toUpperCase()}${(employer.last_name?.charAt(0) || '').toUpperCase()}`;
                 avatarHtml = `<span class="text-slate-300">${initials || 'U'}</span>`;

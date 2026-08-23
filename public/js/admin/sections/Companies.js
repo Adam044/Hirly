@@ -147,10 +147,14 @@ const renderCompanies = (employers, append) => {
             </td>
             <td class="py-4 px-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
-                        ${e.company_logo_url ? `<img src="${e.company_logo_url}" class="w-full h-full object-contain">` : (e.company_name || 'C').charAt(0)}
-                    </div>
-                    <div>
+                        <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                            ${e.company_logo_url ? 
+                                `<img src="${typeof ImageOptimizer !== 'undefined' ? ImageOptimizer.getOptimizedUrl(e.company_logo_url, 'thumb') : e.company_logo_url}" 
+                                      class="w-full h-full object-contain"
+                                      onerror="this.onerror=null; this.src='${e.company_logo_url}';">` 
+                                : (e.company_name || 'C').charAt(0)}
+                        </div>
+                        <div>
                         <p class="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">${e.company_name || 'Personal Account'}</p>
                         <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${e.first_name} ${e.last_name}</p>
                     </div>

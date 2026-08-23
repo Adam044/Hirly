@@ -2212,9 +2212,18 @@ const DashboardProfile = {
         const avatarImg = document.getElementById('viewProfileCardAvatarImg');
         
         if (u.profile_picture_url || u.profilePictureUrl) {
+            const originalUrl = u.profile_picture_url || u.profilePictureUrl;
+            const thumbUrl = typeof ImageOptimizer !== 'undefined'
+                ? ImageOptimizer.getOptimizedUrl(originalUrl, 'thumb')
+                : originalUrl;
+            
             if (avatarPlaceholder) avatarPlaceholder.classList.add('hidden');
             if (avatarImg) {
-                avatarImg.src = u.profile_picture_url || u.profilePictureUrl;
+                avatarImg.src = thumbUrl;
+                avatarImg.onerror = function() {
+                    this.onerror = null;
+                    this.src = originalUrl;
+                };
                 avatarImg.classList.remove('hidden');
             }
         } else {

@@ -17,6 +17,36 @@ class ImageOptimizer {
     }
 
     /**
+     * Derives optimized variant URL from original Supabase URL
+     * @param {string} url - Original public URL
+     * @param {'thumb'|'opt'} variant - Variant type
+     * @returns {string} - Variant URL
+     */
+    static getOptimizedUrl(url, variant = 'thumb') {
+        if (!url || typeof url !== 'string') return url;
+        
+        // Only process Supabase storage URLs that are in profiles or logos
+        if (url.includes('/profiles/') || url.includes('/logos/')) {
+            // Remove any query parameters if present
+            const baseUrl = url.split('?')[0];
+            const extension = baseUrl.substring(baseUrl.lastIndexOf('.'));
+            
+            // Avoid double-suffixing if the URL is already a variant
+            if (baseUrl.endsWith('_thumb.webp') || baseUrl.endsWith('_opt.webp')) {
+                return url;
+            }
+            
+            // Check if it's a supported image extension
+            const validExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+            if (validExtensions.includes(extension.toLowerCase())) {
+                const base = baseUrl.substring(0, baseUrl.lastIndexOf('.'));
+                return `${base}_${variant}.webp`;
+            }
+        }
+        return url;
+    }
+
+    /**
      * Sets up lazy loading for images
      */
     setupLazyLoading() {

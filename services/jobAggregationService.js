@@ -389,10 +389,6 @@ class JobAggregationService {
             // 2. API Sources (Jooble)
             if (hasJooble) {
                 for (const country of selectedCountries) {
-                    if (country === 'Palestine') {
-                        this.addLog('Jooble: Skipping Palestine (Avoiding US-based results. Using local sources instead.)', 'warn');
-                        continue;
-                    }
                     for (const keyword of keywords) {
                         tasks.push({ source: 'jooble', country, keyword });
                     }
@@ -576,11 +572,12 @@ class JobAggregationService {
                         is_external: true
                     };
 
-                    // Save to jobs table using the existing saveJobs logic which handles deduplication, AI cleaning, and logo fetching
+                    // Save to jobs table using the existing saveJobs logic
                     const saved = await this.saveJobs([jobToSave]);
                     
                     if (saved > 0) {
                         await this.pool.query("UPDATE raw_jobs SET status = 'processed', updated_at = NOW() WHERE id = $1", [rawJob.id]);
+                        this.addLog(`[AI] Successfully processed: ${jobToSave.title}`, 'success');
                         return true;
                     } else {
                         await this.pool.query("UPDATE raw_jobs SET status = 'duplicate', updated_at = NOW() WHERE id = $1", [rawJob.id]);

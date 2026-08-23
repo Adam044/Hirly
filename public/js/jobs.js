@@ -365,7 +365,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let avatarHtml = '';
         if (employerLogo) {
             const safeName = employerDisplayName.replace(/"/g, '&quot;');
-            avatarHtml = `<img src="${employerLogo}" onerror="this.onerror=null; this.outerHTML='<i class=&quot;fas fa-briefcase fallback-job-icon&quot;></i>';" alt="${safeName} Logo">`;
+            const thumbUrl = typeof ImageOptimizer !== 'undefined' 
+                ? ImageOptimizer.getOptimizedUrl(employerLogo, 'thumb')
+                : employerLogo;
+            
+            avatarHtml = `<img src="${thumbUrl}" loading="lazy" width="60" height="60" onerror="this.onerror=null; this.src='${employerLogo}'; this.onerror=function(){this.outerHTML='<i class=&quot;fas fa-briefcase fallback-job-icon&quot;></i>'};" alt="${safeName} Logo">`;
         } else {
             avatarHtml = `<i class="fas fa-briefcase fallback-job-icon"></i>`;
         }

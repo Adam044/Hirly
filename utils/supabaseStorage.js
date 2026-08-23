@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const path = require('path');
+const sharp = require('sharp');
 const logger = require('./logger');
 
 // Initialize Supabase client
@@ -13,6 +14,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
         persistSession: false
     }
 });
+
+const CACHE_CONTROL_IMMUTABLE = '31536000, public, immutable';
 
 /**
  * Generate a unique filename with timestamp and random string
@@ -34,16 +37,22 @@ function generateUniqueFilename(originalName, userId, type) {
  * @param {string} filename - Filename with path
  * @param {string} mimetype - File MIME type
  * @param {string} bucket - Storage bucket name (default: 'uploads')
+ * @param {Object} options - Additional options (cacheControl, upsert)
  * @returns {Object} - Upload result with URL and path
  */
-async function uploadFile(fileBuffer, filename, mimetype, bucket = 'uploads') {
+async function uploadFile(fileBuffer, filename, mimetype, bucket = 'uploads', options = {}) {
+    const { 
+        cacheControl = '3600', 
+        upsert = false 
+    } = options;
+
     try {
         const { data, error } = await supabase.storage
             .from(bucket)
             .upload(filename, fileBuffer, {
                 contentType: mimetype,
-                cacheControl: '3600',
-                upsert: false
+                cacheControl: cacheControl,
+                upsert: upsert
             });
 
         if (error) {
@@ -66,6 +75,54 @@ async function uploadFile(fileBuffer, filename, mimetype, bucket = 'uploads') {
     } catch (error) {
         logger.error('Error uploading file to Supabase Storage:', error);
         throw error;
+    }
+}
+
+/**
+ * Generate and upload optimized variants (_thumb.webp and _opt.webp)
+ * @param {Buffer} buffer - Original image buffer
+ * @param {string} filename - Original filename
+ * @param {string} bucket - Bucket name
+ * @param {boolean} isLogo - Whether it's a logo (affects fit strategy)
+ */
+async function generateAndUploadVariants(buffer, filename, bucket, isLogo = false) {
+    const extension = path.extname(filename).toLowerCase();
+    const baseName = filename.substring(0, filename.length - extension.length);
+    const thumbPath = `${baseName}_thumb.webp`;
+    const optPath = `${baseName}_opt.webp`;
+
+    try {
+        // 1. Generate Thumb (160x160)
+        const thumbBuffer = await sharp(buffer)
+            .rotate()
+            .resize(160, 160, { 
+                fit: isLogo ? 'contain' : 'cover',
+                background: { r: 0, g: 0, b: 0, alpha: 0 } 
+            })
+            .webp({ quality: 80 })
+            .toBuffer();
+
+        // 2. Generate Optimized (600x600)
+        const optBuffer = await sharp(buffer)
+            .rotate()
+            .resize(600, 600, { 
+                fit: 'inside', 
+                withoutEnlargement: true,
+                background: { r: 0, g: 0, b: 0, alpha: 0 }
+            })
+            .webp({ quality: 80 })
+            .toBuffer();
+
+        // 3. Upload variants with immutable cache
+        await Promise.all([
+            uploadFile(thumbBuffer, thumbPath, 'image/webp', bucket, { cacheControl: CACHE_CONTROL_IMMUTABLE }),
+            uploadFile(optBuffer, optPath, 'image/webp', bucket, { cacheControl: CACHE_CONTROL_IMMUTABLE })
+        ]);
+
+        logger.info(`Variants generated and uploaded for: ${filename}`);
+    } catch (error) {
+        // Log error but don't fail the main upload
+        logger.error(`Failed to generate variants for ${filename}:`, error);
     }
 }
 
@@ -138,10 +195,14 @@ async function uploadProfilePicture(fileBuffer, originalName, mimetype, userId) 
     const filename = generateUniqueFilename(originalName, userId, 'profiles');
     const result = await uploadFile(fileBuffer, filename, mimetype);
 
+    // Generate variants in background (don't await to keep upload fast)
+    // but the user wants to ensure they exist, so we'll await them for reliability in this pipeline
+    await generateAndUploadVariants(fileBuffer, filename, 'uploads', false);
+
     return {
         ...result,
-        optimizedUrl: getOptimizedImageUrl(result.publicUrl, { width: 400, height: 400 }),
-        thumbnailUrl: getOptimizedImageUrl(result.publicUrl, { width: 150, height: 150 })
+        optimizedUrl: result.publicUrl.replace(path.extname(filename), '_opt.webp'),
+        thumbnailUrl: result.publicUrl.replace(path.extname(filename), '_thumb.webp')
     };
 }
 
@@ -170,10 +231,12 @@ async function uploadCompanyLogo(fileBuffer, originalName, mimetype, userId) {
     const filename = generateUniqueFilename(originalName, userId, 'logos');
     const result = await uploadFile(fileBuffer, filename, mimetype);
 
+    await generateAndUploadVariants(fileBuffer, filename, 'uploads', true);
+
     return {
         ...result,
-        optimizedUrl: getOptimizedImageUrl(result.publicUrl, { width: 300, height: 300 }),
-        smallUrl: getOptimizedImageUrl(result.publicUrl, { width: 100, height: 100 })
+        optimizedUrl: result.publicUrl.replace(path.extname(filename), '_opt.webp'),
+        smallUrl: result.publicUrl.replace(path.extname(filename), '_thumb.webp')
     };
 }
 
