@@ -18,7 +18,8 @@ export class DashboardRenderer {
             reviews: document.getElementById('reviewsSection'),
             notifications: document.getElementById('notificationsSection'),
             campaigns: document.getElementById('campaignsSection'),
-            balancer: document.getElementById('balancerSection')
+            balancer: document.getElementById('balancerSection'),
+            outreachIntel: document.getElementById('outreachIntelSection')
         };
         
         this.navLinks = document.querySelectorAll('.sidebar-nav a[data-section]');
@@ -39,7 +40,10 @@ export class DashboardRenderer {
 
         // Initialize from URL hash or default to overview
         const handleHash = () => {
-            const hash = window.location.hash.replace('#', '') || 'overview';
+            const rawHash = window.location.hash.replace('#', '') || 'overview';
+            // Convert hyphenated-hash to camelCaseHash
+            const hash = rawHash.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+            
             if (this.sections[hash]) {
                 this.showSection(hash);
             }

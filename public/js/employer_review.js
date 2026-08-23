@@ -2,10 +2,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const jobId = urlParams.get('jobId');
 
+    // DOM Elements
+    const htmlTag = document.getElementById('htmlTag');
+    const langToggle = document.getElementById('langToggle');
+    const authSection = document.getElementById('authSection');
+    const emailState = document.getElementById('emailState');
+    const otpState = document.getElementById('otpState');
+    const reviewSection = document.getElementById('reviewSection');
+    const companyEmailInput = document.getElementById('companyEmail');
+    const displayEmail = document.getElementById('displayEmail');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const reviewCandidatesBtn = document.getElementById('reviewCandidatesBtn');
+    const autoEmailView = document.getElementById('autoEmailView');
+    const manualEmailView = document.getElementById('manualEmailView');
+    const autoDetectedEmail = document.getElementById('autoDetectedEmail');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
+    const backToEmailBtn = document.getElementById('backToEmailBtn');
+    const otpInputs = document.querySelectorAll('.otp-input-char');
+    const previewJobTitle = document.getElementById('previewJobTitle');
+    const previewAppCount = document.getElementById('previewAppCount');
+    const morphLangToggle = document.getElementById('morphLangToggle');
+    const analyzedBadge = document.getElementById('analyzedBadge');
+    const segStrong = document.getElementById('segStrong');
+    const segInterview = document.getElementById('segInterview');
+    const segBackup = document.getElementById('segBackup');
+    const segRejected = document.getElementById('segRejected');
+    const countStrong = document.getElementById('countStrong');
+    const countInterview = document.getElementById('countInterview');
+    const countBackup = document.getElementById('countBackup');
+    const countRejected = document.getElementById('countRejected');
+
     // State Management
     let currentLang = localStorage.getItem('hirly_lang') || 'en';
     let employerData = null;
     let detectedEmail = urlParams.get('email') || '';
+
+    // Tracking Helper
+    const trackEvent = async (eventType, metadata = {}) => {
+        const currentEmail = (companyEmailInput ? companyEmailInput.value.trim() : '') || detectedEmail || (displayEmail ? displayEmail.textContent.trim() : '');
+        try {
+            await fetch('/api/employer-review/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jobId: parseInt(jobId),
+                    email: currentEmail || 'anonymous',
+                    eventType: eventType,
+                    metadata: {
+                        ...metadata,
+                        url: window.location.href,
+                        referrer: document.referrer,
+                        lang: currentLang
+                    }
+                })
+            });
+        } catch (error) {
+            console.error('Tracking error:', error);
+        }
+    };
+
+    // Track Page Access
+    if (jobId) {
+        trackEvent('page_access');
+    }
 
     // Elite Avatar Fallback System
     const getApplicantAvatar = (app, sizeClasses = "w-full h-full", textClass = "text-xl") => {
@@ -373,26 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // DOM Elements
-    const htmlTag = document.getElementById('htmlTag');
-    const langToggle = document.getElementById('langToggle');
-    const authSection = document.getElementById('authSection');
-    const emailState = document.getElementById('emailState');
-    const otpState = document.getElementById('otpState');
-    const reviewSection = document.getElementById('reviewSection');
-    const companyEmailInput = document.getElementById('companyEmail');
-    const displayEmail = document.getElementById('displayEmail');
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    const reviewCandidatesBtn = document.getElementById('reviewCandidatesBtn');
-    const autoEmailView = document.getElementById('autoEmailView');
-    const manualEmailView = document.getElementById('manualEmailView');
-    const autoDetectedEmail = document.getElementById('autoDetectedEmail');
-    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-    const resendOtpBtn = document.getElementById('resendOtpBtn');
-    const backToEmailBtn = document.getElementById('backToEmailBtn');
-    const otpInputs = document.querySelectorAll('.otp-input-char');
-    const previewJobTitle = document.getElementById('previewJobTitle');
-    const previewAppCount = document.getElementById('previewAppCount');
+    // DOM Elements (Already declared at the top)
 
     // Review Elements
     const reviewJobTitle = document.getElementById('reviewJobTitle');
@@ -486,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    const morphLangToggle = document.getElementById('morphLangToggle');
+    // (Already declared at the top)
 
     langToggle.addEventListener('click', () => {
         updateLanguage(currentLang === 'en' ? 'ar' : 'en');
@@ -516,7 +557,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const analyzedCount = data.analyzedCount || 0;
                 
                 // Update Analyzed Badge
-                const analyzedBadge = document.getElementById('analyzedBadge');
                 if (analyzedBadge) {
                     analyzedBadge.textContent = `${analyzedCount}/${totalCount} analyzed`;
                 }
@@ -532,22 +572,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const divisor = totalAnalyzed || 1;
                 
                 // Update Bar
-                const segStrong = document.getElementById('segStrong');
-                const segInterview = document.getElementById('segInterview');
-                const segBackup = document.getElementById('segBackup');
-                const segRejected = document.getElementById('segRejected');
-
                 if (segStrong) segStrong.style.width = `${(counts.strong / divisor) * 100}%`;
                 if (segInterview) segInterview.style.width = `${(counts.interview / divisor) * 100}%`;
                 if (segBackup) segBackup.style.width = `${(counts.backup / divisor) * 100}%`;
                 if (segRejected) segRejected.style.width = `${(counts.reject / divisor) * 100}%`;
 
                 // Update Legend Counts
-                const countStrong = document.getElementById('countStrong');
-                const countInterview = document.getElementById('countInterview');
-                const countBackup = document.getElementById('countBackup');
-                const countRejected = document.getElementById('countRejected');
-
                 if (countStrong) countStrong.textContent = counts.strong;
                 if (countInterview) countInterview.textContent = counts.interview;
                 if (countBackup) countBackup.textContent = counts.backup;
@@ -1161,6 +1191,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const result = await response.json();
                 if (response.ok && result.success) {
+                    // Track Workspace Created
+                    trackEvent('workspace_created', { 
+                        companyName: signupData.companyName,
+                        industry: signupData.companyCategory
+                    });
+                    
                     alert(translations[currentLang].signup_success);
                     window.location.href = result.redirect || '/employer/hire_dashboard.html';
                 } else {
@@ -1223,6 +1259,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Track CTA Click
+        trackEvent('cta_click');
+
         // Disable both buttons and show loading state
         if (sendOtpBtn) {
             sendOtpBtn.disabled = true;
@@ -1246,6 +1285,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (emailState) emailState.classList.add('hidden');
                 if (otpState) otpState.classList.remove('hidden');
                 if (otpInputs && otpInputs[0]) otpInputs[0].focus();
+                
+                // Track OTP Stage Reached
+                trackEvent('otp_stage_reached');
             } else {
                 const data = await resp.json();
                 alert(data.error || 'Failed to send verification code.');
@@ -1292,6 +1334,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resp.ok) {
                 // Save email to localStorage for morph pre-fill fallback
                 localStorage.setItem('employer_review_email', email);
+                
+                // Track OTP Verification Success
+                trackEvent('otp_verify_success');
+                
                 loadDashboardData();
             } else {
                 const data = await resp.json();

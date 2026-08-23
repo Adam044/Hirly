@@ -82,6 +82,10 @@
                         <i class="fas fa-bullseye mr-3 w-5 text-lg group-hover:scale-110 transition-transform"></i>
                         <span>Outreach Leads</span>
                     </a>
+                    <a href="#outreach-intel" data-section="outreachIntel" class="flex items-center py-3 px-4 rounded-xl transition-all group">
+                        <i class="fas fa-funnel-dollar mr-3 w-5 text-lg group-hover:scale-110 transition-transform"></i>
+                        <span>Outreach Intel</span>
+                    </a>
                     <a href="/admin/live-view" class="flex items-center py-3 px-4 rounded-xl transition-all group bg-indigo-600/10 text-indigo-400 border border-indigo-500/20">
                         <i class="fas fa-satellite-dish mr-3 w-5 text-lg group-hover:animate-pulse"></i>
                         <span class="font-bold">Live View</span>
@@ -329,6 +333,63 @@
                         <div id="leadsLoadMoreContainer" class="p-6 border-t border-gray-100 text-center hidden">
                             <button id="loadMoreLeadsBtn" class="btn-saas-secondary text-xs uppercase tracking-widest px-8">
                                 Load More Leads
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Outreach Intelligence Section -->
+                <section id="outreachIntelSection" class="dashboard-section space-y-8">
+                    <div class="flex items-center justify-between section-header">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Outreach Intelligence</h2>
+                            <p class="text-sm text-gray-500 font-medium">Conversion funnel and engagement tracking for outreach leads</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button id="refreshOutreachIntelBtn" class="btn-saas-secondary flex items-center gap-2">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Refresh Data</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Funnel Overview -->
+                    <div id="outreachFunnel" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <!-- Funnel steps will be loaded dynamically -->
+                    </div>
+
+                    <div class="saas-card p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-gray-900">Recent Lead Activity</h3>
+                            <div class="flex items-center gap-2">
+                                <select id="intelEventTypeFilter" class="input-saas select-saas text-xs py-1 h-auto">
+                                    <option value="all">All Events</option>
+                                    <option value="page_access">Page Access</option>
+                                    <option value="cta_click">CTA Click</option>
+                                    <option value="otp_stage_reached">OTP Stage</option>
+                                    <option value="otp_verify_success">Verified</option>
+                                    <option value="workspace_created">Converted</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="saas-table">
+                                <thead>
+                                    <tr>
+                                        <th>Lead / Email</th>
+                                        <th>Job Title</th>
+                                        <th>Event</th>
+                                        <th>Time</th>
+                                        <th>Platform Info</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="outreachIntelTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div id="intelLoadMoreContainer" class="p-6 border-t border-gray-100 text-center hidden">
+                            <button id="loadMoreIntelBtn" class="btn-saas-secondary text-xs uppercase tracking-widest px-8">
+                                Load More Activity
                             </button>
                         </div>
                     </div>

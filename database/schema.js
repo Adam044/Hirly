@@ -592,6 +592,20 @@ async function initializeDatabaseSchema(pool) {
             );
         `);
 
+        // 39. Lead Tracking Table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS lead_tracking (
+                id SERIAL PRIMARY KEY,
+                job_id INTEGER NOT NULL REFERENCES jobs(id),
+                email TEXT NOT NULL,
+                event_type TEXT NOT NULL CHECK (event_type IN ('page_access', 'cta_click', 'otp_stage_reached', 'otp_verify_success', 'workspace_created')),
+                ip_address TEXT,
+                user_agent TEXT,
+                metadata JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         await client.query('COMMIT');
         logger.info('Full Database schema initialized successfully');
     } catch (error) {

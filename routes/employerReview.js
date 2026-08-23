@@ -3,7 +3,7 @@ const router = express.Router();
 const logger = require('../utils/logger');
 const EmployerReviewService = require('../services/employerReviewService');
 
-module.exports = function registerEmployerReviewRoutes(app, pool, { sendEmployerLeadOTPEmail }) {
+module.exports = function registerEmployerReviewRoutes(app, pool, { sendEmployerLeadOTPEmail, logLiveEvent }) {
     const service = new EmployerReviewService(pool);
 
     // 1. Send OTP to employer lead
@@ -165,6 +165,54 @@ module.exports = function registerEmployerReviewRoutes(app, pool, { sendEmployer
         } catch (error) {
             logger.error('Error in public preview data:', error);
             res.status(500).json({ title: 'Opportunity', count: 0 });
+        }
+    });
+
+    // 5. Track Lead Event
+    router.post('/track', async (req, res) => {
+        const { jobId, email, eventType, metadata } = req.body;
+        
+        if (!jobId || !email || !eventType) {
+            return res.status(400).json({ error: 'Missing required tracking fields.' });
+        }
+
+        try {
+            await pool.query(`
+                INSERT INTO lead_tracking (job_id, email, event_type, ip_address, user_agent, metadata)
+                VALUES ($1, $2, $3, $4, $5, $6)
+            `, [
+                jobId, 
+                email, 
+                eventType, 
+                req.ip, 
+                req.headers['user-agent'], 
+                metadata ? JSON.stringify(metadata) : null
+            ]);
+
+            // Real-time alert for Admin Command Center
+            if (logLiveEvent) {
+                const eventMap = {
+                    'page_access': 'accessed the Employer Review portal',
+                    'cta_click': 'clicked "Review Candidates"',
+                    'otp_stage_reached': 'reached OTP verification stage',
+                    'otp_verify_success': 'successfully verified their email',
+                    'workspace_created': 'successfully created their workspace! 🎉'
+                };
+                
+                const action = eventMap[eventType] || `performed ${eventType}`;
+                logLiveEvent('lead_conversion', `${email} ${action}`, {
+                    jobId,
+                    email,
+                    eventType,
+                    ip: req.ip
+                });
+            }
+            
+            res.json({ success: true });
+        } catch (error) {
+            logger.error('Error tracking lead event:', error);
+            // Don't fail the request for tracking errors to avoid UX disruption
+            res.json({ success: false, error: 'Failed to log tracking event.' });
         }
     });
 

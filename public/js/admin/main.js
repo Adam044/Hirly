@@ -20,6 +20,7 @@ import { initNotifications } from './sections/Notifications.js';
 import { initBalancer } from './sections/Balancer.js';
 import { initReviews } from './sections/Reviews.js';
 import { initCampaigns } from './sections/Campaigns.js';
+import { initOutreachIntel } from './sections/OutreachIntel.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Hirly Admin Dashboard Initializing...');
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initBalancer();
     initReviews();
     initCampaigns();
+    initOutreachIntel();
 
     // 3. Initialize Core Components (this will trigger the initial section load)
     const renderer = new DashboardRenderer();

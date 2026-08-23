@@ -195,6 +195,18 @@ export const updateOutreachEmail = async (jobId, email) => {
     return await handleFetchResponse(response);
 };
 
+// --- Outreach Intelligence ---
+export const getOutreachIntelStats = async () => {
+    const response = await fetch(`/admin/outreach-intel/stats?t=${Date.now()}`);
+    return await handleFetchResponse(response);
+};
+
+export const getOutreachIntelEvents = async (params) => {
+    const query = new URLSearchParams(params);
+    const response = await fetch(`/admin/outreach-intel/events?${query.toString()}`);
+    return await handleFetchResponse(response);
+};
+
 // --- Reviews ---
 export const getReviews = async () => {
     const response = await fetch(`/admin/reviews?t=${Date.now()}`);

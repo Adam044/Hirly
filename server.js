@@ -19,7 +19,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const compression = require('compression');
 const logger = require('./utils/logger');
-const { initRealtime, trackVisitor } = require('./realtime/manager');
+const { initRealtime, trackVisitor, logLiveEvent } = require('./realtime/manager');
 const errorHandler = require('./middleware/errorHandler');
 
 // Log server start with current settings
@@ -1403,7 +1403,10 @@ registerStorageRoutes(app, pool, {
 
 // --- Employer Review routes ---
 const registerEmployerReviewRoutes = require('./routes/employerReview');
-registerEmployerReviewRoutes(app, pool, { sendEmployerLeadOTPEmail });
+registerEmployerReviewRoutes(app, pool, { 
+    sendEmployerLeadOTPEmail,
+    logLiveEvent
+});
 
 // --- Pages routes (SPA) - Must be registered AFTER all API and Admin routes ---
 const registerPagesRoutes = require('./routes/pages');

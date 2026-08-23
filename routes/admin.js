@@ -21,6 +21,97 @@ module.exports = function registerAdminRoutes(app, pool, {
 }) {
   const router = express.Router();
 
+  // Outreach Intelligence Stats
+  router.get('/admin/outreach-intel/stats', isAuthenticated, isAdmin, async (req, res) => {
+    let client;
+    try {
+      client = await pool.connect();
+      
+      const statsQuery = `
+        SELECT 
+          event_type, 
+          COUNT(*) as count,
+          COUNT(DISTINCT email) as unique_leads
+        FROM lead_tracking
+        GROUP BY event_type
+      `;
+      
+      const statsRes = await client.query(statsQuery);
+      
+      const funnel = {
+        page_access: 0,
+        cta_click: 0,
+        otp_stage_reached: 0,
+        otp_verify_success: 0,
+        workspace_created: 0
+      };
+      
+      const uniqueFunnel = {
+        page_access: 0,
+        cta_click: 0,
+        otp_stage_reached: 0,
+        otp_verify_success: 0,
+        workspace_created: 0
+      };
+      
+      statsRes.rows.forEach(row => {
+        if (funnel.hasOwnProperty(row.event_type)) {
+          funnel[row.event_type] = parseInt(row.count);
+          uniqueFunnel[row.event_type] = parseInt(row.unique_leads);
+        }
+      });
+      
+      res.json({ success: true, funnel, uniqueFunnel });
+    } catch (error) {
+      logger.error('Error fetching outreach intel stats:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch stats.' });
+    } finally { if (client) client.release(); }
+  });
+
+  // Outreach Intelligence Events
+  router.get('/admin/outreach-intel/events', isAuthenticated, isAdmin, async (req, res) => {
+    let client;
+    try {
+      const { eventType = 'all', page = 1, limit = 20 } = req.query;
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      client = await pool.connect();
+      
+      let query = `
+        SELECT 
+          lt.*, 
+          j.title as job_title,
+          COALESCE(e.company_name, j.external_company_name) as company_name
+        FROM lead_tracking lt
+        JOIN jobs j ON lt.job_id = j.id
+        LEFT JOIN employers e ON j.employer_id = e.user_id
+      `;
+      
+      const params = [];
+      if (eventType !== 'all') {
+        query += ` WHERE lt.event_type = $1`;
+        params.push(eventType);
+      }
+      
+      query += ` ORDER BY lt.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+      params.push(parseInt(limit), offset);
+      
+      const eventsRes = await client.query(query, params);
+      
+      res.json({ 
+        success: true, 
+        events: eventsRes.rows,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          hasMore: eventsRes.rows.length === parseInt(limit)
+        }
+      });
+    } catch (error) {
+      logger.error('Error fetching outreach intel events:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch events.' });
+    } finally { if (client) client.release(); }
+  });
+
   router.get('/admin/dashboard-stats', isAuthenticated, isAdmin, async (req, res) => {
     let client;
     try {
