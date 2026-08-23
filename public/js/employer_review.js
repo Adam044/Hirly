@@ -6,6 +6,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLang = localStorage.getItem('hirly_lang') || 'en';
     let employerData = null;
     let detectedEmail = urlParams.get('email') || '';
+
+    // Elite Avatar Fallback System
+    const getApplicantAvatar = (app, sizeClasses = "w-full h-full", textClass = "text-xl") => {
+        const initials = `${(app.first_name || '').charAt(0)}${(app.last_name || '').charAt(0)}`.toUpperCase() || 'U';
+        const bgColors = ['bg-indigo-50', 'bg-emerald-50', 'bg-blue-50', 'bg-violet-50', 'bg-slate-50'];
+        const textColors = ['text-indigo-500', 'text-emerald-500', 'text-blue-500', 'text-violet-500', 'text-slate-500'];
+        const colorIdx = (app.application_id || 0) % bgColors.length;
+        
+        const fallbackHtml = `<div class="${sizeClasses} flex items-center justify-center ${bgColors[colorIdx]} ${textColors[colorIdx]} font-black ${textClass}">${initials}</div>`;
+
+        if (app.profile_picture_url) {
+            // Escape double quotes for the onerror attribute to prevent breaking the HTML structure
+            const escapedFallback = fallbackHtml.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+            return `<img src="${app.profile_picture_url}" class="${sizeClasses} object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null; this.parentElement.innerHTML='${escapedFallback}';">`;
+        }
+        return fallbackHtml;
+    };
+
     let filters = {
         verdict: 'all',
         minScore: 0,
@@ -89,16 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
             resend: "Resend code",
             change_email: "Change email",
             stat_applicants: "Applicants",
-            stat_high: "High Matches",
-            stat_strong: "Strong Matches",
-            stat_other: "Other Matches",
+            stat_elite: "Elite Match",
+            stat_strong: "Strong Match",
+            stat_potential: "Potential Fit",
+            stat_rejected: "Rejected",
             trust_marquee_label: "Trusted by Palestinian Industry Leaders",
             value_dna: "Deep Technical DNA Analysis",
             value_ranking: "Instant AI Candidate Ranking",
             verified_access: "Verified Portal",
             pipeline_status: "Candidate Pipeline Distribution",
             value_locked: "Value Locked",
-            pilot_title: "Hirly Pilot",
+            pilot_title: "Hirly",
             pilot_desc: "Candidates have been evaluated against the requirements of this opportunity.",
             conv_title: "Everything you need to hire better",
             card1_title: "AI Candidate Matching",
@@ -125,10 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
             missing_skills: "Missing Skills",
             interview_questions: "Suggested Interview Questions",
             locked_notice: "Unlock professional CVs and direct contact by claiming your workspace.",
-            verdict_strong: "Strong Hire",
-            verdict_interview: "Interview",
-            verdict_backup: "Backup",
-            verdict_reject: "Reject",
+            verdict_strong: "Elite Match",
+            verdict_interview: "Strong Match",
+            verdict_backup: "Potential Fit",
+            verdict_reject: "Rejected",
             years: "years",
             no_summary: "No AI summary available yet.",
             deep_report: "Deep Report",
@@ -199,13 +218,15 @@ document.addEventListener('DOMContentLoaded', () => {
             trust_label: "Trusted by industry leaders",
             trust_link: "Success Stories",
             intel_title: "Intelligence Report",
-            intel_subtitle: "Hirly AI has evaluated your entire talent pool",
+            intel_subtitle: "Hirly has evaluated your entire talent pool",
             stat_total: "Evaluated Profiles",
-            stat_top: "Strong Matches",
+            stat_top: "Elite Matches",
             feature_dna: "Technical DNA Matrices Ready",
             feature_verdict: "AI Behavioral Verdicts Generated",
             feature_ranking: "Instant Candidate Ranking Complete",
-            contact_us: "Contact Us"
+            contact_us: "Contact Us",
+            quick_support: "Quick Support",
+            contact_page: "Contact Page"
         },
         ar: {
             auth_title: "مرشحوك جاهزون للمراجعة",
@@ -229,16 +250,17 @@ document.addEventListener('DOMContentLoaded', () => {
             resend: "إعادة إرسال الرمز",
             change_email: "تغيير البريد الإلكتروني",
             stat_applicants: "متقدمين",
-            stat_high: "مطابقات عالية",
-            stat_strong: "مطابقات قوية",
-            stat_other: "مطابقات أخرى",
+            stat_elite: "مطابقة نخبوية",
+            stat_strong: "مطابقة قوية",
+            stat_potential: "فرصة محتملة",
+            stat_rejected: "مرفوض",
             trust_marquee_label: "موثوق من قِبَل رواد الصناعة الفلسطينيين",
             value_dna: "تحليل عميق للبصمة التقنية",
             value_ranking: "تصنيف فوري للمرشحين بالذكاء الاصطناعي",
             verified_access: "بوابة موثقة",
             pipeline_status: "توزيع مسار المرشحين",
             value_locked: "المحتوى مقفل",
-            pilot_title: "هايرلي بايلوت",
+            pilot_title: "Hirly",
             pilot_desc: "تم تقييم المرشحين بناءً على متطلبات هذه الفرصة.",
             conv_title: "كل ما تحتاجه للتوظيف بشكل أفضل",
             card1_title: "مطابقة المرشحين بالذكاء الاصطناعي",
@@ -265,10 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
             missing_skills: "المهارات المفقودة",
             interview_questions: "أسئلة المقابلة المقترحة",
             locked_notice: "افتح السير الذاتية المهنية والتواصل المباشر من خلال امتلاك مساحة عملك.",
-            verdict_strong: "توظيف قوي",
-            verdict_interview: "مقابلة",
-            verdict_backup: "احتياطي",
-            verdict_reject: "رفض",
+            verdict_strong: "مطابقة نخبوية",
+            verdict_interview: "مطابقة قوية",
+            verdict_backup: "فرصة محتملة",
+            verdict_reject: "مرفوض",
             years: "سنوات",
             no_summary: "لا يوجد ملخص ذكاء اصطناعي متاح حالياً.",
             deep_report: "تقرير عميق",
@@ -339,13 +361,15 @@ document.addEventListener('DOMContentLoaded', () => {
             create_workspace_btn: "أنشئ مساحة العمل الخاصة بي",
             finalizing: "جاري الإنهاء...",
             intel_title: "تقرير الذكاء الاصطناعي",
-            intel_subtitle: "قام ذكاء هايرلي بتقييم كامل قاعدة بيانات المتقدمين لديك",
+            intel_subtitle: "قام هايرلي بتقييم كامل قاعدة بيانات المتقدمين لديك",
             stat_total: "ملفات تم تقييمها",
-            stat_top: "مطابقات قوية",
+            stat_top: "مطابقات نخبوية",
             feature_dna: "مصفوفات البصمة التقنية جاهزة",
             feature_verdict: "تم إنشاء أحكام السلوك الآلية",
             feature_ranking: "اكتمل التصنيف الفوري للمرشحين",
-            contact_us: "اتصل بنا"
+            contact_us: "اتصل بنا",
+            quick_support: "الدعم السريع",
+            contact_page: "صفحة التواصل"
         }
     };
 
@@ -529,9 +553,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (countBackup) countBackup.textContent = counts.backup;
                 if (countRejected) countRejected.textContent = counts.reject;
 
-                // 2. Update Intelligence Report
-                document.getElementById('intelTotalApps').textContent = totalCount;
-                document.getElementById('intelTopMatches').textContent = counts.strong;
+                // Always show all filter chips for transparency
+                const strongChip = document.querySelector('.verdict-chip[data-verdict="Strong Hire"]');
+                if (strongChip) strongChip.style.display = 'block';
+                
+                const interviewChip = document.querySelector('.verdict-chip[data-verdict="Interview"]');
+                if (interviewChip) interviewChip.style.display = 'block';
+
+                const backupChip = document.querySelector('.verdict-chip[data-verdict="Backup"]');
+                if (backupChip) backupChip.style.display = 'block';
+
+                const rejectChip = document.querySelector('.verdict-chip[data-verdict="Reject"]');
+                if (rejectChip) rejectChip.style.display = 'block';
+
+                // 2. Update Intelligence Report with Dynamic Matching Logic
+                const totalCountEl = document.getElementById('intelTotalApps');
+                const topMatchesCountEl = document.getElementById('intelTopMatches');
+                const topMatchesLabelEl = document.querySelector('[data-t="stat_top"]');
+
+                if (totalCountEl) totalCountEl.textContent = totalCount;
+                
+                if (topMatchesCountEl && topMatchesLabelEl) {
+                    if (counts.strong > 0) {
+                        topMatchesCountEl.textContent = counts.strong;
+                        topMatchesLabelEl.textContent = translations[currentLang].stat_elite;
+                        topMatchesCountEl.classList.add('text-secondary');
+                        topMatchesCountEl.classList.remove('text-primary');
+                    } else if (counts.interview > 0) {
+                        topMatchesCountEl.textContent = counts.interview;
+                        topMatchesLabelEl.textContent = translations[currentLang].stat_strong;
+                        topMatchesCountEl.classList.add('text-primary');
+                        topMatchesCountEl.classList.remove('text-secondary');
+                    } else {
+                        topMatchesCountEl.textContent = totalAnalyzed;
+                        topMatchesLabelEl.textContent = translations[currentLang].stat_total;
+                        topMatchesCountEl.classList.remove('text-secondary', 'text-primary');
+                    }
+                }
             }
         } catch (e) {
             console.error('Job preview error:', e);
@@ -996,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     window.addEventListener('click', () => {
         if (wizardCategoryMenu) wizardCategoryMenu.classList.remove('show');
+        if (supportMenu) supportMenu.classList.remove('show');
     });
 
     // Password Requirements Validation
@@ -1114,6 +1173,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
+        });
+    }
+
+    // Support Dropdown Logic
+    const supportDropdownBtn = document.getElementById('supportDropdownBtn');
+    const supportMenu = document.getElementById('supportMenu');
+
+    if (supportDropdownBtn && supportMenu) {
+        supportDropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            supportMenu.classList.toggle('show');
         });
     }
 
@@ -1390,22 +1460,37 @@ document.addEventListener('DOMContentLoaded', () => {
         reviewJobTitle.textContent = data.job.title;
         reviewCompanyName.textContent = data.job.external_company_name;
 
-        statTotal.textContent = data.stats.total;
-        statHigh.textContent = data.stats.high;
-        statStrong.textContent = data.stats.strong;
-        statOther.textContent = data.stats.other;
+        // 4-Box Tier Grid: Elite, Strong, Potential, Rejected
+        const eliteCount = parseInt(data.stats.high) || 0;
+        const strongCount = parseInt(data.stats.strong) || 0;
+        const potentialCount = parseInt(data.stats.backup) || 0;
+        const rejectedCount = parseInt(data.stats.other) || 0;
 
-        // Dynamic Aha Moment text
+        const statElite = document.getElementById('statElite');
+        const statStrong = document.getElementById('statStrong');
+        const statPotential = document.getElementById('statPotential');
+        const statRejected = document.getElementById('statRejected');
+
+        if (statElite) statElite.textContent = eliteCount;
+        if (statStrong) statStrong.textContent = strongCount;
+        if (statPotential) statPotential.textContent = potentialCount;
+        if (statRejected) statRejected.textContent = rejectedCount;
+
+        // Dynamic Aha Moment text based on top available tier
         const pilotDesc = document.querySelector('[data-t="pilot_desc"]');
         if (pilotDesc) {
-            if (data.stats.high > 0) {
+            if (eliteCount > 0) {
                 pilotDesc.innerHTML = currentLang === 'en' 
-                    ? `We've identified <span class="font-black text-indigo-900">${data.stats.high} exceptional matches</span> for this role. Candidates have been evaluated against your requirements using Hirly's advanced AI pipeline.`
-                    : `لقد حددنا <span class="font-black text-indigo-900">${data.stats.high} مطابقة استثنائية</span> لهذا الدور. تم تقييم المرشحين بناءً على متطلباتك باستخدام نظام الذكاء الاصطناعي المتقدم من هايرلي.`;
-            } else if (data.stats.strong > 0) {
+                    ? `We've identified <span class="font-black text-indigo-900">${eliteCount} Elite Matches</span> for this role. Candidates have been evaluated against your requirements using Hirly's advanced AI pipeline.`
+                    : `لقد حددنا <span class="font-black text-indigo-900">${eliteCount} مطابقة نخبوية</span> لهذا الدور. تم تقييم المرشحين بناءً على متطلباتك باستخدام نظام الذكاء الاصطناعي المتقدم من هايرلي.`;
+            } else if (strongCount > 0) {
                 pilotDesc.innerHTML = currentLang === 'en'
-                    ? `We've found <span class="font-black text-indigo-900">${data.stats.strong} strong candidates</span> worth interviewing. Candidates have been evaluated against your requirements using Hirly's advanced AI pipeline.`
-                    : `لقد وجدنا <span class="font-black text-indigo-900">${data.stats.strong} مرشحاً قوياً</span> يستحقون المقابلة. تم تقييم المرشحين بناءً على متطلباتك باستخدام نظام الذكاء الاصطناعي المتقدم من هايرلي.`;
+                    ? `We've found <span class="font-black text-indigo-900">${strongCount} Strong Candidates</span> worth interviewing. Candidates have been evaluated against your requirements using Hirly's advanced AI pipeline.`
+                    : `لقد وجدنا <span class="font-black text-indigo-900">${strongCount} مرشحاً قوياً</span> يستحقون المقابلة. تم تقييم المرشحين بناءً على متطلباتك باستخدام نظام الذكاء الاصطناعي المتقدم من هايرلي.`;
+            } else {
+                pilotDesc.innerHTML = currentLang === 'en'
+                    ? `Hirly AI has completed the evaluation of your talent pool. All candidates have been analyzed against your specific requirements.`
+                    : `اكتمل تقييم ذكاء هايرلي لقاعدة بيانات المتقدمين لديك. تم تحليل جميع المرشحين بناءً على متطلباتك المحددة.`;
             }
         }
 
@@ -1433,8 +1518,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Reject': 'text-red-500 bg-red-50 border-red-100'
             }[app.verdict] || 'text-slate-400 bg-slate-50 border-slate-100';
 
-            const verdictLabel = translations[currentLang]['verdict_' + (app.verdict || 'backup').toLowerCase().replace(' ', '_')] || app.verdict;
+            let verdictLabel = translations[currentLang]['verdict_' + (app.verdict || 'backup').toLowerCase().replace(' ', '_')] || app.verdict;
             const score = app.match_score || 0;
+
+            // Score-Based Nuance: Protect Hirly's credibility
+            // If the verdict is "Interview" (Strong Match) but the score is low, use "Worth Interviewing"
+            if (app.verdict === 'Interview' && score < 60) {
+                verdictLabel = currentLang === 'en' ? 'Worth Interviewing' : 'يستحق المقابلة';
+            }
+
             const scoreColor = score >= 85 ? 'text-secondary' : (score >= 60 ? 'text-primary' : 'text-slate-400');
             const location = formatLocation(app.country, app.city);
 
@@ -1458,7 +1550,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             <div class="flex items-start gap-6">
                                 <div class="w-20 h-20 rounded-[2rem] bg-slate-50 overflow-hidden shrink-0 border border-slate-100 relative group/avatar">
-                                    <img src="${app.profile_picture_url || 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/default-avatar.png'}" class="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110">
+                                    ${getApplicantAvatar(app, 'w-full h-full', 'text-2xl')}
                                     <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity"></div>
                                 </div>
                                 <div>
@@ -1533,8 +1625,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="md:w-1/3 text-center md:text-left">
                     <div class="relative inline-block mb-8">
                         <div class="w-32 h-32 rounded-[32px] overflow-hidden border-4 border-slate-50 shadow-sm mx-auto md:mx-0 relative group">
-                            <img src="${app.profile_picture_url || 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/default-avatar.png'}" 
-                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            ${getApplicantAvatar(app, 'w-full h-full', 'text-4xl')}
                             <div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </div>
                         <div class="absolute -bottom-2 -right-2 w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-xs shadow-lg border-4 border-white">
@@ -1552,7 +1643,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100 text-center mb-8 relative overflow-hidden">
                         <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">${t.match}</div>
                         <div class="inline-block px-6 py-2 rounded-full text-sm font-black border ${verdictClass} relative z-10">
-                            ${t['verdict_' + (app.verdict || 'backup').toLowerCase().replace(' ', '_')] || app.verdict}
+                            ${(app.verdict === 'Interview' && (app.match_score || 0) < 60) 
+                                ? (currentLang === 'en' ? 'Worth Interviewing' : 'يستحق المقابلة')
+                                : (t['verdict_' + (app.verdict || 'backup').toLowerCase().replace(' ', '_')] || app.verdict)}
                         </div>
                         <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] z-0">
                             <i class="fas fa-fingerprint text-8xl"></i>
