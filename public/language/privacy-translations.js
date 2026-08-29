@@ -1,97 +1,94 @@
 // public/language/privacy-translations.js
 if (typeof window.addTranslations === 'function') {
     window.addTranslations({
-        "privacy_title": {
-            "en": "Privacy Policy - Hirly",
-            "ar": "سياسة الخصوصية - هايرلي"
-        },
-        "privacy_heading": {
+        "privacy_policy_title": {
             "en": "Privacy Policy",
             "ar": "سياسة الخصوصية"
         },
         "last_updated": {
-            "en": "Last Updated: December 27, 2025",
-            "ar": "آخر تحديث: 27 ديسمبر 2025"
+            "en": "Last Updated",
+            "ar": "آخر تحديث"
         },
-        "intro_heading": {
+        "last_updated_date": {
+            "en": "August 29, 2026",
+            "ar": "29 أغسطس 2026"
+        },
+        "privacy_intro_title": {
             "en": "1. Introduction",
             "ar": "1. مقدمة"
         },
-        "intro_text": {
-            "en": "At Hirly (هايرلي), we take your privacy seriously. This Privacy Policy explains how we collect, use, and protect your personal information when you use our platform.",
-            "ar": "في هايرلي (Hirly)، نحن نأخذ خصوصيتك على محمل الجد. تشرح سياسة الخصوصية هذه كيفية جمع واستخدام وحماية معلوماتك الشخصية عند استخدام منصتنا."
+        "privacy_intro_desc": {
+            "en": "Welcome to Hirly. We are committed to protecting your personal data and your right to privacy. This Privacy Policy explains how we collect, use, and share information when you use our platform.",
+            "ar": "مرحباً بك في هايرلي. نحن ملتزمون بحماية بياناتك الشخصية وحقك في الخصوصية. تشرح سياسة الخصوصية هذه كيفية جمع واستخدام ومشاركة المعلومات عند استخدام منصتنا."
         },
-        "data_collection_heading": {
+        "privacy_data_collection_title": {
             "en": "2. Information We Collect",
             "ar": "2. المعلومات التي نجمعها"
         },
-        "data_collection_text": {
+        "privacy_data_collection_desc": {
             "en": "We collect information that you provide directly to us, including:",
             "ar": "نقوم بجمع المعلومات التي تقدمها لنا مباشرة، بما في ذلك:"
         },
-        "data_list_1": {
-            "en": "Account details (name, email, password)",
-            "ar": "تفاصيل الحساب (الاسم، البريد الإلكتروني، كلمة المرور)"
+        "privacy_data_account": {
+            "en": "Account information (name, email, password)",
+            "ar": "معلومات الحساب (الاسم، البريد الإلكتروني، كلمة المرور)"
         },
-        "data_list_2": {
-            "en": "Profile information (CVs, portfolios, skills)",
-            "ar": "معلومات الملف الشخصي (السيرة الذاتية، معرض الأعمال، المهارات)"
+        "privacy_data_profile": {
+            "en": "Professional profile data (CV, skills, experience)",
+            "ar": "بيانات الملف الشخصي المهني (السيرة الذاتية، المهارات، الخبرة)"
         },
-        "data_list_3": {
-            "en": "Communication data between users",
-            "ar": "بيانات التواصل بين المستخدمين"
+        "privacy_data_comms": {
+            "en": "Communication records with other users",
+            "ar": "سجلات التواصل مع المستخدمين الآخرين"
         },
-        "smart_protection_heading": {
-            "en": "3. Smart Data Protection",
-            "ar": "3. حماية البيانات الذكية"
+        "privacy_data_payment": {
+            "en": "Payment information (processed securely via third-party providers)",
+            "ar": "معلومات الدفع (تتم معالجتها بشكل آمن عبر مزودي خدمة خارجيين)"
         },
-        "smart_protection_text": {
-            "en": "Our platform employs advanced encryption and anonymization techniques to ensure that your sensitive data remains private. We use specialized algorithms to match candidates with the best opportunities while maintaining the highest security standards.",
-            "ar": "تستخدم منصتنا تقنيات تشفير وإخفاء هوية متقدمة لضمان بقاء بياناتك الحساسة خاصة. نحن نستخدم خوارزميات متخصصة لمطابقة المرشحين مع أفضل الفرص مع الحفاظ على أعلى معايير الأمان."
+        "privacy_data_usage_title": {
+            "en": "3. How We Use Your Information",
+            "ar": "3. كيف نستخدم معلوماتك"
         },
-        "how_we_use_heading": {
-            "en": "4. How We Use Your Data",
-            "ar": "4. كيف نستخدم بياناتك"
+        "privacy_data_usage_desc": {
+            "en": "We use the collected data to provide and improve our services, including:",
+            "ar": "نحن نستخدم البيانات التي نجمعها لتقديم وتحسين خدماتنا، بما في ذلك:"
         },
-        "how_we_use_text": {
-            "en": "Your data is used to provide and improve our services, facilitate connections between freelancers and employers, and ensure platform security.",
-            "ar": "تُستخدم بياناتك لتقديم خدماتنا وتحسينها، وتسهيل الروابط بين المستقلين وأصحاب العمل، وضمان أمن المنصة."
+        "privacy_usage_connecting": {
+            "en": "Connecting professionals with job opportunities",
+            "ar": "ربط المهنيين بفرص العمل"
         },
-        "data_sharing_heading": {
-            "en": "5. Data Sharing",
-            "ar": "5. مشاركة البيانات"
+        "privacy_usage_verifying": {
+            "en": "Verifying user identities for platform security",
+            "ar": "التحقق من هويات المستخدمين لأمان المنصة"
         },
-        "data_sharing_text": {
-            "en": "We do not sell your personal data. We only share information with third parties when necessary to provide our services or when required by law.",
-            "ar": "نحن لا نبيع بياناتك الشخصية. نحن نشارك المعلومات فقط مع أطراف ثالثة عندما يكون ذلك ضرورياً لتقديم خدماتنا أو عندما يقتضي القانون ذلك."
+        "privacy_usage_notifications": {
+            "en": "Sending important account notifications",
+            "ar": "إرسال إشعارات الحساب الهامة"
         },
-        "advanced_processing_summary": {
-            "en": "Advanced Data Processing Disclosures",
-            "ar": "إفصاحات معالجة البيانات المتقدمة"
+        "privacy_usage_analytics": {
+            "en": "Analyzing platform usage to enhance user experience",
+            "ar": "تحليل استخدام المنصة لتحسين تجربة المستخدم"
         },
-        "ai_protection_text": {
-            "en": "To enhance the matching process, Hirly utilizes proprietary analytical models. These models process candidate profiles and job requirements to provide optimized recommendations. By using Hirly, you acknowledge that your professional data may be analyzed by these automated systems to improve your visibility to relevant employers and vice versa. This processing is designed to protect your professional interests by ensuring high-quality matches.",
-            "ar": "لتعزيز عملية المطابقة، تستخدم هايرلي نماذج تحليلية مملوكة لها. تقوم هذه النماذج بمعالجة ملفات تعريف المرشحين ومتطلبات الوظيفة لتقديم توصيات محسنة. باستخدام هايرلي، فإنك تقر بأن بياناتك المهنية قد يتم تحليلها بواسطة هذه الأنظمة المؤتمتة لتحسين ظهورك لأصحاب العمل ذوي الصلة والعكس صحيح. تم تصميم هذه المعالجة لحماية مصالحك المهنية من خلال ضمان مطابقة عالية الجودة."
+        "privacy_data_security_title": {
+            "en": "4. Data Security",
+            "ar": "4. أمن البيانات"
         },
-        "cookies_heading": {
-            "en": "6. Cookies & Tracking",
-            "ar": "6. ملفات تعريف الارتباط والتتبع"
+        "privacy_data_security_desc": {
+            "en": "We implement industry-standard security measures to protect your data. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.",
+            "ar": "نحن نطبق تدابير أمنية قياسية في الصناعة لحماية بياناتك. ومع ذلك، لا توجد وسيلة نقل عبر الإنترنت آمنة بنسبة 100٪، ولا يمكننا ضمان الأمان المطلق."
         },
-        "cookies_text": {
-            "en": "We use cookies to enhance your experience, remember your preferences, and analyze platform traffic. You can manage your cookie preferences through your browser settings.",
-            "ar": "نحن نستخدم ملفات تعريف الارتباط لتحسين تجربتك، وتذكر تفضيلاتك، وتحليل حركة المرور على المنصة. يمكنك إدارة تفضيلات ملفات تعريف الارتباط الخاصة بك من خلال إعدادات متصفحك."
+        "privacy_rights_title": {
+            "en": "5. Your Rights",
+            "ar": "5. حقوقك"
         },
-        "contact_info_heading": {
-            "en": "7. Contact Information",
-            "ar": "7. معلومات الاتصال"
-        },
-        "contact_info_text": {
-            "en": "If you have any questions about this Privacy Policy, please reach out to us through our contact page.",
-            "ar": "إذا كان لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى التواصل معنا من خلال صفحة الاتصال."
-        },
-        "contact_us_btn": {
-            "en": "Contact Us",
-            "ar": "اتصل بنا"
+        "privacy_rights_desc": {
+            "en": "You have the right to access, correct, or delete your personal information at any time via your account settings or by contacting our support team.",
+            "ar": "لديك الحق في الوصول إلى معلوماتك الشخصية أو تصحيحها أو حذفها في أي وقت عبر إعدادات حسابك أو عن طريق الاتصال بفريق الدعم لدينا."
         }
     });
+    
+    // Re-apply translations to the page once added
+    if (typeof window.applyTranslations === 'function') {
+        window.applyTranslations(window.currentLanguage || 'ar');
+    }
 }

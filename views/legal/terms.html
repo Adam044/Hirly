@@ -1,98 +1,67 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" id="htmlTag">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terms of Service | Hirly</title>
     <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/pages/page-legal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .legal-page-wrapper {
-            padding: 4rem 0;
-            background: var(--background-light);
-            min-height: 100vh;
-        }
-        .legal-container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 4rem;
-            border-radius: 32px;
-            box-shadow: var(--shadow-xl);
-            border: 1px solid var(--border-color);
-        }
-        .legal-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-        .legal-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--text-dark);
-            margin-bottom: 1rem;
-        }
-        .legal-date {
-            color: var(--text-light);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .legal-section {
-            margin-bottom: 3rem;
-        }
-        .legal-section h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 1.25rem;
-            border-left: 4px solid var(--primary);
-            padding-left: 1rem;
-        }
-        .legal-section p {
-            color: var(--text-body);
-            line-height: 1.8;
-            margin-bottom: 1rem;
-        }
-    </style>
 </head>
 <body>
     <div id="headerPlaceholder"></div>
-    <main class="legal-page-wrapper">
+    <main class="legal-page">
         <div class="legal-container">
             <header class="legal-header">
-                <h1 class="legal-title">Terms of Service</h1>
-                <span class="legal-date">Last Updated: August 18, 2026</span>
+                <h1 data-lang-key="terms_service_title">Terms of Service</h1>
+                <div class="last-updated">
+                    <i class="far fa-clock"></i>
+                    <span data-lang-key="last_updated">Last Updated</span>: <span data-lang-key="last_updated_date">August 29, 2026</span>
+                </div>
             </header>
 
-            <section class="legal-section">
-                <h2>1. Acceptance of Terms</h2>
-                <p>By accessing or using Hirly, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using this site.</p>
-            </section>
+            <div class="legal-card">
+                <section class="legal-section">
+                    <h2><i class="fas fa-check-double"></i> <span data-lang-key="terms_acceptance_title">1. Acceptance of Terms</span></h2>
+                    <p data-lang-key="terms_acceptance_desc">By accessing or using Hirly, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using this site.</p>
+                </section>
 
-            <section class="legal-section">
-                <h2>2. User Conduct</h2>
-                <p>Users are responsible for their own behavior on the platform. You agree not to post false information, impersonate others, or use the platform for any illegal activities.</p>
-            </section>
+                <section class="legal-section">
+                    <h2><i class="fas fa-user-shield"></i> <span data-lang-key="terms_conduct_title">2. User Conduct</span></h2>
+                    <p data-lang-key="terms_conduct_desc">Users are responsible for their own behavior on the platform. You agree not to post false information, impersonate others, or use the platform for any illegal activities.</p>
+                </section>
 
-            <section class="legal-section">
-                <h2>3. Intellectual Property</h2>
-                <p>The content, features, and functionality of Hirly are owned by us and are protected by international copyright, trademark, and other intellectual property laws.</p>
-            </section>
+                <section class="legal-section">
+                    <h2><i class="fas fa-copyright"></i> <span data-lang-key="terms_ip_title">3. Intellectual Property</span></h2>
+                    <p data-lang-key="terms_ip_desc">The content, features, and functionality of Hirly are owned by us and are protected by international copyright, trademark, and other intellectual property laws.</p>
+                </section>
 
-            <section class="legal-section">
-                <h2>4. Limitation of Liability</h2>
-                <p>Hirly shall not be liable for any indirect, incidental, or consequential damages resulting from the use or inability to use the platform.</p>
-            </section>
+                <section class="legal-section">
+                    <h2><i class="fas fa-exclamation-triangle"></i> <span data-lang-key="terms_liability_title">4. Limitation of Liability</span></h2>
+                    <p data-lang-key="terms_liability_desc">Hirly shall not be liable for any indirect, incidental, or consequential damages resulting from the use or inability to use the platform.</p>
+                </section>
 
-            <section class="legal-section">
-                <h2>5. Changes to Terms</h2>
-                <p>We reserve the right to modify these terms at any time. We will notify users of any significant changes by posting the new terms on this page.</p>
-            </section>
+                <section class="legal-section">
+                    <h2><i class="fas fa-edit"></i> <span data-lang-key="terms_changes_title">5. Changes to Terms</span></h2>
+                    <p data-lang-key="terms_changes_desc">We reserve the right to modify these terms at any time. We will notify users of any significant changes by posting the new terms on this page.</p>
+                </section>
+
+                <div id="legalFooterPlaceholder"></div>
+            </div>
         </div>
     </main>
     <div id="footerPlaceholder"></div>
+    <script src="/language/language.js"></script>
+    <script src="/language/terms-translations.js"></script>
     <script src="/components.js"></script>
-    <script src="/script.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/components/legal_footer.html')
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('legalFooterPlaceholder').innerHTML = html;
+                });
+        });
+    </script>
 </body>
 </html>

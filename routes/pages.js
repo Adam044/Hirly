@@ -56,7 +56,20 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     <link rel="alternate" hreflang="x-default" href="${currentUrl}" />
     `;
 
-    return html.replace('</head>', `${seoTags}\n</head>`);
+    html = html.replace('</head>', `${seoTags}\n</head>`);
+
+    // Inject Cookie Consent Component
+    const cookieConsentPath = path.join(VIEWS_DIR, 'components', 'cookie_consent.html');
+    if (fs.existsSync(cookieConsentPath)) {
+      const cookieConsentHtml = fs.readFileSync(cookieConsentPath, 'utf8');
+      if (html.includes('</body>')) {
+        html = html.replace('</body>', `${cookieConsentHtml}\n</body>`);
+      } else {
+        html += cookieConsentHtml;
+      }
+    }
+
+    return html;
   }
 
   async function sendSmartSEO(req, res, next, candidates) {
@@ -69,7 +82,26 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
 
     try {
       let html = fs.readFileSync(full, 'utf8');
+      
+      // Inject Global SEO Tags
       html = injectGlobalSEO(html, req);
+
+      // Page-specific SEO overrides
+      const page = path.basename(full, '.html');
+      if (page === 'index') {
+        html = html
+          .replace(/{{PAGE_TITLE}}/g, 'Hirly | The Professional Career Network for Palestine')
+          .replace(/{{PAGE_DESCRIPTION}}/g, 'Hirly is the elite career network connecting Palestinian talent with global opportunities. Discover jobs, hire professionals, and grow your career.');
+      } else if (page === 'jobs') {
+        html = html
+          .replace(/{{PAGE_TITLE}}/g, 'Explore Jobs | Hirly')
+          .replace(/{{PAGE_DESCRIPTION}}/g, 'Find your next career move. Browse thousands of jobs in Palestine and remote roles worldwide on Hirly.');
+      } else if (page === 'talent') {
+        html = html
+          .replace(/{{PAGE_TITLE}}/g, 'Hire Top Talent | Hirly')
+          .replace(/{{PAGE_DESCRIPTION}}/g, 'Discover elite Palestinian professionals. Filter by skills, experience, and location to find your next great hire.');
+      }
+
       res.send(html);
     } catch (err) {
       logger.error('SEO Injection Error:', err);
@@ -77,7 +109,63 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     }
   }
 
-  const ALLOWED_GROUPS = ['employer', 'user', 'admin', 'hirly', 'technical'];
+  async function injectProfileSEO(html, req, user) {
+    let client;
+    try {
+      client = await pool.connect();
+      let profileData = {};
+
+      if (user.user_type === 'professional') {
+        const profResult = await client.query(`
+          SELECT 
+            u.first_name, u.last_name, u.slug, u.profile_picture_url,
+            p.profession, p.bio, p.skills
+          FROM users u
+          JOIN professionals p ON u.id = p.user_id
+          WHERE u.id = $1
+        `, [user.id]);
+        
+        if (profResult.rows.length > 0) {
+          const prof = profResult.rows[0];
+          const name = `${prof.first_name} ${prof.last_name}`;
+          const bio = prof.bio || `${prof.profession || 'Professional'} with skills in ${prof.skills || 'various fields'}.`;
+          
+          html = html
+            .replace(/{{USER_NAME}}/g, name)
+            .replace(/{{USER_DESCRIPTION}}/g, bio.substring(0, 160).trim())
+            .replace(/{{USER_IMAGE}}/g, prof.profile_picture_url || 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/default-avatar.png')
+            .replace(/{{USER_SLUG}}/g, prof.slug);
+        }
+      } else if (user.user_type === 'employer') {
+        const empResult = await client.query(`
+          SELECT 
+            u.slug,
+            e.company_name, e.company_description, e.company_logo_path
+          FROM users u
+          JOIN employers e ON u.id = e.user_id
+          WHERE u.id = $1
+        `, [user.id]);
+
+        if (empResult.rows.length > 0) {
+          const emp = empResult.rows[0];
+          html = html
+            .replace(/{{COMPANY_NAME}}/g, emp.company_name || 'Hirly Partner')
+            .replace(/{{COMPANY_DESCRIPTION}}/g, (emp.company_description || 'Elite partner on Hirly Network.').substring(0, 160).trim())
+            .replace(/{{COMPANY_LOGO}}/g, emp.company_logo_path || 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg')
+            .replace(/{{USER_SLUG}}/g, emp.slug);
+        }
+      }
+      
+      return injectGlobalSEO(html, req);
+    } catch (error) {
+      logger.error('Profile SEO Injection Error:', error);
+      return injectGlobalSEO(html, req);
+    } finally {
+      if (client) client.release();
+    }
+  }
+
+  const ALLOWED_GROUPS = ['employer', 'user', 'admin', 'hirly', 'technical', 'legal'];
 
   router.get('/:group/:page.html', (req, res, next) => {
     const { group, page } = req.params;
@@ -108,7 +196,7 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     'index', 'signup', 'login', 'jobs', 'job_details', 'dashboard',
     'hire_dashboard', 'about', 'contact', 'post_job', 'ai',
     'profile', 'applicants', 'admin_dashboard',
-    'employer_profile', 'email_verification_pending', 'start', 'employers', 'services', 'interviews_analysis', 'talent', 'privacy', 'terms',
+    'employer_profile', 'email_verification_pending', 'start', 'employers', 'services', 'interviews_analysis', 'talent', 'privacy', 'terms', 'cookies',
     'for-individuals', 'for-companies', 'for-professionals', 'employer_review'
   ];
 
@@ -123,6 +211,7 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
         path.join('admin', `${page}.html`),
         path.join('hirly', `${page}.html`),
         path.join('technical', `${page}.html`),
+        path.join('legal', `${page}.html`),
         `${page}.html`
       ]);
     });
@@ -133,6 +222,7 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
         path.join('admin', `${page}.html`),
         path.join('hirly', `${page}.html`),
         path.join('technical', `${page}.html`),
+        path.join('legal', `${page}.html`),
         `${page}.html`
       ]);
     });
@@ -271,6 +361,10 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     sendSmartSEO(req, res, next, [path.join('legal', 'terms.html'), 'terms.html']);
   });
 
+  router.get(['/cookies', '/cookies.html'], (req, res, next) => {
+    sendSmartSEO(req, res, next, [path.join('legal', 'cookies.html'), 'cookies.html']);
+  });
+
   router.get(['/dashboard', '/dashboard.html'], isAuthenticated, isProfessional, (req, res, next) => {
     sendSmart(req, res, next, [path.join('user', 'dashboard.html'), 'dashboard.html']);
   });
@@ -295,20 +389,52 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     sendSmart(req, res, next, [path.join('employer', 'interviews_analysis.html'), 'interviews_analysis.html']);
   });
 
-  router.get('/profile/:id', (req, res, next) => {
-    sendSmart(req, res, next, [path.join('user', 'profile.html'), 'profile.html']);
+  router.get('/profile/:id', async (req, res, next) => {
+    const userId = req.params.id;
+    const candidates = [path.join('user', 'profile.html'), 'profile.html'];
+    const fullPath = resolveViewCandidates(candidates);
+    if (!fullPath) return next();
+
+    try {
+      const userResult = await pool.query('SELECT id, user_type FROM users WHERE id::text = $1', [userId]);
+      if (userResult.rows.length > 0) {
+        let html = fs.readFileSync(fullPath, 'utf8');
+        html = await injectProfileSEO(html, req, userResult.rows[0]);
+        res.send(html);
+      } else {
+        res.sendFile(fullPath);
+      }
+    } catch (error) {
+      res.sendFile(fullPath);
+    }
   });
 
   router.get('/profile.html', (req, res, next) => {
-    sendSmart(req, res, next, [path.join('user', 'profile.html'), 'profile.html']);
+    sendSmartSEO(req, res, next, [path.join('user', 'profile.html'), 'profile.html']);
   });
 
-  router.get('/employer_profile/:id', (req, res, next) => {
-    sendSmart(req, res, next, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
+  router.get('/employer_profile/:id', async (req, res, next) => {
+    const userId = req.params.id;
+    const candidates = [path.join('employer', 'employer_profile.html'), 'employer_profile.html'];
+    const fullPath = resolveViewCandidates(candidates);
+    if (!fullPath) return next();
+
+    try {
+      const userResult = await pool.query('SELECT id, user_type FROM users WHERE id::text = $1', [userId]);
+      if (userResult.rows.length > 0) {
+        let html = fs.readFileSync(fullPath, 'utf8');
+        html = await injectProfileSEO(html, req, userResult.rows[0]);
+        res.send(html);
+      } else {
+        res.sendFile(fullPath);
+      }
+    } catch (error) {
+      res.sendFile(fullPath);
+    }
   });
 
   router.get('/employer_profile.html', (req, res, next) => {
-    sendSmart(req, res, next, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
+    sendSmartSEO(req, res, next, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
   });
 
   router.get(['/admin_dashboard', '/admin_dashboard.html'], isAuthenticated, isAdmin, (req, res, next) => {
@@ -359,10 +485,18 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
         }
 
         // Serve the appropriate profile template with SEO injection
+        let candidates;
         if (user.user_type === 'professional') {
-          return sendSmartSEO(req, res, next, [path.join('user', 'profile.html'), 'profile.html']);
+          candidates = [path.join('user', 'profile.html'), 'profile.html'];
         } else if (user.user_type === 'employer') {
-          return sendSmartSEO(req, res, next, [path.join('employer', 'employer_profile.html'), 'employer_profile.html']);
+          candidates = [path.join('employer', 'employer_profile.html'), 'employer_profile.html'];
+        }
+
+        const fullPath = resolveViewCandidates(candidates);
+        if (fullPath) {
+          let html = fs.readFileSync(fullPath, 'utf8');
+          html = await injectProfileSEO(html, req, user);
+          return res.send(html);
         }
       }
       
@@ -373,6 +507,52 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
       next();
     } finally {
       if (client) client.release();
+    }
+  });
+
+  router.get('/robots.txt', (req, res) => {
+    const robots = `User-agent: *
+Allow: /
+Sitemap: https://hirly.net/sitemap.xml
+
+User-agent: GPTBot
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /hire_dashboard/`;
+    res.type('text/plain');
+    res.send(robots);
+  });
+
+  router.get('/sitemap.xml', async (req, res) => {
+    try {
+      const siteUrl = 'https://hirly.net';
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${siteUrl}/</loc><priority>1.0</priority></url>
+  <url><loc>${siteUrl}/jobs</loc><priority>0.9</priority></url>
+  <url><loc>${siteUrl}/talent</loc><priority>0.9</priority></url>
+  <url><loc>${siteUrl}/about</loc><priority>0.7</priority></url>
+  <url><loc>${siteUrl}/contact</loc><priority>0.7</priority></url>`;
+
+      // Add Jobs
+      const jobsResult = await pool.query('SELECT id, title, created_at FROM jobs WHERE status = \'open\' ORDER BY created_at DESC LIMIT 500');
+      jobsResult.rows.forEach(job => {
+        const slug = generateJobSlug(job);
+        xml += `\n  <url><loc>${siteUrl}/jobs/${job.id}/${slug}</loc><lastmod>${job.created_at.toISOString().split('T')[0]}</lastmod><priority>0.8</priority></url>`;
+      });
+
+      // Add Profiles
+      const usersResult = await pool.query('SELECT slug, created_at FROM users WHERE slug IS NOT NULL ORDER BY created_at DESC LIMIT 500');
+      usersResult.rows.forEach(user => {
+        xml += `\n  <url><loc>${siteUrl}/${user.slug}</loc><lastmod>${user.created_at.toISOString().split('T')[0]}</lastmod><priority>0.6</priority></url>`;
+      });
+
+      xml += '\n</urlset>';
+      res.type('application/xml');
+      res.send(xml);
+    } catch (error) {
+      logger.error('Sitemap Generation Error:', error);
+      res.status(500).send('Error generating sitemap');
     }
   });
 

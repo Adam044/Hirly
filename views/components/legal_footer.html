@@ -1,0 +1,63 @@
+<style>
+    .legal-nav-footer {
+        margin-top: 5rem;
+        padding-top: 3rem;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    .legal-nav-links {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .legal-nav-link {
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .legal-nav-link:hover {
+        color: #8b5cf6;
+    }
+    .legal-nav-link.active {
+        color: #0f172a;
+        pointer-events: none;
+    }
+    .legal-nav-link i {
+        font-size: 0.8rem;
+    }
+</style>
+
+<div class="legal-nav-footer">
+    <div class="legal-nav-links">
+        <a href="/privacy" class="legal-nav-link" id="nav-privacy">
+            <i class="fas fa-shield-alt"></i> Privacy Policy
+        </a>
+        <a href="/terms" class="legal-nav-link" id="nav-terms">
+            <i class="fas fa-file-contract"></i> Terms of Service
+        </a>
+        <a href="/cookies" class="legal-nav-link" id="nav-cookies">
+            <i class="fas fa-cookie-bite"></i> Cookie Policy
+        </a>
+    </div>
+    <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 500;">
+        Curated for the Palestinian professional network 🇵🇸
+    </p>
+</div>
+
+<script>
+    (function() {
+        const path = window.location.pathname;
+        if (path.includes('privacy')) document.getElementById('nav-privacy').classList.add('active');
+        if (path.includes('terms')) document.getElementById('nav-terms').classList.add('active');
+        if (path.includes('cookies')) document.getElementById('nav-cookies').classList.add('active');
+    })();
+</script>

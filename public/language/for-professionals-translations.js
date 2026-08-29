@@ -57,6 +57,11 @@ if (typeof window.addTranslations === 'function') {
         'professionals_cta_create': { 'ar': 'أنشئ ملفك المجاني', 'en': 'Create Your Free Profile' },
         'professionals_cta_browse': { 'ar': 'شاهد ملفات المهنيين', 'en': 'View Professional Profiles' }
     });
+
+    // Re-apply translations to the page once added
+    if (typeof window.applyTranslations === 'function') {
+        window.applyTranslations(window.currentLanguage || 'ar');
+    }
 } else {
     console.error('window.addTranslations is not defined. Ensure language.js is loaded correctly.');
 }

@@ -1,119 +1,79 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" id="htmlTag">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy | Hirly</title>
     <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/pages/page-legal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .legal-page-wrapper {
-            padding: 4rem 0;
-            background: var(--background-light);
-            min-height: 100vh;
-        }
-        .legal-container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 4rem;
-            border-radius: 32px;
-            box-shadow: var(--shadow-xl);
-            border: 1px solid var(--border-color);
-        }
-        .legal-header {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-        .legal-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--text-dark);
-            margin-bottom: 1rem;
-        }
-        .legal-date {
-            color: var(--text-light);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .legal-section {
-            margin-bottom: 3rem;
-        }
-        .legal-section h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 1.25rem;
-            border-left: 4px solid var(--primary);
-            padding-left: 1rem;
-        }
-        .legal-section p {
-            color: var(--text-body);
-            line-height: 1.8;
-            margin-bottom: 1rem;
-        }
-        .legal-section ul {
-            padding-left: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        .legal-section li {
-            color: var(--text-body);
-            margin-bottom: 0.5rem;
-            line-height: 1.6;
-        }
-    </style>
 </head>
 <body>
     <div id="headerPlaceholder"></div>
-    <main class="legal-page-wrapper">
+    <main class="legal-page">
         <div class="legal-container">
             <header class="legal-header">
-                <h1 class="legal-title">Privacy Policy</h1>
-                <span class="legal-date">Last Updated: August 18, 2026</span>
+                <h1 data-lang-key="privacy_policy_title">Privacy Policy</h1>
+                <div class="last-updated">
+                    <i class="far fa-clock"></i>
+                    <span data-lang-key="last_updated">Last Updated</span>: <span data-lang-key="last_updated_date">August 29, 2026</span>
+                </div>
             </header>
 
-            <section class="legal-section">
-                <h2>1. Introduction</h2>
-                <p>Welcome to Hirly. We are committed to protecting your personal data and your right to privacy. This Privacy Policy explains how we collect, use, and share information when you use our platform.</p>
-            </section>
+            <div class="legal-card">
+                <section class="legal-section">
+                    <h2><i class="fas fa-info-circle"></i> <span data-lang-key="privacy_intro_title">1. Introduction</span></h2>
+                    <p data-lang-key="privacy_intro_desc">Welcome to Hirly. We are committed to protecting your personal data and your right to privacy. This Privacy Policy explains how we collect, use, and share information when you use our platform.</p>
+                </section>
 
-            <section class="legal-section">
-                <h2>2. Information We Collect</h2>
-                <p>We collect information that you provide directly to us, including:</p>
-                <ul>
-                    <li>Account information (name, email, password)</li>
-                    <li>Professional profile data (CV, skills, experience)</li>
-                    <li>Communication records with other users</li>
-                    <li>Payment information (processed securely via third-party providers)</li>
-                </ul>
-            </section>
+                <section class="legal-section">
+                    <h2><i class="fas fa-database"></i> <span data-lang-key="privacy_data_collection_title">2. Information We Collect</span></h2>
+                    <p data-lang-key="privacy_data_collection_desc">We collect information that you provide directly to us, including:</p>
+                    <ul>
+                        <li data-lang-key="privacy_data_account">Account information (name, email, password)</li>
+                        <li data-lang-key="privacy_data_profile">Professional profile data (CV, skills, experience)</li>
+                        <li data-lang-key="privacy_data_comms">Communication records with other users</li>
+                        <li data-lang-key="privacy_data_payment">Payment information (processed securely via third-party providers)</li>
+                    </ul>
+                </section>
 
-            <section class="legal-section">
-                <h2>3. How We Use Your Information</h2>
-                <p>We use the collected data to provide and improve our services, including:</p>
-                <ul>
-                    <li>Connecting professionals with job opportunities</li>
-                    <li>Verifying user identities for platform security</li>
-                    <li>Sending important account notifications</li>
-                    <li>Analyzing platform usage to enhance user experience</li>
-                </ul>
-            </section>
+                <section class="legal-section">
+                    <h2><i class="fas fa-cog"></i> <span data-lang-key="privacy_data_usage_title">3. How We Use Your Information</span></h2>
+                    <p data-lang-key="privacy_data_usage_desc">We use the collected data to provide and improve our services, including:</p>
+                    <ul>
+                        <li data-lang-key="privacy_usage_connecting">Connecting professionals with job opportunities</li>
+                        <li data-lang-key="privacy_usage_verifying">Verifying user identities for platform security</li>
+                        <li data-lang-key="privacy_usage_notifications">Sending important account notifications</li>
+                        <li data-lang-key="privacy_usage_analytics">Analyzing platform usage to enhance user experience</li>
+                    </ul>
+                </section>
 
-            <section class="legal-section">
-                <h2>4. Data Security</h2>
-                <p>We implement industry-standard security measures to protect your data. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.</p>
-            </section>
+                <section class="legal-section">
+                    <h2><i class="fas fa-shield-alt"></i> <span data-lang-key="privacy_data_security_title">4. Data Security</span></h2>
+                    <p data-lang-key="privacy_data_security_desc">We implement industry-standard security measures to protect your data. However, no method of transmission over the Internet is 100% secure, and we cannot guarantee absolute security.</p>
+                </section>
 
-            <section class="legal-section">
-                <h2>5. Your Rights</h2>
-                <p>You have the right to access, correct, or delete your personal information at any time via your account settings or by contacting our support team.</p>
-            </section>
+                <section class="legal-section">
+                    <h2><i class="fas fa-user-check"></i> <span data-lang-key="privacy_rights_title">5. Your Rights</span></h2>
+                    <p data-lang-key="privacy_rights_desc">You have the right to access, correct, or delete your personal information at any time via your account settings or by contacting our support team.</p>
+                </section>
+
+                <div id="legalFooterPlaceholder"></div>
+            </div>
         </div>
     </main>
     <div id="footerPlaceholder"></div>
+    <script src="/language/language.js"></script>
+    <script src="/language/privacy-translations.js"></script>
     <script src="/components.js"></script>
-    <script src="/script.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/components/legal_footer.html')
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('legalFooterPlaceholder').innerHTML = html;
+                });
+        });
+    </script>
 </body>
 </html>

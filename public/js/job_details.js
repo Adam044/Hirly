@@ -106,11 +106,23 @@ document.addEventListener('DOMContentLoaded', async function() {
     // --- Share Logic ---
     const getShareContent = () => {
         if (!currentJobData) return null;
-        const companyName = currentJobData.employer_company_name || currentJobData.external_company_name || 'Hirly Network';
+        const companyName = currentJobData.display_employer_name || 'Hirly Network';
         const jobTitle = currentJobData.title;
-        const jobUrl = window.location.href;
-        const text = `Check out this job opportunity: ${jobTitle} at ${companyName}\n\nView details: ${jobUrl}`;
-        return { text, url: jobUrl, title: jobTitle };
+        
+        // Clean URL Strategy: Use the short SEO-friendly slug URL
+        const siteUrl = window.location.origin;
+        const jobId = currentJobData.id;
+        const companyForSlug = currentJobData.display_employer_name || 'Hirly';
+        
+        // Use the global slug generator (shared with jobs.js)
+        const slug = typeof window.generateJobSlug === 'function' 
+            ? window.generateJobSlug(jobTitle, companyForSlug)
+            : jobTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            
+        const cleanJobUrl = `${siteUrl}/jobs/${jobId}/${slug}`;
+        
+        const text = `Check out this job opportunity: ${jobTitle} at ${companyName}\n\nView details: ${cleanJobUrl}`;
+        return { text, url: cleanJobUrl, title: jobTitle };
     };
 
     if (shareWhatsAppBtn) {

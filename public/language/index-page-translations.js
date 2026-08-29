@@ -53,13 +53,13 @@ if (typeof window.addTranslations === 'function') {
         'post_job_now': { 'ar': 'انشر وظيفة الآن', 'en': 'Post a Job Now' },
 
         // New keys for Discover Talent Section
-        'discover_talent_eyebrow': { 'ar': 'اكتشف المواهب', 'en': 'Discover Talent' },
-        'discover_talent_title': { 'ar': 'محترفون متميزون', 'en': 'Featured Professionals' },
-        'discover_talent_desc': { 'ar': 'مواهب مختارة بعناية — بروفايلات كاملة بتقييمات ومهارات حقيقية', 'en': 'Hand-picked talent — complete profiles with real ratings and skills' },
-        'explore_all_talent': { 'ar': 'استكشف جميع المحترفين', 'en': 'Explore All Professionals' },
-        'show_more_talent': { 'ar': 'عرض محترفين آخرين', 'en': 'Show More Professionals' },
-        'no_talent_title': { 'ar': 'لا يوجد محترفون متاحون حالياً', 'en': 'No Professionals Available' },
-        'no_talent_desc': { 'ar': 'سيتم عرض المحترفين بمجرد اكتمال بروفايلاتهم', 'en': 'Professionals will be displayed once their profiles are complete' },
+        'discover_talent_eyebrow': { 'ar': 'اكتشف المهنيين', 'en': 'Discover Professionals' },
+        'discover_talent_title': { 'ar': 'مهنيون مميزون', 'en': 'Featured Professionals' },
+        'discover_talent_desc': { 'ar': 'مهنيون مختارون بعناية — ملفات شخصية كاملة بتقييمات ومهارات حقيقية', 'en': 'Hand-picked professionals — complete profiles with real ratings and skills' },
+        'explore_all_talent': { 'ar': 'استكشف جميع المهنيين', 'en': 'Explore All Professionals' },
+        'show_more_talent': { 'ar': 'عرض المزيد من المهنيين', 'en': 'Show More Professionals' },
+        'no_talent_title': { 'ar': 'لا يوجد مهنيون متاحون حالياً', 'en': 'No Professionals Available' },
+        'no_talent_desc': { 'ar': 'سيتم عرض المهنيين بمجرد اكتمال ملفاتهم الشخصية', 'en': 'Professionals will be displayed once their profiles are complete' },
 
         // New keys for Featured Companies
         'discover_companies_title': { 'ar': 'الشركاء المميزون', 'en': 'Featured Partners' },
@@ -200,7 +200,7 @@ if (typeof window.addTranslations === 'function') {
         'seg_companies_tag': { 'ar': 'للشركات والمؤسسات', 'en': 'For Companies & Organizations' },
         'seg_companies_title': { 'ar': 'وظّف بذكاء وإدارة متكاملة', 'en': 'Hire Smart with Full Management' },
         'seg_companies_desc': { 'ar': 'أنشر وظائف، واستقبل طلبات، وأجرِ مقابلات بالذكاء الاصطناعي، وأدر كامل عملية التوظيف من لوحة تحكم واحدة.', 'en': 'Post jobs, receive applications, conduct AI-powered interviews, and manage the entire hiring process from one dashboard.' },
-        'seg_professionals_tag': { 'ar': 'للمهنيين والمحترفين', 'en': 'For Professionals & Experts' },
+        'seg_professionals_tag': { 'ar': 'للمهنيين', 'en': 'For Professionals' },
         'seg_professionals_title': { 'ar': 'ابنِ هويتك المهنية الرقمية', 'en': 'Build Your Digital Professional Identity' },
         'seg_professionals_desc': { 'ar': 'أنشئ ملفك الشخصي، أضف خدماتك، اشترك بالشبكة، واحصل على رابطك ورمز QR الخاص.', 'en': 'Create your profile, add your services, join the network, and get your personal link and QR code.' },
         'seg_cta_learn_more': { 'ar': 'اكتشف المزيد', 'en': 'Learn more' },
@@ -213,7 +213,7 @@ if (typeof window.addTranslations === 'function') {
         'cta_title': { 'ar': 'هايرلي — فرصتك القادمة على بُعد خطوة', 'en': 'Hirly — Your Next Opportunity is One Step Away' },
         'cta_subtitle': { 'ar': 'سواء كنت تبحث أو تُوظّف أو تبني مسيرتك — هايرلي معك في كل خطوة.', 'en': 'Whether you are searching, hiring, or building your career — Hirly is with you every step of the way.' },
         'cta_create_account': { 'ar': 'إنشاء حساب مجاني', 'en': 'Create a Free Account' },
-        'cta_browse_talent': { 'ar': 'تصفح المواهب', 'en': 'Browse Talent' }
+        'cta_browse_talent': { 'ar': 'تصفح المهنيين', 'en': 'Browse Professionals' }
     });
 } else {
     console.error("window.addTranslations is not defined. Ensure language.js is loaded correctly before index-page-translations.js.");

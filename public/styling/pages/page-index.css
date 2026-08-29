@@ -352,15 +352,13 @@
     width: auto;
     max-width: 140px;
     object-fit: contain;
-    filter: grayscale(100%);
-    opacity: 0.6;
+    opacity: 0.9;
     transition: all 0.3s ease;
 }
 
 .marquee-logo-item:hover .marquee-logo-box img {
-    filter: grayscale(0%);
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
 .marquee-logo-placeholder {

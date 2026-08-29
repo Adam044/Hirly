@@ -222,10 +222,13 @@ module.exports = function registerJobsRoutes(app, pool, {
   router.get('/jobs/recent', async (req, res) => {
     let client;
     const limit = parseInt(req.query.limit) || 6;
+    const homeMode = req.query.mode === 'homepage';
+
     try {
       await autoCloseExpiredJobs();
       client = await pool.connect();
-      const result = await client.query(`
+      
+      let query = `
         SELECT j.id, j.title, j.city, j.country, j.category, j.job_site_type, j.created_at, j.job_image_path, j.job_type,
                COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS company_name,
                COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS company_logo,
@@ -234,9 +237,17 @@ module.exports = function registerJobsRoutes(app, pool, {
         LEFT JOIN employers e ON j.employer_id = e.user_id
         LEFT JOIN users u ON j.employer_id = u.id
         WHERE j.status = 'open' AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE)
-        ORDER BY j.created_at DESC
-        LIMIT $1
-      `, [limit]);
+      `;
+
+      if (homeMode) {
+        // Homepage constraints: Must have a logo, and title must be short (approx 4 words max)
+        query += ` AND COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) IS NOT NULL`;
+        query += ` AND array_length(regexp_split_to_array(trim(j.title), '\\s+'), 1) <= 4`;
+      }
+
+      query += ` ORDER BY j.created_at DESC LIMIT $1`;
+
+      const result = await client.query(query, [limit]);
       res.json({ success: true, jobs: result.rows });
     } catch (error) {
       logger.error('Error fetching recent jobs:', error);
@@ -262,7 +273,10 @@ module.exports = function registerJobsRoutes(app, pool, {
     handleValidationErrors,
     async (req, res) => {
     let client;
-    const { search, category, budget, location, country, jobSiteType, professionRequired, sort, jobType } = req.query;
+    try {
+      await autoCloseExpiredJobs();
+      client = await pool.connect();
+      const { search, category, budget, location, country, jobSiteType, professionRequired, sort, jobType } = req.query;
 
     const parseParamArray = (param) => {
         if (!param) return null;

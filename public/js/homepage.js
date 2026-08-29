@@ -109,7 +109,7 @@ async function fetchFreshJobs() {
     }
     
     try {
-        const response = await fetch('/api/jobs/recent?limit=10');
+        const response = await fetch('/api/jobs/recent?limit=10&mode=homepage');
         const data = await response.json();
         
         if (data.success && data.jobs && data.jobs.length > 0) {

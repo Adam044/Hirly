@@ -105,6 +105,11 @@ if (typeof window.addTranslations === 'function') {
         'construction_worker': { 'ar': 'عامل بناء', 'en': 'Construction Worker' },
         'load_more': { 'ar': 'تحميل المزيد', 'en': 'Load More' }
     });
+
+    // Re-apply translations to the page once added
+    if (typeof window.applyTranslations === 'function') {
+        window.applyTranslations(window.currentLanguage || 'ar');
+    }
 } else {
     console.error("window.addTranslations is not defined. Ensure language.js is loaded correctly before talent-translations.js.");
 }

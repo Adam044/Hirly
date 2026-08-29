@@ -75,7 +75,7 @@ window.translations = {
         'en': 'For Companies'
     },
     'for_professionals': {
-        'ar': 'للمحترفين',
+        'ar': 'للمهنيين',
         'en': 'For Professionals'
     },
     'select_your_language': {
@@ -578,6 +578,22 @@ window.translations = {
     "maybe_later": {
         "ar": "ربما لاحقاً",
         "en": "Maybe Later"
+    },
+    "cookie_title": {
+        "ar": "الخصوصية وملفات تعريف الارتباط",
+        "en": "Privacy & Cookies"
+    },
+    "cookie_message": {
+        "ar": "نحن نستخدم ملفات تعريف الارتباط لتحسين تجربتك المهنية، وتحليل حركة المرور، وتقديم فرص مخصصة. من خلال الاستمرار، فإنك توافق على استخدامنا لملفات تعريف الارتباط.",
+        "en": "We use cookies to enhance your professional experience, analyze traffic, and serve personalized opportunities. By continuing, you agree to our use of cookies."
+    },
+    "cookie_policy": {
+        "ar": "السياسة",
+        "en": "Policy"
+    },
+    "cookie_accept": {
+        "ar": "قبول الكل",
+        "en": "Accept All"
     }
 };
 

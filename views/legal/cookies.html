@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlTag">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Policy | Hirly</title>
+    <link rel="stylesheet" href="/styling/main.css">
+    <link rel="stylesheet" href="/styling/pages/page-legal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="headerPlaceholder"></div>
+    <main class="legal-page">
+        <div class="legal-container">
+            <header class="legal-header">
+                <h1 data-lang-key="cookies_policy_title">Cookie Policy</h1>
+                <div class="last-updated">
+                    <i class="far fa-clock"></i>
+                    <span data-lang-key="last_updated">Last Updated</span>: <span data-lang-key="last_updated_date">August 29, 2026</span>
+                </div>
+            </header>
+
+            <div class="legal-card">
+                <section class="legal-section">
+                    <h2><i class="fas fa-question-circle"></i> <span data-lang-key="what_are_cookies">1. What are Cookies?</span></h2>
+                    <p data-lang-key="cookies_definition">Cookies are small text files stored on your device when you visit websites. They help us remember your preferences and provide a more personalized experience.</p>
+                </section>
+
+                <section class="legal-section">
+                    <h2><i class="fas fa-cookie-bite"></i> <span data-lang-key="how_we_use_cookies">2. How We Use Cookies</span></h2>
+                    <p data-lang-key="cookies_usage_intro">We use cookies for the following purposes:</p>
+                    <ul>
+                        <li><strong data-lang-key="essential_cookies">Essential:</strong> <span data-lang-key="essential_cookies_desc">Necessary for the website to function, such as authentication and security.</span></li>
+                        <li><strong data-lang-key="functional_cookies">Functional:</strong> <span data-lang-key="functional_cookies_desc">Remembering your language preferences and UI settings.</span></li>
+                        <li><strong data-lang-key="analytics_cookies">Analytics:</strong> <span data-lang-key="analytics_cookies_desc">Understanding how users interact with Hirly to improve our features.</span></li>
+                        <li><strong data-lang-key="marketing_cookies">Marketing:</strong> <span data-lang-key="marketing_cookies_desc">Serving relevant job opportunities and career insights.</span></li>
+                    </ul>
+                </section>
+
+                <section class="legal-section">
+                    <h2><i class="fas fa-user-cog"></i> <span data-lang-key="managing_preferences">3. Managing Your Preferences</span></h2>
+                    <p data-lang-key="cookies_management_desc">You can control cookies through your browser settings. However, disabling essential cookies may affect your ability to use certain features of the platform.</p>
+                </section>
+
+                <div id="legalFooterPlaceholder"></div>
+            </div>
+        </div>
+    </main>
+    <div id="footerPlaceholder"></div>
+    
+    <script src="/language/language.js"></script>
+    <script src="/language/cookies-translations.js"></script>
+    <script src="/components.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/components/legal_footer.html')
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('legalFooterPlaceholder').innerHTML = html;
+                });
+        });
+    </script>
+</body>
+</html>

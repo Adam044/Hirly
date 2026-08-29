@@ -1,0 +1,177 @@
+<!-- Cookie Consent Banner -->
+<style>
+    #cookie-consent-banner {
+        position: fixed !important;
+        bottom: 24px !important;
+        left: 50% !important;
+        transform: translateX(-50%) translateY(120%);
+        width: 90% !important;
+        max-width: 800px !important;
+        z-index: 999999 !important;
+        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.8s ease;
+        opacity: 0;
+        pointer-events: none;
+    }
+    #cookie-consent-banner.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .hirly-cookie-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 24px;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        padding: 24px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 24px;
+    }
+    .hirly-cookie-content {
+        flex: 1;
+    }
+    .hirly-cookie-title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        color: #0f172a;
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .hirly-cookie-text {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.5;
+        margin: 0;
+    }
+    .hirly-cookie-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .hirly-cookie-btn-secondary {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        color: #64748b;
+        text-decoration: none;
+        padding: 10px 16px;
+        transition: color 0.2s;
+    }
+    .hirly-cookie-btn-secondary:hover {
+        color: #0f172a;
+    }
+    .hirly-cookie-btn-primary {
+        font-family: 'Inter', sans-serif;
+        background: #0f172a;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        white-space: nowrap;
+    }
+    .hirly-cookie-btn-primary:hover {
+        background: #1e293b;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+    }
+    .hirly-cookie-btn-primary:active {
+        transform: translateY(0);
+    }
+    .hirly-cookie-icon {
+        width: 32px;
+        height: 32px;
+        background: #f1f5f9;
+        color: #6366f1;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* RTL Support */
+    [dir="rtl"] .hirly-cookie-card {
+        flex-direction: row;
+    }
+    [dir="rtl"] .hirly-cookie-title {
+        flex-direction: row;
+    }
+    
+    @media (max-width: 640px) {
+        .hirly-cookie-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 16px;
+        }
+        .hirly-cookie-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+        .hirly-cookie-btn-primary {
+            flex: 1;
+            text-align: center;
+        }
+    }
+</style>
+
+<div id="cookie-consent-banner">
+    <div class="hirly-cookie-card">
+        <div class="hirly-cookie-content">
+            <h3 class="hirly-cookie-title">
+                <div class="hirly-cookie-icon">
+                    <i class="fas fa-cookie-bite"></i>
+                </div>
+                <span data-lang-key="cookie_title">Privacy & Cookies</span>
+            </h3>
+            <p class="hirly-cookie-text" data-lang-key="cookie_message">
+                We use cookies to enhance your professional experience, analyze traffic, and serve personalized opportunities.
+            </p>
+        </div>
+        <div class="hirly-cookie-actions">
+            <a href="/cookies" class="hirly-cookie-btn-secondary" data-lang-key="cookie_policy">
+                Policy
+            </a>
+            <button id="accept-cookies" class="hirly-cookie-btn-primary" data-lang-key="cookie_accept">
+                Accept All
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const banner = document.getElementById('cookie-consent-banner');
+    const acceptBtn = document.getElementById('accept-cookies');
+    
+    if (!localStorage.getItem('hirly_cookies_accepted')) {
+        setTimeout(() => {
+            banner.classList.add('show');
+            if (window.applyTranslations) {
+                window.applyTranslations(window.currentLanguage || 'ar', banner);
+            }
+        }, 3000);
+    } else {
+        banner.style.display = 'none';
+    }
+
+    acceptBtn.addEventListener('click', () => {
+        localStorage.setItem('hirly_cookies_accepted', 'true');
+        banner.classList.remove('show');
+        setTimeout(() => {
+            banner.style.display = 'none';
+        }, 800);
+    });
+})();
+</script>
