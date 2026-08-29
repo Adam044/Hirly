@@ -18,6 +18,7 @@ const cron = require('node-cron');
 const { logoFetcher } = require('../utils/companyLogoFetcher');
 const { DeepSeekAI } = require('../utils/ai/deepSeekAI');
 const PalestineCollector = require('./palestineCollector');
+const RemoteCollector = require('./remoteCollector');
 const { logLiveEvent } = require('../realtime/manager');
 
 // HTTPS agent that bypasses SSL verification for Jooble API
@@ -71,9 +72,19 @@ class JobAggregationService {
         this.scheduledTask = null;
         this.ai = new DeepSeekAI();
         this.collector = new PalestineCollector(this.addLog.bind(this), this.pool);
+        this.remoteCollector = new RemoteCollector(this.addLog.bind(this), this.pool);
         
         // Immediate processing for Intelligence Hub (page-by-page)
         this.collector.onJobsFound = async (jobs, sourceId) => {
+            if (jobs && jobs.length > 0) {
+                this.status.jobsFound += jobs.length;
+                await this.stageRawJobs(sourceId, jobs);
+                await this.processRawJobs(sourceId);
+            }
+        };
+
+        // Processing for Remote Jobs
+        this.remoteCollector.onJobsFound = async (jobs, sourceId) => {
             if (jobs && jobs.length > 0) {
                 this.status.jobsFound += jobs.length;
                 await this.stageRawJobs(sourceId, jobs);
@@ -183,6 +194,9 @@ class JobAggregationService {
             this.shouldStop = true;
             if (this.collector) {
                 this.collector.shouldStop = true;
+            }
+            if (this.remoteCollector) {
+                this.remoteCollector.shouldStop = true;
             }
             this.addLog('Stop request received. Finishing current task...', 'warn');
             return true;
@@ -413,6 +427,18 @@ class JobAggregationService {
                     return { status: 'error', reason: 'unsupported_region' };
                 }
             }
+
+            // 4. Remote Hub Sources
+            if (requestedSources.includes('remote')) {
+                tasks.push({
+                    source: 'remote',
+                    data: { id: 999, name: 'Remote Hub' }, // Virtual source
+                    country: 'Global',
+                    keyword: 'Remote',
+                    options: { lookbackDate }
+                });
+                this.addLog('Remote Hub: Global source added to queue.');
+            }
         }
 
         if (tasks.length === 0) {
@@ -454,6 +480,9 @@ class JobAggregationService {
                     } else if (task.source === 'intelligence') {
                         // Data is staged/processed page-by-page via onJobsFound callback
                         await this.collector.collect(task.data, task.options);
+                    } else if (task.source === 'remote') {
+                        // Remote jobs are staged/processed via onJobsFound callback
+                        await this.remoteCollector.collect(task.data, task.options);
                     }
                 } catch (error) {
                     this.addLog(`${task.source} error [${task.country}/${task.keyword}]: ${error.message}`, 'error');
@@ -1024,14 +1053,14 @@ class JobAggregationService {
                                 external_company_email: job.email // Pass email found by scraper to AI for verification
                             }, hirlyHierarchy);
 
-                            cleanJob.title = aiData.title || job.title;
-                            cleanJob.description = aiData.description || job.description;
-                            cleanJob.category = aiData.category || job.category;
+                            cleanJob.title = aiData.title || job.title || 'Untitled Job';
+                            cleanJob.description = aiData.description || job.description || job.job_text || 'No description provided. Please refer to the job source for details.';
+                            cleanJob.category = aiData.category || job.category || 'Other';
                             cleanJob.profession_required = aiData.professions || [];
-                            cleanJob.company_name = aiData.company || job.company_name;
-                            cleanJob.city = aiData.city || job.city;
-                            cleanJob.country = aiData.country || job.location;
-                            cleanJob.job_type = aiData.job_type || job.job_type;
+                            cleanJob.company_name = aiData.company || job.company_name || 'Private Company';
+                            cleanJob.city = aiData.city || job.city || 'Other';
+                            cleanJob.country = aiData.country || job.location || 'Unknown';
+                            cleanJob.job_type = aiData.job_type || job.job_type || 'Full-time';
                             cleanJob.job_site_type = aiData.job_site_type || job.job_site_type || 'On-site';
                             cleanJob.budget = aiData.salary || null;
                             cleanJob.currency = aiData.currency || null;

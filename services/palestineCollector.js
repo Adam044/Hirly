@@ -465,7 +465,10 @@ class PalestineCollector {
                                 '.job-description', 
                                 '.vacancy-details',
                                 '.post-content',
-                                '.description-content'
+                                '.description-content',
+                                '.list-3',
+                                '.view-content',
+                                'article'
                             ];
                             
                             let contentParts = [];
@@ -528,7 +531,7 @@ class PalestineCollector {
                             const company = document.querySelector('.employer-name, .company-name, .job-company, h1.company, h2.company, .post-content h2, .job-details h2')?.innerText;
                             
                             return { 
-                                full_text: [...new Set(contentParts)].join('\n\n') || '', 
+                                full_text: [...new Set(contentParts)].join('\n\n') || document.querySelector('.main-content, #content, .content')?.innerText || '', 
                                 page_logo: logo, 
                                 page_company: company,
                                 page_date: dateText,

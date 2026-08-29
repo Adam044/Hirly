@@ -227,6 +227,7 @@ async function startAggregation() {
     if (document.getElementById('source_jooble')?.checked) sources.push('jooble');
     if (document.getElementById('source_adzuna')?.checked) sources.push('adzuna');
     if (document.getElementById('source_intelligence')?.checked) sources.push('intelligence');
+    if (document.getElementById('source_remote')?.checked) sources.push('remote');
     
     if (countries.length === 0 && !deepScan && intelligenceSources.length === 0) {
         alert('Please select at least one country or intelligence category.');

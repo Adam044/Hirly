@@ -281,34 +281,54 @@ module.exports = function registerJobsRoutes(app, pool, {
     const professions = parseParamArray(professionRequired);
     const jobTypes = parseParamArray(jobType);
 
+    let selectClause = `
+      j.id, j.title, j.description, j.budget, j.currency, j.deadline, j.created_at, j.status, j.job_type, j.job_site_type, j.city, j.country, j.profession_required, j.job_image_path, j.category, j.gender_requirement, j.age_min, j.age_max,
+      j.is_external, j.external_source, j.external_apply_url,
+      COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS display_employer_name,
+      COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS display_employer_logo,
+      CASE 
+         WHEN j.is_external THEN 'external'
+         WHEN e.company_name IS NOT NULL THEN 'company'
+         ELSE 'individual'
+      END AS display_employer_type,
+      u.user_type AS employer_type,
+      u.id AS employer_user_id,
+      u.slug AS employer_slug
+    `;
+
+    let whereClause = `WHERE (j.status = 'open' OR j.status = 'closed') AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE)`;
+    const params = [];
+    let paramIndex = 1;
+    let rankClause = '';
+
+    if (search) {
+      // Use PostgreSQL Full-Text Search with weights and fallback to ILIKE
+      // A: Title (highest weight), B: Description, C: Company Name
+      whereClause += ` AND (
+        to_tsvector('english', concat_ws(' ', j.title, j.description, j.external_company_name, e.company_name)) @@ plainto_tsquery('english', $${paramIndex})
+        OR j.title ILIKE $${paramIndex + 1}
+        OR j.description ILIKE $${paramIndex + 1}
+        OR COALESCE(j.external_company_name, e.company_name) ILIKE $${paramIndex + 1}
+      )`;
+      
+      rankClause = `, ts_rank_cd(
+        setweight(to_tsvector('english', COALESCE(j.title, '')), 'A') || 
+        setweight(to_tsvector('english', COALESCE(j.description, '')), 'B') ||
+        setweight(to_tsvector('english', concat_ws(' ', j.external_company_name, e.company_name)), 'C'),
+        plainto_tsquery('english', $${paramIndex})
+      ) AS relevance_rank`;
+      
+      params.push(search, `%${search}%`);
+      paramIndex += 2;
+    }
+
     let query = `
-      SELECT j.id, j.title, j.description, j.budget, j.currency, j.deadline, j.created_at, j.status, j.job_type, j.job_site_type, j.city, j.country, j.profession_required, j.job_image_path, j.category, j.gender_requirement, j.age_min, j.age_max,
-             j.is_external, j.external_source, j.external_apply_url,
-             COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS display_employer_name,
-             COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS display_employer_logo,
-             CASE 
-                WHEN j.is_external THEN 'external'
-                WHEN e.company_name IS NOT NULL THEN 'company'
-                ELSE 'individual'
-             END AS display_employer_type,
-             u.user_type AS employer_type,
-             u.id AS employer_user_id,
-             u.slug AS employer_slug
+      SELECT ${selectClause} ${rankClause}
       FROM jobs j
       LEFT JOIN employers e ON j.employer_id = e.user_id
       LEFT JOIN users u ON j.employer_id = u.id
-      WHERE (j.status = 'open' OR j.status = 'closed') AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE)
+      ${whereClause}
     `;
-    const params = [];
-    let paramIndex = 1;
-    try {
-      await autoCloseExpiredJobs();
-      client = await pool.connect();
-      if (search) {
-        query += ` AND (j.title ILIKE $${paramIndex} OR j.description ILIKE $${paramIndex + 1})`;
-        params.push(`%${search}%`, `%${search}%`);
-        paramIndex += 2;
-      }
       if (categories && categories.length > 0) {
         query += ` AND j.category = ANY($${paramIndex}::text[])`;
         params.push(categories);
@@ -356,15 +376,22 @@ module.exports = function registerJobsRoutes(app, pool, {
         END ASC
       `;
 
-      if (sort) {
-        if (sort === 'budget_desc') query += ` ORDER BY ${deadlineSort}, j.budget DESC NULLS LAST`;
-        else if (sort === 'budget_asc') query += ` ORDER BY ${deadlineSort}, j.budget ASC NULLS LAST`;
-        else if (sort === 'date_desc' || sort === 'newest') query += ` ORDER BY ${deadlineSort}, j.created_at DESC`;
-        else if (sort === 'date_asc' || sort === 'oldest') query += ` ORDER BY ${deadlineSort}, j.created_at ASC`;
-        else query += ` ORDER BY ${deadlineSort}, j.created_at DESC`;
-      } else {
-        query += ` ORDER BY ${deadlineSort}, j.created_at DESC`;
+      let orderBy = `ORDER BY ${deadlineSort}`;
+      if (search) {
+        orderBy += `, relevance_rank DESC`;
       }
+
+      if (sort) {
+        if (sort === 'budget_desc') orderBy += `, j.budget DESC NULLS LAST`;
+        else if (sort === 'budget_asc') orderBy += `, j.budget ASC NULLS LAST`;
+        else if (sort === 'date_desc' || sort === 'newest') orderBy += `, j.created_at DESC`;
+        else if (sort === 'date_asc' || sort === 'oldest') orderBy += `, j.created_at ASC`;
+        else orderBy += `, j.created_at DESC`;
+      } else if (!search) {
+        orderBy += `, j.created_at DESC`;
+      }
+
+      query += ` ${orderBy}`;
       const result = await client.query(query, params);
       res.json({ success: true, jobs: result.rows });
     } catch (error) {
