@@ -678,6 +678,7 @@ html[dir="rtl"] .btn-luxe-outline i {
 }
 
 .home-job-tag.location { background: #f0f9ff; color: #0369a1; }
+.home-job-tag.remote { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
 .home-job-tag.type { background: #fff7ed; color: #c2410c; }
 .home-job-tag.category { background: #f0fdf4; color: #166534; }
 
@@ -1706,6 +1707,7 @@ html[dir="rtl"] .btn-text-luxe:hover i {
 }
 
 .home-job-tag.location { background: #f0f9ff; color: #0369a1; }
+.home-job-tag.remote { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
 .home-job-tag.type { background: #fff7ed; color: #c2410c; }
 .home-job-tag.category { background: #f0fdf4; color: #166534; }
 

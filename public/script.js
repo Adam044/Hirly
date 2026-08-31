@@ -161,22 +161,18 @@ function createJobCard(job, currentLanguage, translations, palestinianCitiesTran
         employerAvatarHtml = `<i class="fas fa-briefcase fallback-job-icon"></i>`;
     }
 
-    let translatedCity = t?.['not_available']?.[lang] || 'N/A';
-    if (job.city && palestinianCitiesTranslations) {
+    let translatedCity = '';
+    if (job.city && palestinianCitiesTranslations && job.city.toLowerCase() !== 'remote') {
         const cityKey = `city_${job.city.toLowerCase().replace(/'/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
         translatedCity = (palestinianCitiesTranslations[cityKey] && palestinianCitiesTranslations[cityKey][lang])
                             ? palestinianCitiesTranslations[cityKey][lang]
                             : job.city;
     }
 
-    let locationDisplay = '';
-    if (job.job_site_type === 'Remote') {
-        locationDisplay = t?.['remote']?.[lang] || 'Remote';
-    } else if (job.job_site_type === 'Hybrid' && job.city) {
-        locationDisplay = `Hybrid (${translatedCity})`;
-    } else {
-        locationDisplay = translatedCity;
-    }
+    let locationDisplay = translatedCity;
+
+    const isRemote = job.job_site_type === 'Remote';
+    const remoteTagHtml = isRemote ? `<span class="tag remote-tag" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);"><i class="fas fa-laptop-house"></i> ${t?.['remote']?.[lang] || 'Remote'}</span>` : '';
 
     let displayCategory = t?.['uncategorized']?.[lang] || 'Uncategorized';
     if (job.category) {
@@ -227,6 +223,7 @@ function createJobCard(job, currentLanguage, translations, palestinianCitiesTran
         <div class="job-tags">
             <span class="tag">${displayCategory}</span>
             <span class="tag job-type-tag">${displayJobType}</span>
+            ${remoteTagHtml}
         </div>
         <div class="view-details-btn-container">
             <span class="btn btn-secondary view-details-btn">

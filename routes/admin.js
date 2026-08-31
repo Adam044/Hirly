@@ -759,7 +759,7 @@ module.exports = function registerAdminRoutes(app, pool, {
         return res.status(503).json({ success: false, error: 'Job Aggregator Service is still initializing. Please try again in a few seconds.' });
       }
 
-      const { countries, keywords, deepScan, sources, intelligenceSources, maxPages, lookbackDays } = req.body;
+      const { countries, keywords, deepScan, sources, intelligenceSources, maxPages, lookbackDays, remoteMarketFilter } = req.body;
 
       // Run in background
       jobAggregator.runAggregation({ 
@@ -769,7 +769,8 @@ module.exports = function registerAdminRoutes(app, pool, {
         sources,
         intelligenceSources,
         maxPages,
-        lookbackDays
+        lookbackDays,
+        remoteMarketFilter
       }).catch(err => logger.error('Manual aggregation failed:', err));
 
       res.json({ success: true, message: 'Job aggregation triggered in background.' });

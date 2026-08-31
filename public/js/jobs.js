@@ -1474,8 +1474,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const currencySymbol = getCurrencySymbol(job.currency);
             let locationDisplay = '';
             
-            const cityExists = job.city && job.city.trim() !== '' && job.city.toLowerCase() !== 'n/a' && job.city.toLowerCase() !== 'unknown';
-            const countryExists = job.country && job.country.trim() !== '' && job.country.toLowerCase() !== 'n/a' && job.country.toLowerCase() !== 'unknown';
+            const cityExists = job.city && job.city.trim() !== '' && job.city.toLowerCase() !== 'n/a' && job.city.toLowerCase() !== 'unknown' && job.city.toLowerCase() !== 'remote';
+            const countryExists = job.country && job.country.trim() !== '' && job.country.toLowerCase() !== 'n/a' && job.country.toLowerCase() !== 'unknown' && job.country.toLowerCase() !== 'remote';
 
             let translatedCountry = '';
             if (countryExists) {
@@ -1498,12 +1498,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 locationDisplay = translatedCountry;
             } else if (translatedCity && translatedCity.toLowerCase() !== 'other' && job.city.toLowerCase() !== 'other') {
                 locationDisplay = translatedCity;
-            } else if (job.job_site_type) {
-                const siteTypeKey = job.job_site_type.toLowerCase().replace('-', '_');
-                locationDisplay = t?.[siteTypeKey]?.[lang] || job.job_site_type;
             } else {
-                locationDisplay = t?.['not_available']?.[lang] || 'N/A';
+                locationDisplay = '';
             }
+
+            const isRemote = job.job_site_type === 'Remote';
+            const remoteTagHtml = isRemote ? `
+                <span class="job-tag-item remote-tag" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <i class="fas fa-laptop-house"></i>
+                    <span>${t?.['remote']?.[lang] || 'Remote'}</span>
+                </span>` : '';
 
             // Get employer display info
             const { avatarHtml, avatarContainerClass, employerDisplayName } = getEmployerAvatarHtml(job);
@@ -1559,10 +1563,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     <div class="job-card-tags-container">
                         <div class="job-tags-row">
+                            ${locationDisplay ? `
                             <span class="job-tag-item location-tag">
                                 <i class="fas fa-map-marker-alt"></i>
                                 <span>${locationDisplay}</span>
-                            </span>
+                            </span>` : ''}
+                            ${remoteTagHtml}
                             <span class="job-tag-item category-tag">
                                 ${categoryIcon}
                                 <span>${displayCategory}</span>

@@ -239,6 +239,25 @@ class JobAggregationService {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    async ensureVirtualSources() {
+        const REMOTE_HUB_UUID = '00000000-0000-0000-0000-000000000999';
+        try {
+            // Fix: Use 'GL' instead of 'Global' to avoid character varying(2) length error
+            await this.pool.query(`
+                INSERT INTO job_sources (id, name, type, country_code, active, priority)
+                VALUES ($1, 'Remote Hub', 'api', 'GL', true, 5)
+                ON CONFLICT (id) DO NOTHING
+            `, [REMOTE_HUB_UUID]);
+            
+            // Also ensure it's active if it exists
+            await this.pool.query(`
+                UPDATE job_sources SET active = true WHERE id = $1
+            `, [REMOTE_HUB_UUID]);
+        } catch (error) {
+            this.addLog(`Failed to ensure virtual sources: ${error.message}`, 'error');
+        }
+    }
+
     /**
      * Main aggregation method
      */
@@ -247,6 +266,9 @@ class JobAggregationService {
             this.addLog('Aggregation already in progress. Skipping.', 'warn');
             return { status: 'skipped', reason: 'already_running' };
         }
+
+        // Ensure Virtual Sources Exist (Remote Hub, etc.)
+        await this.ensureVirtualSources();
 
         // Reset counters at the very beginning
         this.status.jobsFound = 0;
@@ -432,7 +454,7 @@ class JobAggregationService {
             if (requestedSources.includes('remote')) {
                 tasks.push({
                     source: 'remote',
-                    data: { id: 999, name: 'Remote Hub' }, // Virtual source
+                    data: { id: '00000000-0000-0000-0000-000000000999', name: 'Remote Hub' }, 
                     country: 'Global',
                     keyword: 'Remote',
                     options: { lookbackDate }
@@ -482,7 +504,10 @@ class JobAggregationService {
                         await this.collector.collect(task.data, task.options);
                     } else if (task.source === 'remote') {
                         // Remote jobs are staged/processed via onJobsFound callback
-                        await this.remoteCollector.collect(task.data, task.options);
+                        await this.remoteCollector.collect(task.data, {
+                            ...task.options,
+                            remoteMarketFilter: options.remoteMarketFilter
+                        });
                     }
                 } catch (error) {
                     this.addLog(`${task.source} error [${task.country}/${task.keyword}]: ${error.message}`, 'error');
@@ -590,6 +615,21 @@ class JobAggregationService {
 
                     const payload = rawJob.raw_payload;
                     
+                    // EXTRA VALIDATION for Remote Hub
+                    if (rawJob.source_id === '00000000-0000-0000-0000-000000000999') {
+                        const isStrictlyRemote = this.remoteCollector.isStrictlyRemote({
+                            title: payload.title,
+                            location: payload.location,
+                            job_text: rawJob.job_text
+                        });
+                        
+                        if (!isStrictlyRemote) {
+                            await this.pool.query("UPDATE raw_jobs SET status = 'failed', updated_at = NOW() WHERE id = $1", [rawJob.id]);
+                            this.addLog(`[RemoteHub] Blocked non-remote job from saving: ${payload.title}`, 'warn');
+                            return false;
+                        }
+                    }
+
                     // Map to jobs structure for saveJobs
                     // CRITICAL: Include the high-fidelity job_text from the dedicated column
                     const jobToSave = {
@@ -995,15 +1035,29 @@ class JobAggregationService {
                         const normTitle = this.normalizeString(job.title);
                         const normCompany = this.normalizeString(job.company_name);
                         const normCity = this.normalizeString(job.city);
+                        const isRemote = job.job_site_type === 'Remote';
 
-                        const semanticMatch = await client.query(
-                            `SELECT id FROM jobs 
-                             WHERE (LOWER(title) = LOWER($1) OR LOWER(title) = $2)
-                             AND (LOWER(external_company_name) = LOWER($3) OR LOWER(external_company_name) = $4)
-                             AND (LOWER(city) = LOWER($5) OR LOWER(city) = $6)
-                             AND created_at > NOW() - INTERVAL '60 days'`,
-                            [job.title, normTitle, job.company_name, normCompany, job.city, normCity]
-                        );
+                        let semanticMatch;
+                        if (isRemote) {
+                            // For remote jobs, we ignore city for deduplication as it's often varied (Remote, Global, Anywhere)
+                            semanticMatch = await client.query(
+                                `SELECT id FROM jobs 
+                                 WHERE (LOWER(title) = LOWER($1) OR LOWER(title) = $2)
+                                 AND (LOWER(external_company_name) = LOWER($3) OR LOWER(external_company_name) = $4)
+                                 AND job_site_type = 'Remote'
+                                 AND created_at > NOW() - INTERVAL '60 days'`,
+                                [job.title, normTitle, job.company_name, normCompany]
+                            );
+                        } else {
+                            semanticMatch = await client.query(
+                                `SELECT id FROM jobs 
+                                 WHERE (LOWER(title) = LOWER($1) OR LOWER(title) = $2)
+                                 AND (LOWER(external_company_name) = LOWER($3) OR LOWER(external_company_name) = $4)
+                                 AND (LOWER(city) = LOWER($5) OR LOWER(city) = $6)
+                                 AND created_at > NOW() - INTERVAL '60 days'`,
+                                [job.title, normTitle, job.company_name, normCompany, job.city, normCity]
+                            );
+                        }
 
                         if (semanticMatch.rows.length > 0) {
                             return { status: 'duplicate', title: job.title, reason: 'semantic_match' };

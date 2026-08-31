@@ -106,6 +106,18 @@ function initializeEventListeners() {
         startBtn.addEventListener('click', startAggregation);
     }
 
+    // NEW: Start remote hub button
+    const startRemoteBtn = document.getElementById('startRemoteBtn');
+    if (startRemoteBtn) {
+        startRemoteBtn.addEventListener('click', startRemoteAggregation);
+    }
+
+    // NEW: Stop remote hub button
+    const stopRemoteBtn = document.getElementById('stopRemoteBtn');
+    if (stopRemoteBtn) {
+        stopRemoteBtn.addEventListener('click', stopAggregation);
+    }
+
     // Stop aggregation button
     const stopBtn = document.getElementById('stopBtn');
     if (stopBtn) {
@@ -203,6 +215,66 @@ function getSelectedCountries() {
     }
     
     return countries;
+}
+
+/**
+ * Start only Remote Hub aggregation
+ */
+async function startRemoteAggregation() {
+    const startRemoteBtn = document.getElementById('startRemoteBtn');
+    const stopRemoteBtn = document.getElementById('stopRemoteBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const remoteKeywordsInput = document.getElementById('remoteKeywords');
+    
+    // Parse keywords
+    const keywordsRaw = remoteKeywordsInput?.value || '';
+    const keywords = keywordsRaw.split(',')
+        .map(k => k.trim())
+        .filter(k => k.length > 0);
+        
+    const finalKeywords = keywords.length > 0 ? keywords : DEFAULT_KEYWORDS;
+    const lookbackDays = parseInt(document.getElementById('remoteLookbackDays')?.value || '7');
+    const remoteMarketFilter = document.getElementById('remoteMarketFilter')?.value || 'all';
+
+    // Update UI
+    startRemoteBtn.disabled = true;
+    startRemoteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> DOMINATING...';
+    if (stopRemoteBtn) stopRemoteBtn.style.display = 'block';
+    if (stopBtn) stopBtn.style.display = 'block';
+    
+    updateWorkBadge('running', 'Running Remote Hub...');
+    
+    try {
+        const response = await fetch('/admin/trigger-job-aggregation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sources: ['remote'],
+                keywords: finalKeywords,
+                lookbackDays: lookbackDays,
+                remoteMarketFilter: remoteMarketFilter,
+                countries: ['Global']
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Remote Hub Domination started!', 'success');
+            startStatusPolling();
+        } else {
+            throw new Error(data.error || 'Failed to start remote aggregation');
+        }
+    } catch (error) {
+        console.error('Error starting remote aggregation:', error);
+        showNotification('Error: ' + error.message, 'error');
+        startRemoteBtn.disabled = false;
+        startRemoteBtn.innerHTML = '<i class="fas fa-bolt"></i> START REMOTE AGGREGATION';
+        if (stopBtn) stopBtn.style.display = 'none';
+        updateWorkBadge('idle', 'Idle');
+    }
 }
 
 /**
@@ -454,6 +526,13 @@ function startStatusPolling() {
                     
                     // Reset UI
                     document.getElementById('startBtn').style.display = 'block';
+                    const startRemoteBtn = document.getElementById('startRemoteBtn');
+                    const stopRemoteBtn = document.getElementById('stopRemoteBtn');
+                    if (startRemoteBtn) {
+                        startRemoteBtn.disabled = false;
+                        startRemoteBtn.innerHTML = '<i class="fas fa-bolt"></i> START REMOTE';
+                    }
+                    if (stopRemoteBtn) stopRemoteBtn.style.display = 'none';
                     document.getElementById('stopBtn').style.display = 'none';
                     updateWorkBadge('idle', 'Idle');
                 }

@@ -287,9 +287,61 @@
         </header>
 
         <div class="grid">
-            <!-- Controls -->
-            <div class="card">
-                <h3><i class="fas fa-cog"></i> Configuration</h3>
+            <!-- Left Column: Controls -->
+            <div class="col-left">
+                <!-- NEW: Remote Hub Dominance Card -->
+                <div class="card" style="border: 2px solid var(--primary); background: linear-gradient(145deg, #1e293b, #0f172a);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                        <h3 style="margin:0; color: var(--primary);"><i class="fas fa-globe"></i> Remote Hub Dominance</h3>
+                        <span class="badge badge-working" style="background: #3b82f6; font-size: 10px;">MAX POWER</span>
+                    </div>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px">
+                        Aggregated from 14+ elite global sources including WWR, Remote OK, Himalayas, and specialized tech boards.
+                    </p>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label class="stat-label">Remote Keywords (Comma separated)</label>
+                        <input type="text" id="remoteKeywords" class="btn btn-outline" style="width:100%; text-align:left; padding: 10px; margin-top:5px; background: rgba(0,0,0,0.2);" placeholder="e.g. React, Node, UI/UX, Marketing">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label class="stat-label">Smart Guard: Lookback Period</label>
+                        <select id="remoteLookbackDays" class="btn btn-outline" style="width:100%; padding: 10px; margin-top:5px; background: rgba(0,0,0,0.2);">
+                            <option value="1">Past 24 Hours</option>
+                            <option value="3">Past 3 Days</option>
+                            <option value="7" selected>Past 7 Days</option>
+                            <option value="14">Past 14 Days</option>
+                            <option value="30">Past 30 Days</option>
+                            <option value="0">No Limit (Scan Everything)</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label class="stat-label">Target Market (Arab vs Non-Arab)</label>
+                        <select id="remoteMarketFilter" class="btn btn-outline" style="width:100%; padding: 10px; margin-top:5px; background: rgba(0,0,0,0.2);">
+                            <option value="all" selected>All (Global Domination)</option>
+                            <option value="arab">Arab World Only (MENA Remote)</option>
+                            <option value="non-arab">Non-Arab Only (Global West)</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button id="startRemoteBtn" class="btn btn-primary" style="flex: 2; background: linear-gradient(90deg, #3b82f6, #2563eb); border: none; padding: 15px; font-size: 16px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+                            <i class="fas fa-bolt"></i> START REMOTE
+                        </button>
+                        <button id="stopRemoteBtn" class="btn btn-outline" style="flex: 1; border-color:var(--danger); color:var(--danger); display:none">
+                            <i class="fas fa-stop"></i> STOP
+                        </button>
+                    </div>
+                    
+                    <p style="font-size:10px; color:var(--text-muted); margin-top:15px; text-align:center; font-style: italic">
+                        *Full domination mode: High-fidelity extraction & AI cleaning enabled.
+                    </p>
+                </div>
+
+                <!-- Existing Configuration Card -->
+                <div class="card">
+                    <h3><i class="fas fa-cog"></i> Configuration</h3>
                 
                 <div style="margin-top:20px">
                     <label class="stat-label">Select Sources</label>
@@ -305,10 +357,6 @@
                         <div class="checkbox-item">
                             <input type="checkbox" id="source_intelligence" value="intelligence" checked>
                             <label for="source_intelligence">Intelligence Hub</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="source_remote" value="remote" checked>
-                            <label for="source_remote">Remote Hub (Global)</label>
                         </div>
                     </div>
                 </div>
@@ -421,9 +469,10 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Status & Logs -->
-            <div class="card">
+        <!-- Status & Logs -->
+        <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center">
                     <h3><i class="fas fa-terminal"></i> Live Progress</h3>
                     <span id="workBadge" class="badge badge-idle">Idle</span>

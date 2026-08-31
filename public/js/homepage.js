@@ -150,8 +150,8 @@ function formatLocationDisplay(jobOrTalent, lang) {
     const t = window.translations;
     const cityTranslations = window.palestinianCitiesTranslations;
     
-    const cityExists = jobOrTalent.city && jobOrTalent.city.trim() !== '' && jobOrTalent.city.toLowerCase() !== 'n/a' && jobOrTalent.city.toLowerCase() !== 'unknown';
-    const countryExists = jobOrTalent.country && jobOrTalent.country.trim() !== '' && jobOrTalent.country.toLowerCase() !== 'n/a' && jobOrTalent.country.toLowerCase() !== 'unknown';
+    const cityExists = jobOrTalent.city && jobOrTalent.city.trim() !== '' && jobOrTalent.city.toLowerCase() !== 'n/a' && jobOrTalent.city.toLowerCase() !== 'unknown' && jobOrTalent.city.toLowerCase() !== 'remote';
+    const countryExists = jobOrTalent.country && jobOrTalent.country.trim() !== '' && jobOrTalent.country.toLowerCase() !== 'n/a' && jobOrTalent.country.toLowerCase() !== 'unknown' && jobOrTalent.country.toLowerCase() !== 'remote';
 
     let translatedCountry = '';
     if (countryExists) {
@@ -172,11 +172,8 @@ function formatLocationDisplay(jobOrTalent, lang) {
         return translatedCountry;
     } else if (translatedCity) {
         return translatedCity;
-    } else if (jobOrTalent.job_site_type) {
-        const siteTypeKey = jobOrTalent.job_site_type.toLowerCase().replace('-', '_');
-        return t?.[siteTypeKey]?.[lang] || jobOrTalent.job_site_type;
     } else {
-        return t?.['not_available']?.[lang] || 'N/A';
+        return '';
     }
 }
 
@@ -224,6 +221,8 @@ function createJobCard(job) {
     }
 
     const typeTrans = job.job_type ? (lang === 'ar' ? (job.job_type === 'Full-time' ? 'دوام كامل' : 'عمل حر') : job.job_type) : '';
+    const isRemote = job.job_site_type === 'Remote';
+    const remoteTagHtml = isRemote ? `<span class="home-job-tag remote" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);"><i class="fas fa-laptop-house"></i> ${t?.['remote']?.[lang] || 'Remote'}</span>` : '';
     const timeAgo = formatTimeAgo(job.created_at, lang);
     
     card.innerHTML = `
@@ -234,6 +233,7 @@ function createJobCard(job) {
         </div>
         <div class="home-job-card-tags">
             ${locationDisplay ? `<span class="home-job-tag location"><i class="fas fa-map-marker-alt"></i> ${locationDisplay}</span>` : ''}
+            ${remoteTagHtml}
             ${typeTrans ? `<span class="home-job-tag type"><i class="fas fa-briefcase"></i> ${typeTrans}</span>` : ''}
             <span class="home-job-tag category">${categoryIcon} ${displayCategory}</span>
         </div>

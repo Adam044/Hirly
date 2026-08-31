@@ -215,17 +215,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const statusKey = isActive ? 'active' : 'inactive';
         const statusText = (window.translations && window.translations[statusKey] && window.translations[statusKey][window.currentLanguage]) || (isActive ? 'Active' : 'Inactive');
 
-        const translatedCity = job.city ? getTranslatedCityName(job.city) : (window.translations?.remote?.[window.currentLanguage] || 'Remote');
+        const isRemote = job.job_site_type === 'Remote';
+        const translatedCity = job.city ? getTranslatedCityName(job.city) : '';
+        const remoteTagHtml = isRemote ? `
+            <span class="remote-tag" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                <i class="fas fa-laptop-house"></i>
+                <span>${window.translations?.remote?.[window.currentLanguage] || 'Remote'}</span>
+            </span>` : '';
 
         card.innerHTML = `
-            <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}" data-lang-key="${statusKey}">
-                ${statusText}
-            </span>
-            <h3 class="truncate">${job.title}</h3>
-            <div class="location">
+            <div class="flex justify-between items-start mb-2">
+                <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}" data-lang-key="${statusKey}">
+                    ${statusText}
+                </span>
+                ${remoteTagHtml}
+            </div>
+            <h3 class="truncate font-bold text-slate-800 mb-1">${job.title}</h3>
+            ${translatedCity ? `
+            <div class="location text-slate-500 text-sm flex items-center gap-1 mb-3">
                 <i class="fas fa-location-dot"></i>
                 <span>${translatedCity}</span>
-            </div>
+            </div>` : ''}
             
             <div class="stats-row">
                 <div class="stat-box">

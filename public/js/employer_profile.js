@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currencySymbol = getCurrencySymbol(job.currency);
         
         // Location
-        let locationDisplay = (t && t['not_available'] && t['not_available'][lang]) || 'N/A';
+        let locationDisplay = '';
         if (job.city && job.city.trim() !== '') {
             const cityKey = job.city.startsWith('city_') ? job.city : `city_${job.city.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
             if (cityTranslations && cityTranslations[cityKey]) {
@@ -109,10 +109,14 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 locationDisplay = job.city.replace('city_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
             }
-        } else if (job.job_site_type) {
-             const siteTypeKey = job.job_site_type.toLowerCase().replace('-', '_');
-             locationDisplay = (t && t[siteTypeKey] && t[siteTypeKey][lang]) || job.job_site_type;
         }
+
+        const isRemote = job.job_site_type === 'Remote';
+        const remoteTagHtml = isRemote ? `
+            <span class="px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 text-xs font-semibold border border-blue-100 flex items-center gap-1">
+                <i class="fas fa-laptop-house"></i>
+                ${(t && t['remote'] && t['remote'][lang]) || 'Remote'}
+            </span>` : '';
 
         // Category
         let displayCategory = (t && t['not_available'] && t['not_available'][lang]) || 'N/A';
@@ -165,12 +169,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
                     <i class="fas fa-money-bill-wave text-emerald-500"></i> ${budgetText}
                 </span>
+                ${locationDisplay ? `
                 <span class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
                     <i class="fas fa-map-marker-alt text-red-400"></i> ${locationDisplay}
-                </span>
+                </span>` : ''}
             </div>
             
             <div class="flex items-center gap-2 mt-auto">
+                ${remoteTagHtml}
                 <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200">
                     ${displayJobType}
                 </span>
