@@ -431,7 +431,7 @@ app.use(session({
     saveUninitialized: false,
     proxy: true,
     cookie: {
-        secure: false, // Set to false for local development
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
@@ -764,7 +764,7 @@ async function generateSitemap(pool) {
     let client;
     try {
         client = await pool.connect();
-        const siteUrl = 'https://hirly.net'; // Replace with your production domain
+        const siteUrl = process.env.BASE_URL || 'https://hirly.net';
         
         // Static pages
         const staticPages = [

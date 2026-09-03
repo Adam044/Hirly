@@ -45,7 +45,7 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
    * Inject Global SEO Tags (Canonical, Hreflang)
    */
   function injectGlobalSEO(html, req) {
-    const siteUrl = 'https://hirly.net';
+    const siteUrl = process.env.BASE_URL || 'https://hirly.net';
     const currentUrl = `${siteUrl}${req.path}`;
     
     const seoTags = `

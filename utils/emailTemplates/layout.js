@@ -5,7 +5,7 @@
  * @param {string} [appBaseUrl] - The base URL of the application (optional).
  * @returns {string} The full HTML content for the email.
  */
-function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = 'https://hirly.net') {
+function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = process.env.BASE_URL || 'https://hirly.net') {
     const logoUrl = `https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/logo.jpg`;
     const year = new Date().getFullYear();
 
@@ -125,10 +125,10 @@ function generateEmailHtmlWrapperLTR(subject, mainContentHtml, appBaseUrl = 'htt
                     </div>
 
                     <div class="footer-links">
-                        <a href="https://hirly.net" class="footer-link">Website</a>
-                        <a href="https://hirly.net/jobs.html" class="footer-link">Browse Jobs</a>
-                        <a href="https://hirly.net/privacy" class="footer-link">Privacy Policy</a>
-                        <a href="https://hirly.net/contact.html" class="footer-link">Contact Support</a>
+                        <a href="${appBaseUrl}" class="footer-link">Website</a>
+                        <a href="${appBaseUrl}/jobs.html" class="footer-link">Browse Jobs</a>
+                        <a href="${appBaseUrl}/privacy" class="footer-link">Privacy Policy</a>
+                        <a href="${appBaseUrl}/contact.html" class="footer-link">Contact Support</a>
                     </div>
 
                     <div class="footer-tagline">
