@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: hirly-platform
+    env: docker
+    plan: starter
+    region: frankfurt # Frankfurt is a stable region for MENA/Europe traffic
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: / # Root path for health check
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Existing Supabase DB Connection String
+      - key: SUPABASE_URL
+        sync: false # Existing Supabase Project URL
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: BASE_URL
+        sync: false # e.g., https://hirly.net
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: AUTO_EMAIL_USER
+        sync: false
+      - key: AUTO_EMAIL_PASS
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: JOOBLE_API_KEY
+        sync: false
+      - key: ADZUNA_APP_ID
+        sync: false
+      - key: ADZUNA_APP_KEY
+        sync: false
+    autoDeploy: true

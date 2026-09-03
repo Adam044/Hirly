@@ -1,7 +1,8 @@
-# Use the official Node.js 20-slim image as a base (Debian-based for better Playwright support)
+# Use the official Node.js 20-slim image as a base
 FROM node:20-slim
 
 # Install system dependencies required for Playwright/Chromium
+# We combine these to reduce image layers and clean up after install
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -28,20 +29,26 @@ RUN apt-get update && apt-get install -y \
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# Copy package files first for better caching
 COPY package*.json ./
 
 # Install application dependencies
+# --omit=dev keeps the image light by excluding dev dependencies
 RUN npm install --omit=dev
 
 # Install Playwright browsers (specifically chromium for the aggregator)
 RUN npx playwright install chromium
 
-# Copy the rest of your application code to the container
+# Copy the rest of the application code
 COPY . .
 
-# Your server.js is configured to listen on process.env.PORT or 8080.
-EXPOSE 8080
+# Render expects the application to listen on the port provided in the PORT env var
+# Defaulting to 8080 if not provided
+ENV PORT=8080
+EXPOSE ${PORT}
 
-# Command to run your application when the container starts
+# Use a non-root user for security (optional but recommended)
+# USER node
+
+# Command to run the application
 CMD ["node", "server.js"]
