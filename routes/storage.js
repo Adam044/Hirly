@@ -155,10 +155,68 @@ module.exports = function registerStorageRoutes(
   router.get('/files/:fileId', fileDownloadLimiter, async (req, res) => {
     let client;
     const fileId = req.params.fileId;
+    const sessionUserId = req.session.userId;
+    const sessionUserType = req.session.userType;
 
     performanceMonitor.trackFileRequest();
 
     try {
+      client = await pool.connect();
+      performanceMonitor.updateConnectionPoolStats(pool);
+
+      // 1. Fetch file metadata for authorization check
+      const metadataResult = await client.query(
+        'SELECT user_id, file_type, mime_type FROM file_storage WHERE id = $1',
+        [fileId]
+      );
+
+      if (metadataResult.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'File not found' });
+      }
+
+      const { user_id: fileOwnerId, file_type: fileType, mime_type: mimeType } = metadataResult.rows[0];
+
+      // 2. Authorization Logic
+      const publicTypes = [
+        'company_logo', 'company_logo_webp',
+        'profile_picture', 'profile_picture_webp',
+        'job_image', 'job_image_webp',
+        'service_image', 'service_image_webp'
+      ];
+
+      const isPublic = publicTypes.includes(fileType);
+      
+      if (!isPublic) {
+        // Private file (CV, ID verification) - requires authorization
+        if (!sessionUserId) {
+          return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+
+        const isAdmin = sessionUserType === 'admin';
+        const isOwner = sessionUserId === fileOwnerId;
+
+        if (!isAdmin && !isOwner) {
+          // Special case: Employer viewing an applicant's CV
+          if (fileType === 'cv' || fileType === 'cv_webp') {
+            const employerAccessCheck = await client.query(
+              `SELECT 1 FROM applications a
+               JOIN jobs j ON a.job_id = j.id
+               WHERE j.employer_id = $1 AND a.professional_id = $2
+               LIMIT 1`,
+              [sessionUserId, fileOwnerId]
+            );
+
+            if (employerAccessCheck.rows.length === 0) {
+              return res.status(403).json({ success: false, error: 'Access denied' });
+            }
+          } else {
+            // ID verification is strictly private to owner and admin
+            return res.status(403).json({ success: false, error: 'Access denied' });
+          }
+        }
+      }
+
+      // 3. Cache Check (moved after auth for security, though slightly less performant)
       const cacheKey = `${fileId}-${req.headers.accept || ''}`;
       if (fileCache.has(cacheKey)) {
         const cachedFile = fileCache.get(cacheKey);
@@ -176,12 +234,9 @@ module.exports = function registerStorageRoutes(
         return res.send(cachedFile.data);
       }
 
-      client = await pool.connect();
-      performanceMonitor.updateConnectionPoolStats(pool);
-
+      // 4. Serving Logic (Original)
       const acceptHeader = req.headers.accept || '';
       const browserSupportsWebP = supportsWebP(acceptHeader);
-
       let etag = `"${fileId}"`;
 
       if (browserSupportsWebP) {
@@ -189,8 +244,6 @@ module.exports = function registerStorageRoutes(
           'SELECT mime_type, file_data FROM file_storage WHERE parent_file_id = $1 AND mime_type = $2',
           [fileId, 'image/webp']
         );
-
-        performanceMonitor.trackDbQuery(webpResult.rows.length > 0 ? webpResult.rows[0].file_data?.length || 0 : 0);
 
         if (webpResult.rows.length > 0) {
           const webpFile = webpResult.rows[0];
@@ -217,32 +270,29 @@ module.exports = function registerStorageRoutes(
             return res.status(304).end();
           }
 
-          performanceMonitor.trackCacheMiss(webpFile.file_data.length);
           return res.send(webpFile.file_data);
         }
       }
 
-      const result = await client.query('SELECT mime_type, file_data FROM file_storage WHERE id = $1', [fileId]);
-      performanceMonitor.trackDbQuery(result.rows.length > 0 ? result.rows[0].file_data?.length || 0 : 0);
-
+      const result = await client.query('SELECT file_data FROM file_storage WHERE id = $1', [fileId]);
       if (result.rows.length === 0) {
         return res.status(404).json({ success: false, error: 'File not found' });
       }
 
       const file = result.rows[0];
-      const cacheDuration = getCacheDuration(file.mime_type);
+      const cacheDuration = getCacheDuration(mimeType);
 
       if (file.file_data.length <= CACHE_MAX_FILE_SIZE) {
         fileCache.set(cacheKey, {
           data: file.file_data,
-          mimeType: file.mime_type,
+          mimeType: mimeType,
           cacheDuration,
           etag
         });
         cleanupCache();
       }
 
-      res.setHeader('Content-Type', file.mime_type);
+      res.setHeader('Content-Type', mimeType);
       res.setHeader('Cache-Control', `public, max-age=${cacheDuration}, immutable`);
       res.setHeader('ETag', etag);
       res.setHeader('Vary', 'Accept');
@@ -252,9 +302,9 @@ module.exports = function registerStorageRoutes(
         return res.status(304).end();
       }
 
-      performanceMonitor.trackCacheMiss(file.file_data.length);
       res.send(file.file_data);
     } catch (error) {
+      logger.error('File serving error:', error);
       res.status(500).json({ success: false, error: 'Failed to serve file' });
     } finally {
       if (client) client.release();

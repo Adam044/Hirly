@@ -1,8 +1,24 @@
 // public/auth.js
 
-// --- Global Fetch Wrapper for 401 Handling ---
+// --- Global Fetch Wrapper for 401 and CSRF Handling ---
 const originalFetch = window.fetch;
 window.fetch = async (url, options) => {
+    // 1. Add CSRF token to state-changing requests
+    const methods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+    if (options && options.method && methods.includes(options.method.toUpperCase())) {
+        const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('XSRF-TOKEN='))
+            ?.split('=')[1];
+
+        if (csrfToken) {
+            options.headers = {
+                ...options.headers,
+                'X-XSRF-TOKEN': csrfToken
+            };
+        }
+    }
+
     try {
         const response = await originalFetch(url, options);
         if (response.status === 401 && !window._isRedirecting) {

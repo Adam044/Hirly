@@ -439,6 +439,44 @@ app.use(session({
     }
 }));
 
+// --- CSRF Protection Implementation ---
+const csrfProtection = (req, res, next) => {
+    // 1. Generate token if it doesn't exist in session
+    if (!req.session.csrfToken) {
+        req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    }
+
+    // 2. Set the token in a cookie so frontend can read it
+    // Note: HttpOnly is false so JS can read it, but Secure and SameSite are preserved
+    res.cookie('XSRF-TOKEN', req.session.csrfToken, {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        httpOnly: false, // Must be false for frontend to read it
+        path: '/'
+    });
+
+    // 3. Skip check for safe methods
+    const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
+    if (safeMethods.includes(req.method)) {
+        return next();
+    }
+
+    // 4. Verify token for state-changing methods
+    const clientToken = req.headers['x-xsrf-token'];
+    
+    if (!clientToken || clientToken !== req.session.csrfToken) {
+        logger.warn(`CSRF validation failed for ${req.method} ${req.originalUrl}. Client token present: ${!!clientToken}`);
+        return res.status(403).json({ 
+            success: false, 
+            error: 'Invalid or missing CSRF token. Please refresh the page.' 
+        });
+    }
+
+    next();
+};
+
+app.use(csrfProtection); // Apply CSRF protection after session and cookie-parser
+
 // Rate limiting for authentication endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -575,7 +613,7 @@ app.use((req, res, next) => {
     if (origin) {
         res.header('Access-Control-Allow-Origin', origin);
     }
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-XSRF-TOKEN');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.header('Access-Control-Allow-Credentials', 'true');
     if (req.method === 'OPTIONS') {

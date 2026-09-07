@@ -478,6 +478,10 @@ async function initializeDatabaseSchema(pool) {
         await client.query('CREATE INDEX IF NOT EXISTS idx_visitor_logs_created_at ON visitor_logs(created_at);');
         await client.query('CREATE INDEX IF NOT EXISTS idx_visitor_logs_visitor_id ON visitor_logs(visitor_id);');
 
+        // Verified Production Performance Indexes
+        await client.query('CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id);');
+        await client.query('CREATE INDEX IF NOT EXISTS idx_jobs_external_source_id ON jobs(external_source, external_id);');
+
         // 34. System Settings Table
         await client.query(`
             CREATE TABLE IF NOT EXISTS system_settings (
