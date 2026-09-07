@@ -459,7 +459,7 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
   router.get(['/talent/:slug', '/:slug', '/@:slug', '/u/:slug'], async (req, res, next) => {
     let slug = req.params.slug;
     const reqPath = req.path;
-    const siteUrl = 'https://hirly.net';
+    const siteUrl = process.env.BASE_URL || 'https://hirly.net';
     
     // Clean up slug if it has prefix
     if (slug.startsWith('@')) slug = slug.substring(1);
@@ -513,7 +513,7 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
   router.get('/robots.txt', (req, res) => {
     const robots = `User-agent: *
 Allow: /
-Sitemap: https://hirly.net/sitemap.xml
+Sitemap: ${process.env.BASE_URL || 'https://hirly.net'}/sitemap.xml
 
 User-agent: GPTBot
 Disallow: /admin/
@@ -525,7 +525,7 @@ Disallow: /hire_dashboard/`;
 
   router.get('/sitemap.xml', async (req, res) => {
     try {
-      const siteUrl = 'https://hirly.net';
+      const siteUrl = process.env.BASE_URL || 'https://hirly.net';
       let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${siteUrl}/</loc><priority>1.0</priority></url>

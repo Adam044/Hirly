@@ -868,7 +868,7 @@ app.get('/jobs/rss', async (req, res) => {
     let client;
     try {
         client = await pool.connect();
-        const siteUrl = 'https://hirly.net';
+        const siteUrl = process.env.BASE_URL || 'https://hirly.net';
         const result = await client.query(`
             SELECT 
                 j.id, j.title, j.description, j.created_at,
@@ -899,7 +899,7 @@ app.get('/jobs/rss', async (req, res) => {
 });
 
 app.get('/robots.txt', (req, res) => {
-    const siteUrl = 'https://hirly.net';
+    const siteUrl = process.env.BASE_URL || 'https://hirly.net';
     let robots = 'User-agent: *\n';
     robots += 'Allow: /\n';
     robots += 'Disallow: /admin/\n';

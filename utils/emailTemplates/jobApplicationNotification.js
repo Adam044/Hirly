@@ -1,5 +1,6 @@
 const sendJobApplicationNotificationEmailTemplate = (employerName, jobTitle, applicationCount, jobPostedDate) => {
     const subject = 'تم استلام طلبات جديدة لوظيفتك في هايرلي';
+    const appBaseUrl = process.env.BASE_URL || 'https://hirly.net';
     const html = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -28,7 +29,7 @@ const sendJobApplicationNotificationEmailTemplate = (employerName, jobTitle, app
             <p style="font-size: 16px;">يمكنك الآن مراجعة الطلبات والتواصل مع المرشحين المناسبين من خلال لوحة التحكم الخاصة بك.</p>
             
             <div style="text-align: center; margin: 30px 0;">
-                <a href="https://www.hirly.net/hire_dashboard.html" style="display: inline-block; background-color: #6366f1; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <a href="${appBaseUrl}/hire_dashboard.html" style="display: inline-block; background-color: #6366f1; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                     عرض الطلبات الآن
                 </a>
             </div>

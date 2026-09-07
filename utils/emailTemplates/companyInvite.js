@@ -43,7 +43,7 @@ const sendCompanyInviteEmailTemplate = (appBaseUrl = process.env.APP_BASE_URL ||
         </p>
 
         <div style="text-align:center; margin-top:18px;">
-            <a href="https://www.hirly.net/employers" target="_blank"
+            <a href="${appBaseUrl}/employers" target="_blank"
                 style="background:#0f172a; color:#fff; display:inline-block; padding:12px 26px; border-radius:10px; font-weight:800; font-size:16px; text-decoration:none;">
                 ابدأ التوظيف الذكي الآن
             </a>

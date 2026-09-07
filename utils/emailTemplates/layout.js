@@ -53,10 +53,10 @@ function generateEmailHtmlWrapperRTL(subject, mainContentHtml, appBaseUrl = proc
                     </div>
 
                     <div class="footer-links">
-                        <a href="https://hirly.net" class="footer-link">الموقع الإلكتروني</a>
-                        <a href="https://hirly.net/jobs.html" class="footer-link">تصفح الوظائف</a>
-                        <a href="https://hirly.net/privacy" class="footer-link">سياسة الخصوصية</a>
-                        <a href="https://hirly.net/contact.html" class="footer-link">اتصل بنا</a>
+                        <a href="${appBaseUrl}" class="footer-link">الموقع الإلكتروني</a>
+                        <a href="${appBaseUrl}/jobs.html" class="footer-link">تصفح الوظائف</a>
+                        <a href="${appBaseUrl}/privacy" class="footer-link">سياسة الخصوصية</a>
+                        <a href="${appBaseUrl}/contact.html" class="footer-link">اتصل بنا</a>
                     </div>
 
                     <div class="footer-tagline">
