@@ -76,7 +76,7 @@ app.use((req, res, next) => {
         "frame-ancestors 'self'"
     ].join('; ');
 
-    res.setHeader('Content-Security-Policy-Report-Only', cspPolicy);
+    res.setHeader('Content-Security-Policy', cspPolicy);
     next();
 });
 
