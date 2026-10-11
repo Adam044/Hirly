@@ -106,13 +106,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     // --- Share Logic ---
     const getShareContent = () => {
         if (!currentJobData) return null;
-        const companyName = currentJobData.display_employer_name || 'Hirly Network';
+        const isConfidential = currentJobData.is_confidential === true;
+        const companyName = isConfidential ? (window.translations?.['confidential_employer']?.[window.currentLanguage || 'en'] || 'Confidential Employer') : (currentJobData.display_employer_name || 'Hirly Network');
         const jobTitle = currentJobData.title;
         
         // Clean URL Strategy: Use the short SEO-friendly slug URL
         const siteUrl = window.location.origin;
         const jobId = currentJobData.id;
-        const companyForSlug = currentJobData.display_employer_name || 'Hirly';
+        const companyForSlug = isConfidential ? 'hirly' : (currentJobData.display_employer_name || 'Hirly');
         
         // Use the global slug generator (shared with jobs.js)
         const slug = typeof window.generateJobSlug === 'function' 
@@ -260,9 +261,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         const existingSchema = document.getElementById('job-jsonld-schema');
         if (existingSchema) existingSchema.remove();
 
+        const isConfidential = job.is_confidential === true;
         const siteUrl = window.location.origin;
         const jobUrl = window.location.href;
-        const logoUrl = job.display_employer_logo || `${siteUrl}/favicon.ico`;
+        const companyName = isConfidential ? 'Confidential Employer' : (job.display_employer_name || 'Hirly Network');
+        const logoUrl = isConfidential ? `${siteUrl}/favicon.ico` : (job.display_employer_logo || `${siteUrl}/favicon.ico`);
 
         const schema = {
             "@context": "https://schema.org/",
@@ -271,7 +274,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             "description": job.description || "",
             "identifier": {
                 "@type": "PropertyValue",
-                "name": job.display_employer_name,
+                "name": companyName,
                 "value": job.id
             },
             "datePosted": job.created_at,
@@ -279,7 +282,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             "employmentType": (job.job_type || "Full-time").toUpperCase().replace(' ', '_'),
             "hiringOrganization": {
                 "@type": "Organization",
-                "name": job.display_employer_name,
+                "name": companyName,
                 "sameAs": siteUrl,
                 "logo": logoUrl
             },
@@ -743,11 +746,67 @@ function renderJobDetails(job) {
 
     // --- 2. Job Description Section ---
     if (jobDescriptionElem) {
-        jobDescriptionElem.innerHTML = job.description ? job.description.replace(/\n/g, '<br>') : t['no_description_provided']?.[lang] || 'No description provided.';
+        if (job.description) {
+            let descriptionHtml = job.description;
+
+            // Normalize line breaks and structural tags from contenteditable output
+            // This is crucial for Markdown parsing to work correctly.
+            descriptionHtml = descriptionHtml
+                .replace(/<div><br\s*\/?>\s*<\/div>/gi, '\n\n') // Empty lines in divs
+                .replace(/<p><br\s*\/?>\s*<\/p>/gi, '\n\n')     // Empty lines in paragraphs
+                .replace(/<br\s*\/?>/gi, '\n')                   // Single breaks
+                .replace(/<\/p>/gi, '\n\n')                      // End of paragraphs
+                .replace(/<p[^>]*>/gi, '')                      // Start of paragraphs
+                .replace(/<div>/gi, '\n')                       // Start of divs
+                .replace(/<\/div>/gi, '')                       // End of divs
+                .replace(/&nbsp;/g, ' ')                        // Non-breaking spaces to normal spaces
+                .replace(/\n{3,}/g, '\n\n')                     // Max 2 consecutive newlines
+                .trim();
+
+            // Use marked if available, fallback to simple newline replacement
+            if (typeof marked !== 'undefined') {
+                // Support both v4+ (marked.parse) and older versions (marked())
+                const parseFn = (typeof marked.parse === 'function') ? marked.parse : marked;
+                
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    headerIds: false,
+                    mangle: false,
+                    sanitize: false // We already sanitized on post_job side
+                });
+                
+                // If it looks like raw Markdown (starts with # or ** or -) but is missing leading newlines, fix it
+                if (descriptionHtml.match(/^[\#\*>\-]/) && !descriptionHtml.startsWith('\n')) {
+                    descriptionHtml = '\n' + descriptionHtml;
+                }
+
+                jobDescriptionElem.innerHTML = parseFn(descriptionHtml);
+            } else {
+                console.warn('Marked library not found. Falling back to simple formatting.');
+                jobDescriptionElem.innerHTML = descriptionHtml.replace(/\n/g, '<br>');
+            }
+        } else {
+            jobDescriptionElem.innerHTML = t['no_description_provided']?.[lang] || 'No description provided.';
+        }
+
+        // Improved RTL detection for the whole description block
         const textContent = jobDescriptionElem.textContent.trim();
         const isRTL = /[\u0600-\u06FF]/.test(textContent); // Check for Arabic characters
+        
+        jobDescriptionElem.classList.toggle('rtl-content', isRTL);
         jobDescriptionElem.style.direction = isRTL ? 'rtl' : 'ltr';
         jobDescriptionElem.style.textAlign = isRTL ? 'right' : 'left';
+
+        // Apply RTL class to all block elements inside the description
+        if (isRTL) {
+            jobDescriptionElem.querySelectorAll('p, ul, ol, li, h1, h2, h3, h4, h5, h6, strong, b').forEach(el => {
+                el.setAttribute('dir', 'rtl');
+                if (el.tagName === 'LI') {
+                    el.style.textAlign = 'right';
+                }
+            });
+        }
     }
 
     // --- 3. Required Professions Section ---
@@ -784,25 +843,18 @@ function renderJobDetails(job) {
 
     // --- 5. About Employer Section ---
     if (aboutEmployerSection) {
-        let employerDisplayName = job.display_employer_name || 'N/A';
-        const employerLogo = job.display_employer_logo;
+        const isConfidential = job.is_confidential === true;
+        const isVerified = job.is_verified === true;
+        
+        // Safety Override: Even if API leaks real name, frontend enforces privacy for confidential jobs
+        const employerDisplayName = isConfidential ? (window.translations?.['confidential_employer']?.[lang] || 'Confidential Employer') : (job.display_employer_name || 'N/A');
+        const employerLogo = isConfidential ? null : job.display_employer_logo;
+        
         const employerType = job.display_employer_type || 'individual';
+        const verifiedBadgeHtml = isVerified ? `<span class="verified-badge-inline" title="Hirly Verified"><i class="fas fa-check-circle"></i></span>` : '';
         
-        // Hide name if it indicates hidden identity
-        const hiddenIdentities = [
-            'هوية صاحب العمل مخفية',
-            'Employer identity hidden',
-            'Confidential',
-            'Hidden Identity'
-        ];
-        
-        const isHidden = hiddenIdentities.includes(employerDisplayName);
-        if (isHidden) {
-            employerDisplayName = '';
-        }
-
+        const avatarClass = `employer-logo-sm ${employerType}`;
         let avatarHtml = '';
-        let avatarClass = `employer-logo-sm ${employerType}`;
         
         if (employerLogo) {
             const safeName = employerDisplayName.replace(/"/g, '&quot;');
@@ -813,11 +865,27 @@ function renderJobDetails(job) {
 
         const translatedAboutEmployer = t['about_the_employer']?.[lang] || 'About the Employer';
         const translatedViewProfile = t['view_employer_profile']?.[lang] || 'View Employer Profile';
+        const confidentialNote = t['confidential_employer_note']?.[lang] || 'This employer prefers to stay anonymous, but has been verified by Hirly to ensure trust and safety.';
         
         const employerSlug = job.employer_slug;
         const profileUrl = employerSlug ? `/${employerSlug}` : `/employer_profile.html?id=${job.employer_user_id}`;
 
-        if (job.is_external) {
+        if (isConfidential) {
+            aboutEmployerSection.innerHTML = `
+                <h2 data-lang-key="about_the_employer"><i class="fas fa-info-circle"></i> ${translatedAboutEmployer}</h2>
+                <div class="employer-info-card anonymous-card">
+                    <div class="employer-card-header-main">
+                        <div class="employer-logo-sm individual anonymous-icon-container">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="employer-details-main">
+                            <h3 class="employer-name-header">${employerDisplayName} ${verifiedBadgeHtml}</h3>
+                            <p class="confidential-note mt-2 text-sm text-gray-500 italic">${confidentialNote}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (job.is_external) {
             aboutEmployerSection.innerHTML = `
                 <h2 data-lang-key="about_the_employer"><i class="fas fa-info-circle"></i> ${translatedAboutEmployer}</h2>
                 <div class="employer-info-card">
@@ -826,7 +894,7 @@ function renderJobDetails(job) {
                             ${avatarHtml}
                         </div>
                         <div class="employer-details-main">
-                            ${employerDisplayName ? `<h3 class="employer-name-header" id="employerName">${employerDisplayName}</h3>` : ''}
+                            <h3 class="employer-name-header" id="employerName">${employerDisplayName} ${verifiedBadgeHtml}</h3>
                         </div>
                     </div>
                 </div>
@@ -841,14 +909,12 @@ function renderJobDetails(job) {
                             ${avatarHtml}
                         </div>
                         <div class="employer-details-main">
-                            ${employerDisplayName ? `<h3 class="employer-name-header" id="employerName">${employerDisplayName}</h3>` : ''}
+                            <h3 class="employer-name-header" id="employerName">${employerDisplayName} ${verifiedBadgeHtml}</h3>
                         </div>
                     </div>
-                    ${!isHidden ? `
                     <a href="${profileUrl}" id="viewEmployerProfileBtn" class="btn btn-primary btn-icon" data-lang-key="view_employer_profile">
                         <i class="fas fa-user-tie"></i> <span class="button-text">${translatedViewProfile}</span>
                     </a>
-                    ` : ''}
                 </div>
             `;
 

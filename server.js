@@ -47,7 +47,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
 });
 
 
-app.set('trust proxy', 1);
+// app.set('trust proxy', 1); // Disabled for local CSRF debugging
 
 // Professional Security Headers
 app.use(helmet({
@@ -68,7 +68,7 @@ app.use((req, res, next) => {
         "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com cdn.tailwindcss.com unpkg.com",
         "img-src 'self' data: blob: ecxvfjceuynwtpjvmxpw.supabase.co www.jobs.ps www.googletagmanager.com *.basemaps.cartocdn.com placehold.co images.pexels.com www.google.com *.gstatic.com icons.duckduckgo.com *.google-analytics.com",
         "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com",
-        "connect-src 'self' www.googletagmanager.com *.google-analytics.com " + wsOrigin,
+        "connect-src 'self' www.googletagmanager.com *.google-analytics.com cdn.jsdelivr.net " + wsOrigin,
         "frame-src 'none'",
         "object-src 'none'",
         "base-uri 'self'",
@@ -381,9 +381,129 @@ async function populateEmailPreferences() {
 // pool.connect((err, client, release) => { ... });
 
 
-// --- Fast AF: Static Assets First ---
-// Serve public files (both at root and /public prefix for tool compatibility)
-// We serve static assets BEFORE sessions or DB logic to ensure extreme speed and zero DB hits for assets.
+// --- Core Middleware Stack (Ordered for Security & Reliability) ---
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Helper to determine if we are in a production/secure environment
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Initialize Session BEFORE CSRF and Static Assets that need SEO/Auth
+app.use(session({
+    store: new pgSession({
+        pool,
+        tableName: 'user_sessions',
+        createTableIfMissing: true
+    }),
+    secret: process.env.SESSION_SECRET || (() => {
+        if (isProduction) {
+            throw new Error('FATAL: SESSION_SECRET is not set in production!');
+        }
+        return 'a_very_strong_default_secret_for_dev';
+    })(),
+    resave: true, 
+    saveUninitialized: true,
+    rolling: true, 
+    proxy: false, // DISABLED: Trusting proxy on localhost often breaks sessions
+    cookie: {
+        // ULTIMATE FIX: Ignore .env. Force secure: false if not on a real domain.
+        secure: false, // We will manually set this in the middleware if needed
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000, 
+        path: '/'
+    }
+}));
+
+// --- CSRF Protection Implementation ---
+const csrfProtection = (req, res, next) => {
+    const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
+
+    // Diagnostic: Track session persistence
+    req.session.viewCount = (req.session.viewCount || 0) + 1;
+
+    // Determine if we should use secure flags based on the ACTUAL request
+    const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1' || req.hostname === '::1';
+    const useSecure = !isLocalhost && (req.secure || req.headers['x-forwarded-proto'] === 'https');
+
+    if (safeMethods.includes(req.method) && !req.session.csrfToken) {
+        req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+        
+        req.session.save((err) => {
+            if (err) logger.error('Session save error during token generation:', err);
+        });
+    }
+
+    if (req.session.csrfToken) {
+        res.cookie('XSRF-TOKEN', req.session.csrfToken, {
+            secure: useSecure,
+            sameSite: 'lax',
+            httpOnly: false,
+            path: '/'
+        });
+    }
+
+    if (safeMethods.includes(req.method)) {
+        return next();
+    }
+
+    const clientToken = req.headers['x-xsrf-token'];
+    
+    if (!clientToken || !req.session.csrfToken || clientToken !== req.session.csrfToken) {
+        logger.warn('CSRF validation failed', {
+            method: req.method,
+            url: req.originalUrl,
+            clientTokenPresent: !!clientToken,
+            sessionTokenPresent: !!req.session.csrfToken,
+            tokenMatch: clientToken === req.session.csrfToken,
+            sessionID: req.sessionID,
+            viewCount: req.session.viewCount,
+            ip: req.ip,
+            host: req.hostname,
+            rawCookies: req.headers.cookie || 'NONE',
+            env: process.env.NODE_ENV
+        });
+        
+        return res.status(403).json({ 
+            success: false, 
+            error: 'Invalid or missing CSRF token. Please refresh the page.' 
+        });
+    }
+
+    next();
+};
+
+app.use(csrfProtection);
+app.use(trackVisitor);
+
+// Morgan middleware for logging HTTP requests
+const morganFormat = ':method :url :status :res[content-length] - :response-time ms';
+app.use(morgan(morganFormat, {
+    stream: {
+        write: (message) => logger.http(message.trim()),
+    },
+    skip: (req, res) => {
+        const staticExtensions = ['.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.otf'];
+        const urlPath = req.url.split('?')[0].toLowerCase();
+        const isStatic = staticExtensions.some(ext => urlPath.endsWith(ext));
+        const isStaticDir = urlPath.startsWith('/styling/') ||
+            urlPath.startsWith('/js/') ||
+            urlPath.startsWith('/css/') ||
+            urlPath.startsWith('/images/') ||
+            urlPath.startsWith('/uploads/') ||
+            urlPath.startsWith('/components/') ||
+            urlPath.startsWith('/language/');
+
+        const shouldSkip = isStatic || isStaticDir;
+        if (shouldSkip && process.env.DEBUG === 'true') {
+            logger.debug(`Skipping log for static asset: ${req.url}`);
+        }
+        return shouldSkip;
+    }
+}));
+
+// --- Fast AF: Static Assets ---
+// We serve static assets after sessions to ensure they carry session state for SEO and Auth scripts.
 app.use(express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, path) => {
         if (path.endsWith('.js')) {
@@ -400,107 +520,6 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 app.get('/favicon.ico', (req, res) => {
     res.sendFile(path.join(__dirname, 'favicon.ico'));
 });
-
-// --- Middleware ---
-app.use(cookieParser());
-app.use(trackVisitor);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Morgan middleware for logging HTTP requests
-const morganFormat = ':method :url :status :res[content-length] - :response-time ms';
-app.use(morgan(morganFormat, {
-    stream: {
-        write: (message) => logger.http(message.trim()),
-    },
-    skip: (req, res) => {
-        // Log only API routes and main page loads, skip common static assets
-        const staticExtensions = ['.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.otf'];
-        const urlPath = req.url.split('?')[0].toLowerCase();
-
-        // Skip common static assets by extension
-        const isStatic = staticExtensions.some(ext => urlPath.endsWith(ext));
-
-        // Also skip common static directories and component requests
-        const isStaticDir = urlPath.startsWith('/styling/') ||
-            urlPath.startsWith('/js/') ||
-            urlPath.startsWith('/css/') ||
-            urlPath.startsWith('/images/') ||
-            urlPath.startsWith('/uploads/') ||
-            urlPath.startsWith('/components/') ||
-            urlPath.startsWith('/language/');
-
-        const shouldSkip = isStatic || isStaticDir;
-
-        if (shouldSkip && process.env.DEBUG === 'true') {
-            logger.debug(`Skipping log for static asset: ${req.url}`);
-        }
-
-        return shouldSkip;
-    }
-}));
-
-app.use(session({
-    store: new pgSession({
-        pool,
-        tableName: 'user_sessions',
-        createTableIfMissing: true
-    }),
-    secret: process.env.SESSION_SECRET || (() => {
-        if (process.env.NODE_ENV === 'production') {
-            throw new Error('FATAL: SESSION_SECRET is not set in production!');
-        }
-        return 'a_very_strong_default_secret_for_dev';
-    })(),
-    resave: false,
-    saveUninitialized: false,
-    proxy: true,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        path: '/'
-    }
-}));
-
-// --- CSRF Protection Implementation ---
-const csrfProtection = (req, res, next) => {
-    // 1. Generate token if it doesn't exist in session
-    if (!req.session.csrfToken) {
-        req.session.csrfToken = crypto.randomBytes(32).toString('hex');
-    }
-
-    // 2. Set the token in a cookie so frontend can read it
-    // Note: HttpOnly is false so JS can read it, but Secure and SameSite are preserved
-    res.cookie('XSRF-TOKEN', req.session.csrfToken, {
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        httpOnly: false, // Must be false for frontend to read it
-        path: '/'
-    });
-
-    // 3. Skip check for safe methods
-    const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
-    if (safeMethods.includes(req.method)) {
-        return next();
-    }
-
-    // 4. Verify token for state-changing methods
-    const clientToken = req.headers['x-xsrf-token'];
-    
-    if (!clientToken || clientToken !== req.session.csrfToken) {
-        logger.warn(`CSRF validation failed for ${req.method} ${req.originalUrl}. Client token present: ${!!clientToken}`);
-        return res.status(403).json({ 
-            success: false, 
-            error: 'Invalid or missing CSRF token. Please refresh the page.' 
-        });
-    }
-
-    next();
-};
-
-app.use(csrfProtection); // Apply CSRF protection after session and cookie-parser
 
 // Rate limiting for authentication endpoints
 const authLimiter = rateLimit({
@@ -1311,6 +1330,7 @@ global.emailCampaignProgress = emailCampaignProgress; // Make it globally access
 const registerJobsRoutes = require('./routes/jobs');
 const { autoCloseExpiredJobs } = registerJobsRoutes(app, pool, {
     isAuthenticated,
+    isAdmin,
     isEmployer,
     isEmployerVerified,
     isEmailVerified,
@@ -1417,8 +1437,8 @@ registerAdminRoutes(app, pool, {
     sendEmailCampaignWithProgress,
     sendVerificationEmail,
     sendEmail,
-    checkAuthStatus,
-    employerOutreach
+    employerOutreach,
+    supabaseAdmin
 });
 
 const registerAutoEmailRoutes = require('./routes/autoEmail');

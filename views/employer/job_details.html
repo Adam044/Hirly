@@ -45,6 +45,9 @@
     <script src="/language/job-details-translations.js"></script>
     <script src="/language/categories-professions-translations.js"></script>
     <script src="/language/cities-translations.js"></script>
+
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div id="headerPlaceholder"></div>
@@ -87,7 +90,7 @@
                 <!-- Job Description Section -->
                 <section class="job-details-section">
                     <h2 data-lang-key="job_description">Job Description</h2>
-                    <p id="jobDescription" data-lang-key="job_description_placeholder">Loading job description...</p>
+                    <div id="jobDescription" class="job-description-content" data-lang-key="job_description_placeholder">Loading job description...</div>
                 </section>
 
                 <!-- Job Responsibilities Section -->

@@ -238,7 +238,8 @@ if (typeof window.addTranslations === 'function') {
         'refresh_recommended_title': { 'ar': 'تم تحديث اللغة!', 'en': 'Language Updated!' },
         'refresh_recommended_desc': { 'ar': 'نوصي بشدة بتحديث الصفحة لتطبيق جميع التغييرات بشكل مثالي.', 'en': 'We highly recommend refreshing the page to apply all changes perfectly.' },
         'refresh_now': { 'ar': 'تحديث الآن', 'en': 'Refresh Now' },
-        'maybe_later': { 'ar': 'ربما لاحقاً', 'en': 'Maybe Later' }
+        'maybe_later': { 'ar': 'ربما لاحقاً', 'en': 'Maybe Later' },
+        'export_intel_btn': { 'ar': 'تصدير التقارير', 'en': 'Export Intelligence' }
     });
 } else {
     console.error("window.addTranslations is not defined. Ensure language.js is loaded correctly before hire-dashboard-translations.js.");

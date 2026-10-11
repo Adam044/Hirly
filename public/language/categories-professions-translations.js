@@ -109,6 +109,8 @@ if (typeof window.globalCategoriesAndProfessions === 'undefined') {
                 { 'ar': "مطور بلوكتشين", 'en': "Blockchain Developer" },
                 { 'ar': "مسؤول قاعدة بيانات", 'en': "Database Administrator" },
                 { 'ar': "مسؤول نظام", 'en': "System Administrator" },
+                { 'ar': "مدير التحول الرقمي", 'en': "Digital Transformation Director", icon: "fas fa-rocket" },
+                { 'ar': "مدير الابتكار", 'en': "Innovation Director", icon: "fas fa-lightbulb" },
                 { 'ar': "مهندس ضمان الجودة", 'en': "QA Engineer" },
                 { 'ar': "كاتب تقني", 'en': "Technical Writer" },
                 { 'ar': "محلل ذكاء الأعمال", 'en': "Business Intelligence Analyst" },

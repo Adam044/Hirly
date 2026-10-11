@@ -257,6 +257,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fas fa-users-viewfinder"></i>
                     <span data-lang-key="review_candidates_btn">Candidates</span>
                 </button>
+                <button onclick="window.exportJobIntelligence('${job.id}')" class="btn-job-action btn-job-export bg-slate-900 text-white hover:bg-slate-800">
+                    <i class="fas fa-file-pdf"></i>
+                    <span data-lang-key="export_intel_btn">Export Intelligence</span>
+                </button>
                 <button onclick="window.toggleJobStatus('${job.id}', '${job.status}', '${job.deadline}')" class="btn-job-action ${isActive ? 'btn-job-close' : 'btn-job-reopen'}">
                     <i class="fas ${isActive ? 'fa-times-circle' : 'fa-folder-open'}"></i>
                     <span data-lang-key="${isActive ? 'close' : 'reopen'}">${isActive ? 'Close' : 'Reopen'}</span>
@@ -896,6 +900,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!confirm('Delete job?')) return;
         const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' });
         if (res.ok) { showToast('Job deleted', 'success'); loadPostedJobs(); }
+    };
+
+    window.exportJobIntelligence = async (id) => {
+        showToast('Generating intelligence report...', 'info');
+        try {
+            // We'll redirect to the PDF generation endpoint
+            window.open(`/api/jobs/${id}/intelligence-report`, '_blank');
+        } catch (err) {
+            showToast('Failed to generate report', 'error');
+        }
     };
 
     window.toggleJobStatus = async (id, currentStatus, deadline) => {

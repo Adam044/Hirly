@@ -144,14 +144,17 @@ function createJobCard(job, currentLanguage, translations, palestinianCitiesTran
         return `https://placehold.co/${width}x${height}/999999/ffffff?text=${encodeURIComponent(text)}`;
     }
 
-    const slug = window.generateJobSlug ? window.generateJobSlug(job.title, employerDisplayName) : 'details';
-    card.href = `/jobs/${job.id}/${slug}`;
-    card.className = 'job-card';
-
     // Unified Employer Display Logic
     const employerDisplayName = job.display_employer_name || 'N/A';
     const employerLogo = job.display_employer_logo;
     const avatarClass = `job-employer-logo-container ${job.display_employer_type || 'individual'}`;
+    const isVerified = job.is_verified === true;
+    const verifiedBadgeHtml = isVerified ? `<span class="verified-badge-mini" title="Hirly Verified"><i class="fas fa-check-circle"></i></span>` : '';
+
+    const slug = window.generateJobSlug ? window.generateJobSlug(job.title, employerDisplayName) : 'details';
+    const card = document.createElement('a');
+    card.href = `/jobs/${job.id}/${slug}`;
+    card.className = 'job-card';
 
     let employerAvatarHtml = '';
     if (employerLogo) {
@@ -213,7 +216,7 @@ function createJobCard(job, currentLanguage, translations, palestinianCitiesTran
             </div>
             <div class="job-card-info">
                 <h3 class="job-title-main">${job.title}</h3>
-                <p class="job-employer-name">${employerDisplayName}</p>
+                <p class="job-employer-name">${employerDisplayName} ${verifiedBadgeHtml}</p>
             </div>
         </div>
         <p class="job-meta">

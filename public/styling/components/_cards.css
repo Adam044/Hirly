@@ -80,6 +80,38 @@
     /* Default RTL layout */
 }
 
+/* Verified Badge Styles */
+.verified-badge-mini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 0.9em;
+    margin-inline-start: 6px;
+    vertical-align: middle;
+}
+
+.verified-badge-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 1.1em;
+    margin-inline-start: 8px;
+    vertical-align: middle;
+}
+
+/* Confidential Employer Styling */
+.job-employer-logo-container.confidential {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
+}
+
+.job-employer-logo-container.confidential i {
+    opacity: 0.6;
+}
+
 .job-card:hover {
     transform: translateY(-3px);
     /* Gentle lift effect on hover */

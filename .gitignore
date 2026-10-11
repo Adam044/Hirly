@@ -134,3 +134,12 @@ optimization-test-results.json
 egress-report-*.json
 README-TESTING.md
 TESTING-RESULTS.md
+
+# Browser data and Playwright/Puppeteer artifacts
+.browser-data/
+browser_data/
+playwright-report/
+test-results/
+test-snapshots/
+.auth/
+.state.json

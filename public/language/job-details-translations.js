@@ -12,6 +12,11 @@ if (typeof window.addTranslations === 'function') {
         'not_available': { 'ar': 'غير متاح', 'en': 'N/A' },
         'about_the_employer': { 'ar': 'عن صاحب العمل', 'en': 'About the Employer' },
         'employer_name_placeholder': { 'ar': 'اسم صاحب العمل', 'en': 'Employer Name' },
+        'confidential_employer': { 'ar': 'هوية صاحب العمل مخفية', 'en': 'Confidential Employer' },
+        'confidential_employer_note': { 
+            'ar': 'يفضل صاحب العمل هذا البقاء مجهول الهوية، ولكن تم التحقق منه من قبل Hirly لضمان الثقة والأمان.', 
+            'en': 'This employer prefers to stay anonymous, but has been verified by Hirly to ensure trust and safety.' 
+        },
         'employer_type_placeholder': { 'ar': 'النوع', 'en': 'Type' },
         'employer_description_loading': { 'ar': 'جارٍ تحميل وصف صاحب العمل...', 'en': 'Loading employer description...' },
         // Removed: 'employer_description_placeholder' as the description is removed

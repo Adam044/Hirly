@@ -118,7 +118,9 @@ async function initializeDatabaseSchema(pool) {
                 external_company_name TEXT,
                 external_company_logo TEXT,
                 external_id TEXT,
-                country VARCHAR
+                country VARCHAR,
+                is_verified BOOLEAN DEFAULT false,
+                is_confidential BOOLEAN DEFAULT false
             );
         `);
 

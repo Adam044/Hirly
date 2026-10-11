@@ -55,6 +55,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const ageMinInput = document.getElementById('ageMin');
     const ageMaxInput = document.getElementById('ageMax');
 
+    // NEW: Admin Mode Detection
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdminMode = urlParams.get('mode') === 'admin';
+    const adminControls = document.getElementById('adminControls');
+    const isVerifiedCheckbox = document.getElementById('isVerified');
+    const isConfidentialCheckbox = document.getElementById('isConfidential');
+
+    async function initializeAdminMode() {
+        if (!isAdminMode) return;
+
+        try {
+            const auth = await checkAuthStatus();
+            if (auth.isAuthenticated && auth.userType === 'admin') {
+                if (adminControls) {
+                    adminControls.classList.remove('hidden');
+                    // Add a special class to the form to indicate admin mode
+                    postJobForm.classList.add('admin-mode');
+                    
+                    // Default to checked for Direct Post convenience
+                    if (isVerifiedCheckbox) isVerifiedCheckbox.checked = true;
+                    if (isConfidentialCheckbox) isConfidentialCheckbox.checked = true;
+                }
+            }
+        } catch (error) {
+            console.error('[ADMIN] Error checking admin status:', error);
+        }
+    }
+    initializeAdminMode();
+
     // List of Palestinian cities (without "Remote")
     const palestinianCities = [
         "Abasan al-Kabira", "Abu Dis", "Bani Na'im", "Bani Suheila", "Beit Hanoun",
@@ -90,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Define a list of allowed tags and attributes
-        const allowedTags = ['p', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li'];
+        const allowedTags = ['p', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'br', 'div'];
         const allowedAttrs = ['dir']; // Allow 'dir' to preserve RTL/LTR
 
         // Get all elements in the document body as a static array to avoid
@@ -595,6 +624,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 jobDescriptionContent.classList.add('border-primary', 'ring-4', 'ring-primary/10');
                 toggleRichTextEditorBtn.classList.add('bg-primary/10', 'text-primary');
                 applyTranslationToElement(toggleRichTextEditorBtn, 'toggle_richtext_plain', 'Plain Text');
+                
+                // Focus the editor if it's empty
+                if (jobDescriptionContent.innerHTML.trim() === '') {
+                    jobDescriptionContent.focus();
+                }
             } else {
                 // Deactivate rich text editor toolbar
                 richTextEditorToolbar.classList.add('hidden');
@@ -603,29 +637,66 @@ document.addEventListener('DOMContentLoaded', function() {
                 toggleRichTextEditorBtn.classList.remove('bg-primary/10', 'text-primary');
                 applyTranslationToElement(toggleRichTextEditorBtn, 'toggle_richtext', 'Format');
             }
-            // Update the hidden textarea's value regardless of editor state
-            // This is crucial for ensuring the latest content (even plain) is submitted
+            // Sync the hidden textarea
             jobDescriptionHiddenInput.value = jobDescriptionContent.innerHTML;
         });
 
         // Add event listeners for toolbar buttons
         richTextEditorToolbar.querySelectorAll('button[data-command]').forEach(button => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
                 const command = button.dataset.command;
+                
                 // For lists, we need to ensure a new line or paragraph is created if contenteditable is empty
                 if ((command === 'insertUnorderedList' || command === 'insertOrderedList') && jobDescriptionContent.innerHTML.trim() === '') {
-                     document.execCommand('insertHTML', false, `<li></li>`);
+                     document.execCommand('insertHTML', false, `<ul><li>&nbsp;</li></ul>`);
                 } else {
                     document.execCommand(command, false, null);
                 }
+                
+                // Ensure RTL consistency for newly created lists
+                const isRTL = jobDescriptionContent.getAttribute('dir') === 'rtl';
+                if (isRTL) {
+                    jobDescriptionContent.querySelectorAll('ul, ol, li, p, div').forEach(el => {
+                        if (!el.hasAttribute('dir')) el.setAttribute('dir', 'rtl');
+                    });
+                }
+                
                 jobDescriptionContent.focus(); // Keep focus on the contenteditable div
                 jobDescriptionHiddenInput.value = jobDescriptionContent.innerHTML; // Sync immediately
+                
+                // Update active state of buttons
+                button.classList.toggle('bg-primary/10', document.queryCommandState(command));
             });
+        });
+
+        // Handle Paste to ensure clean HTML but preserve formatting
+        jobDescriptionContent.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const html = e.clipboardData.getData('text/html');
+            const text = e.clipboardData.getData('text/plain');
+            
+            if (html) {
+                const sanitized = sanitizeHtml(html);
+                document.execCommand('insertHTML', false, sanitized);
+            } else {
+                document.execCommand('insertText', false, text);
+            }
+            
+            // Trigger input event to sync
+            jobDescriptionContent.dispatchEvent(new Event('input'));
         });
 
         // Sync content from contenteditable div to hidden textarea on input/change
         jobDescriptionContent.addEventListener('input', () => {
             jobDescriptionHiddenInput.value = jobDescriptionContent.innerHTML;
+            
+            // Automatic RTL detection for the editor
+            const textContent = jobDescriptionContent.textContent;
+            const isRTL = /[\u0600-\u06FF]/.test(textContent);
+            jobDescriptionContent.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+            jobDescriptionContent.style.textAlign = isRTL ? 'right' : 'left';
+
             const cleaned = jobDescriptionHiddenInput.value.replace(/<[^>]*>?/gm, '').trim();
             if (cleaned.length >= 10 && postJobMessage) {
                 postJobMessage.textContent = '';
@@ -932,6 +1003,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (jobImageInput.files && jobImageInput.files[0]) {
                 formData.append('job_image', jobImageInput.files[0]); // Append the image file
+            }
+
+            // NEW: Admin Flags
+            if (adminControls && !adminControls.classList.contains('hidden')) {
+                formData.append('is_verified', isVerifiedCheckbox.checked);
+                formData.append('is_confidential', isConfidentialCheckbox.checked);
             }
 
                 try {

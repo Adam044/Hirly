@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const { getAvailableTemplates, getTemplateContent } = require('../utils/templateHelper');
 const logger = require('../utils/logger');
 const { logoFetcher } = require('../utils/companyLogoFetcher');
@@ -17,7 +18,8 @@ module.exports = function registerAdminRoutes(app, pool, {
   sendEmailCampaignWithProgress,
   sendVerificationEmail,
   sendEmail,
-  employerOutreach
+  employerOutreach,
+  supabaseAdmin
 }) {
   const router = express.Router();
 
@@ -580,14 +582,47 @@ module.exports = function registerAdminRoutes(app, pool, {
       client = await pool.connect();
       await client.query('BEGIN');
       
-      // Instead of deleting, we just mark them as closed
-      const result = await client.query("UPDATE jobs SET status = 'closed' WHERE id = ANY($1)", [jobIds]);
+      // Delete associated data first (Cascade-like manual cleanup)
+      // 1. Tables referencing applications (which reference jobs)
+      try {
+        const appIdsResult = await client.query('SELECT id FROM applications WHERE job_id = ANY($1)', [jobIds]);
+        const appIds = appIdsResult.rows.map(r => r.id);
+        if (appIds.length > 0) {
+          await client.query('DELETE FROM application_ai_evaluations WHERE application_id = ANY($1)', [appIds]);
+          await client.query('DELETE FROM deep_reports WHERE application_id = ANY($1)', [appIds]);
+        }
+      } catch (err) { logger.warn(`App-related cleanup failed: ${err.message}`); }
+
+      const tablesToClean = [
+        'applications',
+        'contracts',
+        'email_notifications',
+        'job_outreach_recipients',
+        'reviews',
+        'job_application_notifications',
+        'interview_sessions',
+        'job_calibrations',
+        'lead_tracking',
+        'employer_lead_otps'
+      ];
+
+      for (const table of tablesToClean) {
+        try {
+          await client.query(`DELETE FROM ${table} WHERE job_id = ANY($1)`, [jobIds]);
+        } catch (err) {
+          // Ignore errors if table doesn't exist yet, but log for debugging
+          logger.warn(`Cleanup failed for table ${table}: ${err.message}`);
+        }
+      }
+      
+      // Actually delete the jobs
+      const result = await client.query("DELETE FROM jobs WHERE id = ANY($1)", [jobIds]);
       
       await client.query('COMMIT');
       res.json({ success: true, count: result.rowCount });
     } catch (error) {
       if (client) await client.query('ROLLBACK');
-      logger.error('Error removing jobs:', error);
+      logger.error('Error deleting jobs:', error);
       res.status(500).json({ success: false, error: error.message });
     } finally {
       if (client) client.release();
@@ -951,6 +986,7 @@ module.exports = function registerAdminRoutes(app, pool, {
 
       let query = `
         SELECT j.id, j.title, j.description, j.status, j.created_at, j.has_been_sent, j.city, j.category, j.budget, j.currency,
+               j.is_verified, j.is_confidential,
                u.id as employer_id, u.first_name AS employer_first_name, u.last_name AS employer_last_name, u.slug AS employer_slug,
                e.company_name as employer_company_name,
                (SELECT COUNT(*) FROM applications WHERE job_id = j.id) as app_count
@@ -1854,6 +1890,107 @@ module.exports = function registerAdminRoutes(app, pool, {
 
   router.get('/admin/job-aggregator', isAuthenticated, isAdmin, (req, res) => {
     res.sendFile(path.join(__dirname, '../views', 'admin', 'job_aggregator.html'));
+  });
+
+  router.post('/admin/generate-elite-access', isAuthenticated, isAdmin, async (req, res) => {
+    const { jobId, email, password } = req.body;
+    if (!jobId || !email || !password) {
+      return res.status(400).json({ success: false, error: 'Job ID, Email, and Password are required.' });
+    }
+
+    let client;
+    let authUserUuid = null;
+    try {
+      client = await pool.connect();
+      
+      // 1. Verify job exists and is eligible
+      const jobCheck = await client.query('SELECT id, employer_id, title FROM jobs WHERE id = $1', [jobId]);
+      if (jobCheck.rowCount === 0) {
+        return res.status(404).json({ success: false, error: 'Job not found.' });
+      }
+      
+      const job = jobCheck.rows[0];
+
+      // 2. Check if user already exists
+      const existingUserRes = await client.query('SELECT id, auth_user_id FROM users WHERE email = $1', [email]);
+      let userId;
+      
+      if (existingUserRes.rowCount > 0) {
+        // User exists, just use their ID
+        userId = existingUserRes.rows[0].id;
+        authUserUuid = existingUserRes.rows[0].auth_user_id;
+      } else {
+        // 3. Create Supabase User
+        const { data: authUserData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
+          email: email,
+          password: password,
+          email_confirm: true,
+          user_metadata: {
+            user_type: 'employer',
+            employer_type: 'company',
+            is_elite: true
+          }
+        });
+
+        if (createUserError) {
+          logger.error('Supabase error generating elite access:', createUserError);
+          return res.status(500).json({ success: false, error: `Auth Error: ${createUserError.message}` });
+        }
+
+        authUserUuid = authUserData.user.id;
+
+        await client.query('BEGIN');
+
+        // 4. Generate unique slug
+        let baseSlug = `elite-${jobId}`;
+        let finalSlug = baseSlug;
+        let counter = 1;
+        while (true) {
+          const check = await client.query('SELECT id FROM users WHERE slug = $1', [finalSlug]);
+          if (check.rows.length === 0) break;
+          finalSlug = `${baseSlug}-${counter}`;
+          counter++;
+        }
+
+        // 5. Create User record
+        const userResult = await client.query(
+          `INSERT INTO users (
+            first_name, last_name, email, user_type, is_email_verified, auth_user_id, slug, country, city
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+          ['Elite', 'Employer', email, 'employer', true, authUserUuid, finalSlug, 'Palestine', 'Ramallah']
+        );
+        userId = userResult.rows[0].id;
+
+        // 6. Create Employer record
+        await client.query(
+          `INSERT INTO employers (
+            user_id, company_name, employer_type, company_email, verification_status, company_category
+          ) VALUES ($1, $2, $3, $4, $5, $6)`,
+          [userId, 'Confidential Employer', 'company', email, 'Verified', 'Tech & Development']
+        );
+      }
+
+      // 7. Link job to this employer (if not already inside a transaction, start one)
+      const inTransaction = existingUserRes.rowCount === 0;
+      if (!inTransaction) await client.query('BEGIN');
+      
+      await client.query('UPDATE jobs SET employer_id = $1 WHERE id = $2', [userId, jobId]);
+
+      await client.query('COMMIT');
+      
+      logLiveEvent('admin', `Elite access generated for job <b>#${jobId}</b>: <b>${email}</b>`);
+      res.json({ success: true, message: 'Elite access provisioned successfully.' });
+
+    } catch (error) {
+      if (client) await client.query('ROLLBACK');
+      if (authUserUuid) {
+        await supabaseAdmin.auth.admin.deleteUser(authUserUuid).catch(() => {});
+      }
+      logger.error('Error generating elite access:', error);
+      res.status(500).json({ success: false, error: error.message });
+    } finally {
+      if (client) client.release();
+    }
   });
 
   app.use('/', router);

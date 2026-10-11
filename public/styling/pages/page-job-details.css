@@ -246,13 +246,73 @@ html[dir="rtl"] .btn.btn-icon i {
     text-align: center;
 }
 
-.job-details-section p {
+.job-description-content {
     font-size: var(--font-size-base);
     color: var(--text-body);
-    line-height: 1.6;
+    line-height: 1.7;
     margin-bottom: var(--spacing-md);
-    /* Override global text-align for job description content */
     text-align: initial !important; 
+}
+
+.job-description-content p {
+    margin-bottom: 1.2rem;
+}
+
+.job-description-content ul, 
+.job-description-content ol {
+    margin-bottom: 1.2rem;
+    padding-left: 1.5rem;
+    list-style-position: outside;
+}
+
+html[dir="rtl"] .job-description-content ul,
+html[dir="rtl"] .job-description-content ol {
+    padding-left: 0;
+    padding-right: 2.5rem; /* Increased for bullet clearance */
+    text-align: right;
+    list-style-position: outside;
+}
+
+.job-description-content li {
+    margin-bottom: 0.6rem;
+    position: relative;
+    line-height: 1.6;
+}
+
+/* Ensure list markers are correctly placed and visible in RTL */
+html[dir="rtl"] .job-description-content ul {
+    list-style-type: disc;
+}
+
+html[dir="rtl"] .job-description-content ol {
+    list-style-type: decimal;
+}
+
+/* Fix for bullet points overlapping text in some browsers */
+html[dir="rtl"] .job-description-content li {
+    padding-right: 0.5rem;
+    text-align: right;
+}
+
+.job-description-content strong, 
+.job-description-content b {
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+.verified-badge-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    margin-left: 0.4rem;
+    font-size: 0.9em;
+    vertical-align: middle;
+}
+
+html[dir="rtl"] .verified-badge-inline {
+    margin-left: 0;
+    margin-right: 0.4rem;
 }
 
 .job-details-section p:last-child {
@@ -342,6 +402,32 @@ html[dir="rtl"] .requirement-item {
 
 /* Removed: More Jobs Section styles */
 
+
+.employer-logo-sm.individual.anonymous-icon-container {
+    background-color: var(--gray-50);
+    color: var(--gray-400);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 2px dashed var(--gray-200);
+}
+
+.confidential-note {
+    line-height: 1.5;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+html[dir="rtl"] .confidential-note {
+    text-align: right;
+}
+
+.anonymous-card {
+    border: 1px solid var(--gray-100);
+    background: linear-gradient(to bottom, var(--white), var(--gray-50));
+}
 
 /* --- Sidebar / Apply Section --- */
 .job-apply-sidebar {

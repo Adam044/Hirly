@@ -284,12 +284,20 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
         SELECT 
           j.title, 
           j.description,
-          COALESCE(j.external_company_name, e.company_name, 'Private Company') as company_name,
-          COALESCE(j.external_company_logo, e.company_logo_path, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg') as company_logo,
+          CASE 
+            WHEN j.is_confidential THEN 'Confidential Employer'
+            ELSE COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'Private Company')
+          END as company_name,
+          CASE 
+            WHEN j.is_confidential THEN 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg'
+            ELSE COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url, 'https://ecxvfjceuynwtpjvmxpw.supabase.co/storage/v1/object/public/assets/cta-employer-bg.jpg')
+          END as company_logo,
           j.city,
-          j.country
+          j.country,
+          j.is_confidential
         FROM jobs j
         LEFT JOIN employers e ON j.employer_id = e.user_id
+        LEFT JOIN users u ON j.employer_id = u.id
         WHERE j.id::text = $1::text OR j.external_id = $1::text
         LIMIT 1
       `, [jobId]);
@@ -373,7 +381,13 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     sendSmart(req, res, next, [path.join('employer', 'hire_dashboard.html'), 'hire_dashboard.html']);
   });
 
-  router.get(['/post_job', '/post_job.html'], isAuthenticated, isEmployer, isEmployerVerified, (req, res, next) => {
+  router.get(['/post_job', '/post_job.html'], isAuthenticated, (req, res, next) => {
+    if (req.session.userType === 'admin') return next();
+    return isEmployer(req, res, next);
+  }, (req, res, next) => {
+    if (req.session.userType === 'admin') return next();
+    return isEmployerVerified(req, res, next);
+  }, (req, res, next) => {
     sendSmart(req, res, next, [path.join('employer', 'post_job.html'), 'post_job.html']);
   });
 

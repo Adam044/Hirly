@@ -83,17 +83,37 @@
                 width: 6px;
             }
             .custom-scrollbar::-webkit-scrollbar-track {
-                @apply bg-slate-50 rounded-full;
+                @apply bg-slate-50;
             }
             .custom-scrollbar::-webkit-scrollbar-thumb {
                 @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
             }
-        }
 
-        /* Rich Text Editor Overrides */
-        .richtext-content:empty:not(:focus)::before {
-            content: attr(placeholder);
-            @apply text-slate-400 italic;
+            /* Rich Text Editor Placeholder */
+            .richtext-content:empty:before {
+                content: attr(placeholder);
+                @apply text-slate-400 italic pointer-events-none;
+            }
+            
+            /* Ensure bullet points are visible and correctly aligned in the editor */
+            .richtext-content ul {
+                list-style-type: disc;
+                padding-inline-start: 1.5rem;
+            }
+            .richtext-content ol {
+                list-style-type: decimal;
+                padding-inline-start: 1.5rem;
+            }
+            .richtext-content li {
+                display: list-item;
+            }
+            
+            /* RTL specific list alignment for the editor */
+            .richtext-content[dir="rtl"] ul, 
+            .richtext-content[dir="rtl"] ol {
+                padding-inline-start: 0;
+                padding-inline-end: 1.5rem;
+            }
         }
     </style>
 
@@ -133,7 +153,7 @@
                         </button>
                     </div>
 
-                    <div id="richTextEditorToolbar" class="flex flex-wrap gap-1 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl" style="display: none;">
+                    <div id="richTextEditorToolbar" class="hidden flex-wrap gap-1 p-2 bg-slate-50 border border-slate-200 border-b-0 rounded-t-xl">
                         <button type="button" data-command="bold" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Bold"><i class="fas fa-bold"></i></button>
                         <button type="button" data-command="italic" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Italic"><i class="fas fa-italic"></i></button>
                         <button type="button" data-command="underline" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all" title="Underline"><i class="fas fa-underline"></i></button>
@@ -208,6 +228,37 @@
                         </div>
                         <input type="hidden" id="selectedCategoryHidden" name="category">
                     </div>
+                </div>
+
+                <!-- NEW: Professions Dropdown (Multi-select) -->
+                <div class="form-group">
+                    <label for="professionsDropdownToggle" data-lang-key="professions_label" class="form-label">Required Professions</label>
+                    <div class="relative" id="professionsDropdown">
+                        <button type="button" class="form-input flex justify-between items-center text-left rtl:text-right disabled:bg-slate-50 disabled:cursor-not-allowed" id="professionsDropdownToggle" aria-haspopup="listbox" aria-expanded="false" disabled>
+                            <span data-lang-key="select_professions">Select Professions</span>
+                            <i class="fas fa-chevron-down text-slate-400 transition-transform duration-200 dropdown-arrow"></i>
+                        </button>
+                        
+                        <div id="professionsListContainer" class="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 hidden">
+                            <div class="p-3 border-b border-slate-100">
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                    <input type="text" id="professionsSearchInput" class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" data-lang-key="professions_search_placeholder" placeholder="Search professions...">
+                                </div>
+                            </div>
+                            <div id="professionsList" class="max-h-60 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                <!-- Professions will be injected by JS -->
+                                <div class="p-4 text-center text-slate-400 text-sm">
+                                    <i class="fas fa-info-circle mr-2"></i> <span data-lang-key="select_category_first_professions">Select a category first to see professions.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="selectedProfessionsTags" class="flex flex-wrap gap-2 mt-3">
+                        <span class="text-sm text-slate-400 italic tag-placeholder" data-lang-key="no_professions_selected">No professions selected</span>
+                    </div>
+                    <input type="hidden" id="requiredProfessionsHidden" name="profession_required">
                 </div>
 
 
@@ -303,6 +354,43 @@
                     <div class="flex gap-2">
                         <input type="text" id="requirementsInput" class="form-input" data-lang-key="add_requirement_placeholder" placeholder="Add a requirement, e.g., 3+ years experience">
                         <button type="button" id="addRequirementBtn" class="btn-primary-tw !py-2" data-lang-key="add_requirement_btn">Add</button>
+                    </div>
+                </div>
+
+                <!-- Admin Controls (Only visible in admin mode) -->
+                <div id="adminControls" class="card-tw border-primary/20 bg-primary/5 mb-8 hidden">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900" data-lang-key="admin_controls_title">Admin Controls</h3>
+                            <p class="text-sm text-slate-500" data-lang-key="admin_controls_subtitle">Post this job with special administrative flags.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                            <div>
+                                <label for="isVerified" class="font-semibold text-slate-800 block" data-lang-key="hirly_verified_label">Hirly Verified</label>
+                                <span class="text-xs text-slate-500" data-lang-key="hirly_verified_hint">Show the "Hirly Verified" badge for trust.</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="isVerified" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                            <div>
+                                <label for="isConfidential" class="font-semibold text-slate-800 block" data-lang-key="confidential_employer_label">Confidential Employer</label>
+                                <span class="text-xs text-slate-500" data-lang-key="confidential_employer_hint">Hide company name and logo from public view.</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="isConfidential" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
                     </div>
                 </div>
 

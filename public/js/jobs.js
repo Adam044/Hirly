@@ -346,21 +346,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function getEmployerAvatarHtml(job) {
         const t = window.translations || {};
         const lang = window.currentLanguage || 'en';
-        let employerDisplayName = job.display_employer_name || t?.['not_available']?.[lang] || 'N/A';
-        const employerLogo = job.display_employer_logo;
+        const isConfidential = job.is_confidential === true;
+        
+        let employerDisplayName = isConfidential 
+            ? (t?.['confidential_employer']?.[lang] || 'Confidential Employer')
+            : (job.display_employer_name || t?.['not_available']?.[lang] || 'N/A');
+            
+        const employerLogo = isConfidential ? null : job.display_employer_logo;
         const employerType = job.display_employer_type || 'individual';
-        
-        // Hide name if it indicates hidden identity
-        const hiddenIdentities = [
-            'هوية صاحب العمل مخفية',
-            'Employer identity hidden',
-            'Confidential',
-            'Hidden Identity'
-        ];
-        
-        if (hiddenIdentities.includes(employerDisplayName)) {
-            employerDisplayName = '';
-        }
 
         let avatarHtml = '';
         if (employerLogo) {
@@ -1513,7 +1506,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const { avatarHtml, avatarContainerClass, employerDisplayName } = getEmployerAvatarHtml(job);
             const employerSlug = job.employer_slug;
             const profileUrl = employerSlug ? `/${employerSlug}` : `/employer_profile.html?id=${job.employer_user_id}`;
-            const employerNameHtml = employerDisplayName ? `
+            const employerNameHtml = (employerDisplayName && !job.is_confidential) ? `
                 <a href="${profileUrl}" target="_blank" class="employer-name-display hover:text-primary transition-colors">
                     ${employerDisplayName}
                 </a>` : '';

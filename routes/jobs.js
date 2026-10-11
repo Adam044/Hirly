@@ -5,6 +5,7 @@ const { logLiveEvent } = require('../realtime/manager');
 
 module.exports = function registerJobsRoutes(app, pool, {
   isAuthenticated,
+  isAdmin,
   isEmployer,
   isEmployerVerified,
   isEmailVerified,
@@ -48,8 +49,14 @@ module.exports = function registerJobsRoutes(app, pool, {
   router.post(
     '/jobs',
     isAuthenticated,
-    isEmployer,
-    isEmployerVerified,
+    (req, res, next) => {
+      if (req.session.userType === 'admin') return next();
+      return isEmployer(req, res, next);
+    },
+    (req, res, next) => {
+      if (req.session.userType === 'admin') return next();
+      return isEmployerVerified(req, res, next);
+    },
     isEmailVerified,
     uploadJobImageMiddleware,
     [
@@ -67,14 +74,20 @@ module.exports = function registerJobsRoutes(app, pool, {
       body('externalApplyUrl').optional({ checkFalsy: true }).isURL({ require_protocol: true }),
       body('genderRequirement').optional({ checkFalsy: true }).isIn(['male','female','any']),
       body('ageMin').optional({ checkFalsy: true }).isInt({ min: 16, max: 100 }),
-      body('ageMax').optional({ checkFalsy: true }).isInt({ min: 16, max: 100 })
+      body('ageMax').optional({ checkFalsy: true }).isInt({ min: 16, max: 100 }),
+      body('is_verified').optional().isBoolean(),
+      body('is_confidential').optional().isBoolean()
     ],
     handleValidationErrors,
     async (req, res) => {
     let client;
-    // Simplified: No tier or credit checks. Everyone is unlimited.
     const employerId = req.session.userId;
-    const { title, description, budget, currency, category, deadline, jobType, jobSiteType, city, requiredProfessions, externalApplyUrl, requirements, genderRequirement, ageMin, ageMax } = req.body;
+    const isAdminUser = req.session.userType === 'admin';
+    const { 
+        title, description, budget, currency, category, deadline, jobType, 
+        jobSiteType, city, requiredProfessions, externalApplyUrl, requirements, 
+        genderRequirement, ageMin, ageMax, is_verified, is_confidential 
+    } = req.body;
  
     let jobImagePath = null;
     let fileCleanupId = null;
@@ -158,9 +171,24 @@ module.exports = function registerJobsRoutes(app, pool, {
         const professionsJsonString = JSON.stringify(professionsArray);
         const requirementsJsonString = JSON.stringify(requirementsArray);
 
+        // Handle Admin Flags
+        const verifiedFlag = isAdminUser ? (String(is_verified) === 'true') : false;
+        const confidentialFlag = isAdminUser ? (String(is_confidential) === 'true') : false;
+
         const jobInsertResult = await client.query(
-          'INSERT INTO jobs (employer_id, title, description, budget, currency, category, deadline, job_type, job_site_type, city, profession_required, job_image_path, external_apply_url, requirements, gender_requirement, age_min, age_max) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, $15, $16, $17) RETURNING id',
-          [employerId, title, description, isBudgetProvided ? parseFloat(budget) : null, isBudgetProvided ? currency : null, category, deadline, jobType, jobSiteType, city, professionsJsonString, jobImagePath, normalizedExternalUrl, requirementsJsonString, genderRequirementValue, ageMinValue, ageMaxValue]
+          `INSERT INTO jobs (
+              employer_id, title, description, budget, currency, category, deadline, 
+              job_type, job_site_type, city, profession_required, job_image_path, 
+              external_apply_url, requirements, gender_requirement, age_min, age_max,
+              is_verified, is_confidential
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING id`,
+          [
+              employerId, title, description, isBudgetProvided ? parseFloat(budget) : null, 
+              isBudgetProvided ? currency : null, category, deadline, jobType, 
+              jobSiteType, city, professionsJsonString, jobImagePath, normalizedExternalUrl, 
+              requirementsJsonString, genderRequirementValue, ageMinValue, ageMaxValue,
+              verifiedFlag, confidentialFlag
+          ]
         );
         const jobId = jobInsertResult.rows[0].id;
         
@@ -230,9 +258,17 @@ module.exports = function registerJobsRoutes(app, pool, {
       
       let query = `
         SELECT j.id, j.title, j.city, j.country, j.category, j.job_site_type, j.created_at, j.job_image_path, j.job_type,
-               COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS company_name,
-               COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS company_logo,
-               u.slug AS employer_slug, u.id AS employer_id
+               j.is_verified, j.is_confidential,
+               CASE 
+                  WHEN j.is_confidential THEN 'Confidential Employer'
+                  ELSE COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A')
+               END AS company_name,
+               CASE 
+                  WHEN j.is_confidential THEN NULL
+                  ELSE COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url)
+               END AS company_logo,
+               CASE WHEN j.is_confidential THEN NULL ELSE u.slug END AS employer_slug,
+               CASE WHEN j.is_confidential THEN NULL ELSE u.id END AS employer_id
         FROM jobs j
         LEFT JOIN employers e ON j.employer_id = e.user_id
         LEFT JOIN users u ON j.employer_id = u.id
@@ -297,17 +333,24 @@ module.exports = function registerJobsRoutes(app, pool, {
 
     let selectClause = `
       j.id, j.title, j.description, j.budget, j.currency, j.deadline, j.created_at, j.status, j.job_type, j.job_site_type, j.city, j.country, j.profession_required, j.job_image_path, j.category, j.gender_requirement, j.age_min, j.age_max,
-      j.is_external, j.external_source, j.external_apply_url,
-      COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS display_employer_name,
-      COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS display_employer_logo,
+      j.is_external, j.external_source, j.external_apply_url, j.is_verified, j.is_confidential,
       CASE 
+         WHEN j.is_confidential THEN 'Confidential Employer'
+         ELSE COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A')
+      END AS display_employer_name,
+      CASE 
+         WHEN j.is_confidential THEN NULL
+         ELSE COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url)
+      END AS display_employer_logo,
+      CASE 
+         WHEN j.is_confidential THEN 'confidential'
          WHEN j.is_external THEN 'external'
          WHEN e.company_name IS NOT NULL THEN 'company'
          ELSE 'individual'
       END AS display_employer_type,
       u.user_type AS employer_type,
-      u.id AS employer_user_id,
-      u.slug AS employer_slug
+      CASE WHEN j.is_confidential THEN NULL ELSE u.id END AS employer_user_id,
+      CASE WHEN j.is_confidential THEN NULL ELSE u.slug END AS employer_slug
     `;
 
     let whereClause = `WHERE (j.status = 'open' OR j.status = 'closed') AND (j.deadline IS NULL OR j.deadline >= CURRENT_DATE)`;
@@ -458,24 +501,32 @@ module.exports = function registerJobsRoutes(app, pool, {
             j.is_external, j.external_source, j.external_apply_url,
             j.requirements, j.external_apply_clicks,
             j.city AS job_city, j.country AS job_country,
-            COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A') AS display_employer_name,
-            COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url) AS display_employer_logo,
+            j.is_verified, j.is_confidential,
             CASE 
+                WHEN j.is_confidential THEN 'Confidential Employer'
+                ELSE COALESCE(j.external_company_name, e.company_name, u.first_name || ' ' || u.last_name, 'N/A')
+            END AS display_employer_name,
+            CASE 
+                WHEN j.is_confidential THEN NULL
+                ELSE COALESCE(j.external_company_logo, e.company_logo_path, u.profile_picture_url)
+            END AS display_employer_logo,
+            CASE 
+                WHEN j.is_confidential THEN 'confidential'
                 WHEN j.is_external THEN 'external'
                 WHEN e.company_name IS NOT NULL THEN 'company'
                 ELSE 'individual'
             END AS display_employer_type,
-            e.company_description AS employer_company_description,
-            e.verification_status AS is_verified,
+            CASE WHEN j.is_confidential THEN NULL ELSE e.company_description END AS employer_company_description,
+            CASE WHEN j.is_confidential THEN false ELSE COALESCE(e.verification_status = 'Verified', false) END AS is_employer_verified,
             e.employer_type,
-            e.address AS employer_address,
-            u.email AS employer_email,
-            u.phone AS employer_phone,
-            u.first_name AS employer_first_name,
-            u.last_name AS employer_last_name,
-            u.id AS employer_user_id,
-            u.slug AS employer_slug,
-            u.city AS employer_city,
+            CASE WHEN j.is_confidential THEN NULL ELSE e.address END AS employer_address,
+            CASE WHEN j.is_confidential THEN NULL ELSE u.email END AS employer_email,
+            CASE WHEN j.is_confidential THEN NULL ELSE u.phone END AS employer_phone,
+            CASE WHEN j.is_confidential THEN NULL ELSE u.first_name END AS employer_first_name,
+            CASE WHEN j.is_confidential THEN NULL ELSE u.last_name END AS employer_last_name,
+            CASE WHEN j.is_confidential THEN NULL ELSE u.id END AS employer_user_id,
+            CASE WHEN j.is_confidential THEN NULL ELSE u.slug END AS employer_slug,
+            CASE WHEN j.is_confidential THEN NULL ELSE u.city END AS employer_city,
             (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE professional_id = u.id) AS professional_average_rating,
             (SELECT COUNT(id) FROM reviews WHERE professional_id = u.id) AS professional_reviews_count
         FROM jobs j
@@ -566,10 +617,11 @@ module.exports = function registerJobsRoutes(app, pool, {
       client = await pool.connect();
       let query = `
         SELECT j.id, j.title, j.description, j.budget, j.currency, j.category, j.job_site_type, j.city, j.created_at, j.job_image_path, j.job_type,
-               u.slug AS employer_slug
+               j.is_verified, j.is_confidential,
+               CASE WHEN j.is_confidential THEN NULL ELSE u.slug END AS employer_slug
         FROM jobs j
         JOIN users u ON j.employer_id = u.id
-        WHERE j.employer_id = $1
+        WHERE j.employer_id = $1 AND j.is_confidential = false
       `;
       const params = [employerId];
       let paramIndex = 2;
@@ -1110,6 +1162,178 @@ module.exports = function registerJobsRoutes(app, pool, {
     } finally {
       if (client) client.release();
     }
+    }
+  );
+
+  router.get(
+    '/jobs/:jobId/intelligence-report',
+    isAuthenticated,
+    (req, res, next) => {
+      if (req.session.userType === 'admin') return next();
+      return isEmployer(req, res, next);
+    },
+    async (req, res) => {
+      const jobId = req.params.jobId;
+      const employerId = req.session.userId;
+      const isAdmin = req.session.userType === 'admin';
+      let client;
+
+      try {
+        client = await pool.connect();
+
+        // 1. Fetch Job Stats
+        const jobStatsQuery = `
+          SELECT 
+            j.title, j.status, j.created_at, j.deadline, j.views_count,
+            COUNT(a.id) as total_applications,
+            ROUND(AVG(COALESCE(ae.match_score, 0))) as avg_score,
+            COUNT(CASE WHEN a.status = 'accepted' OR a.status = 'hired' THEN 1 END) as hired_count
+          FROM jobs j
+          LEFT JOIN applications a ON j.id = a.job_id
+          LEFT JOIN application_ai_evaluations ae ON a.id = ae.application_id
+          WHERE j.id = $1 ${isAdmin ? '' : 'AND j.employer_id = $2'}
+          GROUP BY j.id
+        `;
+        const jobStatsResult = await client.query(jobStatsQuery, isAdmin ? [jobId] : [jobId, employerId]);
+        
+        if (jobStatsResult.rowCount === 0) {
+          return res.status(404).send('Job not found or access denied.');
+        }
+
+        const stats = jobStatsResult.rows[0];
+
+        // 2. Fetch Top Candidates
+        const candidatesQuery = `
+          SELECT 
+            u.first_name, u.last_name, 
+            ae.match_score, ae.verdict, ae.summary as headline
+          FROM applications a
+          JOIN users u ON a.professional_id = u.id
+          LEFT JOIN application_ai_evaluations ae ON a.id = ae.application_id
+          WHERE a.job_id = $1
+          ORDER BY ae.match_score DESC NULLS LAST
+          LIMIT 5
+        `;
+        const candidatesResult = await client.query(candidatesQuery, [jobId]);
+
+        // 3. Generate HTML Template
+        const candidatesHtml = candidatesResult.rows.map(c => `
+          <div style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #f1f5f9;">
+            <div style="width: 45px; height: 45px; border-radius: 12px; background: #6366f1; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-right: 15px; font-size: 14px;">
+              ${c.match_score || 0}%
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 700; font-size: 15px; color: #0f172a;">${c.first_name} ${c.last_name}</div>
+              <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${c.headline || 'Pending Analysis'}</div>
+            </div>
+            <div style="padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; 
+              ${c.verdict === 'Strong Hire' ? 'background: #dcfce7; color: #166534;' : 
+                c.verdict === 'Interview' ? 'background: #dbeafe; color: #1e40af;' : 
+                'background: #f1f5f9; color: #475569;'}">
+              ${c.verdict || 'Pending'}
+            </div>
+          </div>
+        `).join('');
+
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;700;900&display=swap');
+              body { font-family: 'Inter', sans-serif; color: #1e293b; margin: 0; padding: 50px; line-height: 1.5; }
+              .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #f1f5f9; padding-bottom: 30px; margin-bottom: 40px; }
+              .logo { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 24px; color: #0f172a; letter-spacing: -1px; }
+              .report-tag { font-size: 10px; text-transform: uppercase; color: #6366f1; font-weight: 900; letter-spacing: 3px; }
+              .job-title { font-size: 32px; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: -1px; }
+              .meta-row { display: flex; gap: 25px; margin-top: 15px; font-size: 12px; color: #64748b; font-weight: 600; }
+              .meta-item { display: flex; align-items: center; gap: 6px; }
+              .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 40px 0; }
+              .stat-card { background: #ffffff; padding: 25px; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+              .stat-value { font-size: 28px; font-weight: 900; color: #0f172a; }
+              .stat-label { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-top: 4px; letter-spacing: 1px; }
+              .section-title { font-size: 16px; font-weight: 900; color: #0f172a; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+              .section-title::after { content: ''; flex: 1; height: 1px; background: #f1f5f9; }
+              .footer { margin-top: 60px; padding-top: 30px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+              .verified-badge { background: #6366f1; color: white; padding: 2px 8px; border-radius: 4px; font-size: 9px; margin-left: 10px; vertical-align: middle; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div>
+                <div class="logo">HIRLY</div>
+                <div class="report-tag">Intelligence Report</div>
+              </div>
+              <div style="text-align: right; font-size: 10px; color: #94a3b8;">
+                Ref: #JOB-${jobId}<br>
+                Generated: ${new Date().toLocaleDateString()}
+              </div>
+            </div>
+
+            <div style="margin-bottom: 40px;">
+              <h1 class="job-title">${stats.title} <span class="verified-badge">VERIFIED</span></h1>
+              <div class="meta-row">
+                <div class="meta-item">📅 Posted: ${new Date(stats.created_at).toLocaleDateString()}</div>
+                <div class="meta-item">⏱️ Status: ${stats.status.toUpperCase()}</div>
+                <div class="meta-item">🎯 Deadline: ${new Date(stats.deadline).toLocaleDateString()}</div>
+              </div>
+            </div>
+
+            <div class="section-title">Engagement Metrics</div>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value">${stats.views_count || 0}</div>
+                <div class="stat-label">Total Views</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">${stats.total_applications}</div>
+                <div class="stat-label">Applications</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">${stats.avg_score || 0}%</div>
+                <div class="stat-label">Avg. Match</div>
+              </div>
+              <div class="stat-card" style="background: #f8fafc; border-color: #6366f1;">
+                <div class="stat-value" style="color: #6366f1;">${stats.hired_count}</div>
+                <div class="stat-label">Success Hires</div>
+              </div>
+            </div>
+
+            <div class="section-title">Top Talent Intelligence</div>
+            <div style="background: white; border: 1px solid #f1f5f9; border-radius: 16px; overflow: hidden;">
+              ${candidatesHtml || '<div style="padding: 40px; text-align: center; color: #64748b;">No applicants analyzed yet.</div>'}
+            </div>
+
+            <div class="footer">
+              PROPRIETARY INTELLIGENCE REPORT • PROTECTED BY HIRLY SECURITY SYSTEMS • DOCUMENT ID: ${Math.random().toString(36).substring(7).toUpperCase()}
+            </div>
+          </body>
+          </html>
+        `;
+
+        // 4. Convert to PDF using Playwright
+        const { chromium } = require('playwright');
+        const browser = await chromium.launch({ headless: true });
+        const page = await browser.newPage();
+        await page.setContent(htmlContent);
+        const pdfBuffer = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
+        });
+        await browser.close();
+
+        res.contentType('application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Hirly-Intelligence-Report-${jobId}.pdf`);
+        res.send(pdfBuffer);
+
+      } catch (error) {
+        logger.error('Error generating PDF report:', error);
+        res.status(500).send('Failed to generate intelligence report.');
+      } finally {
+        if (client) client.release();
+      }
     }
   );
 

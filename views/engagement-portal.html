@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Hirly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styling/main.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+
+        :root {
+            --bg-dark: #0a0a0b;
+            --surface: #121214;
+            --border: #1e1e22;
+            --text-primary: #e1e1e6;
+            --text-secondary: #a8a8b3;
+            --accent: #6366f1;
+            --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            overflow: hidden;
+        }
+
+        .split-screen {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Left Side: Image */
+        .left-side {
+            flex: 1;
+            background: url('https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Professional+high-end+minimalist+dark+office+workstation+with+a+single+monitor+cinematic+lighting+monochromatic+aesthetic+8k+resolution&image_size=portrait_16_9') no-repeat center center;
+            background-size: cover;
+            position: relative;
+            display: none; /* Hidden on mobile */
+        }
+
+        .left-side::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, rgba(10, 10, 11, 0) 0%, rgba(10, 10, 11, 0.4) 100%);
+        }
+
+        /* Right Side: Form */
+        .right-side {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-dark);
+            padding: 2rem;
+            position: relative;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-section {
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo i {
+            color: var(--accent);
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.875rem 1rem;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg-dark);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-msg {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            text-align: center;
+            min-height: 1.2rem;
+            font-weight: 500;
+        }
+
+        .status-error { color: #ef4444; }
+        .status-success { color: #10b981; }
+
+        .footer-note {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            right: 2rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+
+        @media (min-width: 1024px) {
+            .left-side {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-screen">
+        <div class="left-side"></div>
+        
+        <div class="right-side">
+            <div class="login-card">
+                <div class="logo-section">
+                    <div class="logo">
+                        <i class="fas fa-shield-halved"></i>
+                        HIRLY
+                    </div>
+                    <h1 class="login-title">Login</h1>
+                    <p class="login-subtitle">Access your intelligence dashboard</p>
+                </div>
+
+                <form id="eliteLoginForm">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="email" class="form-input" placeholder="name@company.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    
+                    <button type="submit" class="login-btn" id="loginBtn">
+                        Sign In
+                    </button>
+
+                    <div id="statusMsg" class="status-msg"></div>
+                </form>
+            </div>
+
+            <div class="footer-note">
+                &copy; 2026 Hirly. Secure Partner Access.
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth-shared.js"></script>
+    <script>
+        document.getElementById('eliteLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const status = document.getElementById('statusMsg');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+            status.textContent = '';
+            status.className = 'status-msg';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    status.textContent = 'Access granted. Redirecting...';
+                    status.classList.add('status-success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/hire_dashboard.html';
+                    }, 800);
+                } else {
+                    throw new Error(data.error || 'Invalid credentials.');
+                }
+            } catch (err) {
+                status.textContent = err.message;
+                status.classList.add('status-error');
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        });
+    </script>
+</body>
+</html>

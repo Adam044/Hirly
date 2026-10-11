@@ -142,6 +142,15 @@ export const bulkRemoveJobs = async (jobIds) => {
     return await handleFetchResponse(response);
 };
 
+export const bulkCloseJobs = async (jobIds) => {
+    const response = await fetch('/admin/bulk-close-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobIds })
+    });
+    return await handleFetchResponse(response);
+};
+
 // --- Intelligence / Sources ---
 export const getJobSources = async () => {
     const response = await fetch(`/admin/job-sources?t=${Date.now()}`);

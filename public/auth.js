@@ -6,10 +6,9 @@ window.fetch = async (url, options) => {
     // 1. Add CSRF token to state-changing requests
     const methods = ['POST', 'PUT', 'DELETE', 'PATCH'];
     if (options && options.method && methods.includes(options.method.toUpperCase())) {
-        const csrfToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('XSRF-TOKEN='))
-            ?.split('=')[1];
+        // Robust cookie parsing using regex
+        const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
+        const csrfToken = match ? match[1] : null;
 
         if (csrfToken) {
             options.headers = {
@@ -17,6 +16,12 @@ window.fetch = async (url, options) => {
                 'X-XSRF-TOKEN': csrfToken
             };
         }
+    }
+
+    // 2. Ensure credentials are included for same-origin API requests
+    if (typeof url === 'string' && url.startsWith('/api/')) {
+        options = options || {};
+        options.credentials = options.credentials || 'include';
     }
 
     try {
@@ -282,6 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify({ email, password }),
                 });
 
@@ -311,6 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const reqRes = await fetch('/api/request-activation', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
                             body: JSON.stringify({ email })
                         });
                         const reqData = await reqRes.json();
@@ -375,6 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const res = await fetch('/api/verify-activation-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ email, otp })
                 });
                 const data = await res.json();
@@ -437,6 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const res = await fetch('/api/complete-activation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ token: window._activationToken, newPassword })
                 });
                 const data = await res.json();

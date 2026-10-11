@@ -11,40 +11,46 @@ class PalestineCollector {
         this.dbPool = dbPool;
         this.browser = null;
         this.context = null;
+        this.activePage = null;
         this.shouldStop = false;
     }
 
-    async initBrowser() {
+    async initBrowser(forceFresh = false) {
         if (!this.browser) {
             const path = require('path');
             const fs = require('fs');
             const userDataDir = path.join(process.cwd(), '.browser-data');
             
-            // OPTIONAL: If we detect too many failures, we could clear this dir
-            // For now, let's just ensure it exists
+            // If we are stuck in a loop, clearing the session data is often the only way
+            if (forceFresh && fs.existsSync(userDataDir)) {
+                this.addLog('[Playwright] ⚠️ Stuck loop detected. Clearing browser session data...', 'warn');
+                try {
+                    fs.rmSync(userDataDir, { recursive: true, force: true });
+                } catch (e) {
+                    this.addLog(`[Playwright] Failed to clear session data: ${e.message}`, 'error');
+                }
+            }
+
             if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
 
-            this.addLog('[Playwright] Launching Persistent Chrome (Stability Mode)...');
+            this.addLog('[Playwright] Launching Persistent Chrome (Stealth Mode)...');
             
             this.browser = await chromium.launchPersistentContext(userDataDir, {
                 headless: false,
                 channel: 'chrome',
                 args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-blink-features=AutomationControlled',
-                    '--disable-infobars',
-                    '--disable-extensions',
                     '--window-position=0,0',
                     '--window-size=1920,1080',
                     '--start-maximized',
                     '--disable-notifications',
                     '--no-first-run',
-                    '--disable-gpu', // Fixes blank page issues in some environments
-                    '--disable-dev-shm-usage', // Prevents crashes in containerized/limited environments
-                    '--disable-software-rasterizer'
+                    '--disable-blink-features=AutomationControlled',
+                    // REMOVED: --no-sandbox, --disable-setuid-sandbox as they trigger warnings
+                    // REMOVED: --disable-web-security as it can be a bot signal
                 ],
                 ignoreDefaultArgs: ['--enable-automation'],
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+                viewport: { width: 1920, height: 1080 },
                 deviceScaleFactor: 1,
                 hasTouch: false,
                 isMobile: false,
@@ -56,17 +62,21 @@ class PalestineCollector {
             this.context = this.browser; 
             
             // Set default timeouts
-            this.context.setDefaultTimeout(90000);
-            this.context.setDefaultNavigationTimeout(90000);
+            this.context.setDefaultTimeout(60000);
+            this.context.setDefaultNavigationTimeout(60000);
 
             await this.context.addInitScript(() => {
-                // 1. Remove webdriver
+                // 1. Fully mask webdriver
                 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
                 
-                // 2. Mock hardware concurrency
+                // 2. Mock hardware concurrency and languages
                 Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
+                Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en', 'ar'] });
 
-                // 3. Mock permissions
+                // 3. Mock plugins (Empty but present, like real Chrome)
+                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+
+                // 4. Mock permissions
                 const originalQuery = window.navigator.permissions.query;
                 window.navigator.permissions.query = (parameters) => (
                     parameters.name === 'notifications' ?
@@ -74,17 +84,127 @@ class PalestineCollector {
                         originalQuery(parameters)
                 );
 
-                // 4. Subtle Chrome identification (Real Chrome has this, bots don't)
+                // 5. Subtle Chrome identification
                 window.chrome = {
                     runtime: {},
                     loadTimes: function() {},
                     csi: function() {},
                     app: {}
                 };
+
+                // 6. WebGL Vendor/Renderer masking
+                const getParameter = WebGLRenderingContext.prototype.getParameter;
+                WebGLRenderingContext.prototype.getParameter = function(parameter) {
+                    if (parameter === 37445) return 'Intel Inc.';
+                    if (parameter === 37446) return 'Intel(R) Iris(TM) Graphics 6100';
+                    return getParameter.apply(this, arguments);
+                };
             });
             
             this.addLog('[Playwright] Stability Context Ready');
         }
+    }
+
+    /**
+     * Consolidates challenge handling (Auto + Manual Fallback)
+     */
+    async handleChallenge(page, contextName = 'General') {
+        let title = '';
+        try { title = await page.title(); } catch (e) { title = 'Error'; }
+        
+        const checkChallenge = async () => {
+            try {
+                const currentTitle = await page.title();
+                const content = await page.content();
+                return currentTitle.includes('Just a moment') || 
+                       currentTitle.includes('Cloudflare') || 
+                       currentTitle.includes('Security Check') ||
+                       content.includes('cf-turnstile') ||
+                       content.includes('challenges.cloudflare.com') ||
+                       currentTitle === 'Error';
+            } catch (e) {
+                return true;
+            }
+        };
+
+        if (!(await checkChallenge())) return true;
+
+        this.addLog(`[Jobs.ps Playwright] [${contextName}] 🛡️ Security challenge detected.`, 'warn');
+
+        // 1. Try Auto-solve first (5 attempts)
+        for (let i = 0; i < 5; i++) {
+            this.addLog(`[Jobs.ps Playwright] [${contextName}] Auto-solve attempt ${i+1}/5...`);
+            
+            try {
+                const frames = page.frames();
+                for (const frame of frames) {
+                    try {
+                        const fContent = await frame.content().catch(() => '');
+                        if (fContent.includes('cf-turnstile') || frame.url().includes('challenges.cloudflare.com')) {
+                            const checkbox = await frame.$('#challenge-stage, .ctp-checkbox-container, .cf-turnstile-wrapper');
+                            if (checkbox) {
+                                const rect = await checkbox.boundingBox();
+                                if (rect) {
+                                    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2, { steps: 15 });
+                                    await page.waitForTimeout(500);
+                                    await page.mouse.click(rect.x + rect.width / 2, rect.y + rect.height / 2);
+                                    await page.waitForTimeout(5000);
+                                }
+                            }
+                        }
+                    } catch (frameErr) {}
+                }
+            } catch (e) {}
+
+            await page.waitForTimeout(3000);
+            if (!(await checkChallenge())) {
+                this.addLog(`[Jobs.ps Playwright] [${contextName}] ✅ Auto-solve successful!`);
+                return true;
+            }
+        }
+
+        // 2. Manual Fallback
+        this.addLog(`[Jobs.ps Playwright] [${contextName}] ⚠️ AUTO-SOLVE FAILED. SWITCHING TO MANUAL MODE.`, 'warn');
+        this.addLog(`[Jobs.ps Playwright] 🔴 ATTENTION: Please solve the Cloudflare challenge in the browser window NOW!`, 'error');
+        this.addLog(`[Jobs.ps Playwright] Waiting for manual verification... (Max 2 minutes)`);
+
+        const startTime = Date.now();
+        const timeout = 120000; // 2 minutes
+
+        while (Date.now() - startTime < timeout) {
+            if (this.shouldStop) return false;
+            
+            await page.waitForTimeout(3000);
+            if (!(await checkChallenge())) {
+                this.addLog(`[Jobs.ps Playwright] [${contextName}] 🎉 Solve detected! Verifying session stability...`, 'success');
+                
+                // CRITICAL: Wait for the page to actually load after the challenge clears
+                try {
+                    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+                    
+                    // If we are still on a challenge-like page or the loop continues, try a reload
+                    if (await checkChallenge()) {
+                        this.addLog(`[Jobs.ps Playwright] Loop detected. Forcing page reload...`, 'warn');
+                        await page.reload({ waitUntil: 'domcontentloaded' });
+                        await page.waitForTimeout(5000);
+                    }
+                } catch (e) {}
+
+                if (!(await checkChallenge())) {
+                    this.addLog(`[Jobs.ps Playwright] [${contextName}] ✅ Manual verification confirmed! Proceeding...`, 'success');
+                    return true;
+                }
+            }
+
+            // Periodic reminder
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            if (elapsed > 0 && elapsed % 20 === 0) {
+                this.addLog(`[Jobs.ps Playwright] Still waiting for manual solve... (${elapsed}s elapsed). Please ensure you click the checkbox.`, 'warn');
+            }
+        }
+
+        this.addLog(`[Jobs.ps Playwright] [${contextName}] ❌ Manual solve timed out.`, 'error');
+        return false;
     }
 
     async closeBrowser() {
@@ -96,101 +216,141 @@ class PalestineCollector {
         }
     }
 
+    async connectToRealBrowser(silent = false) {
+        if (!silent) {
+            this.addLog('[Playwright] 🔴 REAL BROWSER BRIDGE MODE', 'error');
+            this.addLog('[Playwright] ', 'error');
+            this.addLog('[Playwright] ⚠️  MANUAL SETUP REQUIRED - FOLLOW THESE STEPS EXACTLY:', 'error');
+            this.addLog('[Playwright] ', 'error');
+            this.addLog('[Playwright] Step 1: Force-close ALL Chrome processes first!', 'error');
+            this.addLog('[Playwright]         Run this in PowerShell:  Stop-Process -Name "chrome" -ErrorAction SilentlyContinue', 'error');
+            this.addLog('[Playwright] ', 'error');
+            this.addLog('[Playwright] Step 2: Open a new PowerShell as Administrator and run:', 'error');
+            this.addLog('[Playwright]         & "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\\temp\\chrome-debug"', 'error');
+            this.addLog('[Playwright] ', 'error');
+            this.addLog('[Playwright] Step 3: In the new Chrome window, navigate to: https://www.jobs.ps/', 'error');
+            this.addLog('[Playwright] Step 4: Solve any CAPTCHA manually', 'error');
+            this.addLog('[Playwright] Step 5: PRESS ENTER in this terminal ONLY AFTER the homepage is fully loaded', 'error');
+            this.addLog('[Playwright] ', 'error');
+            this.addLog('[Playwright] Waiting for you to complete the steps above...', 'error');
+            
+            const readline = require('readline');
+            const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+            
+            await new Promise(resolve => {
+                rl.question('[Playwright] Press ENTER to attempt connection...', () => {
+                    rl.close();
+                    resolve();
+                });
+            });
+        }
+        
+        if (silent) {
+            this.addLog('[Playwright] Checking for existing Real Browser Bridge (localhost:9222)...');
+        } else {
+            this.addLog('[Playwright] Attempting to connect to http://localhost:9222 ...');
+        }
+        
+        try {
+            // Connect to the real Chrome via CDP
+            this.browser = await chromium.connectOverCDP('http://localhost:9222', { timeout: silent ? 3000 : 10000 });
+            
+            const contexts = this.browser.contexts();
+            this.context = contexts[0] || await this.browser.newContext();
+            
+            const pages = this.context.pages();
+            let targetPage = pages.find(p => p.url().includes('jobs.ps'));
+            
+            if (targetPage) {
+                this.addLog('[Playwright] ✅ Found existing Jobs.ps tab!');
+                this.activePage = targetPage;
+            } else {
+                this.addLog('[Playwright] ⚠️ Jobs.ps tab not found. Opening a new one in your Chrome...');
+                this.activePage = await this.context.newPage();
+                await this.activePage.goto('https://www.jobs.ps/', { waitUntil: 'load' });
+            }
+            
+            this.addLog('[Playwright] ✅ Successfully connected! Using your real human session.');
+            return true;
+        } catch (error) {
+            if (!silent) {
+                this.addLog(`[Playwright] ❌ Connection failed: ${error.message}`, 'error');
+                this.addLog('[Playwright] Likely cause: Chrome was not started with --remote-debugging-port=9222 or was not fully closed first.', 'error');
+            }
+            return false;
+        }
+    }
+
     async collect(source, options = {}) {
         this.addLog(`[Jobs.ps Playwright] Starting scan for: ${source.name}${options.isAuto ? ' (Automation Mode)' : ''}`);
-        this.shouldStop = false; // Reset stop signal at start
+        this.shouldStop = false; 
         
         const rawJobs = [];
         let pagesToScan = options.maxPages || options.scanDepthLimit || source.config?.pages || 1;
 
-        // Optimization: In automation mode, we only need the first page for NEW jobs
         if (options.isAuto) {
             pagesToScan = 1;
         }
 
-        try {
-            await this.initBrowser();
+        // FIRST: Try a SILENT Real Browser Bridge (in case debug Chrome is already open)
+        this.addLog('[Playwright] Attempting Silent Browser Bridge check...');
+        let realBrowserConnected = await this.connectToRealBrowser(true);
+        
+        if (!realBrowserConnected) {
+            this.addLog('[Playwright] No existing Bridge found, trying Standard Stealth Automation...');
+            
+            let loopCount = 0;
+            const MAX_LOOPS = 2;
 
-            // STEP 0: Warm up the session by visiting the homepage
-            const mainPage = await this.context.newPage();
-            
-            // Add a small initial delay to let the browser "breathe"
-            await mainPage.waitForTimeout(Math.floor(Math.random() * 3000 + 2000));
-            
-            this.addLog(`[Jobs.ps Playwright] Warming up session via homepage...`);
-            
-            try {
-                // Use 'load' for initial navigation to ensure challenge UI renders
-                this.addLog(`[Jobs.ps Playwright] Navigating to homepage...`);
-                await mainPage.goto('https://www.jobs.ps/', { 
-                    waitUntil: 'load', 
-                    timeout: 90000 
-                });
-            } catch (gotoError) {
-                this.addLog(`[Jobs.ps Playwright] Warm-up navigation timed out or blank (${gotoError.message}), checking for challenge-stage...`, 'warn');
-            }
-            
-            // Check for challenge on warm-up
-            for (let i = 0; i < 10; i++) {
-                let warmTitle = '';
+            while (loopCount < MAX_LOOPS) {
                 try {
-                    warmTitle = await mainPage.title();
-                } catch (e) {
-                    warmTitle = 'Error';
-                }
+                    await this.initBrowser(loopCount > 0);
 
-                if (!warmTitle.includes('Just a moment') && warmTitle !== 'Error') break;
-                
-                this.addLog(`[Jobs.ps Playwright] Warm-up: Still challenged... (${i+1}/10)`, 'warn');
-                
-                // Human-like jitter
-                await mainPage.mouse.move(Math.floor(Math.random() * 800), Math.floor(Math.random() * 600), { steps: 50 });
-                await mainPage.mouse.wheel(0, 300);
-                await mainPage.waitForTimeout(1500);
-                await mainPage.mouse.wheel(0, -300);
-                
-                // Try to click turnstile if found - Smart Wait
-                try {
-                    const frames = mainPage.frames();
-                    for (const frame of frames) {
-                        const content = await frame.content().catch(() => '');
-                        if (content.includes('cf-turnstile') || frame.url().includes('challenges.cloudflare.com')) {
-                            const checkbox = await frame.$('#challenge-stage, .ctp-checkbox-container, .cf-turnstile-wrapper');
-                            if (checkbox) {
-                                const rect = await checkbox.boundingBox();
-                                if (rect) {
-                                    // 1. Move mouse to a random spot on the page first
-                                    await mainPage.mouse.move(Math.random() * 500, Math.random() * 500, { steps: 20 });
-                                    await mainPage.waitForTimeout(1000);
+                    const mainPage = await this.context.newPage();
+                    this.addLog(`[Jobs.ps Playwright] Warming up session via homepage...`);
+                    
+                    try {
+                        await mainPage.goto('https://www.jobs.ps/', { waitUntil: 'load', timeout: 60000 });
+                    } catch (gotoError) {}
+                    
+                    const warmedUp = await this.handleChallenge(mainPage, 'Warm-up');
+                    
+                    // IF AUTOMATION FAILS (Warm-up blocked), ESCALATE to Manual Bridge
+                    if (!warmedUp) {
+                        this.addLog(`[Jobs.ps Playwright] Automation blocked. Escalating to Real Browser Bridge...`, 'error');
+                        await mainPage.close();
+                        await this.closeBrowser();
+                        
+                        realBrowserConnected = await this.connectToRealBrowser(false);
+                        if (realBrowserConnected) break; // Success via Bridge
 
-                                    // 2. Approach Turnstile slowly
-                                    this.addLog(`[Jobs.ps Playwright] Approaching Turnstile at ${rect.x}, ${rect.y}`);
-                                    await mainPage.mouse.move(
-                                        rect.x + rect.width / 2 + (Math.random() * 30 - 15), 
-                                        rect.y + rect.height / 2 + (Math.random() * 30 - 15),
-                                        { steps: 40 }
-                                    );
-                                    
-                                    await mainPage.waitForTimeout(Math.floor(Math.random() * 2000 + 1000));
-                                    
-                                    // 3. Final Click
-                                    await mainPage.mouse.click(
-                                        rect.x + rect.width / 2 + (Math.random() * 10 - 5), 
-                                        rect.y + rect.height / 2 + (Math.random() * 10 - 5)
-                                    );
-                                    await mainPage.waitForTimeout(8000);
-                                }
-                            }
-                        }
+                        loopCount++;
+                        if (loopCount < MAX_LOOPS) continue;
+                        return [];
                     }
-                } catch (e) {}
-                
-                await mainPage.waitForTimeout(5000);
+
+                    await mainPage.close();
+                    break;
+                } catch (error) {
+                    this.addLog(`[Jobs.ps Playwright] Initial setup failure: ${error.message}`, 'error');
+                    await this.closeBrowser();
+                    loopCount++;
+                    if (loopCount >= MAX_LOOPS) return [];
+                }
             }
+        }
 
-            await mainPage.waitForTimeout(8000);
-            await mainPage.close();
+        if (realBrowserConnected) {
+            this.addLog('[Playwright] Real Browser Bridge active - using your verified Chrome');
+            try {
+                if (this.activePage) {
+                    await this.activePage.bringToFront();
+                    await this.handleChallenge(this.activePage, 'Bridge Check');
+                }
+            } catch (e) {}
+        }
 
+        try {
             for (let page = 1; page <= pagesToScan; page++) {
                 if (this.shouldStop) break;
 
@@ -258,50 +418,11 @@ class PalestineCollector {
                     });
 
                     // Enhanced Bot/Security wall bypass
-                    let title = '';
-                    try { title = await page.title(); } catch (e) { title = 'Error'; }
-                    let content = await page.content();
-                    this.addLog(`[Jobs.ps Playwright] Page loaded. Title: "${title}". Content length: ${content.length}`);
-
-                    if (content.includes('security verification') || content.includes('verifying you are not a bot') || content.includes('Cloudflare') || content.includes('cf-challenge-running') || title.includes('Just a moment')) {
-                        this.addLog('[Jobs.ps Playwright] Security challenge detected. Attempting deep bypass...', 'warn');
-                        
-                        // 1. Wait for auto-solve
-                        for (let i = 0; i < 8; i++) {
-                            await page.waitForTimeout(3000);
-                            try { title = await page.title(); } catch (e) { title = 'Error'; }
-                            if (!title.includes('Just a moment') && title !== 'Error') break;
-                            
-                            // 2. Try to find and click Turnstile checkbox if it exists
-                            try {
-                                const frames = page.frames();
-                                for (const frame of frames) {
-                                    const fContent = await frame.content().catch(() => '');
-                                    if (fContent.includes('cf-turnstile') || frame.url().includes('challenges.cloudflare.com')) {
-                                        const checkbox = await frame.$('#challenge-stage, .ctp-checkbox-container, .cf-turnstile-wrapper');
-                                        if (checkbox) {
-                                            const rect = await checkbox.boundingBox();
-                                            if (rect) {
-                                                await page.mouse.move(
-                                                    rect.x + rect.width / 2 + (Math.random() * 20 - 10), 
-                                                    rect.y + rect.height / 2 + (Math.random() * 20 - 10),
-                                                    { steps: 15 }
-                                                );
-                                                await page.waitForTimeout(800);
-                                                await page.mouse.click(rect.x + rect.width / 2, rect.y + rect.height / 2);
-                                                await page.waitForTimeout(3000);
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (e) {}
-
-                            // 3. Human-like jitter
-                            await page.mouse.move(Math.floor(Math.random() * 800), Math.floor(Math.random() * 600), { steps: 5 });
-                        }
-                        
-                        // Wait for content to settle after bypass
-                        await page.waitForTimeout(5000);
+                    const handled = await this.handleChallenge(page, 'Fetch');
+                    if (!handled) {
+                        this.addLog(`[Jobs.ps Playwright] Security wall could not be bypassed for ${url}.`, 'error');
+                        await page.close();
+                        return [];
                     }
                     
                     success = true;
@@ -450,11 +571,11 @@ class PalestineCollector {
                         await jobPage.goto(job.link, { waitUntil: 'domcontentloaded', timeout: 90000 });
 
                         // Check for Bot/Security wall on deep scan
-                        const pageContent = await jobPage.content();
-                        if (pageContent.includes('security verification') || pageContent.includes('Cloudflare') || pageContent.includes('cf-challenge-running')) {
-                            this.addLog(`[Jobs.ps Playwright] Security wall on deep scan for ${job.title}. Humanizing...`, 'warn');
-                            await jobPage.waitForTimeout(Math.floor(Math.random() * (5000 - 3000 + 1) + 3000));
-                            await jobPage.mouse.move(200, 200, { steps: 5 });
+                        const deepHandled = await this.handleChallenge(jobPage, `Deep Scan: ${job.title}`);
+                        if (!deepHandled) {
+                            this.addLog(`[Jobs.ps Playwright] Skipping job ${job.title} due to security challenge.`, 'warn');
+                            await jobPage.close();
+                            return null;
                         }
                         
                         const fullData = await jobPage.evaluate(() => {
