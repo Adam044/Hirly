@@ -1,5 +1,6 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
+const bcrypt = require('bcryptjs');
 const logger = require('../utils/logger');
 const { logLiveEvent } = require('../realtime/manager');
 
@@ -45,6 +46,76 @@ module.exports = function registerJobsRoutes(app, pool, {
       if (client) client.release();
     }
   }
+
+  // --- Secure Direct Access for Employers ---
+  router.post('/jobs/:jobId/verify-access', async (req, res) => {
+    const { jobId } = req.params;
+    const { accessKey } = req.body;
+
+    if (!jobId || !accessKey) {
+      return res.status(400).json({ success: false, error: 'Job ID and Access Key are required.' });
+    }
+
+    let client;
+    try {
+      client = await pool.connect();
+      const result = await client.query(
+        'SELECT id, access_key_hash, is_direct_access_enabled, title FROM jobs WHERE id = $1',
+        [jobId]
+      );
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({ success: false, error: 'Job not found.' });
+      }
+
+      const job = result.rows[0];
+
+      if (!job.is_direct_access_enabled || !job.access_key_hash) {
+        return res.status(403).json({ success: false, error: 'Direct access is not enabled for this job.' });
+      }
+
+      const isValid = await bcrypt.compare(accessKey, job.access_key_hash);
+
+      if (!isValid) {
+        return res.status(401).json({ success: false, error: 'Invalid access key.' });
+      }
+
+      // Set job-specific access in session
+      if (!req.session.jobAccess) {
+        req.session.jobAccess = {};
+      }
+      req.session.jobAccess[jobId] = true;
+      
+      // Also set some user-like properties for the session if not logged in
+      if (!req.session.userId) {
+        req.session.userType = 'employer';
+        req.session.isDirectAccess = true;
+      }
+
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
+      res.json({ success: true, message: 'Access granted.', jobTitle: job.title });
+
+    } catch (error) {
+      logger.error('Error verifying job access:', error);
+      res.status(500).json({ success: false, error: 'Server error during verification.' });
+    } finally {
+      if (client) client.release();
+    }
+  });
+
+  router.post('/jobs/:jobId/clear-access', (req, res) => {
+    const { jobId } = req.params;
+    if (req.session.jobAccess) {
+      delete req.session.jobAccess[jobId];
+    }
+    res.json({ success: true });
+  });
 
   router.post(
     '/jobs',

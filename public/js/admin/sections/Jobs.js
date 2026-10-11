@@ -7,8 +7,13 @@ import { state } from '../core/state.js';
 import { createLoadingSpinner, getStatusBadgeClass, formatDate } from '../core/utils.js';
 import { showToast, showConfirmationModal } from '../components/UI.js';
 
+// --- State & Variables ---
+let currentEliteJobId = null;
+let listenersAttached = false;
+let tableListenerAttached = false;
+
 // --- Helper Functions ---
-const updateJobBulkActionsUI = () => {
+function updateJobBulkActionsUI() {
     const bulkBar = document.getElementById('jobBulkActions');
     const countSpan = document.getElementById('selectedJobsCount');
     if (bulkBar && countSpan) {
@@ -16,15 +21,28 @@ const updateJobBulkActionsUI = () => {
         countSpan.textContent = count;
         bulkBar.classList.toggle('hidden', count === 0);
     }
-};
+}
 
-const handleTableActions = async (e) => {
-    const viewBtn = e.target.closest('.view-job-btn');
-    const eliteBtn = e.target.closest('.elite-access-btn');
-    const closeBtn = e.target.closest('.close-job-btn');
-    const deleteBtn = e.target.closest('.delete-job-btn');
+async function handleTableActions(e) {
+    const target = e.target;
+    console.log('JobsTable Click Target:', target);
+    
+    // Checkbox handling
+    if (target.classList.contains('job-checkbox')) {
+        const id = target.dataset.id;
+        if (target.checked) state.selectedJobsList.add(id);
+        else state.selectedJobsList.delete(id);
+        updateJobBulkActionsUI();
+        return;
+    }
+
+    const viewBtn = target.closest('.view-job-btn');
+    const eliteBtn = target.closest('.elite-access-btn');
+    const closeBtn = target.closest('.close-job-btn');
+    const deleteBtn = target.closest('.delete-job-btn');
 
     if (viewBtn) {
+        console.log('View Job Clicked:', viewBtn.dataset.id);
         const id = viewBtn.dataset.id;
         const title = viewBtn.dataset.title;
         const company = viewBtn.dataset.company;
@@ -34,11 +52,13 @@ const handleTableActions = async (e) => {
     }
 
     if (eliteBtn) {
+        console.log('Elite Access Button Clicked! ID:', eliteBtn.dataset.id, 'Title:', eliteBtn.dataset.title);
         openEliteAccessModal(eliteBtn.dataset.id, eliteBtn.dataset.title);
         return;
     }
 
     if (closeBtn) {
+        console.log('Close Job Clicked:', closeBtn.dataset.id);
         const id = closeBtn.dataset.id;
         showConfirmationModal(
             'Close Job',
@@ -55,6 +75,7 @@ const handleTableActions = async (e) => {
     }
 
     if (deleteBtn) {
+        console.log('Delete Job Clicked:', deleteBtn.dataset.id);
         const id = deleteBtn.dataset.id;
         showConfirmationModal(
             'Delete Permanently',
@@ -69,53 +90,167 @@ const handleTableActions = async (e) => {
         );
         return;
     }
-};
+}
 
-const handleBulkDelete = async () => {
-    const ids = Array.from(state.selectedJobsList);
-    if (ids.length === 0) return;
+function generateSecureKey() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Readable chars
+    let key = 'HIRLY-';
+    for (let i = 0; i < 4; i++) key += chars.charAt(Math.floor(Math.random() * chars.length));
+    key += '-';
+    for (let i = 0; i < 4; i++) key += chars.charAt(Math.floor(Math.random() * chars.length));
+    return key;
+}
 
-    showConfirmationModal(
-        'Bulk Delete',
-        `Permanently delete ${ids.length} selected jobs? This cannot be undone.`,
-        async () => {
+function openEliteAccessModal(jobId, jobTitle) {
+    currentEliteJobId = jobId;
+    const modal = document.getElementById('eliteAccessModal');
+    const targetDisplay = document.getElementById('eliteTargetJob');
+    const setupView = document.getElementById('eliteAccessSetup');
+    const resultView = document.getElementById('eliteAccessResult');
+    
+    if (!modal) {
+        console.error('CRITICAL: Elite Access Modal not found in DOM');
+        showToast('UI Error: Modal not found', 'error');
+        return;
+    }
+
+    if (targetDisplay) targetDisplay.textContent = `#${jobId} - ${jobTitle}`;
+    
+    // Reset views
+    if (setupView) setupView.classList.remove('hidden');
+    if (resultView) resultView.classList.add('hidden');
+    
+    // Force show modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex'; 
+    modal.style.zIndex = '9999';
+    
+    const passInput = document.getElementById('eliteEmployerPassword');
+    if (passInput) passInput.value = generateSecureKey();
+}
+
+function initEliteAccessListeners() {
+    if (listenersAttached) return;
+
+    const modal = document.getElementById('eliteAccessModal');
+    const closeBtn = document.getElementById('closeEliteAccessModal');
+    const generatePassBtn = document.getElementById('generateElitePass');
+    const confirmBtn = document.getElementById('confirmEliteAccess');
+    const copyBtn = document.getElementById('copyEliteDetails');
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        });
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    if (generatePassBtn) {
+        generatePassBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const passInput = document.getElementById('eliteEmployerPassword');
+            if (passInput) passInput.value = generateSecureKey();
+        });
+    }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            const passInput = document.getElementById('eliteEmployerPassword');
+            const customKey = passInput?.value;
+
+            if (!customKey) {
+                showToast('Access Key is required', 'error');
+                return;
+            }
+
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Provisioning...</span>';
+
             try {
-                await bulkRemoveJobs(ids);
-                showToast(`Deleted ${ids.length} jobs`, 'success');
-                state.selectedJobsList.clear();
-                updateJobBulkActionsUI();
-                loadJobsData();
-            } catch (err) { showToast(err.message, 'error'); }
-        }
-    );
-};
+                const response = await fetch('/admin/generate-job-access-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jobId: currentEliteJobId, customKey })
+                });
 
-const handleBulkClose = async () => {
-    const ids = Array.from(state.selectedJobsList);
-    if (ids.length === 0) return;
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('eliteAccessSetup')?.classList.add('hidden');
+                    const resultView = document.getElementById('eliteAccessResult');
+                    if (resultView) resultView.classList.remove('hidden');
+                    
+                    const resUrl = document.getElementById('resEliteUrl');
+                    const resPass = document.getElementById('resElitePass');
+                    
+                    const directUrl = `${window.location.origin}/employer/applicants.html?job_id=${currentEliteJobId}&mode=direct`;
+                    if (resUrl) resUrl.textContent = directUrl;
+                    if (resPass) resPass.textContent = customKey;
+                } else {
+                    throw new Error(data.error || 'Failed to generate access');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-lock"></i> <span>Provision Secure Link</span>';
+            }
+        });
+    }
 
-    showConfirmationModal(
-        'Bulk Close',
-        `Mark ${ids.length} selected jobs as closed?`,
-        async () => {
-            try {
-                await bulkCloseJobs(ids);
-                showToast(`Closed ${ids.length} jobs`, 'success');
-                state.selectedJobsList.clear();
-                updateJobBulkActionsUI();
-                loadJobsData();
-            } catch (err) { showToast(err.message, 'error'); }
-        }
-    );
-};
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const url = document.getElementById('resEliteUrl')?.textContent;
+            const key = document.getElementById('resElitePass')?.textContent;
+            const text = `HIRLY SECURE ACCESS\nJob ID: #${currentEliteJobId}\nAccess URL: ${url}\nSecure Key: ${key}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Access details copied', 'success');
+            });
+        });
+    }
+    
+    listenersAttached = true;
+}
 
 export const initJobs = () => {
+    console.log('Initializing Jobs Section...');
+    
     document.addEventListener('sectionLoaded', (e) => {
         if (e.detail.sectionId === 'jobs') {
+            console.log('Jobs Section Loaded Event Fired');
             loadJobsData();
-            initEliteAccessListeners(); // Ensure listeners are ready when section is active
+            initEliteAccessListeners();
         }
     });
+
+    // Global listener for the jobs table body - attached once
+    if (!tableListenerAttached) {
+        console.log('Attaching Global Click Listener for Jobs Table');
+        document.addEventListener('click', (e) => {
+            // We look for the closest table row to see if it's within our jobs table
+            const tableBody = document.getElementById('jobsTableBody');
+            if (!tableBody) return;
+
+            // Check if the click is within the table body OR if the target is one of our buttons
+            // This is more robust than just tableBody.contains(e.target)
+            const isTableClick = tableBody.contains(e.target);
+            const isActionButton = e.target.closest('.view-job-btn, .elite-access-btn, .close-job-btn, .delete-job-btn, .job-checkbox');
+
+            if (isTableClick || isActionButton) {
+                handleTableActions(e);
+            }
+        });
+        tableListenerAttached = true;
+    }
 
     const searchInput = document.getElementById('jobSearchInput');
     const statusFilter = document.getElementById('jobStatusFilter');
@@ -153,7 +288,7 @@ export const initJobs = () => {
         });
     }
 
-    // Select All
+    // Bulk Actions
     const selectAll = document.getElementById('selectAllJobs');
     if (selectAll) {
         selectAll.addEventListener('change', (e) => {
@@ -167,19 +302,48 @@ export const initJobs = () => {
         });
     }
 
-    const tableBody = document.getElementById('jobsTableBody');
-    if (tableBody) {
-        tableBody.addEventListener('click', handleTableActions);
-    }
-
     const bulkDeleteBtn = document.getElementById('bulkDeleteJobsBtn');
     if (bulkDeleteBtn) {
-        bulkDeleteBtn.addEventListener('click', handleBulkDelete);
+        bulkDeleteBtn.addEventListener('click', async () => {
+            const ids = Array.from(state.selectedJobsList);
+            if (ids.length === 0) return;
+
+            showConfirmationModal(
+                'Bulk Delete',
+                `Permanently delete ${ids.length} selected jobs? This cannot be undone.`,
+                async () => {
+                    try {
+                        await bulkRemoveJobs(ids);
+                        showToast(`Deleted ${ids.length} jobs`, 'success');
+                        state.selectedJobsList.clear();
+                        updateJobBulkActionsUI();
+                        loadJobsData();
+                    } catch (err) { showToast(err.message, 'error'); }
+                }
+            );
+        });
     }
 
     const bulkCloseBtn = document.getElementById('bulkCloseJobsBtn');
     if (bulkCloseBtn) {
-        bulkCloseBtn.addEventListener('click', handleBulkClose);
+        bulkCloseBtn.addEventListener('click', async () => {
+            const ids = Array.from(state.selectedJobsList);
+            if (ids.length === 0) return;
+
+            showConfirmationModal(
+                'Bulk Close',
+                `Mark ${ids.length} selected jobs as closed?`,
+                async () => {
+                    try {
+                        await bulkCloseJobs(ids);
+                        showToast(`Closed ${ids.length} jobs`, 'success');
+                        state.selectedJobsList.clear();
+                        updateJobBulkActionsUI();
+                        loadJobsData();
+                    } catch (err) { showToast(err.message, 'error'); }
+                }
+            );
+        });
     }
 };
 
@@ -310,109 +474,4 @@ const renderJobs = (jobs, append) => {
 
     if (append) tableBody.insertAdjacentHTML('beforeend', html);
     else tableBody.innerHTML = html;
-
-    // Attach listeners
-    tableBody.querySelectorAll('.job-checkbox').forEach(cb => {
-        cb.onchange = () => {
-            if (cb.checked) state.selectedJobsList.add(cb.dataset.id);
-            else state.selectedJobsList.delete(cb.dataset.id);
-            updateJobBulkActionsUI();
-        };
-    });
-};
-
-// --- Partner Access Logic ---
-let currentEliteJobId = null;
-
-const openEliteAccessModal = (jobId, jobTitle) => {
-    currentEliteJobId = jobId;
-    const modal = document.getElementById('eliteAccessModal');
-    const targetDisplay = document.getElementById('eliteTargetJob');
-    const setupView = document.getElementById('eliteAccessSetup');
-    const resultView = document.getElementById('eliteAccessResult');
-    
-    if (!modal || !targetDisplay) return;
-
-    targetDisplay.textContent = `#${jobId} - ${jobTitle}`;
-    setupView.classList.remove('hidden');
-    resultView.classList.add('hidden');
-    modal.classList.remove('hidden');
-    
-    // Auto-generate a password
-    document.getElementById('eliteEmployerPassword').value = Math.random().toString(36).slice(-10);
-};
-
-// Initialize Access Modal Listeners
-let listenersAttached = false;
-const initEliteAccessListeners = () => {
-    if (listenersAttached) return; // Prevent multiple attachments
-
-    const closeBtn = document.getElementById('closeEliteAccessModal');
-    const generatePassBtn = document.getElementById('generateElitePass');
-    const confirmBtn = document.getElementById('confirmEliteAccess');
-    const copyBtn = document.getElementById('copyEliteDetails');
-
-    if (closeBtn) closeBtn.onclick = () => document.getElementById('eliteAccessModal').classList.add('hidden');
-    
-    if (generatePassBtn) {
-        generatePassBtn.onclick = () => {
-            document.getElementById('eliteEmployerPassword').value = Math.random().toString(36).slice(-10);
-        };
-    }
-
-    if (confirmBtn) {
-        confirmBtn.onclick = async () => {
-            const email = document.getElementById('eliteEmployerEmail').value;
-            const password = document.getElementById('eliteEmployerPassword').value;
-
-            if (!email || !password) {
-                showToast('Email and Password are required', 'error');
-                return;
-            }
-
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Generating...</span>';
-
-            try {
-                const response = await fetch('/admin/generate-elite-access', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ jobId: currentEliteJobId, email, password })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('eliteAccessSetup').classList.add('hidden');
-                    const resultView = document.getElementById('eliteAccessResult');
-                    resultView.classList.remove('hidden');
-                    
-                    document.getElementById('resEliteUrl').textContent = `${window.location.origin}/engagement-portal.html`;
-                    document.getElementById('resEliteEmail').textContent = email;
-                    document.getElementById('resElitePass').textContent = password;
-                } else {
-                    throw new Error(data.error || 'Failed to generate access');
-                }
-            } catch (err) {
-                showToast(err.message, 'error');
-            } finally {
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="fas fa-link"></i> <span>Generate Access</span>';
-            }
-        };
-    }
-
-    if (copyBtn) {
-        copyBtn.onclick = () => {
-            const url = document.getElementById('resEliteUrl').textContent;
-            const email = document.getElementById('resEliteEmail').textContent;
-            const pass = document.getElementById('resElitePass').textContent;
-            const text = `HIRLY PARTNER LOGIN\nURL: ${url}\nID: ${email}\nKEY: ${pass}`;
-            
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('Access details copied', 'success');
-            });
-        };
-    }
-    
-    listenersAttached = true;
 };

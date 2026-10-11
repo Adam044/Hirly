@@ -1096,6 +1096,34 @@ function isEmployer(req, res, next) {
     res.status(403).send('Access Denied: Employer account required.');
 }
 
+function isEmployerOrDirectAccess(req, res, next) {
+    // 1. Normal employer check
+    if (req.session.userId && req.session.userType === 'employer') {
+        return next();
+    }
+
+    // 2. Direct access check (job-specific)
+    // The jobId is usually in req.params.jobId or req.query.jobId
+    const jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId);
+    
+    if (jobId && req.session.jobAccess && req.session.jobAccess[jobId]) {
+        return next();
+    }
+
+    // 3. Fallback for application-specific routes that need jobId lookup
+    if (req.params.applicationId) {
+        // We'll handle this inside the route since we need a DB lookup for the jobId
+        return next();
+    }
+
+    const isApiRequest = req.originalUrl.startsWith('/api/') || req.originalUrl.startsWith('/admin/');
+    if (isApiRequest) {
+        return res.status(403).json({ error: 'Access Denied: Secure access required.' });
+    }
+    
+    res.redirect('/login.html');
+}
+
 function isAdmin(req, res, next) {
     if (req.session.userId && req.session.userType === 'admin') {
         return next();
@@ -1348,6 +1376,7 @@ const registerApplicationsRoutes = require('./routes/applications');
 registerApplicationsRoutes(app, pool, {
     isAuthenticated,
     isEmployer,
+    isEmployerOrDirectAccess,
     isEmployerVerified,
     isProfessional,
     isEmailVerified,

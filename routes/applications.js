@@ -5,6 +5,7 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
   const {
     isAuthenticated,
     isEmployer,
+    isEmployerOrDirectAccess,
     isEmployerVerified,
     isProfessional,
     isEmailVerified,
@@ -47,19 +48,28 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
 
   router.get(
     '/applications/job/:jobId',
-    isAuthenticated,
-    isEmployer,
+    isEmployerOrDirectAccess,
     [param('jobId').isInt({ min: 1 })],
     handleValidationErrors,
     async (req, res) => {
     let client;
     const jobId = req.params.jobId;
     const employerId = req.session.userId;
+    
+    // Check if it's direct access
+    const isDirectAccess = req.session.jobAccess && req.session.jobAccess[jobId];
+
     try {
       client = await pool.connect();
-      const jobOwnerResult = await client.query('SELECT employer_id, title FROM jobs WHERE id = $1', [jobId]);
+      const jobOwnerResult = await client.query('SELECT employer_id, title, is_confidential FROM jobs WHERE id = $1', [jobId]);
       const jobOwner = jobOwnerResult.rows[0];
-      if (!jobOwner || jobOwner.employer_id !== employerId) {
+      
+      if (!jobOwner) {
+        return res.status(404).json({ success: false, error: 'Job not found.' });
+      }
+
+      // Authorization check: Either must be the employer OR have direct access
+      if (!isDirectAccess && jobOwner.employer_id !== employerId) {
         return res.status(403).json({ success: false, error: 'Access denied. This job does not belong to you.' });
       }
       const result = await client.query(`
@@ -112,10 +122,7 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
 
   router.patch(
     '/applications/:applicationId/status',
-    isAuthenticated,
-    isEmployer,
-    isEmployerVerified,
-    isEmailVerified,
+    isEmployerOrDirectAccess,
     upload.none(),
     [
       param('applicationId').isInt({ min: 1 }),
@@ -128,6 +135,7 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
     const applicationId = req.params.applicationId;
     const { status, rejectionReason } = req.body;
     const employerId = req.session.userId;
+    
     const validStatuses = ['pending', 'accepted', 'rejected', 'interviewing', 'shortlisted'];
     if (!validStatuses.includes(status)) {
         return res.status(400).json({ success: false, error: 'Invalid application status.' });
@@ -135,14 +143,22 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
     try {
         client = await pool.connect();
         const applicationDetailsResult = await client.query(`
-            SELECT a.status as current_status, j.employer_id, j.title, u.email, u.first_name, u.last_name
+            SELECT a.status as current_status, j.id as job_id, j.employer_id, j.title, u.email, u.first_name, u.last_name
             FROM applications a
             JOIN jobs j ON a.job_id = j.id
             JOIN users u ON a.professional_id = u.id
             WHERE a.id = $1
         `, [applicationId]);
         const applicationDetails = applicationDetailsResult.rows[0];
-        if (!applicationDetails || applicationDetails.employer_id !== employerId) {
+        
+        if (!applicationDetails) {
+            return res.status(404).json({ success: false, error: 'Application not found.' });
+        }
+
+        const jobId = applicationDetails.job_id;
+        const isDirectAccess = req.session.jobAccess && req.session.jobAccess[jobId];
+
+        if (!isDirectAccess && applicationDetails.employer_id !== employerId) {
             return res.status(403).json({ success: false, error: 'Access denied. You do not have permission to modify this application.' });
         }
         let updateQuery;

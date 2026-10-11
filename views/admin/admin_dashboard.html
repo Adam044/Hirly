@@ -1406,8 +1406,8 @@
         <div class="modal-content max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
             <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-slate-900 text-white">
                 <div class="flex items-center gap-3">
-                    <i class="fas fa-key text-indigo-400"></i>
-                    <h3 class="font-bold uppercase tracking-widest text-xs">Generate Access Link</h3>
+                    <i class="fas fa-shield-alt text-indigo-400"></i>
+                    <h3 class="font-bold uppercase tracking-widest text-xs">Secure Partner Access</h3>
                 </div>
                 <button id="closeEliteAccessModal" class="text-white/70 hover:text-white transition-colors">
                     <i class="fas fa-times"></i>
@@ -1416,7 +1416,7 @@
             <div class="p-8 space-y-6">
                 <div id="eliteAccessSetup">
                     <p class="text-sm text-gray-500 leading-relaxed mb-6">
-                        Create secure credentials for an employer to manage this specific job listing.
+                        Generate a secure, job-specific access key. This allows the employer to manage applications without a full platform account.
                     </p>
                     <div class="space-y-4">
                         <div class="space-y-1">
@@ -1424,44 +1424,47 @@
                             <div id="eliteTargetJob" class="text-sm font-bold text-gray-900 truncate bg-gray-50 p-3 rounded-lg border border-gray-100"></div>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employer Email</label>
-                            <input type="email" id="eliteEmployerEmail" class="input-saas w-full" placeholder="client@company.com">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Access Key (Password)</label>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Secure Access Key</label>
                             <div class="relative">
-                                <input type="text" id="eliteEmployerPassword" class="input-saas w-full pr-10" placeholder="••••••••">
-                                <button id="generateElitePass" class="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-600 hover:text-indigo-800">
-                                    <i class="fas fa-random"></i>
+                                <input type="text" id="eliteEmployerPassword" class="input-saas w-full pr-10 font-mono" placeholder="Auto-generating...">
+                                <button id="generateElitePass" class="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-600 hover:text-indigo-800" title="Regenerate Key">
+                                    <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
+                            <p class="text-[9px] text-gray-400 mt-1 italic">Leave as is to use the generated key or enter a custom one.</p>
                         </div>
                     </div>
                     <button id="confirmEliteAccess" class="btn-saas-primary w-full mt-8 py-3 flex items-center justify-center gap-2">
-                        <i class="fas fa-link"></i>
-                        <span>Generate Access</span>
+                        <i class="fas fa-lock"></i>
+                        <span>Provision Secure Link</span>
                     </button>
                 </div>
 
                 <div id="eliteAccessResult" class="hidden space-y-6 animate-fade-in">
                     <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-center gap-3">
                         <i class="fas fa-check-circle text-emerald-500"></i>
-                        <span class="text-emerald-700 text-sm font-bold">Access Provisioned Successfully</span>
+                        <span class="text-emerald-700 text-sm font-bold">Secure Access Provisioned</span>
                     </div>
                     <div class="space-y-4">
-                        <div class="bg-gray-900 p-5 rounded-xl font-mono text-[11px] text-gray-300 space-y-3 relative group">
+                        <div class="bg-gray-900 p-5 rounded-xl font-mono text-[11px] text-gray-300 space-y-4 relative group">
                             <div class="flex justify-between items-center text-indigo-400 border-b border-gray-800 pb-2 mb-2">
-                                <span class="uppercase tracking-widest text-[9px]">Portal Details</span>
-                                <button id="copyEliteDetails" class="hover:text-white transition-colors">
+                                <span class="uppercase tracking-widest text-[9px]">Direct Access Details</span>
+                                <button id="copyEliteDetails" class="hover:text-white transition-colors flex items-center gap-2">
                                     <i class="fas fa-copy"></i>
+                                    <span class="text-[8px] uppercase">Copy All</span>
                                 </button>
                             </div>
-                            <div>URL: <span class="text-white" id="resEliteUrl"></span></div>
-                            <div>ID:  <span class="text-white" id="resEliteEmail"></span></div>
-                            <div>KEY: <span class="text-white" id="resElitePass"></span></div>
+                            <div class="space-y-2">
+                                <div class="text-[9px] text-gray-500 uppercase">Access URL</div>
+                                <div class="text-white break-all bg-gray-800/50 p-2 rounded" id="resEliteUrl"></div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="text-[9px] text-gray-500 uppercase">Access Key</div>
+                                <div class="text-white font-bold text-lg tracking-wider" id="resElitePass"></div>
+                            </div>
                         </div>
                         <p class="text-[10px] text-gray-400 italic text-center">
-                            Share these credentials securely with the client.
+                            Share this link and key securely with the elite partner.
                         </p>
                     </div>
                 </div>

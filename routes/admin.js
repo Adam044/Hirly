@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const { getAvailableTemplates, getTemplateContent } = require('../utils/templateHelper');
 const logger = require('../utils/logger');
 const { logoFetcher } = require('../utils/companyLogoFetcher');
@@ -1892,101 +1893,48 @@ module.exports = function registerAdminRoutes(app, pool, {
     res.sendFile(path.join(__dirname, '../views', 'admin', 'job_aggregator.html'));
   });
 
-  router.post('/admin/generate-elite-access', isAuthenticated, isAdmin, async (req, res) => {
-    const { jobId, email, password } = req.body;
-    if (!jobId || !email || !password) {
-      return res.status(400).json({ success: false, error: 'Job ID, Email, and Password are required.' });
+  router.post('/admin/generate-job-access-key', isAuthenticated, isAdmin, async (req, res) => {
+    const { jobId, customKey } = req.body;
+    if (!jobId) {
+      return res.status(400).json({ success: false, error: 'Job ID is required.' });
     }
 
     let client;
-    let authUserUuid = null;
     try {
       client = await pool.connect();
       
-      // 1. Verify job exists and is eligible
-      const jobCheck = await client.query('SELECT id, employer_id, title FROM jobs WHERE id = $1', [jobId]);
+      // 1. Verify job exists
+      const jobCheck = await client.query('SELECT id, title FROM jobs WHERE id = $1', [jobId]);
       if (jobCheck.rowCount === 0) {
         return res.status(404).json({ success: false, error: 'Job not found.' });
       }
       
       const job = jobCheck.rows[0];
 
-      // 2. Check if user already exists
-      const existingUserRes = await client.query('SELECT id, auth_user_id FROM users WHERE email = $1', [email]);
-      let userId;
+      // 2. Generate or use custom key
+      // If customKey is provided, use it. Otherwise generate a clean one.
+      const rawKey = customKey || `HIRLY-${crypto.randomBytes(3).toString('hex').toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
       
-      if (existingUserRes.rowCount > 0) {
-        // User exists, just use their ID
-        userId = existingUserRes.rows[0].id;
-        authUserUuid = existingUserRes.rows[0].auth_user_id;
-      } else {
-        // 3. Create Supabase User
-        const { data: authUserData, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
-          email: email,
-          password: password,
-          email_confirm: true,
-          user_metadata: {
-            user_type: 'employer',
-            employer_type: 'company',
-            is_elite: true
-          }
-        });
+      // 3. Hash the key
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(rawKey, salt);
 
-        if (createUserError) {
-          logger.error('Supabase error generating elite access:', createUserError);
-          return res.status(500).json({ success: false, error: `Auth Error: ${createUserError.message}` });
-        }
+      // 4. Update job with the hash and enable direct access
+      await client.query(
+        'UPDATE jobs SET access_key_hash = $1, is_direct_access_enabled = TRUE WHERE id = $2',
+        [hash, jobId]
+      );
 
-        authUserUuid = authUserData.user.id;
-
-        await client.query('BEGIN');
-
-        // 4. Generate unique slug
-        let baseSlug = `elite-${jobId}`;
-        let finalSlug = baseSlug;
-        let counter = 1;
-        while (true) {
-          const check = await client.query('SELECT id FROM users WHERE slug = $1', [finalSlug]);
-          if (check.rows.length === 0) break;
-          finalSlug = `${baseSlug}-${counter}`;
-          counter++;
-        }
-
-        // 5. Create User record
-        const userResult = await client.query(
-          `INSERT INTO users (
-            first_name, last_name, email, user_type, is_email_verified, auth_user_id, slug, country, city
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-          ['Elite', 'Employer', email, 'employer', true, authUserUuid, finalSlug, 'Palestine', 'Ramallah']
-        );
-        userId = userResult.rows[0].id;
-
-        // 6. Create Employer record
-        await client.query(
-          `INSERT INTO employers (
-            user_id, company_name, employer_type, company_email, verification_status, company_category
-          ) VALUES ($1, $2, $3, $4, $5, $6)`,
-          [userId, 'Confidential Employer', 'company', email, 'Verified', 'Tech & Development']
-        );
-      }
-
-      // 7. Link job to this employer (if not already inside a transaction, start one)
-      const inTransaction = existingUserRes.rowCount === 0;
-      if (!inTransaction) await client.query('BEGIN');
+      logLiveEvent('admin', `Secure access key generated for job <b>#${jobId}</b>: <b>${job.title}</b>`);
       
-      await client.query('UPDATE jobs SET employer_id = $1 WHERE id = $2', [userId, jobId]);
-
-      await client.query('COMMIT');
-      
-      logLiveEvent('admin', `Elite access generated for job <b>#${jobId}</b>: <b>${email}</b>`);
-      res.json({ success: true, message: 'Elite access provisioned successfully.' });
+      res.json({ 
+        success: true, 
+        message: 'Secure access key provisioned successfully.',
+        accessKey: rawKey // Return the raw key ONLY once here so admin can copy it
+      });
 
     } catch (error) {
-      if (client) await client.query('ROLLBACK');
-      if (authUserUuid) {
-        await supabaseAdmin.auth.admin.deleteUser(authUserUuid).catch(() => {});
-      }
-      logger.error('Error generating elite access:', error);
+      logger.error('Error generating job access key:', error);
       res.status(500).json({ success: false, error: error.message });
     } finally {
       if (client) client.release();
