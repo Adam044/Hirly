@@ -8,7 +8,7 @@ import { createLoadingSpinner, getStatusBadgeClass, formatDate } from '../core/u
 import { showToast, showConfirmationModal } from '../components/UI.js';
 
 // --- State & Variables ---
-let currentEliteJobId = null;
+let currentDirectJobId = null;
 let listenersAttached = false;
 let tableListenerAttached = false;
 
@@ -37,7 +37,7 @@ async function handleTableActions(e) {
     }
 
     const viewBtn = target.closest('.view-job-btn');
-    const eliteBtn = target.closest('.elite-access-btn');
+    const directAccessBtn = target.closest('.direct-access-btn');
     const closeBtn = target.closest('.close-job-btn');
     const deleteBtn = target.closest('.delete-job-btn');
 
@@ -51,10 +51,9 @@ async function handleTableActions(e) {
         return;
     }
 
-    if (eliteBtn) {
-        console.log('Elite Access Button Clicked! ID:', eliteBtn.dataset.id, 'Title:', eliteBtn.dataset.title);
-        // Ensure ID is a string for currentEliteJobId
-        openEliteAccessModal(String(eliteBtn.dataset.id), eliteBtn.dataset.title);
+    if (directAccessBtn) {
+        console.log('Direct Access Button Clicked! ID:', directAccessBtn.dataset.id, 'Title:', directAccessBtn.dataset.title);
+        openDirectAccessModal(String(directAccessBtn.dataset.id), directAccessBtn.dataset.title);
         return;
     }
 
@@ -102,17 +101,17 @@ function generateSecureKey() {
     return key;
 }
 
-function openEliteAccessModal(jobId, jobTitle) {
-    currentEliteJobId = jobId;
-    console.log('Opening Elite Access Modal for Job:', jobId);
+function openDirectAccessModal(jobId, jobTitle) {
+    currentDirectJobId = jobId;
+    console.log('Opening Direct Access Modal for Job:', jobId);
     
-    const modal = document.getElementById('eliteAccessModal');
-    const targetDisplay = document.getElementById('eliteTargetJob');
-    const setupView = document.getElementById('eliteAccessSetup');
-    const resultView = document.getElementById('eliteAccessResult');
+    const modal = document.getElementById('directAccessModal');
+    const targetDisplay = document.getElementById('directTargetJob');
+    const setupView = document.getElementById('directAccessSetup');
+    const resultView = document.getElementById('directAccessResult');
     
     if (!modal) {
-        console.error('CRITICAL: Elite Access Modal not found in DOM');
+        console.error('CRITICAL: Direct Access Modal not found in DOM');
         showToast('UI Error: Modal not found', 'error');
         return;
     }
@@ -127,18 +126,18 @@ function openEliteAccessModal(jobId, jobTitle) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     
-    const passInput = document.getElementById('eliteEmployerPassword');
+    const passInput = document.getElementById('directEmployerPassword');
     if (passInput) passInput.value = generateSecureKey();
 }
 
-function initEliteAccessListeners() {
+function initDirectAccessListeners() {
     if (listenersAttached) return;
 
-    const modal = document.getElementById('eliteAccessModal');
-    const closeBtn = document.getElementById('closeEliteAccessModal');
-    const generatePassBtn = document.getElementById('generateElitePass');
-    const confirmBtn = document.getElementById('confirmEliteAccess');
-    const copyBtn = document.getElementById('copyEliteDetails');
+    const modal = document.getElementById('directAccessModal');
+    const closeBtn = document.getElementById('closeDirectAccessModal');
+    const generatePassBtn = document.getElementById('generateDirectPass');
+    const confirmBtn = document.getElementById('confirmDirectAccess');
+    const copyBtn = document.getElementById('copyDirectDetails');
 
     const closeModal = () => {
         if (modal) {
@@ -158,14 +157,14 @@ function initEliteAccessListeners() {
     if (generatePassBtn) {
         generatePassBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const passInput = document.getElementById('eliteEmployerPassword');
+            const passInput = document.getElementById('directEmployerPassword');
             if (passInput) passInput.value = generateSecureKey();
         });
     }
 
     if (confirmBtn) {
         confirmBtn.addEventListener('click', async () => {
-            const passInput = document.getElementById('eliteEmployerPassword');
+            const passInput = document.getElementById('directEmployerPassword');
             const customKey = passInput?.value;
 
             if (!customKey) {
@@ -180,19 +179,19 @@ function initEliteAccessListeners() {
                 const response = await fetch('/admin/generate-job-access-key', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ jobId: currentEliteJobId, customKey })
+                    body: JSON.stringify({ jobId: currentDirectJobId, customKey })
                 });
 
                 const data = await response.json();
                 if (data.success) {
-                    document.getElementById('eliteAccessSetup')?.classList.add('hidden');
-                    const resultView = document.getElementById('eliteAccessResult');
+                    document.getElementById('directAccessSetup')?.classList.add('hidden');
+                    const resultView = document.getElementById('directAccessResult');
                     if (resultView) resultView.classList.remove('hidden');
                     
-                    const resUrl = document.getElementById('resEliteUrl');
-                    const resPass = document.getElementById('resElitePass');
+                    const resUrl = document.getElementById('resDirectUrl');
+                    const resPass = document.getElementById('resDirectPass');
                     
-                    const directUrl = `${window.location.origin}/employer/applicants.html?job_id=${currentEliteJobId}&mode=direct`;
+                    const directUrl = `${window.location.origin}/employer/applicants.html?job_id=${currentDirectJobId}&mode=direct`;
                     if (resUrl) resUrl.textContent = directUrl;
                     if (resPass) resPass.textContent = customKey;
                 } else {
@@ -209,9 +208,9 @@ function initEliteAccessListeners() {
 
     if (copyBtn) {
         copyBtn.addEventListener('click', () => {
-            const url = document.getElementById('resEliteUrl')?.textContent;
-            const key = document.getElementById('resElitePass')?.textContent;
-            const text = `HIRLY SECURE ACCESS\nJob ID: #${currentEliteJobId}\nAccess URL: ${url}\nSecure Key: ${key}`;
+            const url = document.getElementById('resDirectUrl')?.textContent;
+            const key = document.getElementById('resDirectPass')?.textContent;
+            const text = `HIRLY SECURE ACCESS\nJob ID: #${currentDirectJobId}\nAccess URL: ${url}\nSecure Key: ${key}`;
             
             navigator.clipboard.writeText(text).then(() => {
                 showToast('Access details copied', 'success');
@@ -229,7 +228,7 @@ export const initJobs = () => {
         if (e.detail.sectionId === 'jobs') {
             console.log('Jobs Section Loaded Event Fired');
             loadJobsData();
-            initEliteAccessListeners();
+            initDirectAccessListeners();
         }
     });
 
@@ -240,7 +239,7 @@ export const initJobs = () => {
         // Listen on document level to ensure it catches everything
         document.addEventListener('click', (e) => {
             // Check if the click is on an action button or inside one
-            const actionBtn = e.target.closest('.view-job-btn, .elite-access-btn, .close-job-btn, .delete-job-btn, .job-checkbox');
+            const actionBtn = e.target.closest('.view-job-btn, .direct-access-btn, .close-job-btn, .delete-job-btn, .job-checkbox');
             
             if (actionBtn) {
                 console.log('Action Button Clicked:', actionBtn.className);
@@ -457,7 +456,7 @@ const renderJobs = (jobs, append) => {
                         <i class="fas fa-eye text-xs"></i>
                     </button>
                     ${(j.is_confidential) ? `
-                    <button class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1 elite-access-btn" 
+                    <button class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1 direct-access-btn" 
                             data-id="${j.id}" 
                             data-title="${j.title.replace(/"/g, '&quot;')}" 
                             title="Generate Access">

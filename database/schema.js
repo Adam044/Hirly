@@ -84,6 +84,14 @@ async function initializeDatabaseSchema(pool) {
             );
         `);
 
+        // Ensure professionals table has all required columns (for existing databases)
+        await client.query(`
+            ALTER TABLE professionals ADD COLUMN IF NOT EXISTS cv_text TEXT;
+            ALTER TABLE professionals ADD COLUMN IF NOT EXISTS cv_text_updated_at TIMESTAMP;
+            ALTER TABLE professionals ADD COLUMN IF NOT EXISTS employer_views_count INTEGER DEFAULT 0;
+            ALTER TABLE professionals ADD COLUMN IF NOT EXISTS website_link TEXT;
+        `);
+
         // 4. Jobs Table
         await client.query(`
             CREATE TABLE IF NOT EXISTS jobs (

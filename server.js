@@ -68,7 +68,7 @@ app.use((req, res, next) => {
         "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com cdn.tailwindcss.com unpkg.com",
         "img-src 'self' data: blob: ecxvfjceuynwtpjvmxpw.supabase.co www.jobs.ps www.googletagmanager.com *.basemaps.cartocdn.com placehold.co images.pexels.com www.google.com *.gstatic.com icons.duckduckgo.com *.google-analytics.com",
         "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com",
-        "connect-src 'self' www.googletagmanager.com *.google-analytics.com cdn.jsdelivr.net " + wsOrigin,
+        "connect-src 'self' www.googletagmanager.com *.google-analytics.com cdn.jsdelivr.net cdnjs.cloudflare.com " + wsOrigin,
         "frame-src 'none'",
         "object-src 'none'",
         "base-uri 'self'",
@@ -1064,15 +1064,49 @@ const checkAuthStatus = (req, res, next) => {
 
 const DIRECT_ACCESS_TTL = 6 * 60 * 60 * 1000; // 6 Hours
 
-function isAuthenticated(req, res, next) {
+// --- Helper for robust Job ID extraction from various request parts ---
+function extractJobId(req) {
+    // 1. Direct parameters, query, or body
+    let jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId) || req.query.job_id;
+    if (jobId && jobId !== 'null') return jobId;
+
+    // 2. Extract from path segments
+    const urlPath = req.originalUrl.split('?')[0];
+    const urlParts = urlPath.split('/').filter(Boolean);
+    
+    // We look from the end to find the first numeric segment that follows a known keyword
+    const keywords = ['jobs', 'job', 'overview', 'progress', 'job-dossier', 'analyze-job', 'stop-analysis', 'ai', 'applications'];
+    
+    for (let i = urlParts.length - 1; i >= 0; i--) {
+        // If current segment is a number, check if the previous segment is a keyword
+        if (/^\d+$/.test(urlParts[i])) {
+            const prev = urlParts[i-1];
+            if (prev && keywords.includes(prev)) {
+                return urlParts[i];
+            }
+        }
+    }
+
+    // 3. Last-ditch: find ANY numeric segment from the end
+    for (let i = urlParts.length - 1; i >= 0; i--) {
+        if (/^\d+$/.test(urlParts[i])) {
+            return urlParts[i];
+        }
+    }
+
+    return null;
+}
+
+async function isAuthenticated(req, res, next) {
     if (req.session.userId) {
         return next();
     }
 
     // Allow Direct Access sessions to pass authentication
-    const jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId) || req.query.job_id;
-    if (jobId && req.session.jobAccess && req.session.jobAccess[jobId]) {
-        const accessData = req.session.jobAccess[jobId];
+    const jobId = extractJobId(req);
+    
+    if (jobId && req.session.jobAccess && (req.session.jobAccess[jobId] || req.session.jobAccess[String(jobId)])) {
+        const accessData = req.session.jobAccess[jobId] || req.session.jobAccess[String(jobId)];
         
         if (accessData.unlockedAt && (Date.now() - accessData.unlockedAt < DIRECT_ACCESS_TTL)) {
             return next();
@@ -1115,9 +1149,9 @@ function isEmployer(req, res, next) {
     }
     
     // Allow Direct Access sessions to pass employer check
-    const jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId) || req.query.job_id;
-    if (jobId && req.session.jobAccess && req.session.jobAccess[jobId]) {
-        const accessData = req.session.jobAccess[jobId];
+    const jobId = extractJobId(req);
+    if (jobId && req.session.jobAccess && (req.session.jobAccess[jobId] || req.session.jobAccess[String(jobId)])) {
+        const accessData = req.session.jobAccess[jobId] || req.session.jobAccess[String(jobId)];
         
         if (accessData.unlockedAt && (Date.now() - accessData.unlockedAt < DIRECT_ACCESS_TTL)) {
             return next();
@@ -1148,46 +1182,49 @@ function isEmployerOrDirectAccess(req, res, next) {
     }
 
     // 2. Direct access check (job-specific)
-    let jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId) || req.query.job_id;
+    const jobId = extractJobId(req);
     
-    // Fallback: Try to extract from path
-    if (!jobId) {
-        const urlParts = req.originalUrl.split('/');
-        // Look for the ID after 'jobs' or 'job'
-        const jobIdx = urlParts.findIndex(p => p === 'jobs' || p === 'job');
-        if (jobIdx !== -1 && urlParts[jobIdx + 1]) {
-            jobId = urlParts[jobIdx + 1].split('?')[0];
-        }
-    }
-    
-    const isDirectMode = req.query.mode === 'direct';
+    // Direct mode check: also check if jobId was extracted
+    const isDirectMode = req.query.mode === 'direct' || !!jobId;
     const isApiRequest = req.originalUrl.includes('/api/') || req.originalUrl.includes('/admin/');
 
     // Allow page load in direct mode to show the gate
-    if (isDirectMode && jobId && !isApiRequest) {
+    if (req.query.mode === 'direct' && jobId && !isApiRequest) {
         return next();
     }
 
     // Check session-based access
-    if (jobId && req.session.jobAccess) {
+    if (jobId && req.session) {
+        if (!req.session.jobAccess) {
+            // Auto-initialize if it's missing but we have a session
+            // This prevents the 'hasJobAccess: false' issue if the session was just created
+            req.session.jobAccess = {};
+        }
+        
         const accessData = req.session.jobAccess[jobId] || req.session.jobAccess[String(jobId)];
         if (accessData) {
             if (accessData.unlockedAt && (Date.now() - accessData.unlockedAt < DIRECT_ACCESS_TTL)) {
                 return next();
             } else {
-                // Session expired
+                logger.info(`Direct access session expired for job ${jobId}`);
                 delete req.session.jobAccess[jobId];
             }
         }
     }
 
-    // 3. Fallback for application-specific routes
-    // We allow these through the middleware and handle deeper auth in the route handler
-    if (req.originalUrl.includes('/applications/')) {
+    // 3. Fallback for application and AI specific routes
+    // We allow these through if they match the path structure, letting route handlers do deep auth
+    if (req.originalUrl.includes('/applications/') || req.originalUrl.includes('/ai/')) {
         return next();
     }
 
     if (isApiRequest) {
+        logger.warn('Direct access API request denied', {
+            path: req.originalUrl,
+            jobId,
+            hasSession: !!req.session,
+            hasJobAccess: !!(req.session && req.session.jobAccess)
+        });
         return res.status(403).json({ error: 'Access Denied: Secure access required.' });
     }
     
@@ -1458,7 +1495,12 @@ registerApplicationsRoutes(app, pool, {
 
 // AI Assistant routes
 const registerAIRoutes = require('./routes/ai');
-registerAIRoutes(app, pool, { isAuthenticated, isEmployer, handleValidationErrors });
+registerAIRoutes(app, pool, { 
+    isAuthenticated, 
+    isEmployer, 
+    isEmployerOrDirectAccess,
+    handleValidationErrors 
+});
 
 // Interviews routes
 const registerInterviewRoutes = require('./routes/interviews');

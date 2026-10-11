@@ -72,12 +72,52 @@ class AIEvaluationService {
             }
         }
 
-        const buffer = await this.bufferFromUrl(url);
-        if (!buffer) return null;
+        let buffer = null;
+        try {
+            // Try Supabase admin download if it's a Supabase URL and we have the admin client
+            // We need to check if supabaseAdmin is available. In this class, it might not be directly available.
+            // Let's check the constructor or imports.
+            const supabaseUrl = process.env.SUPABASE_URL;
+            const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+            
+            if (url.includes('supabase.co') && supabaseUrl && supabaseKey) {
+                const { createClient } = require('@supabase/supabase-js');
+                const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
+                
+                const storageMatch = url.match(/\/storage\/v1\/object\/(?:public|authenticated)\/([^\/]+)\/(.+)$/);
+                if (storageMatch) {
+                    const bucket = storageMatch[1];
+                    const key = decodeURIComponent(storageMatch[2]);
+                    const { data, error } = await supabaseAdmin.storage.from(bucket).download(key);
+                    if (!error && data) {
+                        buffer = Buffer.from(await data.arrayBuffer());
+                    }
+                }
+            }
+        } catch (e) {}
+
+        if (!buffer) {
+            buffer = await this.bufferFromUrl(url);
+        }
+
+        if (!buffer) {
+            logger.warn(`CV Download Failed for user ${userId}. Path: ${cvPath}`);
+            return null;
+        }
 
         const lowerPath = cvPath.toLowerCase();
         if (lowerPath.includes('.pdf')) {
             try {
+                // MOCK DOMMatrix and Path2D to avoid canvas polyfill warnings
+                if (typeof global.DOMMatrix === 'undefined') {
+                    global.DOMMatrix = class DOMMatrix {
+                        constructor() { this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.e = 0; this.f = 0; }
+                    };
+                }
+                if (typeof global.Path2D === 'undefined') {
+                    global.Path2D = class Path2D {};
+                }
+
                 let pdfjsLib;
                 try { 
                     // Suppress canvas warnings on environments without native build tools
@@ -92,19 +132,36 @@ class AIEvaluationService {
                     data: u8,
                     standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
                     cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
-                    cMapPacked: true
+                    cMapPacked: true,
+                    disableFontFace: true,
+                    verbosity: 0
                 });
                 
                 const doc = await loadingTask.promise;
                 let content = '';
                 const numPages = Math.min(doc.numPages, 10);
                 for (let p = 1; p <= numPages; p++) {
-                    const page = await doc.getPage(p);
-                    const tc = await page.getTextContent();
-                    content += '\n' + tc.items.map(i => i.str).join(' '); 
+                    try {
+                        const page = await doc.getPage(p);
+                        const tc = await page.getTextContent();
+                        const pageText = tc.items
+                            .map(i => i.str || '')
+                            .filter(s => s.trim().length > 0)
+                            .join(' ');
+                        content += '\n' + pageText;
+                    } catch (e) {
+                        logger.warn(`Error parsing PDF page ${p} for user ${userId}:`, e.message);
+                    }
                 }
-                return this.cleanText(content).substring(0, 15000);
-            } catch (e) { return null; }
+                const finalText = this.cleanText(content).substring(0, 15000);
+                if (!finalText || finalText.trim().length < 10) {
+                    logger.warn(`CV PDF Parse yielded no text for user ${userId}. PDF might be scanned/image-based.`);
+                }
+                return finalText;
+            } catch (e) { 
+                logger.error(`CV PDF Parse Error for user ${userId}:`, e.message);
+                return null; 
+            }
         }
 
         if (lowerPath.includes('.doc') && mammoth) {

@@ -19,7 +19,7 @@ try {
     }
 } catch {}
 
-module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmployer }) {
+module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmployer, isEmployerOrDirectAccess }) {
 
     // --- HELPER UTILITIES ---
 
@@ -148,27 +148,61 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
 
         let buffer = null;
         try {
-            if (/^https?:\/\//.test(url)) {
+            // Check if it's a Supabase URL first
+            const isSupabaseUrl = url && url.includes(process.env.SUPABASE_URL || 'supabase.co');
+            
+            if (isSupabaseUrl && supabaseAdmin) {
+                // Try to extract the storage key from the URL
+                // Format: https://project.supabase.co/storage/v1/object/public/bucket/path/to/file
+                try {
+                    const storageMatch = url.match(/\/storage\/v1\/object\/(?:public|authenticated)\/([^\/]+)\/(.+)$/);
+                    if (storageMatch) {
+                        const bucket = storageMatch[1];
+                        const key = decodeURIComponent(storageMatch[2]);
+                        const { data, error } = await supabaseAdmin.storage.from(bucket).download(key);
+                        if (!error && data) {
+                            buffer = Buffer.from(await data.arrayBuffer());
+                        }
+                    }
+                } catch (supaErr) {
+                    logger.warn(`Supabase direct download attempt failed for user ${userId}:`, supaErr.message);
+                }
+            }
+
+            // Fallback to standard HTTP download if Supabase specific failed or wasn't applicable
+            if (!buffer && /^https?:\/\//.test(url)) {
                 buffer = await bufferFromUrl(url);
-            } else if (supabaseAdmin && !url.startsWith('http')) {
+            } else if (!buffer && supabaseAdmin && !url.startsWith('http')) {
+                // Handle relative paths like 'uploads/cv.pdf'
                 const key = url.replace(/^\/?uploads\//, '');
                 const { data, error } = await supabaseAdmin.storage.from('uploads').download(key);
                 if (!error && data) buffer = Buffer.from(await data.arrayBuffer());
             }
-        } catch (e) { logger.error("CV Download Error:", e.message); }
+        } catch (e) { logger.error(`CV Download Error for user ${userId}:`, e.message); }
 
-        if (!buffer) return null;
+        if (!buffer) {
+            logger.warn(`CV Download Failed for user ${userId}. Path: ${cvPath}`);
+            return null;
+        }
 
         const lowerPath = cvPath.toLowerCase();
         
         if (lowerPath.includes('.pdf')) {
-            // --- FIX: Use explicit PDF.js parsing only to avoid 'pdf-parse' errors ---
             try {
+                // MOCK DOMMatrix and Path2D to avoid canvas polyfill warnings
+                if (typeof global.DOMMatrix === 'undefined') {
+                    global.DOMMatrix = class DOMMatrix {
+                        constructor() { this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.e = 0; this.f = 0; }
+                    };
+                }
+                if (typeof global.Path2D === 'undefined') {
+                    global.Path2D = class Path2D {};
+                }
+
                 let pdfjsLib;
-                // Attempt CommonJS require first
-                try { pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js'); } catch { pdfjsLib = null; }
-                // Fallback to dynamic import for ESM/other environments
-                if (!pdfjsLib) {
+                try { 
+                    pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js'); 
+                } catch { 
                     const esm = await import('pdfjs-dist/legacy/build/pdf.js');
                     pdfjsLib = esm && (esm.default || esm);
                 }
@@ -178,43 +212,51 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
                 if (pdfjsLib && typeof pdfjsLib.getDocument === 'function') {
                     const u8 = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
                     
-                    // CRITICAL CONFIGURATION: This addresses the standardFontDataUrl warning
                     const loadingTask = pdfjsLib.getDocument({
                         data: u8,
                         standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/',
                         cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
-                        cMapPacked: true
+                        cMapPacked: true,
+                        disableFontFace: true,
+                        verbosity: 0
                     });
                     
                     const doc = await loadingTask.promise;
                     const numPages = Math.min(doc.numPages || 10, 20);
                     let content = '';
+                    
                     for (let p = 1; p <= numPages; p++) {
-                        const page = await doc.getPage(p);
-                        const tc = await page.getTextContent();
-                        // Join text items with a space for better readability/parsing
-                        content += '\n' + tc.items.map(i => i.str).join(' '); 
+                        try {
+                            const page = await doc.getPage(p);
+                            const tc = await page.getTextContent();
+                            // Filter out empty strings and join properly
+                            const pageText = tc.items
+                                .map(i => i.str || '')
+                                .filter(s => s.trim().length > 0)
+                                .join(' ');
+                            
+                            content += '\n' + pageText;
+                        } catch (pageErr) {
+                            logger.warn(`Error parsing PDF page ${p} for user ${userId}:`, pageErr.message);
+                        }
                     }
                     finalText = cleanText(String(content || '')).substring(0, 15000);
-                } else {
-                    logger.error('PDF.js library is not available or getDocument function is missing. Check pdfjs-dist installation.');
                 }
 
-                if (finalText.length < 500) {
-                    logger.warn(`CV PDF Parse Short Text length: ${finalText.length}.`);
+                if (!finalText || finalText.trim().length < 10) {
+                    logger.warn(`CV PDF Parse yielded no text for user ${userId}. Length: ${finalText.length}. PDF might be scanned/image-based.`);
                 }
                 
                 setCache(cvPath, finalText);
                 
-                // Save to DB cache if possible
-                if (pool && userId && finalText.length > 100) {
+                if (pool && userId && finalText.length > 50) {
                     pool.query('UPDATE professionals SET cv_text = $1, cv_text_updated_at = NOW() WHERE user_id = $2', [finalText, userId])
-                        .catch(e => logger.error("Failed to update CV text in DB:", e.message));
+                        .catch(e => logger.error(`Failed to update CV text in DB for user ${userId}:`, e.message));
                 }
                 
                 return finalText; 
             } catch (e) { 
-                logger.error('CV PDF Parse Error (PDF.js Failed):', e.message); 
+                logger.error(`CV PDF Parse Error for user ${userId}:`, e.message); 
                 return null; 
             }
         }
@@ -453,7 +495,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
     const pilotRuns = new Map();
 
     // 1. Run Bulk Analysis
-    router.post('/ai/analyze-job/:jobId', isAuthenticated, isEmployer, async (req, res) => {
+    router.post('/ai/analyze-job/:jobId', isEmployerOrDirectAccess, async (req, res) => {
         const { jobId } = req.params;
         const { language, additionalInstructions, applicationIds, source, focusAreas, strictness, cv_weight, domain_tolerance, transferability } = req.body;
         
@@ -575,7 +617,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
                                 ]);
 
                                 // 2. Deep Report Storage
-                                await clientLocal.query(`
+                                await clientLocalSave.query(`
                                     INSERT INTO deep_reports (application_id, detailed_summary, detailed_strengths, detailed_weaknesses, interview_questions, detailed_report_html, analyzed_at)
                                     VALUES ($1, $2, $3, $4, $5, $6, NOW())
                                     ON CONFLICT (application_id) DO UPDATE SET
@@ -592,7 +634,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
                                 ]);
 
                                 // 3. Update application status if it was 'pending'
-                                await clientLocal.query(`
+                                await clientLocalSave.query(`
                                     UPDATE applications SET status = 'viewed' 
                                     WHERE id = $1 AND status = 'pending'
                                 `, [app.application_id]);
@@ -601,7 +643,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
                                 throw new Error("AI Engine returned empty analysis");
                             }
                         } finally {
-                            clientLocal.release();
+                            clientLocalSave.release();
                         }
                     } catch (err) {
                         logger.error(`Worker error for app ${app.application_id}:`, err);
@@ -656,7 +698,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
     });
 
     // 2. Stop Analysis Run
-    router.post('/ai/stop-analysis/:jobId', isAuthenticated, isEmployer, async (req, res) => {
+    router.post('/ai/stop-analysis/:jobId', isEmployerOrDirectAccess, async (req, res) => {
         const { runId } = req.body;
         if (runId && pilotRuns.has(runId)) {
             const r = pilotRuns.get(runId);
@@ -710,7 +752,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
         }
     }
 
-    router.post('/ai/job-dossier/:jobId', isAuthenticated, isEmployer, async (req, res) => {
+    router.post('/ai/job-dossier/:jobId', isEmployerOrDirectAccess, async (req, res) => {
         const { jobId } = req.params;
         const { revision_instructions, options, regenerate } = req.body || {};
         let client;
@@ -746,7 +788,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
     });
 
     // 2. Poll Progress
-    router.get('/ai/progress/:jobId', isAuthenticated, isEmployer, async (req, res) => {
+    router.get('/ai/progress/:jobId', isEmployerOrDirectAccess, async (req, res) => {
         let since = null;
         if (req.query.since) {
             const ts = Date.parse(req.query.since);
@@ -799,7 +841,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
     });
 
     // 3. Get Dashboard Overview Data
-    router.get('/ai/overview/:jobId', isAuthenticated, isEmployer, async (req, res) => {
+    router.get('/ai/overview/:jobId', isEmployerOrDirectAccess, async (req, res) => {
         const { jobId } = req.params;
         let client;
         try {

@@ -476,7 +476,7 @@
             <button id="mobileMenuToggle" class="md:hidden w-10 h-10 rounded-xl glass-btn text-white flex items-center justify-center">
                 <i class="fas fa-users-viewfinder"></i>
             </button>
-            <button onclick="history.back()" class="hidden md:flex w-8 h-8 rounded-full glass-btn items-center justify-center text-slate-400">
+            <button id="backBtn" onclick="history.back()" class="hidden md:flex w-8 h-8 rounded-full glass-btn items-center justify-center text-slate-400">
                 <i class="fas fa-arrow-left"></i>
             </button>
             <div>
@@ -484,6 +484,12 @@
                     Hirly <span class="text-blue-400">Pilot</span>
                 </h1>
                 <p id="jobTitleDisplay" class="text-[10px] md:text-xs text-slate-400 font-mono truncate max-w-[120px] md:max-w-none">Loading Context...</p>
+            </div>
+            
+            <!-- WhatsApp Support Link (Direct Mode Only) -->
+            <div id="directSupportLink" class="hidden items-center gap-2 ml-4 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                <i class="fab fa-whatsapp text-emerald-500 text-xs"></i>
+                <a href="https://wa.me/970594444403" target="_blank" class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest hover:text-emerald-300 transition-colors">Partner Support</a>
             </div>
             
             <!-- Workflow Guide (REMOVED) -->
@@ -499,7 +505,7 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="flex flex-1 overflow-hidden relative">
+    <div id="mainContent" class="flex flex-1 overflow-hidden relative hidden opacity-0 transition-opacity duration-500">
         
         <!-- SIDEBAR: Candidate Stream -->
         <aside id="candidateSidebar" class="w-[320px] md:w-[400px] border-r border-white/10 bg-slate-900/50 flex flex-col z-10">
@@ -1381,7 +1387,13 @@
         }
 
         // --- STATE MANAGEMENT ---
-        let currentJobId = new URLSearchParams(window.location.search).get('job_id') || new URLSearchParams(window.location.search).get('jobId');
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentJobId = urlParams.get('job_id') || urlParams.get('jobId');
+        const isDirectMode = urlParams.get('mode') === 'direct';
+        
+        // Hard check for "null" string or empty ID
+        if (currentJobId === 'null' || currentJobId === 'undefined') currentJobId = null;
+
         let candidates = [];
         let selectedCandidateId = null;
         let radarChart = null;
@@ -1582,14 +1594,30 @@
         }
 
         async function fetchData() {
+            if (!currentJobId || currentJobId === 'null') {
+                console.error("Cannot fetch data: Job ID is missing or null");
+                showEmptyState();
+                return;
+            }
+
+            // In direct mode, wait for authorization before fetching
+            const urlParams = new URLSearchParams(window.location.search);
+            const isDirectMode = urlParams.get('mode') === 'direct';
+            if (isDirectMode && document.documentElement.getAttribute('data-unlocked') !== 'true') {
+                console.log("[AI] Waiting for secure access authorization...");
+                return;
+            }
+
             try {
                 // Fetch Job Context
                 const jobRes = await fetch(`/api/jobs/${currentJobId}`);
+                if (!jobRes.ok) throw new Error(`Job fetch failed: ${jobRes.status}`);
                 const job = await jobRes.json();
                 document.getElementById('jobTitleDisplay').textContent = job.title;
 
                 // Fetch AI Data
                 const res = await fetch(`/api/ai/overview/${currentJobId}`);
+                if (!res.ok) throw new Error(`AI overview fetch failed: ${res.status}`);
                 const data = await res.json();
                 
                 if(data.success) {
@@ -3093,5 +3121,138 @@
 
     </script>
     <script src="/components.js"></script>
+    <!-- Secure Direct Access Gate -->
+    <div id="secureAccessGate" class="fixed inset-0 z-[99999] bg-slate-900 flex items-center justify-center p-4 hidden">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-slide-up ring-1 ring-slate-200">
+            <div class="p-8 text-center space-y-8">
+                <!-- Branding -->
+                <div class="w-16 h-16 mx-auto bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <i class="fas fa-shield-alt text-3xl text-emerald-400"></i>
+                </div>
+                
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight">Secure Access</h2>
+                    <p class="text-sm text-slate-500 font-medium leading-relaxed">Enter your secure key to view analysis for this listing.</p>
+                </div>
+
+                <div class="space-y-4 text-left">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Secure Access Key</label>
+                        <div class="relative">
+                            <input type="password" id="directAccessKey" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-slate-900 focus:bg-white focus:outline-none transition-all text-center text-xl font-bold tracking-[0.5em] placeholder-slate-200" placeholder="••••••••">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                                <i class="fas fa-key"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="accessErrorMessage" class="text-[11px] text-red-500 font-black uppercase tracking-wider text-center hidden bg-red-50 py-2 rounded-lg border border-red-100">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> Invalid access key.
+                    </div>
+                </div>
+
+                <button id="verifyAccessBtn" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-200 group">
+                    <i class="fas fa-lock-open group-hover:scale-110 transition-transform"></i>
+                    <span>Unlock Pilot</span>
+                </button>
+
+                <div class="pt-6 border-t border-slate-50 flex items-center justify-center gap-2">
+                    <i class="fas fa-check-circle text-emerald-500 text-[10px]"></i>
+                    <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest">Verified by Hirly Protocol</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Secure Direct Access Logic ---
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isDirectMode = urlParams.get('mode') === 'direct';
+            const jobId = urlParams.get('job_id') || urlParams.get('jobId');
+            const gate = document.getElementById('secureAccessGate');
+            const keyInput = document.getElementById('directAccessKey');
+            const verifyBtn = document.getElementById('verifyAccessBtn');
+            const errorMsg = document.getElementById('accessErrorMessage');
+            const mainContent = document.getElementById('mainContent');
+            const backBtn = document.getElementById('backBtn');
+            const supportLink = document.getElementById('directSupportLink');
+
+            // Hide back button in direct mode
+            if (isDirectMode) {
+                if (backBtn) backBtn.style.display = 'none';
+                if (supportLink) supportLink.classList.remove('hidden');
+            } else {
+                // If not in direct mode, show content immediately (auth middleware handles standard users)
+                if (mainContent) {
+                    mainContent.classList.remove('hidden');
+                    mainContent.style.opacity = '1';
+                }
+            }
+
+            if (isDirectMode && jobId) {
+                // Initial check: if already authorized, don't show the gate
+                fetch(`/api/jobs/${jobId}/check-access`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.authorized) {
+                             gate.classList.add('hidden');
+                             document.documentElement.setAttribute('data-unlocked', 'true');
+                             if (mainContent) {
+                                 mainContent.classList.remove('hidden');
+                                 mainContent.style.opacity = '1';
+                             }
+                             // Trigger data fetch now that we are unlocked
+                             if (typeof fetchData === 'function') fetchData();
+                         } else {
+                            gate.classList.remove('hidden');
+                            if (mainContent) mainContent.style.opacity = '0';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Initial access check failed:', err);
+                        gate.classList.remove('hidden');
+                    });
+                
+                verifyBtn.addEventListener('click', async () => {
+                    const accessKey = keyInput.value.trim();
+                    if (!accessKey) return;
+
+                    verifyBtn.disabled = true;
+                    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+                    errorMsg.classList.add('hidden');
+
+                    try {
+                        const response = await fetch(`/api/jobs/${jobId}/verify-access`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ accessKey })
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            gate.classList.add('hidden');
+                            document.documentElement.setAttribute('data-unlocked', 'true');
+                            if (mainContent) {
+                                mainContent.classList.remove('hidden');
+                                mainContent.style.opacity = '1';
+                            }
+                            window.location.reload(); // Reload to ensure all components fetch data with new session
+                        } else {
+                            errorMsg.classList.remove('hidden');
+                        }
+                    } catch (err) {
+                        console.error('Access verification failed:', err);
+                    } finally {
+                        verifyBtn.disabled = false;
+                        verifyBtn.innerHTML = '<span>Unlock Pilot</span>';
+                    }
+                });
+
+                keyInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') verifyBtn.click();
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

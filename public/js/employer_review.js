@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resend: "Resend code",
             change_email: "Change email",
             stat_applicants: "Applicants",
-            stat_elite: "Elite Match",
+            stat_elite: "Top Match",
             stat_strong: "Strong Match",
             stat_potential: "Potential Fit",
             stat_rejected: "Rejected",
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             missing_skills: "Missing Skills",
             interview_questions: "Suggested Interview Questions",
             locked_notice: "Unlock professional CVs and direct contact by claiming your workspace.",
-            verdict_strong: "Elite Match",
+            verdict_strong: "Top Match",
             verdict_interview: "Strong Match",
             verdict_backup: "Potential Fit",
             verdict_reject: "Rejected",
@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resend: "إعادة إرسال الرمز",
             change_email: "تغيير البريد الإلكتروني",
             stat_applicants: "متقدمين",
-            stat_elite: "مطابقة نخبوية",
+            stat_elite: "مطابقة ممتازة",
             stat_strong: "مطابقة قوية",
             stat_potential: "فرصة محتملة",
             stat_rejected: "مرفوض",
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
             missing_skills: "المهارات المفقودة",
             interview_questions: "أسئلة المقابلة المقترحة",
             locked_notice: "افتح السير الذاتية المهنية والتواصل المباشر من خلال امتلاك مساحة عملك.",
-            verdict_strong: "مطابقة نخبوية",
+            verdict_strong: "مطابقة ممتازة",
             verdict_interview: "مطابقة قوية",
             verdict_backup: "فرصة محتملة",
             verdict_reject: "مرفوض",
@@ -1540,8 +1540,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pilotDesc) {
             if (eliteCount > 0) {
                 pilotDesc.innerHTML = currentLang === 'en' 
-                    ? `We've identified <span class="font-black text-indigo-900">${eliteCount} Elite Matches</span> for this role. Candidates have been evaluated against your requirements using Hirly's advanced AI pipeline.`
-                    : `لقد حددنا <span class="font-black text-indigo-900">${eliteCount} مطابقة نخبوية</span> لهذا الدور. تم تقييم المرشحين بناءً على متطلباتك باستخدام نظام الذكاء الاصطناعي المتقدم من هايرلي.`;
+                    ? `We've identified <span class="font-black text-indigo-900">${eliteCount} Top Matches</span> for this role. Candidates have been evaluated against your requirements using Hirly's advanced AI pipeline.`
+                    : `لقد حددنا <span class="font-black text-indigo-900">${eliteCount} مطابقة ممتازة</span> لهذا الدور. تم تقييم المرشحين بناءً على متطلباتك باستخدام نظام الذكاء الاصطناعي المتقدم من هايرلي.`;
             } else if (strongCount > 0) {
                 pilotDesc.innerHTML = currentLang === 'en'
                     ? `We've found <span class="font-black text-indigo-900">${strongCount} Strong Candidates</span> worth interviewing. Candidates have been evaluated against your requirements using Hirly's advanced AI pipeline.`
