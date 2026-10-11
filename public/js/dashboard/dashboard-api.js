@@ -126,7 +126,7 @@ const DashboardAPI = {
                 currency: service.currency,
                 delivery_time: service.delivery_time,
                 category: service.category,
-                image_url: service.service_image_path || '/images/IT.jpg'
+                image_url: service.service_image_path || 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=professional+service+placeholder&image_size=square'
             }));
 
             return { success: true, data: services };

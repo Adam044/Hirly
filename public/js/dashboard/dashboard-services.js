@@ -200,7 +200,8 @@ const DashboardServices = {
         const card = document.createElement('div');
         card.className = 'service-card group';
         
-        const imageUrl = service.image_url || '/images/IT.jpg';
+        const placeholderUrl = 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=professional+service+placeholder&image_size=square';
+        const imageUrl = service.image_url || placeholderUrl;
         const lang = window.currentLanguage || 'en';
         
         let translatedCategory = service.category || '';
@@ -331,7 +332,8 @@ const DashboardServices = {
                 }
             }
             
-            if (service.image_url && service.image_url !== '/images/IT.jpg') {
+            const placeholderUrl = 'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=professional+service+placeholder&image_size=square';
+            if (service.image_url && service.image_url !== placeholderUrl && service.image_url !== '/images/IT.jpg') {
                 if (imagePreviewImg) imagePreviewImg.src = service.image_url;
                 if (imagePreviewContainer) imagePreviewContainer.classList.remove('hidden');
                 if (imagePlaceholder) imagePlaceholder.classList.add('hidden');
