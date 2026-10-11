@@ -49,6 +49,11 @@
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+.modal-content.small-modal {
+    max-width: 440px;
+    padding: 3rem 2rem;
+}
+
 .modal-header {
     padding-bottom: 1.5rem;
     margin-bottom: 1.5rem;
@@ -106,11 +111,64 @@
 
 .modal-actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding-top: 1.5rem;
+    justify-content: center;
+    gap: 1.25rem;
+    padding-top: 2rem;
     border-top: 1px solid var(--border-color);
-    flex-shrink: 0; /* Keep buttons visible */
+    flex-shrink: 0;
+}
+
+/* Enhanced Action Buttons for clarity */
+.modal-actions .btn {
+    min-width: 160px;
+    padding: 0.8rem 2rem;
+    border-radius: 50px !important; /* Force pill shape for luxe look */
+    font-weight: 700 !important;
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Help text pop against gradients */
+    color: var(--white) !important; /* Absolute clarity */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-actions .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-actions .btn:active {
+    transform: translateY(-1px);
+}
+
+/* Special fix for secondary/cancel button to ensure it doesn't fight with the primary */
+.modal-actions .btn-secondary {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+    box-shadow: 0 4px 12px rgba(148, 163, 184, 0.2);
+}
+
+.modal-actions .btn-secondary:hover {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    box-shadow: 0 8px 20px rgba(148, 163, 184, 0.3);
+}
+
+.modal-actions .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2) !important;
+}
+
+.modal-actions .btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3) !important;
+}
+
+.modal-actions .btn-primary {
+    background: var(--primary-gradient) !important;
+}
+
+.modal-actions .btn-primary:hover {
+    background: var(--primary-gradient-hover) !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3) !important;
 }
 
 /* REVISED: Minimalist close button - Luxe Aesthetic */

@@ -1354,7 +1354,7 @@
                                             <span class="inline-block px-4 py-1.5 rounded-full text-sm font-bold uppercase ring-2 ${getStatusColorClass(app.status)} shadow-sm">${statusText}</span>
                                         </div>
                                         <div class="flex gap-3 mt-1 sm:mt-0">
-                                            <a href="/profile.html?id=${app.freelancer_id}" target="_blank" class="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors shadow-md transform hover:scale-105" title="${translate('view_full_profile_tooltip', 'View Full Profile')}">
+                                            <a href="${app.slug ? `/${app.slug}` : `/profile.html?id=${app.professional_id}`}" target="_blank" class="w-11 h-11 flex items-center justify-center rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors shadow-md transform hover:scale-105" title="${translate('view_full_profile_tooltip', 'View Full Profile')}">
                                                 <i class="fas fa-external-link-alt fa-lg"></i>
                                             </a>
                                             <button class="w-11 h-11 flex items-center justify-center rounded-xl transition-colors shadow-md transform hover:scale-105 ${isStarred ? 'bg-warning/15 text-warning hover:bg-warning/25' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}" 

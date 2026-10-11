@@ -19,7 +19,7 @@ try {
     }
 } catch {}
 
-module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmployer, isEmployerOrDirectAccess }) {
+module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmployer, isEmployerOrDirectAccess, educationService }) {
 
     // --- HELPER UTILITIES ---
 
@@ -313,13 +313,22 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
         try {
             const t = await readCVText(cvPath, pool, userId);
             if (t && t.length) return { text: t, status: { used: true, reason: 'parsed', length: t.length } };
+            
+            // If text is empty but path exists, it might be an image
+            if (t === "" || (t && t.length === 0)) {
+                return { text: '', status: { used: true, reason: 'empty_content_likely_image', length: 0 } };
+            }
+
             // Attempt to find latest CV from account if initial path failed
             const latestUrl = await findLatestCvPathForUser(userId);
             if (latestUrl) {
                 const t2 = await readCVText(latestUrl, pool, userId);
                 if (t2 && t2.length) return { text: t2, status: { used: true, reason: 'found_latest_account_cv', length: t2.length } };
+                if (t2 === "" || (t2 && t2.length === 0)) {
+                    return { text: '', status: { used: true, reason: 'empty_content_likely_image', length: 0 } };
+                }
             }
-            // Since we removed pdf-parse, we no longer need to check for its availability here.
+            
             if (lowerPath.includes('.doc') && !mammoth) return { text: '', status: { used: false, reason: 'doc_parser_unavailable' } };
             return { text: '', status: { used: false, reason: 'download_or_parse_failed' } };
         } catch (e) {
@@ -328,6 +337,18 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
     }
 
     // --- DEEPSEEK ANALYSIS ENGINE (V3) ---
+    function calculateAge(birthdate) {
+        if (!birthdate) return null;
+        const today = new Date();
+        const birth = new Date(birthdate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
     async function analyzeWithDeepSeek(job, candidate, lang = 'en', instructions = '', source = 'both', strictness = 5, cvTextOverride = null, options = {}, pool = null) {
         if (!process.env.DEEPSEEK_API_KEY) return null;
 
@@ -341,11 +362,23 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
             cvText = info.text;
             cvMeta = info.status;
         }
+
+        // Image CV Warning: If text extraction failed but file exists
+        let cvWarning = "";
+        if (!cvText && candidate.cv_path && source !== 'profile_only') {
+            cvWarning = "\n[SYSTEM WARNING]: The uploaded CV file appears to be a scanned image or text extraction failed. Please perform the evaluation based ONLY on the structured Profile, Education, and Bio data provided below.";
+        }
         
         const includeProfile = source !== 'cv_only';
         const bio = includeProfile ? (candidate.bio || '') : '';
         const skills = includeProfile ? parseSkills(candidate.skills) : [];
         const proposal = (source !== 'profile_only') ? (candidate.proposal_message || '') : '';
+
+        // Extract structured data
+        const age = calculateAge(candidate.birthdate);
+        const location = [candidate.city, candidate.country].filter(Boolean).join(', ');
+        const interests = parseSkills(candidate.interested_professions).join(', ');
+        const education = candidate.education_history || 'No formal education listed';
 
         const jobDesc = stripHTML(job.description || '').substring(0, 2000);
         const jobReqs = parseSkills(job.requirements);
@@ -375,7 +408,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
         OUTPUT_FORMAT: JSON only. No markdown.
         LANGUAGE: ${lang === 'ar' ? 'Arabic' : 'English'}
         STRICTNESS LEVEL: ${strictness}/10. ${strictnessPrompt}
-        WEIGHTING: Prioritize objective evidence from CV content. Apply ${cvFactor} weight to verified skills and tenure. Profile-only claims are secondary signal.
+        WEIGHTING: Prioritize objective evidence from structured education and CV content. Apply ${cvFactor} weight to verified skills and tenure. Profile-only claims are secondary signal.
         TRANSFERABILITY: ${emphasizeTransfer ? 'Highlight adaptable competencies and leadership potential.' : 'Focus on direct functional alignment.'}
         DOMAIN TOLERANCE: ${domainNote}
 
@@ -413,13 +446,20 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
 
         === CANDIDATE PROFILE ===
         Name: ${candidate.first_name} ${candidate.last_name}
+        Age: ${age || 'Not provided'}
+        Location: ${location || 'Not provided'}
         Current Role: ${candidate.profession}
         Bio: ${cleanText(bio).substring(0, 1000)}
         Listed Skills: ${skills.join(', ')}
+        Career Interests: ${interests || 'General'}
         Application Note: ${cleanText(proposal).substring(0, 1000)}
 
+        === STRUCTURED EDUCATION ===
+        ${education}
+
         === EXTRACTED CV CONTENT ===
-        ${cvText ? cvText : "(No CV file accessible, analyze based on Profile/Bio only)"}
+        ${cvWarning}
+        ${cvText ? cvText : "(No CV file accessible, analyze based on Profile/Bio/Education only)"}
         `;
 
         try {
@@ -520,8 +560,8 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
 
             let queryStr = `
                 SELECT a.id as application_id, a.proposal_message,
-                u.first_name, u.last_name, u.city, u.id as user_id,
-                f.skills, f.bio, f.profession, f.cv_path
+                u.first_name, u.last_name, u.city, u.country, u.birthdate, u.id as user_id,
+                f.skills, f.bio, f.profession, f.cv_path, f.interested_professions
                 FROM applications a
                 JOIN users u ON a.professional_id = u.id
                 LEFT JOIN professionals f ON u.id = f.user_id
@@ -587,6 +627,23 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
                         } finally { clientLocal.release(); }
 
                         const cvInfo = await getCVTextWithStatus(app.cv_path, source, app.user_id, pool);
+                        
+                        // Fetch Education History if service is available
+                        let educationText = "";
+                        if (educationService && app.user_id) {
+                            try {
+                                const eduEntries = await educationService.getUserEducation(app.user_id);
+                                if (eduEntries && eduEntries.length > 0) {
+                                    educationText = eduEntries.map(e => 
+                                        `- ${e.title} at ${e.institution_name} (${e.field_of_study || 'N/A'}), Level: ${e.education_level || 'N/A'}, Dates: ${e.start_date ? new Date(e.start_date).getFullYear() : '?'} - ${e.end_date ? new Date(e.end_date).getFullYear() : (e.is_current ? 'Present' : '?')}`
+                                    ).join('\n');
+                                }
+                            } catch (eduErr) {
+                                logger.warn(`Failed to fetch education for AI analysis (user ${app.user_id}):`, eduErr.message);
+                            }
+                        }
+                        app.education_history = educationText;
+
                         const analysis = await analyzeWithDeepSeek(job, app, language, finalInstructions, source, strictnessLevel, cvInfo, {
                             cv_weight: (typeof cv_weight === 'number') ? cv_weight : parseInt(cv_weight || '66', 10),
                             domain_tolerance: (typeof domain_tolerance === 'number') ? domain_tolerance : parseInt(domain_tolerance || '50', 10),
@@ -850,7 +907,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
             const r = await client.query(`
                 SELECT 
                     a.id, a.applied_at,
-                    u.first_name, u.last_name, u.profile_picture_url, u.city, u.id as user_id,
+                    u.first_name, u.last_name, u.slug, u.profile_picture_url, u.city, u.id as user_id,
                     f.profession, f.cv_path, f.skills, f.bio,
                     
                     -- Basic AI Evaluation
@@ -883,6 +940,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
                 return {
                     id: row.id,
                     user_id: row.user_id,
+                    slug: row.slug,
                     first_name: row.first_name,
                     last_name: row.last_name,
                     profession: row.profession,

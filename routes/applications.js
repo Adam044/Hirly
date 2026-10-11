@@ -103,6 +103,7 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
             a.applied_at,
             u.first_name,
             u.last_name,
+            u.slug,
             u.email,
             u.phone,
             u.city,

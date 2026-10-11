@@ -41,6 +41,7 @@
   --background-light: var(--slate-50);
   --background-card: #ffffff;
   --background-hover: var(--slate-50);
+  --white: #ffffff;
   
   /* Status Colors */
   --success: #10b981;

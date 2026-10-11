@@ -1495,11 +1495,15 @@ registerApplicationsRoutes(app, pool, {
 
 // AI Assistant routes
 const registerAIRoutes = require('./routes/ai');
+const EducationService = require('./services/educationService');
+const educationService = new EducationService(pool);
+
 registerAIRoutes(app, pool, { 
     isAuthenticated, 
     isEmployer, 
     isEmployerOrDirectAccess,
-    handleValidationErrors 
+    handleValidationErrors,
+    educationService
 });
 
 // Interviews routes
@@ -1508,8 +1512,6 @@ registerInterviewRoutes(app, pool, { isAuthenticated, isEmployer });
 
 const registerUserRoutes = require('./routes/user');
 const userService = require('./services/userService');
-const EducationService = require('./services/educationService');
-const educationService = new EducationService(pool);
 
 // Initialize Job Aggregation Service early for route registration
 const jobAggregator = new JobAggregationService(pool);
