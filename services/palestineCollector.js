@@ -55,7 +55,7 @@ class PalestineCollector {
                 hasTouch: false,
                 isMobile: false,
                 javaScriptEnabled: true,
-                locale: 'en-US,ar-PS',
+                locale: 'en-US', // Fixed: Playwright expects a single locale string
                 timezoneId: 'Asia/Gaza'
             });
 

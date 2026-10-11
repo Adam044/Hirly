@@ -22,6 +22,15 @@
 
     <!-- Tailwind CSS -->
     <script src="/auth.js"></script>
+    <script>
+        // Set direct mode attribute as early as possible to prevent layout flash
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('mode') === 'direct') {
+                document.documentElement.setAttribute('data-direct-mode', 'true');
+            }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -106,6 +115,24 @@
             background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
             background-size: 30px 30px;
         }
+
+        /* Prevent flash of content in direct access mode */
+        [data-direct-mode="true"]:not([data-unlocked="true"]) #mainContent {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+
+        [data-direct-mode="true"] #backToDashboardBtn {
+            display: none !important;
+        }
+
+        [data-direct-mode="true"] #directContactSupport {
+            display: flex !important;
+        }
+
+        #directJobIntel {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
         
         /* PIN Input Styles */
         .pin-input {
@@ -187,11 +214,33 @@
         <!-- Header Section: Compact and Efficient -->
         <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 pb-4 border-b border-gray-100 shrink-0 gap-4">
             <div class="flex items-start gap-4">
-                <a href="/employer/hire_dashboard.html#postedJobsSection" class="mt-1 w-10 h-10 flex items-center justify-center rounded-lg bg-white hover:bg-gray-50 transition-colors text-gray-700 shadow-sm ring-1 ring-gray-200" aria-label="Back to Dashboard">
+                <a id="backToDashboardBtn" href="/employer/hire_dashboard.html#postedJobsSection" class="mt-1 w-10 h-10 flex items-center justify-center rounded-lg bg-white hover:bg-gray-50 transition-colors text-gray-700 shadow-sm ring-1 ring-gray-200" aria-label="Back to Dashboard">
                     <i class="fas fa-arrow-left"></i>
                 </a>
+                <div id="directContactSupport" class="hidden items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-100 shadow-sm animate-fade-in">
+                    <i class="fab fa-whatsapp text-lg text-green-500"></i>
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-bold uppercase tracking-widest text-indigo-400">Need Help?</span>
+                        <a href="https://wa.me/970594444403" target="_blank" class="text-xs font-bold hover:underline">Contact Support</a>
+                    </div>
+                </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 mb-0" data-lang-key="applicants_for_job_title">Applicants for Job</h1>
+                    <div class="flex items-center gap-2 mb-0.5">
+                        <h1 class="text-2xl font-bold text-gray-900" data-lang-key="applicants_for_job_title">Applicants for Job</h1>
+                        <!-- Direct Mode Intel Pill -->
+                        <div id="directJobIntel" class="hidden items-center gap-3 bg-slate-900 text-white px-3 py-1 rounded-full shadow-lg border border-slate-700 animate-fade-in scale-90 origin-left">
+                            <div class="flex items-center gap-1.5 border-r border-slate-700 pr-3">
+                                <i class="fas fa-eye text-indigo-400 text-[10px]"></i>
+                                <span id="directJobViews" class="text-xs font-mono font-bold tracking-tighter">0</span>
+                                <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Views</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <i class="fas fa-users text-emerald-400 text-[10px]"></i>
+                                <span id="directJobApplicants" class="text-xs font-mono font-bold tracking-tighter">0</span>
+                                <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Total</span>
+                            </div>
+                        </div>
+                    </div>
                     <h2 id="jobTitleDisplay" class="text-base font-medium text-gray-500">...</h2>
                 </div>
             </div>
@@ -1767,7 +1816,20 @@
             };
 
             // Run Init
-            init();
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'direct') {
+                const jobId = params.get('job_id') || params.get('jobId');
+                fetch(`/api/jobs/${jobId}/check-access`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.authorized) init();
+                    })
+                    .catch(() => {
+                        // On error, we don't init to prevent 401 toasts
+                    });
+            } else {
+                init();
+            }
         });
     </script>
     <!-- AI Assistant Modal (Simplified) -->
@@ -1957,35 +2019,41 @@
     </script>
     
     <!-- Secure Direct Access Gate -->
-    <div id="secureAccessGate" class="fixed inset-0 z-[5000] bg-slate-900 flex items-center justify-center p-4 hidden">
-        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
+    <div id="secureAccessGate" class="fixed inset-0 z-[99999] bg-slate-900 flex items-center justify-center p-4 hidden">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-slide-up ring-1 ring-slate-200">
             <div class="p-8 text-center space-y-8">
                 <!-- Branding -->
-                <div class="w-16 h-16 mx-auto bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-shield-alt text-3xl text-indigo-400"></i>
+                <div class="w-16 h-16 mx-auto bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <i class="fas fa-shield-alt text-3xl text-emerald-400"></i>
                 </div>
                 
                 <div class="space-y-2">
-                    <h2 class="text-2xl font-black text-slate-900">Secure Access</h2>
-                    <p class="text-sm text-slate-500 font-medium">Enter your secure key to view applications for this listing.</p>
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight">Secure Access</h2>
+                    <p class="text-sm text-slate-500 font-medium leading-relaxed">Enter your secure key to view applications for this listing.</p>
                 </div>
 
                 <div class="space-y-4 text-left">
                     <div class="space-y-1">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Secure Access Key</label>
-                        <input type="password" id="directAccessKey" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:outline-none transition-all text-center text-xl font-bold tracking-[0.5em]" placeholder="••••••••">
+                        <div class="relative">
+                            <input type="password" id="directAccessKey" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-slate-900 focus:bg-white focus:outline-none transition-all text-center text-xl font-bold tracking-[0.5em] placeholder-slate-200" placeholder="••••••••">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                                <i class="fas fa-key"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div id="accessErrorMessage" class="text-xs text-red-500 font-bold text-center hidden">
-                        <i class="fas fa-exclamation-circle mr-1"></i> Invalid access key.
+                    <div id="accessErrorMessage" class="text-[11px] text-red-500 font-black uppercase tracking-wider text-center hidden bg-red-50 py-2 rounded-lg border border-red-100">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> Invalid access key.
                     </div>
                 </div>
 
-                <button id="verifyAccessBtn" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
-                    <i class="fas fa-lock-open"></i>
+                <button id="verifyAccessBtn" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl shadow-slate-200 group">
+                    <i class="fas fa-lock-open group-hover:scale-110 transition-transform"></i>
                     <span>Unlock Applications</span>
                 </button>
 
-                <div class="pt-4 border-t border-slate-50">
+                <div class="pt-6 border-t border-slate-50 flex items-center justify-center gap-2">
+                    <i class="fas fa-check-circle text-emerald-500 text-[10px]"></i>
                     <p class="text-[9px] text-slate-400 uppercase font-black tracking-widest">Verified by Hirly Protocol</p>
                 </div>
             </div>
@@ -2004,13 +2072,43 @@
             const errorMsg = document.getElementById('accessErrorMessage');
 
             if (isDirectMode && jobId) {
-                // Show gate by default for direct mode
-                gate.classList.remove('hidden');
-                
-                // Also hide the main UI to prevent flash
-                const mainContent = document.getElementById('mainContent');
-                if (mainContent) mainContent.style.opacity = '0';
+                // Initial check: if already authorized, don't show the gate
+                fetch(`/api/jobs/${jobId}/check-access`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.authorized) {
+                            // Already authorized, ensure UI is visible
+                            gate.classList.add('hidden');
+                            document.documentElement.setAttribute('data-unlocked', 'true');
+                            
+                            // Update Intel Pill if in direct mode
+                            if (isDirectMode && data.stats) {
+                                document.getElementById('directJobIntel')?.classList.remove('hidden');
+                                document.getElementById('directJobIntel')?.classList.add('flex');
+                                const viewsEl = document.getElementById('directJobViews');
+                                const appsEl = document.getElementById('directJobApplicants');
+                                if (viewsEl) viewsEl.textContent = data.stats.views_count || 0;
+                                if (appsEl) appsEl.textContent = data.stats.applicants_count || 0;
+                            }
 
+                            const mainContent = document.getElementById('mainContent');
+                            if (mainContent) {
+                                mainContent.style.opacity = '1';
+                                mainContent.classList.remove('hidden');
+                            }
+                        } else {
+                            // Not authorized, show gate
+                            gate.classList.remove('hidden');
+                            const mainContent = document.getElementById('mainContent');
+                            if (mainContent) mainContent.style.opacity = '0';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Initial access check failed:', err);
+                        // Fallback: show gate just in case
+                        gate.classList.remove('hidden');
+                    });
+                
                 // Listen for verification
                 verifyBtn.addEventListener('click', async () => {
                     const accessKey = keyInput.value.trim();
@@ -2031,6 +2129,7 @@
                         if (data.success) {
                             // Success! Unlock the UI
                             gate.classList.add('hidden');
+                            document.documentElement.setAttribute('data-unlocked', 'true');
                             if (mainContent) {
                                 mainContent.style.opacity = '1';
                                 mainContent.classList.add('animate-fade-in');

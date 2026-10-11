@@ -401,13 +401,12 @@ app.use(session({
         }
         return 'a_very_strong_default_secret_for_dev';
     })(),
-    resave: true, 
-    saveUninitialized: true,
+    resave: false, 
+    saveUninitialized: false,
     rolling: true, 
-    proxy: false, // DISABLED: Trusting proxy on localhost often breaks sessions
+    proxy: true, 
     cookie: {
-        // ULTIMATE FIX: Ignore .env. Force secure: false if not on a real domain.
-        secure: false, // We will manually set this in the middleware if needed
+        secure: false, // Set to true in production with HTTPS
         httpOnly: true,
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000, 
@@ -416,52 +415,70 @@ app.use(session({
 }));
 
 // --- CSRF Protection Implementation ---
+const setCsrfCookie = (req, res) => {
+    if (!req.session.csrfToken) return;
+    const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1' || req.hostname === '::1';
+    const useSecure = !isLocalhost && (req.secure || req.headers['x-forwarded-proto'] === 'https');
+    
+    res.cookie('XSRF-TOKEN', req.session.csrfToken, {
+        secure: useSecure,
+        sameSite: 'lax',
+        httpOnly: false,
+        path: '/'
+    });
+};
+
 const csrfProtection = (req, res, next) => {
     const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
 
-    // Diagnostic: Track session persistence
-    req.session.viewCount = (req.session.viewCount || 0) + 1;
-
-    // Determine if we should use secure flags based on the ACTUAL request
-    const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1' || req.hostname === '::1';
-    const useSecure = !isLocalhost && (req.secure || req.headers['x-forwarded-proto'] === 'https');
-
+    // 1. Generate CSRF token if missing for safe methods
     if (safeMethods.includes(req.method) && !req.session.csrfToken) {
         req.session.csrfToken = crypto.randomBytes(32).toString('hex');
-        
-        req.session.save((err) => {
-            if (err) logger.error('Session save error during token generation:', err);
+        // Force save to ensure the token is persisted immediately before proceeding
+        return req.session.save((err) => {
+            if (err) logger.error('Error saving session after CSRF generation:', err);
+            
+            // Set cookie and proceed
+            setCsrfCookie(req, res);
+            next();
         });
     }
 
+    // 2. Always set the cookie if token exists, ensuring it's available to client
     if (req.session.csrfToken) {
-        res.cookie('XSRF-TOKEN', req.session.csrfToken, {
-            secure: useSecure,
-            sameSite: 'lax',
-            httpOnly: false,
-            path: '/'
-        });
+        setCsrfCookie(req, res);
     }
 
+    // 3. Skip validation for safe methods
     if (safeMethods.includes(req.method)) {
         return next();
     }
 
-    const clientToken = req.headers['x-xsrf-token'];
+    // 4. Validate token for state-changing methods
+    const clientToken = req.headers['x-xsrf-token'] || req.headers['x-csrf-token'];
     
-    if (!clientToken || !req.session.csrfToken || clientToken !== req.session.csrfToken) {
+    // Exception for specific admin actions or logout if needed
+    // Use req.path instead of originalUrl to avoid query string issues, and normalize trailing slashes
+    const cleanPath = req.path.replace(/\/$/, '');
+    const isSpecialAction = (cleanPath === '/admin/generate-job-access-key' && req.session.userType === 'admin') ||
+                            (cleanPath === '/api/logout') ||
+                            (cleanPath === '/api/auth/logout');
+
+    if (!isSpecialAction && (!clientToken || !req.session.csrfToken || clientToken !== req.session.csrfToken)) {
         logger.warn('CSRF validation failed', {
             method: req.method,
+            path: cleanPath,
             url: req.originalUrl,
+            isSpecialAction,
             clientTokenPresent: !!clientToken,
             sessionTokenPresent: !!req.session.csrfToken,
             tokenMatch: clientToken === req.session.csrfToken,
+            clientTokenLength: clientToken ? clientToken.length : 0,
+            sessionTokenLength: req.session.csrfToken ? req.session.csrfToken.length : 0,
+            clientTokenStart: clientToken ? (typeof clientToken === 'string' ? clientToken.substring(0, 4) + '...' : 'TYPE:' + typeof clientToken) : 'NONE',
+            sessionTokenStart: req.session.csrfToken ? req.session.csrfToken.substring(0, 4) + '...' : 'NONE',
             sessionID: req.sessionID,
-            viewCount: req.session.viewCount,
-            ip: req.ip,
-            host: req.hostname,
-            rawCookies: req.headers.cookie || 'NONE',
-            env: process.env.NODE_ENV
+            ip: req.ip
         });
         
         return res.status(403).json({ 
@@ -1045,9 +1062,24 @@ const checkAuthStatus = (req, res, next) => {
     }
 };
 
+const DIRECT_ACCESS_TTL = 6 * 60 * 60 * 1000; // 6 Hours
+
 function isAuthenticated(req, res, next) {
     if (req.session.userId) {
         return next();
+    }
+
+    // Allow Direct Access sessions to pass authentication
+    const jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId) || req.query.job_id;
+    if (jobId && req.session.jobAccess && req.session.jobAccess[jobId]) {
+        const accessData = req.session.jobAccess[jobId];
+        
+        if (accessData.unlockedAt && (Date.now() - accessData.unlockedAt < DIRECT_ACCESS_TTL)) {
+            return next();
+        } else {
+            // Session expired
+            delete req.session.jobAccess[jobId];
+        }
     }
 
     const isApiRequest = req.originalUrl.startsWith('/api/') || req.originalUrl.startsWith('/admin/');
@@ -1082,6 +1114,19 @@ function isEmployer(req, res, next) {
         return next();
     }
     
+    // Allow Direct Access sessions to pass employer check
+    const jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId) || req.query.job_id;
+    if (jobId && req.session.jobAccess && req.session.jobAccess[jobId]) {
+        const accessData = req.session.jobAccess[jobId];
+        
+        if (accessData.unlockedAt && (Date.now() - accessData.unlockedAt < DIRECT_ACCESS_TTL)) {
+            return next();
+        } else {
+            // Session expired
+            delete req.session.jobAccess[jobId];
+        }
+    }
+    
     const isApiRequest = req.originalUrl.startsWith('/api/') || req.originalUrl.startsWith('/admin/');
     if (isApiRequest) {
         return res.status(403).json({ error: 'Access Denied: Employer account required.' });
@@ -1103,20 +1148,45 @@ function isEmployerOrDirectAccess(req, res, next) {
     }
 
     // 2. Direct access check (job-specific)
-    // The jobId is usually in req.params.jobId or req.query.jobId
-    const jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId);
+    let jobId = req.params.jobId || req.query.jobId || (req.body && req.body.jobId) || req.query.job_id;
     
-    if (jobId && req.session.jobAccess && req.session.jobAccess[jobId]) {
+    // Fallback: Try to extract from path
+    if (!jobId) {
+        const urlParts = req.originalUrl.split('/');
+        // Look for the ID after 'jobs' or 'job'
+        const jobIdx = urlParts.findIndex(p => p === 'jobs' || p === 'job');
+        if (jobIdx !== -1 && urlParts[jobIdx + 1]) {
+            jobId = urlParts[jobIdx + 1].split('?')[0];
+        }
+    }
+    
+    const isDirectMode = req.query.mode === 'direct';
+    const isApiRequest = req.originalUrl.includes('/api/') || req.originalUrl.includes('/admin/');
+
+    // Allow page load in direct mode to show the gate
+    if (isDirectMode && jobId && !isApiRequest) {
         return next();
     }
 
-    // 3. Fallback for application-specific routes that need jobId lookup
-    if (req.params.applicationId) {
-        // We'll handle this inside the route since we need a DB lookup for the jobId
+    // Check session-based access
+    if (jobId && req.session.jobAccess) {
+        const accessData = req.session.jobAccess[jobId] || req.session.jobAccess[String(jobId)];
+        if (accessData) {
+            if (accessData.unlockedAt && (Date.now() - accessData.unlockedAt < DIRECT_ACCESS_TTL)) {
+                return next();
+            } else {
+                // Session expired
+                delete req.session.jobAccess[jobId];
+            }
+        }
+    }
+
+    // 3. Fallback for application-specific routes
+    // We allow these through the middleware and handle deeper auth in the route handler
+    if (req.originalUrl.includes('/applications/')) {
         return next();
     }
 
-    const isApiRequest = req.originalUrl.startsWith('/api/') || req.originalUrl.startsWith('/admin/');
     if (isApiRequest) {
         return res.status(403).json({ error: 'Access Denied: Secure access required.' });
     }
@@ -1522,7 +1592,7 @@ registerEmployerReviewRoutes(app, pool, {
 
 // --- Pages routes (SPA) - Must be registered AFTER all API and Admin routes ---
 const registerPagesRoutes = require('./routes/pages');
-registerPagesRoutes(app, { isAuthenticated, isProfessional, isEmployer, isEmployerVerified, isAdmin, pool });
+registerPagesRoutes(app, { isAuthenticated, isProfessional, isEmployer, isEmployerOrDirectAccess, isEmployerVerified, isAdmin, pool });
 
 // Existing endpoints
 // ... (All existing routes remain the same)

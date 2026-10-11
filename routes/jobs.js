@@ -48,6 +48,54 @@ module.exports = function registerJobsRoutes(app, pool, {
   }
 
   // --- Secure Direct Access for Employers ---
+  router.get('/jobs/:jobId/check-access', async (req, res) => {
+    const { jobId } = req.params;
+    
+    // Check if authorized
+    let isAuthorized = (req.session.userId && (req.session.userType === 'employer' || req.session.userType === 'admin'));
+    
+    if (!isAuthorized && req.session.jobAccess && req.session.jobAccess[jobId]) {
+      const accessData = req.session.jobAccess[jobId];
+      const SIX_HOURS = 6 * 60 * 60 * 1000;
+      
+      if (accessData.unlockedAt && (Date.now() - accessData.unlockedAt < SIX_HOURS)) {
+        isAuthorized = true;
+      } else {
+        // Expired
+        delete req.session.jobAccess[jobId];
+        isAuthorized = false;
+      }
+    }
+    
+    if (!isAuthorized) {
+      return res.json({ success: true, authorized: false });
+    }
+
+    // If authorized, fetch stats for the direct mode UI
+    let client;
+    try {
+      client = await pool.connect();
+      const stats = await client.query(
+        `SELECT 
+          views_count, 
+          (SELECT COUNT(*) FROM applications WHERE job_id = $1) as applicants_count 
+         FROM jobs WHERE id = $1`,
+        [jobId]
+      );
+      
+      res.json({ 
+        success: true, 
+        authorized: true, 
+        stats: stats.rows[0] || { views_count: 0, applicants_count: 0 } 
+      });
+    } catch (err) {
+      logger.error('Error fetching job stats for check-access:', err);
+      res.json({ success: true, authorized: true, stats: { views_count: 0, applicants_count: 0 } });
+    } finally {
+      if (client) client.release();
+    }
+  });
+
   router.post('/jobs/:jobId/verify-access', async (req, res) => {
     const { jobId } = req.params;
     const { accessKey } = req.body;
@@ -80,11 +128,13 @@ module.exports = function registerJobsRoutes(app, pool, {
         return res.status(401).json({ success: false, error: 'Invalid access key.' });
       }
 
-      // Set job-specific access in session
+      // Set job-specific access in session with timestamp
       if (!req.session.jobAccess) {
         req.session.jobAccess = {};
       }
-      req.session.jobAccess[jobId] = true;
+      req.session.jobAccess[jobId] = {
+        unlockedAt: Date.now()
+      };
       
       // Also set some user-like properties for the session if not logged in
       if (!req.session.userId) {

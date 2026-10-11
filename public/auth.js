@@ -2,25 +2,41 @@
 
 // --- Global Fetch Wrapper for 401 and CSRF Handling ---
 const originalFetch = window.fetch;
-window.fetch = async (url, options) => {
-    // 1. Add CSRF token to state-changing requests
+window.fetch = async (url, options = {}) => {
+    // 1. Ensure options and headers are initialized
+    options = { ...options }; // Clone to avoid side effects
+    options.headers = options.headers || {};
+    
+    // 2. Handle both plain objects and Headers instances
+    const isHeadersInstance = options.headers instanceof Headers;
+    const getHeader = (name) => isHeadersInstance ? options.headers.get(name) : options.headers[name];
+    const setHeader = (name, value) => {
+        if (isHeadersInstance) options.headers.set(name, value);
+        else options.headers[name] = value;
+    };
+
+    // 3. Add CSRF token to state-changing requests
     const methods = ['POST', 'PUT', 'DELETE', 'PATCH'];
-    if (options && options.method && methods.includes(options.method.toUpperCase())) {
-        // Robust cookie parsing using regex
+    const currentMethod = (options.method || 'GET').toUpperCase();
+    
+    if (methods.includes(currentMethod)) {
+        // Robust cookie parsing
         const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
         const csrfToken = match ? match[1] : null;
 
         if (csrfToken) {
-            options.headers = {
-                ...options.headers,
-                'X-XSRF-TOKEN': csrfToken
-            };
+            // Set the header only once to avoid duplicate headers in some browsers/proxies
+            if (isHeadersInstance) {
+                options.headers.set('x-xsrf-token', csrfToken);
+            } else {
+                options.headers['x-xsrf-token'] = csrfToken;
+            }
         }
     }
 
-    // 2. Ensure credentials are included for same-origin API requests
-    if (typeof url === 'string' && url.startsWith('/api/')) {
-        options = options || {};
+    // 4. Ensure credentials are included for same-origin API/Admin requests
+    const urlStr = typeof url === 'string' ? url : (url instanceof Request ? url.url : '');
+    if (urlStr.startsWith('/api/') || urlStr.startsWith('/admin/')) {
         options.credentials = options.credentials || 'include';
     }
 
@@ -164,6 +180,11 @@ async function handleAuthDisplayAndRedirect() {
 
         const currentPathNormalized = normalizePath(window.location.pathname);
 
+        // --- Direct Access Bypass ---
+        const _authUrlParams = new URLSearchParams(window.location.search);
+        const isDirectMode = _authUrlParams.get('mode') === 'direct';
+        const jobId = _authUrlParams.get('job_id') || _authUrlParams.get('jobId');
+
         if (isAuthenticated) {
             if (authButtons) authButtons.style.display = 'none';
             if (userMenu) userMenu.style.display = 'flex';
@@ -191,6 +212,12 @@ async function handleAuthDisplayAndRedirect() {
             if (authButtons) authButtons.style.display = 'flex';
             if (userMenu) userMenu.style.display = 'none';
 
+            // Allow bypass for Direct Access mode on protected pages
+            if (isDirectMode && jobId) {
+                console.log('[AUTH] Direct Access Mode detected. Bypassing standard auth redirect.');
+                return;
+            }
+
             const protectedPages = [
                 '/job_dashboard', '/hire_dashboard', '/post_job',
                 '/applicants', '/admin_dashboard', '/ai', '/interviews_analysis'
@@ -208,8 +235,7 @@ async function handleAuthDisplayAndRedirect() {
             }
         }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const message = urlParams.get('message');
+    const message = _authUrlParams.get('message');
     const signupMessageElement = document.getElementById('signupMessage');
     const loginMessageElement = document.getElementById('loginMessage');
     const verificationMessageElement = document.getElementById('verificationMessage');
@@ -220,7 +246,7 @@ async function handleAuthDisplayAndRedirect() {
             loginMessageElement.style.color = 'var(--success)';
             loginMessageElement.style.display = 'block';
             history.replaceState(null, '', window.location.pathname);
-        } else if (urlParams.get('activated') === 'true' && loginMessageElement) {
+        } else if (_authUrlParams.get('activated') === 'true' && loginMessageElement) {
             loginMessageElement.textContent = 'Account activated successfully! You can now log in.';
             loginMessageElement.style.color = 'var(--success)';
             loginMessageElement.style.display = 'block';

@@ -56,8 +56,20 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
     const jobId = req.params.jobId;
     const employerId = req.session.userId;
     
-    // Check if it's direct access
-    const isDirectAccess = req.session.jobAccess && req.session.jobAccess[jobId];
+    // Check if it's direct access and verify TTL (6 hours)
+    const accessData = req.session.jobAccess ? (req.session.jobAccess[jobId] || req.session.jobAccess[String(jobId)]) : null;
+    let isDirectAccess = false;
+    
+    if (accessData) {
+      const SIX_HOURS = 6 * 60 * 60 * 1000;
+      if (accessData.unlockedAt && (Date.now() - accessData.unlockedAt < SIX_HOURS)) {
+        isDirectAccess = true;
+      } else {
+        // Session expired, clean up
+        logger.info(`Direct access expired for job ${jobId}`);
+        if (req.session.jobAccess) delete req.session.jobAccess[jobId];
+      }
+    }
 
     try {
       client = await pool.connect();
@@ -68,9 +80,16 @@ module.exports = function registerApplicationsRoutes(app, pool, deps) {
         return res.status(404).json({ success: false, error: 'Job not found.' });
       }
 
-      // Authorization check: Either must be the employer OR have direct access
+      // Authorization check: Either must be the employer OR have valid direct access
       if (!isDirectAccess && jobOwner.employer_id !== employerId) {
-        return res.status(403).json({ success: false, error: 'Access denied. This job does not belong to you.' });
+        logger.warn('Access denied to job applications', {
+          jobId,
+          userId: employerId,
+          userType: req.session.userType,
+          isDirectAccess,
+          hasSessionAccess: !!accessData
+        });
+        return res.status(403).json({ success: false, error: 'Access denied. Secure access required.' });
       }
       const result = await client.query(`
         SELECT

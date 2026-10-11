@@ -987,7 +987,7 @@ module.exports = function registerAdminRoutes(app, pool, {
 
       let query = `
         SELECT j.id, j.title, j.description, j.status, j.created_at, j.has_been_sent, j.city, j.category, j.budget, j.currency,
-               j.is_verified, j.is_confidential,
+               j.is_verified, j.is_confidential, j.views_count,
                u.id as employer_id, u.first_name AS employer_first_name, u.last_name AS employer_last_name, u.slug AS employer_slug,
                e.company_name as employer_company_name,
                (SELECT COUNT(*) FROM applications WHERE job_id = j.id) as app_count

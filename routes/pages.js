@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const logger = require('../utils/logger');
 
-module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessional, isEmployer, isEmployerVerified, isAdmin, pool }) {
+module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessional, isEmployer, isEmployerOrDirectAccess, isEmployerVerified, isAdmin, pool }) {
   const router = express.Router();
 
   const ROOT_DIR = path.join(__dirname, '..');
@@ -391,11 +391,11 @@ module.exports = function registerPagesRoutes(app, { isAuthenticated, isProfessi
     sendSmart(req, res, next, [path.join('employer', 'post_job.html'), 'post_job.html']);
   });
 
-  router.get(['/applicants', '/applicants.html'], isAuthenticated, isEmployer, async (req, res, next) => {
+  router.get(['/applicants', '/applicants.html'], isEmployerOrDirectAccess, async (req, res, next) => {
     sendSmart(req, res, next, [path.join('employer', 'applicants.html'), 'applicants.html']);
   });
 
-  router.get(['/ai', '/ai.html'], isAuthenticated, isEmployer, (req, res, next) => {
+  router.get(['/ai', '/ai.html'], isEmployerOrDirectAccess, (req, res, next) => {
     sendSmart(req, res, next, [path.join('employer', 'ai.html'), 'ai.html']);
   });
 

@@ -53,7 +53,8 @@ async function handleTableActions(e) {
 
     if (eliteBtn) {
         console.log('Elite Access Button Clicked! ID:', eliteBtn.dataset.id, 'Title:', eliteBtn.dataset.title);
-        openEliteAccessModal(eliteBtn.dataset.id, eliteBtn.dataset.title);
+        // Ensure ID is a string for currentEliteJobId
+        openEliteAccessModal(String(eliteBtn.dataset.id), eliteBtn.dataset.title);
         return;
     }
 
@@ -103,6 +104,8 @@ function generateSecureKey() {
 
 function openEliteAccessModal(jobId, jobTitle) {
     currentEliteJobId = jobId;
+    console.log('Opening Elite Access Modal for Job:', jobId);
+    
     const modal = document.getElementById('eliteAccessModal');
     const targetDisplay = document.getElementById('eliteTargetJob');
     const setupView = document.getElementById('eliteAccessSetup');
@@ -120,10 +123,9 @@ function openEliteAccessModal(jobId, jobTitle) {
     if (setupView) setupView.classList.remove('hidden');
     if (resultView) resultView.classList.add('hidden');
     
-    // Force show modal
+    // Show modal using the new CSS class
     modal.classList.remove('hidden');
-    modal.style.display = 'flex'; 
-    modal.style.zIndex = '9999';
+    modal.classList.add('flex');
     
     const passInput = document.getElementById('eliteEmployerPassword');
     if (passInput) passInput.value = generateSecureKey();
@@ -138,19 +140,18 @@ function initEliteAccessListeners() {
     const confirmBtn = document.getElementById('confirmEliteAccess');
     const copyBtn = document.getElementById('copyEliteDetails');
 
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
+    const closeModal = () => {
+        if (modal) {
             modal.classList.add('hidden');
-            modal.style.display = 'none';
-        });
-    }
+            modal.classList.remove('flex');
+        }
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
     
     if (modal) {
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
-                modal.style.display = 'none';
-            }
+            if (e.target === modal) closeModal();
         });
     }
 
@@ -235,17 +236,14 @@ export const initJobs = () => {
     // Global listener for the jobs table body - attached once
     if (!tableListenerAttached) {
         console.log('Attaching Global Click Listener for Jobs Table');
+        
+        // Listen on document level to ensure it catches everything
         document.addEventListener('click', (e) => {
-            // We look for the closest table row to see if it's within our jobs table
-            const tableBody = document.getElementById('jobsTableBody');
-            if (!tableBody) return;
-
-            // Check if the click is within the table body OR if the target is one of our buttons
-            // This is more robust than just tableBody.contains(e.target)
-            const isTableClick = tableBody.contains(e.target);
-            const isActionButton = e.target.closest('.view-job-btn, .elite-access-btn, .close-job-btn, .delete-job-btn, .job-checkbox');
-
-            if (isTableClick || isActionButton) {
+            // Check if the click is on an action button or inside one
+            const actionBtn = e.target.closest('.view-job-btn, .elite-access-btn, .close-job-btn, .delete-job-btn, .job-checkbox');
+            
+            if (actionBtn) {
+                console.log('Action Button Clicked:', actionBtn.className);
                 handleTableActions(e);
             }
         });
@@ -431,7 +429,16 @@ const renderJobs = (jobs, append) => {
                 </div>
             </td>
             <td class="py-4 px-6 text-center">
-                <span class="text-xs font-bold ${j.app_count > 0 ? 'text-indigo-600' : 'text-gray-400'}">${j.app_count || 0}</span>
+                <div class="flex items-center justify-center gap-4">
+                    <div class="flex flex-col items-center gap-1" title="Total Applications">
+                        <i class="fas fa-users text-[10px] text-gray-400"></i>
+                        <span class="text-[11px] font-black ${j.app_count > 0 ? 'text-indigo-600' : 'text-gray-400'}">${j.app_count || 0}</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1" title="Job Views">
+                        <i class="fas fa-eye text-[10px] text-gray-400"></i>
+                        <span class="text-[11px] font-black text-gray-400">${j.views_count || 0}</span>
+                    </div>
+                </div>
             </td>
             <td class="py-4 px-6">
                 <span class="${getStatusBadgeClass(j.status)} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border shadow-sm">
