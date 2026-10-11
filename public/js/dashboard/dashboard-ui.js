@@ -408,7 +408,14 @@ const DashboardUI = {
         const status = u.current_status || u.currentStatus || '';
         const isFreelancer = status === 'Freelancing' || status === 'Working';
         if (isFreelancer && (!window.userServicesCount || window.userServicesCount === 0)) {
-            tasks.push({ key: 'add_services_task', priority: 'low', section: 'services', field: 'addServiceBtn', icon: 'fa-concierge-bell' });
+            tasks.push({ 
+                key: 'add_services_task', 
+                priority: 'low', 
+                section: 'services', 
+                field: 'addServiceBtn', 
+                icon: 'fa-bolt',
+                isOptional: true 
+            });
         }
 
         // Render tasks
@@ -460,7 +467,12 @@ const DashboardUI = {
                             <i class="fa-solid ${task.icon}"></i>
                         </div>
                         <div>
-                            <h5 class="text-xs font-black text-slate-700" data-lang-key="${task.key}">${window.translations?.[task.key]?.[lang] || this.formatTaskKey(task.key)}</h5>
+                            <h5 class="text-xs font-black text-slate-700 flex items-center gap-2">
+                                <span data-lang-key="${task.key}">${window.translations?.[task.key]?.[lang] || this.formatTaskKey(task.key)}</span>
+                                ${task.isOptional ? `
+                                    <span class="text-[8px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider" data-lang-key="optional">${window.translations?.['optional']?.[lang] || 'Optional'}</span>
+                                ` : ''}
+                            </h5>
                             <div class="flex items-center gap-2 mt-1">
                                 <span class="text-[8px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-full ${s.badge}" data-lang-key="${task.priority}">${window.translations?.[task.priority]?.[lang] || task.priority}</span>
                                 <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest" data-lang-key="${task.section}_section">${window.translations?.[task.section + '_section']?.[lang] || task.section}</span>

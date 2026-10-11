@@ -73,6 +73,7 @@ if (typeof window.addTranslations === 'function') {
         'add_education_task': { 'ar': 'إضافة تعليم', 'en': 'Add Education' },
         'add_website_task': { 'ar': 'إضافة موقع إلكتروني', 'en': 'Add Website' },
         'add_services_task': { 'ar': 'إضافة خدمات', 'en': 'Add Services' },
+        'optional': { 'ar': 'اختياري', 'en': 'Optional' },
 
         // Applications Section
         'applications_subtitle': { 'ar': 'تتبع وإدارة طلبات التوظيف الخاصة بك', 'en': 'Track and manage your job applications' },
