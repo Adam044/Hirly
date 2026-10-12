@@ -66,9 +66,9 @@ app.use((req, res, next) => {
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' cdn.tailwindcss.com cdnjs.cloudflare.com cdn.jsdelivr.net www.googletagmanager.com unpkg.com",
         "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com cdn.tailwindcss.com unpkg.com",
-        "img-src 'self' data: blob: ecxvfjceuynwtpjvmxpw.supabase.co www.jobs.ps www.googletagmanager.com *.basemaps.cartocdn.com placehold.co images.pexels.com www.google.com *.gstatic.com icons.duckduckgo.com *.google-analytics.com",
-        "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com",
-        "connect-src 'self' www.googletagmanager.com *.google-analytics.com cdn.jsdelivr.net cdnjs.cloudflare.com " + wsOrigin,
+        "img-src 'self' data: blob: ecxvfjceuynwtpjvmxpw.supabase.co www.jobs.ps www.googletagmanager.com *.basemaps.cartocdn.com placehold.co images.pexels.com www.google.com *.gstatic.com icons.duckduckgo.com *.google-analytics.com ui-avatars.com *.ui-avatars.com",
+        "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com data:",
+        "connect-src 'self' www.googletagmanager.com *.google-analytics.com cdn.jsdelivr.net cdnjs.cloudflare.com ui-avatars.com " + wsOrigin,
         "frame-src 'none'",
         "object-src 'none'",
         "base-uri 'self'",
@@ -1212,12 +1212,7 @@ function isEmployerOrDirectAccess(req, res, next) {
         }
     }
 
-    // 3. Fallback for application and AI specific routes
-    // We allow these through if they match the path structure, letting route handlers do deep auth
-    if (req.originalUrl.includes('/applications/') || req.originalUrl.includes('/ai/')) {
-        return next();
-    }
-
+    // 3. Fallback for API requests
     if (isApiRequest) {
         logger.warn('Direct access API request denied', {
             path: req.originalUrl,

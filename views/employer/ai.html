@@ -666,9 +666,13 @@
                     </button>
                 </div>
 
-                        <div class="flex-1"></div>
-                        
-                        <button onclick="initiateInterview()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-blue-600/20 transition hover:scale-105">
+                <div class="flex-1"></div>
+                
+                <button id="reAnalyzeBtn" onclick="analyzeCandidateNow(selectedCandidateId)" class="hidden glass-btn text-slate-300 px-6 py-2 rounded-lg text-sm font-bold border border-white/5 transition hover:bg-white/5 hover:text-white mr-2">
+                    <i class="fas fa-redo mr-2"></i> Re-run Analysis
+                </button>
+
+                <button onclick="initiateInterview()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-blue-600/20 transition hover:scale-105">
                             <i class="fas fa-robot mr-2"></i> Invite to Interview
                         </button>
                     </div>
@@ -988,7 +992,7 @@
                         <label class="relative flex items-center p-4 rounded-xl border border-white/10 bg-slate-800/30 hover:bg-slate-800/50 cursor-pointer transition group">
                             <input type="radio" name="scope" value="not_analyzed" class="hidden" onchange="toggleSpecificList('not_analyzed')">
                             <div class="radio-icon w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 mr-4 group-hover:scale-110 transition-transform">
-                                <i class="fas fa-sparkles"></i>
+                                <i class="fas fa-bolt"></i>
                             </div>
                             <div class="flex-1">
                                 <div class="text-sm font-bold text-white">New Candidates Only</div>
@@ -1476,13 +1480,6 @@
         let activeChips = [];
 
         function openAnalysisWizard() {
-            const confirmed = localStorage.getItem('jobDossierConfirmed');
-            if (!confirmed) {
-                showToast("Please complete your Job Dossier first.", "info");
-                openJobAnalysis();
-                return;
-            }
-
             const modal = document.getElementById('wizardModal');
             const content = document.getElementById('wizardContent');
             
@@ -1795,6 +1792,8 @@
 
                 if(data.success) {
                     currentDossier = data.dossier;
+                    // Auto-confirm if we found one, to prevent loop prompts
+                    localStorage.setItem('jobDossierConfirmed', '1');
                     renderDossier(currentDossier);
                     updateRevCount();
                 } else {
@@ -1993,6 +1992,8 @@
                 
                 if(data.success) {
                     currentDossier = data.dossier;
+                    // Auto-confirm if we found one, to prevent loop prompts
+                    localStorage.setItem('jobDossierConfirmed', '1');
                     renderDossier(currentDossier);
                     // Hide spinner, show dossier
                     document.getElementById('jobAnalysisStatus').classList.add('hidden');
@@ -2008,7 +2009,7 @@
                                     <div class="text-white font-bold text-xl mb-1">No Analysis Found</div>
                                     <div class="text-slate-400 text-sm max-w-sm mx-auto">This job hasn't been analyzed by Hirly Pilot yet. Start the guided journey to create your dossier.</div>
                                 </div>
-                                <button onclick="openGuidedStart(); document.getElementById('jobAnalysisModal').classList.add('hidden');" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-blue-600/20 transition transform hover:scale-105">
+                                <button onclick="startGuidedJourney(); document.getElementById('jobAnalysisModal').classList.add('hidden');" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-blue-600/20 transition transform hover:scale-105">
                                     <i class="fas fa-route mr-2"></i> Start Guided Journey
                                 </button>
                             </div>
@@ -2118,12 +2119,18 @@
                 el.style.opacity = '0';
                 
                 el.onclick = () => selectCandidate(c.id);
+                
+                const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.first_name + ' ' + c.last_name)}&background=random`;
+                const avatarUrl = (c.avatar_url && c.avatar_url !== 'null' && c.avatar_url !== 'undefined') 
+                    ? c.avatar_url 
+                    : fallbackUrl;
+                
                 el.innerHTML = `
                     <div class="flex justify-between items-start relative z-10">
                         <div class="flex gap-4">
                             <div class="relative">
-                                <div class="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-400 border border-white/10 overflow-hidden shadow-inner group-hover:border-blue-500/30 transition-colors">
-                                    ${c.avatar_url ? `<img src="${c.avatar_url}" class="w-full h-full object-cover">` : getInitials(c.first_name, c.last_name)}
+                                <div class="w-12 h-12 rounded-2xl bg-slate-800 border border-white/10 overflow-hidden shadow-inner group-hover:border-blue-500/30 transition-colors" style="background-image: url('${fallbackUrl}'); background-size: cover;">
+                                    <img src="${avatarUrl}" class="w-full h-full object-cover opacity-0 transition-opacity duration-300" onload="this.classList.remove('opacity-0')" onerror="this.style.display='none'">
                                 </div>
                                 ${isActive ? '<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-slate-900 flex items-center justify-center"><i class="fas fa-check text-[8px] text-white"></i></div>' : ''}
                                 ${c.isNewInSession ? '<div class="absolute -top-1 -left-1 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-slate-900 animate-ping"></div>' : ''}
@@ -2204,6 +2211,13 @@
             const headline = c.headline && c.headline.length > 5 ? c.headline : (c.summary ? c.summary.substring(0, 60) + "..." : "Pending Analysis...");
             safeSetText('detailHeadline', headline);
 
+            // Hero Buttons & Status
+            const reAnalyzeBtn = document.getElementById('reAnalyzeBtn');
+            if (reAnalyzeBtn) {
+                if (c.match_score > 0 || c.summary) reAnalyzeBtn.classList.remove('hidden');
+                else reAnalyzeBtn.classList.add('hidden');
+            }
+
             // Score Animation - Reset first
             const scoreEl = document.getElementById('detailScore');
             const scoreCircle = document.getElementById('scoreCircle');
@@ -2254,16 +2268,33 @@
             // Avatar
             const avatarImg = document.getElementById('detailAvatar');
             const initials = document.getElementById('detailInitials');
+            const avatarContainer = avatarImg?.parentElement;
+            
             if (avatarImg && initials) {
-                if(c.avatar_url) {
-                    avatarImg.src = c.avatar_url;
-                    avatarImg.classList.remove('hidden');
-                    initials.classList.add('hidden');
-                } else {
-                    avatarImg.classList.add('hidden');
-                    initials.classList.remove('hidden');
-                    initials.innerText = getInitials(c.first_name, c.last_name);
+                const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.first_name + ' ' + c.last_name)}&background=random`;
+                const avatarUrl = (c.avatar_url && c.avatar_url !== 'null' && c.avatar_url !== 'undefined') 
+                    ? c.avatar_url 
+                    : fallbackUrl;
+                
+                // Set fallback background
+                if (avatarContainer) {
+                    avatarContainer.style.backgroundImage = `url('${fallbackUrl}')`;
+                    avatarContainer.style.backgroundSize = 'cover';
                 }
+                
+                avatarImg.classList.add('opacity-0');
+                avatarImg.classList.remove('hidden');
+                initials.classList.add('hidden');
+                
+                avatarImg.onload = function() {
+                    this.classList.remove('opacity-0');
+                };
+                
+                avatarImg.onerror = function() {
+                    this.style.display = 'none';
+                };
+                
+                avatarImg.src = avatarUrl;
             }
 
             // Summary

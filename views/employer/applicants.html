@@ -1213,11 +1213,18 @@
                     `;
                     el.onclick = () => selectApplicant(app.id); // PRESERVED JS HOOK
                     
-                    const avatarUrl = app.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random`;
+                    // Robust avatar fallback logic
+                    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random`;
+                    let avatarUrl = (app.profile_picture && app.profile_picture !== 'null' && app.profile_picture !== 'undefined' && app.profile_picture !== '') 
+                        ? app.profile_picture 
+                        : fallbackUrl;
+                    
                     const isStarred = isShortlisted(app.id);
                     
                     el.innerHTML = `
-                        <img src="${avatarUrl}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random'" class="w-14 h-14 rounded-full object-cover border-2 ${isActive ? 'border-primary' : 'border-gray-200'} shadow-md shrink-0" alt="Avatar">
+                        <div class="w-14 h-14 rounded-full border-2 ${isActive ? 'border-primary' : 'border-gray-200'} shadow-md shrink-0 overflow-hidden" style="background-image: url('${fallbackUrl}'); background-size: cover;">
+                            <img src="${avatarUrl}" class="w-full h-full object-cover opacity-0 transition-opacity duration-300" onload="this.classList.remove('opacity-0')" onerror="this.style.display='none'" alt="Avatar">
+                        </div>
                         <div class="flex-1 min-w-0">
                             <div class="font-bold text-gray-900 truncate flex items-center text-lg">
                                 ${app.first_name} ${app.last_name}
@@ -1255,7 +1262,12 @@
             function renderDetailView(app) {
                 if (!app) return;
                 
-                const avatarUrl = app.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random`;
+                // Robust avatar fallback logic
+                const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random`;
+                let avatarUrl = (app.profile_picture && app.profile_picture !== 'null' && app.profile_picture !== 'undefined' && app.profile_picture !== '') 
+                    ? app.profile_picture 
+                    : fallbackUrl;
+                
                 const isStarred = isShortlisted(app.id);
                 const dateApplied = new Date(app.applied_at).toLocaleDateString(lang, { year: 'numeric', month: 'short', day: 'numeric' });
                 
@@ -1344,7 +1356,9 @@
                             </button>
 
                             <div class="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
-                                <img src="${avatarUrl}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(app.first_name + ' ' + app.last_name)}&background=random'" class="w-32 h-32 rounded-full object-cover shadow-2xl border-4 border-primary-light/50 shrink-0" alt="Profile">
+                                <div class="w-32 h-32 rounded-full shadow-2xl border-4 border-primary-light/50 shrink-0 overflow-hidden" style="background-image: url('${fallbackUrl}'); background-size: cover;">
+                                    <img src="${avatarUrl}" class="w-full h-full object-cover opacity-0 transition-opacity duration-300" onload="this.classList.remove('opacity-0')" onerror="this.style.display='none'" alt="Profile">
+                                </div>
                                 
                                 <div class="flex-1">
                                     <div class="flex justify-between items-start">
