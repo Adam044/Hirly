@@ -856,6 +856,15 @@
                         fetch(`/api/jobs/${currentJobId}`).then(res => res.json())
                     ]);
 
+                    if (applicantsResponse.status === 403) {
+                        const gate = document.getElementById('secureAccessGate');
+                        if (gate) {
+                            gate.classList.remove('hidden');
+                            const mainContent = document.getElementById('mainContent');
+                            if (mainContent) mainContent.style.opacity = '0';
+                            return;
+                        }
+                    }
                     if (!applicantsResponse.ok) throw new Error('Failed to fetch applicants');
                     
                     const data = await applicantsResponse.json();

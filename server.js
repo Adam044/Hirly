@@ -48,6 +48,9 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
 
 
 // app.set('trust proxy', 1); // Disabled for local CSRF debugging
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
 
 // Professional Security Headers
 app.use(helmet({
@@ -406,9 +409,9 @@ app.use(session({
     rolling: true, 
     proxy: true, 
     cookie: {
-        secure: false, // Set to true in production with HTTPS
+        secure: isProduction, // Use secure cookies in production (HTTPS)
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'lax', // 'lax' is safer and works for same-domain requests
         maxAge: 30 * 24 * 60 * 60 * 1000, 
         path: '/'
     }

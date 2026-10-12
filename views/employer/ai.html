@@ -1602,12 +1602,26 @@
             try {
                 // Fetch Job Context
                 const jobRes = await fetch(`/api/jobs/${currentJobId}`);
+                if (jobRes.status === 403) {
+                    const gate = document.getElementById('secureAccessGate');
+                    if (gate) {
+                        gate.classList.remove('hidden');
+                        return;
+                    }
+                }
                 if (!jobRes.ok) throw new Error(`Job fetch failed: ${jobRes.status}`);
                 const job = await jobRes.json();
                 document.getElementById('jobTitleDisplay').textContent = job.title;
 
                 // Fetch AI Data
                 const res = await fetch(`/api/ai/overview/${currentJobId}`);
+                if (res.status === 403) {
+                    const gate = document.getElementById('secureAccessGate');
+                    if (gate) {
+                        gate.classList.remove('hidden');
+                        return;
+                    }
+                }
                 if (!res.ok) throw new Error(`AI overview fetch failed: ${res.status}`);
                 const data = await res.json();
                 
