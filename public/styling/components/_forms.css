@@ -13,6 +13,18 @@
     gap: 0.5rem; /* Equivalent to gap-2 in Tailwind */
 }
 
+/* Specific styling for password inputs to ensure high contrast dots */
+input[type="password"] {
+    letter-spacing: 0.15em;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--slate-900) !important;
+}
+
+input[type="password"]::placeholder {
+    letter-spacing: normal;
+    color: var(--slate-300) !important;
+}
+
 .form-control {
   width: 100%;
   padding: 1rem 1.5rem;

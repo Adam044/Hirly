@@ -23,8 +23,20 @@ const DashboardProfile = {
     /**
      * Mark current section as dirty (unsaved changes)
      */
-    setDirty() {
+    setDirty(section = 'professional') {
         this.hasUnsavedChanges = true;
+        
+        // Highlight the save button to guide the user
+        const saveBtnId = section === 'professional' ? 'saveProfessionalEdit' : 'savePersonalEdit';
+        const saveBtn = document.getElementById(saveBtnId);
+        if (saveBtn) {
+            saveBtn.classList.add('animate-pulse', 'ring-2', 'ring-emerald-500', 'ring-offset-2');
+            // Remove the ring after a few pulses but keep it slightly highlighted
+            setTimeout(() => {
+                saveBtn.classList.remove('animate-pulse', 'ring-2', 'ring-offset-2');
+                saveBtn.classList.add('shadow-emerald-200', 'bg-emerald-600');
+            }, 3000);
+        }
     },
 
     /**
@@ -1296,14 +1308,27 @@ const DashboardProfile = {
         picInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
+                // Check size
+                if (file.size > 2 * 1024 * 1024) {
+                    if (window.DashboardUI) window.DashboardUI.showToast('Image too large (Max 2MB)', 'error');
+                    e.target.value = '';
+                    return;
+                }
+
                 this.selectedProfilePicFile = file;
                 this.profilePicRemoved = false;
+                this.setDirty('personal');
+
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     picPreview.src = event.target.result;
                     picPreview.classList.remove('hidden');
                     picPlaceholder.classList.add('hidden');
                     removePicBtn.classList.remove('hidden');
+                    
+                    if (window.DashboardUI) {
+                        window.DashboardUI.showToast('Photo staged! Save to update profile.', 'info');
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -1312,6 +1337,7 @@ const DashboardProfile = {
         removePicBtn.addEventListener('click', () => {
             this.selectedProfilePicFile = null;
             this.profilePicRemoved = true;
+            this.setDirty('personal');
             picPreview.src = '';
             picPreview.classList.add('hidden');
             picPlaceholder.classList.remove('hidden');
@@ -1322,9 +1348,9 @@ const DashboardProfile = {
         // Setup event listeners
         const formInputs = editContainer.querySelectorAll('input, select, textarea');
         formInputs.forEach(input => {
-            input.addEventListener('change', () => this.setDirty());
+            input.addEventListener('change', () => this.setDirty('personal'));
             if (input.type === 'text' || input.type === 'textarea') {
-                input.addEventListener('input', () => this.setDirty());
+                input.addEventListener('input', () => this.setDirty('personal'));
             }
         });
 
@@ -1860,7 +1886,8 @@ const DashboardProfile = {
         const cvNameDisplay = document.getElementById('cvFileNameDisplay');
         const removeCvBtn = document.getElementById('removeCvBtn');
 
-        if (cvPath) {
+        // Initial UI state based on current user data
+        if (cvPath && !this.cvRemoved) {
             if (cvNameDisplay) cvNameDisplay.textContent = 'My CV.pdf';
             if (cvEmpty) cvEmpty.classList.add('hidden');
             if (cvActions) cvActions.classList.remove('hidden');
@@ -1869,29 +1896,59 @@ const DashboardProfile = {
             if (cvActions) cvActions.classList.add('hidden');
         }
 
-        if (cvInput && !cvInput.dataset.listenerAdded) {
-            cvInput.addEventListener('change', (e) => {
+        // Handle file selection
+        if (cvInput) {
+            // Always refresh the listener to ensure it has latest closure variables
+            const newCvInput = cvInput.cloneNode(true);
+            cvInput.parentNode.replaceChild(newCvInput, cvInput);
+            
+            newCvInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
+                    // Check file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                        if (window.DashboardUI) window.DashboardUI.showToast('File too large (Max 5MB)', 'error');
+                        e.target.value = '';
+                        return;
+                    }
+
                     this.cvRemoved = false;
                     this.setDirty();
+                    
+                    // Instant UI Feedback
                     if (cvNameDisplay) cvNameDisplay.textContent = file.name;
                     if (cvEmpty) cvEmpty.classList.add('hidden');
-                    if (cvActions) cvActions.classList.remove('hidden');
+                    if (cvActions) {
+                        cvActions.classList.remove('hidden');
+                        cvActions.classList.add('ring-2', 'ring-emerald-500', 'ring-offset-2');
+                        // Remove highlight after a moment
+                        setTimeout(() => cvActions.classList.remove('ring-2', 'ring-emerald-500', 'ring-offset-2'), 2000);
+                    }
+
+                    if (window.DashboardUI) {
+                        window.DashboardUI.showToast('CV staged! Click Save to finish upload.', 'info');
+                    }
                 }
             });
-            cvInput.dataset.listenerAdded = "true";
         }
 
-        if (removeCvBtn && !removeCvBtn.dataset.listenerAdded) {
-            removeCvBtn.addEventListener('click', () => {
+        if (removeCvBtn) {
+            // Always refresh the listener
+            const newRemoveBtn = removeCvBtn.cloneNode(true);
+            removeCvBtn.parentNode.replaceChild(newRemoveBtn, removeCvBtn);
+
+            newRemoveBtn.addEventListener('click', () => {
                 this.cvRemoved = true;
                 this.setDirty();
-                if (cvInput) cvInput.value = '';
+                const cvFileInput = document.getElementById('editCvFile');
+                if (cvFileInput) cvFileInput.value = '';
                 if (cvEmpty) cvEmpty.classList.remove('hidden');
                 if (cvActions) cvActions.classList.add('hidden');
+                
+                if (window.DashboardUI) {
+                    window.DashboardUI.showToast('CV removed. Save to confirm.', 'warning');
+                }
             });
-            removeCvBtn.dataset.listenerAdded = "true";
         }
 
         // Skill management logic
