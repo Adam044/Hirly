@@ -21,6 +21,7 @@ const compression = require('compression');
 const logger = require('./utils/logger');
 const { initRealtime, trackVisitor, logLiveEvent } = require('./realtime/manager');
 const errorHandler = require('./middleware/errorHandler');
+const localSessionCookie = require('./middleware/localSessionCookie');
 
 // Log server start with current settings
 logger.info(`Hirly server is starting in ${process.env.NODE_ENV || 'development'} mode`);
@@ -47,7 +48,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
 });
 
 
-// app.set('trust proxy', 1); // Disabled for local CSRF debugging
 if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 1);
 }
@@ -418,10 +418,10 @@ app.use(session({
 }));
 
 // --- CSRF Protection Implementation ---
+app.use(localSessionCookie);
 const setCsrfCookie = (req, res) => {
     if (!req.session.csrfToken) return;
-    const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1' || req.hostname === '::1';
-    const useSecure = !isLocalhost && (req.secure || req.headers['x-forwarded-proto'] === 'https');
+    const useSecure = req.session.cookie.secure;
     
     res.cookie('XSRF-TOKEN', req.session.csrfToken, {
         secure: useSecure,
@@ -439,7 +439,10 @@ const csrfProtection = (req, res, next) => {
         req.session.csrfToken = crypto.randomBytes(32).toString('hex');
         // Force save to ensure the token is persisted immediately before proceeding
         return req.session.save((err) => {
-            if (err) logger.error('Error saving session after CSRF generation:', err);
+            if (err) {
+                logger.error('Error saving session after CSRF generation:', err);
+                return res.status(503).json({ success: false, error: 'Unable to initialize your session. Please try again.' });
+            }
             
             // Set cookie and proceed
             setCsrfCookie(req, res);

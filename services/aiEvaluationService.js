@@ -1,5 +1,6 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
+const candidateScoring = require('./candidateScoring');
 let mammoth;
 try { mammoth = require('mammoth'); } catch (e) {}
 
@@ -10,10 +11,7 @@ class AIEvaluationService {
         this.CACHE_TTL = 1000 * 60 * 60 * 2; // 2 hours
     }
 
-    cleanText(text) {
-        if (!text) return "";
-        return text.replace(/\s+/g, ' ').replace(/[^\w\s.,@%-]/g, '').trim();
-    }
+    cleanText(text) { return candidateScoring.cleanText(text); }
 
     stripHTML(text) {
         if (!text) return "";
@@ -210,7 +208,7 @@ class AIEvaluationService {
             try {
                 // Fetch Application, Job, and Candidate details
                 const appRes = await client.query(`
-                    SELECT a.*, j.title as job_title, j.description as job_description, j.requirements, j.profession_required, j.budget, j.currency,
+                    SELECT a.*, j.title as job_title, j.description as job_description, j.requirements, j.profession_required, j.budget, j.currency, j.job_dossier,
                     u.first_name, u.last_name, u.email, u.id as user_id, f.skills, f.bio, f.profession, f.cv_path
                     FROM applications a
                     JOIN jobs j ON a.job_id = j.id
@@ -225,6 +223,8 @@ class AIEvaluationService {
                 const cvInfo = await this.getCVText(data.cv_path, data.user_id);
 
                 const job = {
+                    id: data.job_id,
+                    job_dossier: data.job_dossier,
                     title: data.job_title,
                     description: data.job_description,
                     requirements: data.requirements,
@@ -244,7 +244,11 @@ class AIEvaluationService {
                     proposal_message: data.proposal_message
                 };
 
-                // Trigger analysis using the robust pipeline
+                try {
+                    const education = await this.pool.query('SELECT * FROM education WHERE user_id = $1 ORDER BY end_date DESC, created_at DESC', [data.user_id]);
+                    candidate.education_history = education.rows.map(e => `- ${e.title} at ${e.institution_name} (${e.field_of_study || 'N/A'}), Level: ${e.education_level || 'N/A'}, Dates: ${e.start_date ? new Date(e.start_date).getFullYear() : '?'} - ${e.end_date ? new Date(e.end_date).getFullYear() : (e.is_current ? 'Present' : '?')}`).join('\n');
+                } catch (error) { logger.warn('Education unavailable for analysis:', error.message); }
+                // Trigger analysis using the shared scoring strategy
                 const analysis = await this.runDeepSeekAnalysis(job, candidate, cvInfo);
                 
                 if (analysis) {
@@ -293,109 +297,11 @@ class AIEvaluationService {
     }
 
     async runDeepSeekAnalysis(job, candidate, cvInfo = null) {
-        // Match the exact prompt and parameters from routes/ai.js
-        const jobDesc = this.stripHTML(job.description || '').substring(0, 2000);
-        const jobReqs = this.parseSkills(job.requirements);
-        const jobProfs = this.parseSkills(job.profession_required);
-        const effectiveReqs = [...jobReqs, ...jobProfs].filter(Boolean).slice(0, 25);
-        const descNote = jobDesc && jobDesc.length >= 60 ? '' : 'DESCRIPTION UNCLEAR: Rely on the requirements list and professions as primary signal.';
-
-        const cvText = cvInfo?.text || '';
-        const cvMeta = cvInfo?.status || { used: false, reason: 'not_provided' };
-
-        const systemPrompt = `
-        ROLE: Senior Executive Recruiter & Domain Expert.
-        TASK: Conduct a high-stakes, professional analysis of a candidate's suitability for a specific role.
-        OUTPUT_FORMAT: JSON only. No markdown.
-        LANGUAGE: English
-        STRICTNESS LEVEL: 5/10. MODE: BALANCED. Be fair but verified. Require proof of skills in experience history.
-        WEIGHTING: Prioritize objective evidence from CV content. Apply 2x weight to verified skills and tenure. Profile-only claims are secondary signal.
-        TRANSFERABILITY: Focus on direct functional alignment.
-        DOMAIN TOLERANCE: Be cautious but allow transferable competencies.
-
-        EVALUATION CRITERIA:
-        1. **Functional Alignment**: Technical proficiency and core competency match.
-        2. **Trajectory & Growth**: Career progression, tenure stability, and achievement impact.
-        3. **Soft Skills/Executive Presence**: Communication clarity, professional tone, and leadership indicators.
-        4. **Risk Assessment**: Gaps, job-hopping, or misalignment with seniority.
-
-        JSON SCHEMA:
-        {
-          "score": number, // 0-100
-          "headline": string, // Professional, punchy 5-word summary
-          "executive_summary": string, // High-level assessment (2 sentences)
-          "skills_analysis": {
-            "matched": string[], // Top 5 skills found
-            "missing": string[]  // Critical gaps
-          },
-          "pros": string[], // 3-4 distinct professional strengths
-          "cons": string[], // 3-4 specific risks or weaknesses
-          "interview_guide": string[], // 3 behavioral or technical "pressure-test" questions
-          "verdict": "Strong Hire" | "Interview" | "Backup" | "Reject"
-        }
-        
-        INSTRUCTIONS: Provide a cold, objective, and professional assessment.
-        `;
-
-        const userPrompt = `
-        === JOB POSITION ===
-        Title: ${job.title}
-        Budget: ${job.budget} ${job.currency}
-        Description: ${jobDesc}
-        Requirements: ${JSON.stringify(effectiveReqs)}
-        Notes: ${descNote}
-
-        === CANDIDATE PROFILE ===
-        Name: ${candidate.first_name} ${candidate.last_name}
-        Current Role: ${candidate.profession}
-        Bio: ${this.cleanText(candidate.bio || '').substring(0, 1000)}
-        Listed Skills: ${this.parseSkills(candidate.skills).join(', ')}
-        Application Note: ${this.cleanText(candidate.proposal_message || '').substring(0, 1000)}
-
-        === EXTRACTED CV CONTENT ===
-        ${cvText ? cvText : "(No CV file accessible, analyze based on Profile/Bio only)"}
-        `;
-
         try {
-            const resp = await axios.post('https://api.deepseek.com/chat/completions', {
-                model: "deepseek-chat",
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
-                ],
-                temperature: 0.1, 
-                response_format: { type: "json_object" }
-            }, { 
-                headers: { 'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}` }, 
-                timeout: 60000 
-            });
-
-            let raw = resp.data.choices[0].message.content;
-            if (typeof raw === 'string') {
-                raw = raw.trim();
-                if (raw.startsWith('```')) {
-                    raw = raw.replace(/^```(json)?\s*/i, '').replace(/\s*```$/, '');
-                }
-            }
-
-            const obj = JSON.parse(raw);
-            obj.verdict = this.normalizeVerdict(obj.verdict, obj.score);
-            obj.cv_meta = { used: !!cvMeta.used, reason: cvMeta.reason, length: cvText.length };
-            
-            // Store the parameters used for this analysis
-            obj.analysis_params = {
-                instructions: "Standard professional background analysis",
-                source: "background",
-                strictness: 5,
-                cv_weight: 66,
-                domain_tolerance: 50,
-                transferability: false,
-                model: "deepseek-chat"
-            };
-            
-            return obj;
-        } catch (e) {
-            logger.error('DeepSeek Analysis Failed in Service:', e.message);
+            return await candidateScoring.analyze({ job, candidate, cvInfo: cvInfo || {},
+                source: 'both', strictness: 5, cv_weight: 66, domain_tolerance: 50, transferability: true }, { pool: this.pool });
+        } catch (error) {
+            logger.error('DeepSeek Analysis Failed in Service:', error.message);
             return null;
         }
     }

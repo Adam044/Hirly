@@ -1414,6 +1414,8 @@
                 </button>
             </div>
             <div class="p-8 space-y-6">
+                <p id="directAccessStatus" role="status" class="text-sm text-gray-500"></p>
+                <button id="retryDirectAccess" class="hidden btn-saas-secondary w-full">Retry</button>
                 <div id="directAccessSetup">
                     <p class="text-sm text-gray-500 leading-relaxed mb-6">
                         Generate a secure, job-specific access key. This allows the employer to manage applications without a full platform account.
@@ -1426,13 +1428,18 @@
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Secure Access Key</label>
                             <div class="relative">
-                                <input type="text" id="directEmployerPassword" class="input-saas w-full pr-10 font-mono" placeholder="Auto-generating...">
-                                <button id="generateDirectPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-600 hover:text-indigo-800" title="Regenerate Key">
+                                <input type="text" id="directEmployerPassword" class="input-saas w-full pr-10 font-mono" placeholder="Enter a password">
+                                <button id="generateDirectPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-600 hover:text-indigo-800" title="Suggest a password">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
                             <p class="text-[9px] text-gray-400 mt-1 italic">Leave as is to use the generated key or enter a custom one.</p>
                         </div>
+                    </div>
+                    <div id="directReplacementWarning" class="hidden mt-4 text-sm text-amber-800">
+                        <p>Saving replaces the password you shared with your client. The link stays the same. Send the new password to your client after saving.</p>
+                        <label class="flex items-center gap-2 mt-3"><input id="acknowledgeDirectReplacement" type="checkbox"> I understand the current password will stop working.</label>
+                        <button id="cancelDirectReplacement" class="btn-saas-secondary mt-3" type="button">Cancel</button>
                     </div>
                     <button id="confirmDirectAccess" class="btn-saas-primary w-full mt-8 py-3 flex items-center justify-center gap-2">
                         <i class="fas fa-lock"></i>
@@ -1441,6 +1448,7 @@
                 </div>
 
                 <div id="directAccessResult" class="hidden space-y-6 animate-fade-in">
+                    <button id="changeDirectPassword" class="btn-saas-secondary w-full">Replace Password</button>
                     <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-center gap-3">
                         <i class="fas fa-check-circle text-emerald-500"></i>
                         <span class="text-emerald-700 text-sm font-bold">Secure Access Provisioned</span>
@@ -1464,7 +1472,7 @@
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-400 italic text-center">
-                            Share this link and key securely with the partner.
+                            Share this link and key securely with the partner. They stay the same until you change the password.
                         </p>
                     </div>
                 </div>

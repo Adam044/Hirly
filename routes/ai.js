@@ -3,6 +3,7 @@ const axios = require('axios');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const logger = require('../utils/logger');
+const candidateScoring = require('../services/candidateScoring');
 
 // --- LIBRARY INITIALIZATION ---
 // NOTE: pdfParse initialization removed to fix the "Class constructors cannot be invoked without 'new'" error.
@@ -23,13 +24,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
 
     // --- HELPER UTILITIES ---
 
-    function cleanText(text) {
-        if (!text) return "";
-        return text
-            .replace(/\s+/g, ' ')           
-            .replace(/[^\w\s.,@%-]/g, '')   
-            .trim();
-    }
+    function cleanText(text) { return candidateScoring.cleanText(text); }
 
     function bufferFromUrl(url) {
         return axios.get(url, { responseType: 'arraybuffer', timeout: 30000, headers: { 'User-Agent': 'Hirly-Pilot/2.0' } })
@@ -337,196 +332,15 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
     }
 
     // --- DEEPSEEK ANALYSIS ENGINE (V3) ---
-    function calculateAge(birthdate) {
-        if (!birthdate) return null;
-        const today = new Date();
-        const birth = new Date(birthdate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-            age--;
-        }
-        return age;
-    }
-
     async function analyzeWithDeepSeek(job, candidate, lang = 'en', instructions = '', source = 'both', strictness = 5, cvTextOverride = null, options = {}, pool = null) {
         if (!process.env.DEEPSEEK_API_KEY) return null;
-
-        let cvText = "";
-        let cvMeta = { used: false, reason: 'unknown' };
-        if (cvTextOverride !== null) {
-            cvText = cvTextOverride.text || '';
-            cvMeta = cvTextOverride.status || cvMeta;
-        } else {
-            const info = await getCVTextWithStatus(candidate.cv_path, source, candidate.user_id, pool);
-            cvText = info.text;
-            cvMeta = info.status;
-        }
-
-        // Image CV Warning: If text extraction failed but file exists
-        let cvWarning = "";
-        if (!cvText && candidate.cv_path && source !== 'profile_only') {
-            cvWarning = "\n[SYSTEM WARNING]: The uploaded CV file appears to be a scanned image or text extraction failed. Please perform the evaluation based ONLY on the structured Profile, Education, and Bio data provided below.";
-        }
-        
-        const includeProfile = source !== 'cv_only';
-        const bio = includeProfile ? (candidate.bio || '') : '';
-        const skills = includeProfile ? parseSkills(candidate.skills) : [];
-        const proposal = (source !== 'profile_only') ? (candidate.proposal_message || '') : '';
-
-        // Extract structured data
-        const age = calculateAge(candidate.birthdate);
-        const location = [candidate.city, candidate.country].filter(Boolean).join(', ');
-        const interests = parseSkills(candidate.interested_professions).join(', ');
-        const education = candidate.education_history || 'No formal education listed';
-
-        const jobDesc = stripHTML(job.description || '').substring(0, 2000);
-        const jobReqs = parseSkills(job.requirements);
-        const jobProfs = parseSkills(job.profession_required);
-        const effectiveReqs = [...jobReqs, ...jobProfs].filter(Boolean).slice(0, 25);
-        const descNote = jobDesc && jobDesc.length >= 60 ? '' : 'DESCRIPTION UNCLEAR: Rely on the requirements list and professions as primary signal.';
-
-        // Dynamic Strictness Logic
-        let strictnessPrompt = "";
-        if (strictness >= 8) {
-            strictnessPrompt = "MODE: RUTHLESS. Penalize generic skills heavily. Disqualify for minor requirement mismatches. Be extremely critical of employment gaps. Score conservatively (rarely above 85).";
-        } else if (strictness <= 3) {
-            strictnessPrompt = "MODE: LENIENT. Focus on potential and transferable skills. Ignore minor gaps or formatting issues. Be generous with scoring.";
-        } else {
-            strictnessPrompt = "MODE: BALANCED. Be fair but verified. Require proof of skills in experience history.";
-        }
-
-        const cvWeight = (typeof options.cv_weight === 'number') ? options.cv_weight : 66;
-        const domainTol = (typeof options.domain_tolerance === 'number') ? options.domain_tolerance : 50;
-        const emphasizeTransfer = options.transferability === true;
-        const cvFactor = cvWeight >= 90 ? '3x' : (cvWeight >= 66 ? '2x' : (cvWeight >= 33 ? '1.5x' : '1x'));
-        const domainNote = domainTol >= 66 ? 'Treat cross-domain experience as acceptable if achievements align.' : (domainTol <= 33 ? 'Penalize domain mismatch significantly.' : 'Be cautious but allow transferable competencies.');
-
-        const systemPrompt = `
-        ROLE: Senior Executive Recruiter & Domain Expert.
-        TASK: Conduct a high-stakes, professional analysis of a candidate's suitability for a specific role.
-        OUTPUT_FORMAT: JSON only. No markdown.
-        LANGUAGE: ${lang === 'ar' ? 'Arabic' : 'English'}
-        STRICTNESS LEVEL: ${strictness}/10. ${strictnessPrompt}
-        WEIGHTING: Prioritize objective evidence from structured education and CV content. Apply ${cvFactor} weight to verified skills and tenure. Profile-only claims are secondary signal.
-        TRANSFERABILITY: ${emphasizeTransfer ? 'Highlight adaptable competencies and leadership potential.' : 'Focus on direct functional alignment.'}
-        DOMAIN TOLERANCE: ${domainNote}
-
-        EVALUATION CRITERIA:
-        1. **Functional Alignment**: Technical proficiency and core competency match.
-        2. **Trajectory & Growth**: Career progression, tenure stability, and achievement impact.
-        3. **Soft Skills/Executive Presence**: Communication clarity, professional tone, and leadership indicators.
-        4. **Risk Assessment**: Gaps, job-hopping, or misalignment with seniority.
-
-        JSON SCHEMA:
-        {
-          "score": number, // 0-100
-          "headline": string, // Professional, punchy 5-word summary
-          "executive_summary": string, // High-level assessment (2 sentences)
-          "skills_analysis": {
-            "matched": string[], // Top 5 skills found
-            "missing": string[]  // Critical gaps
-          },
-          "pros": string[], // 3-4 distinct professional strengths
-          "cons": string[], // 3-4 specific risks or weaknesses
-          "interview_guide": string[], // 3 behavioral or technical "pressure-test" questions
-          "verdict": "Strong Hire" | "Interview" | "Backup" | "Reject"
-        }
-        
-        INSTRUCTIONS: ${instructions || "Provide a cold, objective, and professional assessment."}
-        `;
-
-        const userPrompt = `
-        === JOB POSITION ===
-        Title: ${job.title}
-        Budget: ${job.budget} ${job.currency}
-        Description: ${jobDesc}
-        Requirements: ${JSON.stringify(effectiveReqs)}
-        Notes: ${descNote}
-
-        === CANDIDATE PROFILE ===
-        Name: ${candidate.first_name} ${candidate.last_name}
-        Age: ${age || 'Not provided'}
-        Location: ${location || 'Not provided'}
-        Current Role: ${candidate.profession}
-        Bio: ${cleanText(bio).substring(0, 1000)}
-        Listed Skills: ${skills.join(', ')}
-        Career Interests: ${interests || 'General'}
-        Application Note: ${cleanText(proposal).substring(0, 1000)}
-
-        === STRUCTURED EDUCATION ===
-        ${education}
-
-        === EXTRACTED CV CONTENT ===
-        ${cvWarning}
-        ${cvText ? cvText : "(No CV file accessible, analyze based on Profile/Bio/Education only)"}
-        `;
-
         try {
-            // Retry logic with exponential backoff
-            let attempts = 0;
-            const maxAttempts = 3;
-            let lastError = null;
-
-            while (attempts < maxAttempts) {
-                try {
-                    const resp = await axios.post('https://api.deepseek.com/chat/completions', {
-                        model: "deepseek-chat",
-                        messages: [
-                            { role: "system", content: systemPrompt },
-                            { role: "user", content: userPrompt }
-                        ],
-                        temperature: 0.1, 
-                        response_format: { type: "json_object" }
-                    }, { 
-                        headers: { 'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}` }, 
-                        timeout: 120000 
-                    });
-
-                    let raw = resp.data.choices[0].message.content;
-                    
-                    // Cleanup: Strip markdown code blocks if present (common LLM artifact)
-                    if (typeof raw === 'string') {
-                        raw = raw.trim();
-                        if (raw.startsWith('```')) {
-                            raw = raw.replace(/^```(json)?\s*/i, '').replace(/\s*```$/, '');
-                        }
-                    }
-
-                    const obj = JSON.parse(raw);
-                    obj.cv_meta = { used: !!cvMeta.used, reason: cvMeta.reason, length: cvText ? cvText.length : 0 };
-                    obj.verdict = normalizeVerdict(obj.verdict, obj.score);
-                    
-                    // Store the parameters used for this analysis for future "smart skip" checks
-                    obj.analysis_params = {
-                        instructions: instructions,
-                        source: source,
-                        strictness: strictness,
-                        cv_weight: options.cv_weight,
-                        domain_tolerance: options.domain_tolerance,
-                        transferability: options.transferability,
-                        model: "deepseek-chat"
-                    };
-                    
-                    return obj;
-                } catch (err) {
-                    lastError = err;
-                    attempts++;
-                    logger.warn(`AI Analysis Attempt ${attempts} failed: ${err.message}`);
-                    
-                    if (attempts >= maxAttempts) break;
-                    
-                    // Wait before retrying (1s, 2s, 4s...)
-                    const delay = Math.pow(2, attempts) * 1000;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
-            
-            throw lastError;
-
-        } catch (e) {
-            logger.error('AI Analysis Failed after retries:', e.message);
-            if (e.response) logger.error('AI Response:', e.response.data);
+            const cvInfo = cvTextOverride || await getCVTextWithStatus(candidate.cv_path, source, candidate.user_id, pool);
+            return await candidateScoring.analyze({ job, candidate, cvInfo, language: lang, instructions, source, strictness,
+                cv_weight: options.cv_weight, domain_tolerance: options.domain_tolerance, transferability: options.transferability,
+                previousReport: options.previousReport, force: options.force }, { pool });
+        } catch (error) {
+            logger.error('AI Analysis Failed:', error.message);
             return null;
         }
     }
@@ -596,35 +410,10 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
 
                 const runOne = async (app) => {
                     try {
-                        // Smart Check: Skip only if we have a successful result AND parameters are identical
-                        const clientLocal = await pool.connect();
-                        try {
-                            const existing = await clientLocal.query(
-                                `SELECT parameters, verdict FROM application_ai_evaluations WHERE application_id = $1`,
-                                [app.application_id]
-                            );
-                            
-                            if (existing.rows.length > 0 && existing.rows[0].verdict !== 'Error' && !req.body.force) {
-                                const prevParams = existing.rows[0].parameters || {};
-                                
-                                // Compare current parameters with previous ones
-                                const currentParams = {
-                                    instructions: finalInstructions,
-                                    source: source,
-                                    strictness: strictnessLevel,
-                                    cv_weight: (typeof cv_weight === 'number') ? cv_weight : parseInt(cv_weight || '66', 10),
-                                    domain_tolerance: (typeof domain_tolerance === 'number') ? domain_tolerance : parseInt(domain_tolerance || '50', 10),
-                                    transferability: !!transferability
-                                };
-
-                                const isSame = JSON.stringify(prevParams) === JSON.stringify(currentParams);
-                                
-                                if (isSame) {
-                                    // Parameters are identical, no need to re-analyze unless forced
-                                    return;
-                                }
-                            }
-                        } finally { clientLocal.release(); }
+                        // Compare the complete scoring input after extracting evidence; settings alone
+                        // cannot tell whether a candidate CV or the scoring strategy changed.
+                        const existing = await pool.query('SELECT full_report FROM application_ai_evaluations WHERE application_id = $1', [app.application_id]);
+                        const previousReport = existing.rows[0]?.full_report;
 
                         const cvInfo = await getCVTextWithStatus(app.cv_path, source, app.user_id, pool);
                         
@@ -647,7 +436,8 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
                         const analysis = await analyzeWithDeepSeek(job, app, language, finalInstructions, source, strictnessLevel, cvInfo, {
                             cv_weight: (typeof cv_weight === 'number') ? cv_weight : parseInt(cv_weight || '66', 10),
                             domain_tolerance: (typeof domain_tolerance === 'number') ? domain_tolerance : parseInt(domain_tolerance || '50', 10),
-                            transferability: !!transferability
+                            transferability: !!transferability,
+                            previousReport, force: req.body.force === true
                         }, pool);
 
                         const clientLocalSave = await pool.connect();
@@ -714,6 +504,7 @@ module.exports = function registerAIRoutes(app, pool, { isAuthenticated, isEmplo
                                 ON CONFLICT (application_id) DO UPDATE SET 
                                 match_score=0, summary='Analysis Failed', 
                                 verdict='Error', analyzed_at=NOW()
+                                WHERE application_ai_evaluations.verdict = 'Error'
                             `, [app.application_id, 0, 'Analysis Failed', '[]', '[]', 'Error', JSON.stringify({ error: err.message })]);
                         } finally {
                             clientLocal.release();

@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const { encryptAccessKey, decryptAccessKey } = require('../utils/directAccessKey');
 const { getAvailableTemplates, getTemplateContent } = require('../utils/templateHelper');
 const logger = require('../utils/logger');
 const { logoFetcher } = require('../utils/companyLogoFetcher');
@@ -1893,8 +1894,22 @@ module.exports = function registerAdminRoutes(app, pool, {
     res.sendFile(path.join(__dirname, '../views', 'admin', 'job_aggregator.html'));
   });
 
+  router.get('/admin/job-access-key/:jobId', isAuthenticated, isAdmin, async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+      const result = await pool.query('SELECT access_key_encrypted, access_key_hash FROM jobs WHERE id = $1', [req.params.jobId]);
+      if (!result.rowCount) return res.status(404).json({ success: false, error: 'Job not found.' });
+      const job = result.rows[0];
+      res.json({ success: true, provisioned: !!job.access_key_hash, accessKey: job.access_key_encrypted ? decryptAccessKey(job.access_key_encrypted) : null });
+    } catch (error) {
+      logger.error('Error loading access details:', error);
+      res.status(500).json({ success: false, error: 'Failed to load access details.' });
+    }
+  });
+
   router.post('/admin/generate-job-access-key', isAuthenticated, isAdmin, async (req, res) => {
-    const { jobId, customKey } = req.body;
+    const { jobId, customKey, rotate } = req.body;
+    res.set('Cache-Control', 'no-store');
     if (!jobId) {
       return res.status(400).json({ success: false, error: 'Job ID is required.' });
     }
@@ -1903,17 +1918,27 @@ module.exports = function registerAdminRoutes(app, pool, {
     try {
       client = await pool.connect();
       
-      // 1. Verify job exists
-      const jobCheck = await client.query('SELECT id, title FROM jobs WHERE id = $1', [jobId]);
+      await client.query('BEGIN');
+      const jobCheck = await client.query('SELECT id, title, access_key_encrypted, access_key_hash FROM jobs WHERE id = $1 FOR UPDATE', [jobId]);
       if (jobCheck.rowCount === 0) {
+        await client.query('ROLLBACK');
         return res.status(404).json({ success: false, error: 'Job not found.' });
       }
       
       const job = jobCheck.rows[0];
+      if (job.access_key_hash && rotate !== true) {
+        const accessKey = job.access_key_encrypted ? decryptAccessKey(job.access_key_encrypted) : null;
+        await client.query('COMMIT');
+        return res.json({ success: true, accessKey, message: 'Existing password preserved.' });
+      }
+      if (customKey !== undefined && (typeof customKey !== 'string' || !customKey.trim() || Buffer.byteLength(customKey, 'utf8') > 72)) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ success: false, error: 'Password must contain 1 to 72 bytes.' });
+      }
 
       // 2. Generate or use custom key
       // If customKey is provided, use it. Otherwise generate a clean one.
-      const rawKey = customKey || `HIRLY-${crypto.randomBytes(3).toString('hex').toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+      const rawKey = customKey?.trim() || `HIRLY-${crypto.randomBytes(3).toString('hex').toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
       
       // 3. Hash the key
       const salt = await bcrypt.genSalt(10);
@@ -1921,21 +1946,23 @@ module.exports = function registerAdminRoutes(app, pool, {
 
       // 4. Update job with the hash and enable direct access
       await client.query(
-        'UPDATE jobs SET access_key_hash = $1, is_direct_access_enabled = TRUE WHERE id = $2',
-        [hash, jobId]
+        'UPDATE jobs SET access_key_hash = $1, access_key_encrypted = $2, is_direct_access_enabled = TRUE WHERE id = $3',
+        [hash, encryptAccessKey(rawKey), jobId]
       );
+      await client.query('COMMIT');
 
       logLiveEvent('admin', `Secure access key generated for job <b>#${jobId}</b>: <b>${job.title}</b>`);
       
       res.json({ 
         success: true, 
         message: 'Secure access key provisioned successfully.',
-        accessKey: rawKey // Return the raw key ONLY once here so admin can copy it
+        accessKey: rawKey
       });
 
     } catch (error) {
+      if (client) await client.query('ROLLBACK');
       logger.error('Error generating job access key:', error);
-      res.status(500).json({ success: false, error: error.message });
+      res.status(500).json({ success: false, error: 'Unable to save access credentials. Please contact your administrator.' });
     } finally {
       if (client) client.release();
     }

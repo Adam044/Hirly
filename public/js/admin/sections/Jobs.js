@@ -95,13 +95,31 @@ async function handleTableActions(e) {
 function generateSecureKey() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Readable chars
     let key = 'HIRLY-';
-    for (let i = 0; i < 4; i++) key += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < 4; i++) key += chars.charAt(crypto.getRandomValues(new Uint32Array(1))[0] % chars.length);
     key += '-';
-    for (let i = 0; i < 4; i++) key += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < 4; i++) key += chars.charAt(crypto.getRandomValues(new Uint32Array(1))[0] % chars.length);
     return key;
 }
 
-function openDirectAccessModal(jobId, jobTitle) {
+let directAccessProvisioned = false;
+let directAccessLoading = false;
+let directAccessRequest = 0;
+let directAccessSaving = false;
+let savedDirectKey = null;
+function showDirectAccessDetails(jobId, key) {
+    document.getElementById('directAccessSetup').classList.add('hidden');
+    document.getElementById('directAccessResult').classList.remove('hidden');
+    document.getElementById('resDirectUrl').textContent = `${window.location.origin}/employer/applicants.html?job_id=${jobId}&mode=direct`;
+    savedDirectKey = key;
+    document.getElementById('directEmployerPassword').value = '';
+    document.getElementById('resDirectPass').textContent = key || 'Your current password still works, but cannot be displayed. Use your saved copy or explicitly replace it.';
+    document.getElementById('directAccessStatus').textContent = '';
+    document.getElementById('directReplacementWarning').classList.add('hidden');
+    document.getElementById('copyDirectDetails').disabled = !key;
+}
+async function openDirectAccessModal(jobId, jobTitle) {
+    if (directAccessSaving) return;
+    const request = ++directAccessRequest;
     currentDirectJobId = jobId;
     console.log('Opening Direct Access Modal for Job:', jobId);
     
@@ -119,7 +137,13 @@ function openDirectAccessModal(jobId, jobTitle) {
     if (targetDisplay) targetDisplay.textContent = `#${jobId} - ${jobTitle}`;
     
     // Reset views
-    if (setupView) setupView.classList.remove('hidden');
+    if (setupView) setupView.classList.add('hidden');
+    document.getElementById('directReplacementWarning').classList.add('hidden');
+    document.getElementById('acknowledgeDirectReplacement').checked = false;
+    document.getElementById('retryDirectAccess').classList.add('hidden');
+    document.getElementById('directAccessStatus').textContent = 'Loading saved access details...';
+    document.getElementById('resDirectPass').textContent = '';
+    savedDirectKey = null;
     if (resultView) resultView.classList.add('hidden');
     
     // Show modal using the new CSS class
@@ -127,7 +151,32 @@ function openDirectAccessModal(jobId, jobTitle) {
     modal.classList.add('flex');
     
     const passInput = document.getElementById('directEmployerPassword');
-    if (passInput) passInput.value = generateSecureKey();
+    if (passInput) passInput.value = '';
+    directAccessProvisioned = false;
+    directAccessLoading = true;
+    const confirmBtn = document.getElementById('confirmDirectAccess');
+    confirmBtn.disabled = true;
+    try {
+        const response = await fetch(`/admin/job-access-key/${encodeURIComponent(jobId)}`, { cache: 'no-store' });
+        const data = await response.json();
+        if (request !== directAccessRequest) return;
+        if (!response.ok || !data.success) throw new Error(data.error || 'Failed to load access details');
+        directAccessProvisioned = data.provisioned;
+        if (data.provisioned) showDirectAccessDetails(jobId, data.accessKey);
+        else {
+            setupView.classList.remove('hidden');
+            document.getElementById('directAccessStatus').textContent = '';
+            if (passInput) passInput.value = generateSecureKey();
+        }
+        confirmBtn.innerHTML = '<span>Provision Secure Link</span>';
+        confirmBtn.disabled = false;
+        directAccessLoading = false;
+    } catch (error) {
+        if (request === directAccessRequest) {
+            document.getElementById('directAccessStatus').textContent = error.message;
+            document.getElementById('retryDirectAccess').classList.remove('hidden');
+        }
+    }
 }
 
 function initDirectAccessListeners() {
@@ -140,6 +189,11 @@ function initDirectAccessListeners() {
     const copyBtn = document.getElementById('copyDirectDetails');
 
     const closeModal = () => {
+        if (directAccessSaving) return;
+        ++directAccessRequest;
+        savedDirectKey = null;
+        document.getElementById('resDirectPass').textContent = '';
+        document.getElementById('directEmployerPassword').value = '';
         if (modal) {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
@@ -147,6 +201,16 @@ function initDirectAccessListeners() {
     };
 
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    document.getElementById('retryDirectAccess').addEventListener('click', () => openDirectAccessModal(currentDirectJobId, document.getElementById('directTargetJob').textContent.replace(/^#.*? - /, '')));
+    document.getElementById('cancelDirectReplacement').addEventListener('click', () => showDirectAccessDetails(currentDirectJobId, savedDirectKey));
+    document.getElementById('changeDirectPassword')?.addEventListener('click', () => {
+        document.getElementById('directAccessResult').classList.add('hidden');
+        document.getElementById('directAccessSetup').classList.remove('hidden');
+        document.getElementById('directEmployerPassword').value = '';
+        document.getElementById('directReplacementWarning').classList.remove('hidden');
+        document.getElementById('acknowledgeDirectReplacement').checked = false;
+        confirmBtn.innerHTML = '<span>Replace Password</span>';
+    });
     
     if (modal) {
         modal.addEventListener('click', (e) => {
@@ -165,13 +229,23 @@ function initDirectAccessListeners() {
     if (confirmBtn) {
         confirmBtn.addEventListener('click', async () => {
             const passInput = document.getElementById('directEmployerPassword');
-            const customKey = passInput?.value;
+            if (directAccessLoading || directAccessSaving) return;
+            if (directAccessProvisioned && !document.getElementById('acknowledgeDirectReplacement').checked) {
+                showToast('Please acknowledge that the current password will stop working.', 'error');
+                return;
+            }
+            const request = directAccessRequest;
+            const submittedJobId = currentDirectJobId;
+            const customKey = passInput?.value.trim();
 
             if (!customKey) {
                 showToast('Access Key is required', 'error');
                 return;
             }
 
+            directAccessSaving = true;
+            closeBtn.disabled = true;
+            document.getElementById('cancelDirectReplacement').disabled = true;
             confirmBtn.disabled = true;
             confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Provisioning...</span>';
 
@@ -179,42 +253,41 @@ function initDirectAccessListeners() {
                 const response = await fetch('/admin/generate-job-access-key', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ jobId: currentDirectJobId, customKey })
+                    body: JSON.stringify({ jobId: submittedJobId, customKey, rotate: directAccessProvisioned })
                 });
 
                 const data = await response.json();
+                if (request !== directAccessRequest) return;
                 if (data.success) {
-                    document.getElementById('directAccessSetup')?.classList.add('hidden');
-                    const resultView = document.getElementById('directAccessResult');
-                    if (resultView) resultView.classList.remove('hidden');
-                    
-                    const resUrl = document.getElementById('resDirectUrl');
-                    const resPass = document.getElementById('resDirectPass');
-                    
-                    const directUrl = `${window.location.origin}/employer/applicants.html?job_id=${currentDirectJobId}&mode=direct`;
-                    if (resUrl) resUrl.textContent = directUrl;
-                    if (resPass) resPass.textContent = customKey;
+                    directAccessProvisioned = true;
+                    showDirectAccessDetails(submittedJobId, data.accessKey);
                 } else {
                     throw new Error(data.error || 'Failed to generate access');
                 }
             } catch (err) {
-                showToast(err.message, 'error');
+                if (request === directAccessRequest) showToast(err.message, 'error');
             } finally {
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="fas fa-lock"></i> <span>Provision Secure Link</span>';
+                directAccessSaving = false;
+                closeBtn.disabled = false;
+                document.getElementById('cancelDirectReplacement').disabled = false;
+                if (request === directAccessRequest) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = directAccessProvisioned ? '<span>Replace Password</span>' : '<span>Provision Secure Link</span>';
+                }
             }
         });
     }
 
     if (copyBtn) {
         copyBtn.addEventListener('click', () => {
+            if (!savedDirectKey) return;
             const url = document.getElementById('resDirectUrl')?.textContent;
             const key = document.getElementById('resDirectPass')?.textContent;
             const text = `HIRLY SECURE ACCESS\nJob ID: #${currentDirectJobId}\nAccess URL: ${url}\nSecure Key: ${key}`;
             
             navigator.clipboard.writeText(text).then(() => {
                 showToast('Access details copied', 'success');
-            });
+            }).catch(() => showToast('Unable to copy. Please copy the details manually.', 'error'));
         });
     }
     
