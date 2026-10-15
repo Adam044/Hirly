@@ -110,3 +110,18 @@ test('session secret changes do not affect saved password retrieval', () => {
   if (previous === undefined) delete process.env.SESSION_SECRET;
   else process.env.SESSION_SECRET = previous;
 });
+
+test('missing encryption configuration reports setup error without changing credentials', async () => {
+  const previous = process.env.DIRECT_ACCESS_SECRET;
+  delete process.env.DIRECT_ACCESS_SECRET;
+  try {
+    const h = harness({ id: 1, title: 'Unconfigured' });
+    const result = await h.call('post /admin/generate-job-access-key', { jobId: 1 });
+    assert.equal(result.success, false);
+    assert.match(result.error, /DIRECT_ACCESS_SECRET/);
+    assert.equal(h.updates(), 0);
+  } finally {
+    if (previous === undefined) delete process.env.DIRECT_ACCESS_SECRET;
+    else process.env.DIRECT_ACCESS_SECRET = previous;
+  }
+});

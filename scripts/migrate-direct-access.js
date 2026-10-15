@@ -12,6 +12,7 @@ async function main() {
     client = await pool.connect();
     await client.query('BEGIN');
     await client.query("SET LOCAL lock_timeout = '5s'");
+    await client.query(fs.readFileSync(path.join(__dirname, '../supabase/migrations/add_secure_access_key.sql'), 'utf8'));
     await client.query(fs.readFileSync(path.join(__dirname, '../supabase/migrations/add_encrypted_access_key_to_jobs.sql'), 'utf8'));
     const result = await client.query("SELECT data_type FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'jobs' AND column_name = 'access_key_encrypted'");
     if (result.rows[0]?.data_type !== 'text') throw new Error('Encrypted access-key column verification failed.');

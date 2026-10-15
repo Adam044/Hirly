@@ -7,6 +7,7 @@ services:
     dockerContext: .
     dockerfilePath: ./Dockerfile
     healthCheckPath: / # Root path for health check
+    preDeployCommand: node scripts/migrate-direct-access.js
     envVars:
       - key: PORT
         value: 8080
@@ -21,6 +22,8 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: SESSION_SECRET
+        generateValue: true
+      - key: DIRECT_ACCESS_SECRET
         generateValue: true
       - key: BASE_URL
         sync: false # e.g., https://hirly.net

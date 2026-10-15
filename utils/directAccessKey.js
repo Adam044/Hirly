@@ -2,7 +2,11 @@ const crypto = require('crypto');
 
 function encryptionKey() {
   const secret = process.env.DIRECT_ACCESS_SECRET;
-  if (!secret || Buffer.byteLength(secret, 'utf8') < 32) throw new Error('DIRECT_ACCESS_SECRET must be a persistent secret of at least 32 bytes.');
+  if (!secret || Buffer.byteLength(secret, 'utf8') < 32) {
+    const error = new Error('DIRECT_ACCESS_SECRET must be a persistent secret of at least 32 bytes.');
+    error.code = 'DIRECT_ACCESS_SECRET_MISSING';
+    throw error;
+  }
   return crypto.createHash('sha256').update('hirly-direct-access:' + secret).digest();
 }
 

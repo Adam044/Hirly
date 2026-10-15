@@ -1962,6 +1962,12 @@ module.exports = function registerAdminRoutes(app, pool, {
     } catch (error) {
       if (client) await client.query('ROLLBACK');
       logger.error('Error generating job access key:', error);
+      if (error.code === 'DIRECT_ACCESS_SECRET_MISSING') {
+        return res.status(503).json({ success: false, error: 'Access-key setup is incomplete: set a persistent DIRECT_ACCESS_SECRET of at least 32 bytes in the server environment, then redeploy.' });
+      }
+      if (error.code === '42703') {
+        return res.status(503).json({ success: false, error: 'Access-key database setup is incomplete. Run node scripts/migrate-direct-access.js against the deployment database, then retry.' });
+      }
       res.status(500).json({ success: false, error: 'Unable to save access credentials. Please contact your administrator.' });
     } finally {
       if (client) client.release();
